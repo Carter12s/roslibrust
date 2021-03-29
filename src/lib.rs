@@ -1,11 +1,32 @@
+pub mod message_gen;
+
 use std::collections::HashMap;
 use std::net::TcpStream;
 
-use serde_json::json;
+use log::*;
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use tokio_tungstenite::*;
 use tungstenite::Message;
+use serde::de::DeserializeOwned;
 
-type Callback = fn(&str) -> ();
+type Callback = Box<dyn Fn(&str) -> ()>;
+
+#[derive(Deserialize, Serialize, Debug)]
+/// Represents a "publish" operation message in roslib
+/// Msg is assumed to be a serde_json serializable type
+struct RoslibPublish<Msg> {
+    op: String,
+    topic: String,
+    msg: Msg,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct NodeStatusMsg {
+    node_name: String,
+    pid: usize,
+    status: usize,
+}
 
 pub struct Client {
     pub stream: tungstenite::WebSocket<TcpStream>,
@@ -13,6 +34,10 @@ pub struct Client {
 }
 
 impl Client {
+    //! Connects a rosbridge instance at the given url
+    //! Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
+    //! Panics if connection fails
+    //! TODO better error handling
     pub fn new(url: &str) -> Client {
         let (stream, _) = tungstenite::connect(url).expect("Failed to connect client");
         Client {
@@ -21,13 +46,21 @@ impl Client {
         }
     }
 
-    pub fn subscribe(&mut self, topic_name: &str, callback: Callback) {
+    /// Subscribe to a given topic expecting msgs of provided type
+    pub fn subscribe<Msg: 'static>(&mut self, topic_name: &str, callback: fn(Msg))
+    where
+        Msg: DeserializeOwned,
+    {
         // Register callback in callback map
         let topic = self
             .subscriptions
             .entry(topic_name.to_string())
             .or_insert(vec![]);
-        topic.push(callback);
+        topic.push(Box::new(move |data: &str| {
+            let msg: Msg =
+                serde_json::from_str(data).expect("Could not interpret data as message type.");
+            callback(msg)
+        }));
         let msg = json!(
         {
         "op": "subscribe",
@@ -40,12 +73,37 @@ impl Client {
             .expect("Failed to write subscription message!");
     }
 
+    /// Core read loop, recivies messages from rosbridge and dispatches them.
+    /// TODO async version?
+    /// TODO how to integrate with other event loops?
+    /// TODO how will borrowing work with these callbacks
+    /// TODO should we use something like 'bus' crate instead of callbacks?
     pub fn spin(&mut self) {
         loop {
             let read = self.stream.read_message().unwrap();
             match read {
                 Message::Text(text) => {
-                    print!("got message: {:?}\n", text);
+                    debug!("got message: {}", text);
+                    let parsed: serde_json::Value = serde_json::from_str(text.as_str())
+                        .expect("Invalid json received from server.");
+
+                    let parsed_object = parsed
+                        .as_object()
+                        .expect("Server sent json that was not an object");
+
+                    let op = parsed_object
+                        .get("op")
+                        .expect("Server sent json without an 'op' key")
+                        .as_str()
+                        .unwrap();
+                    match op {
+                        "publish" => {
+                            self.handle_publish(parsed);
+                        }
+                        _ => {
+                            warn!("Unhandled op type {}", op)
+                        }
+                    }
                 }
                 _ => {
                     panic!("Non-text response received");
@@ -53,4 +111,31 @@ impl Client {
             }
         }
     }
+
+    /// Response handler for recieved publish messages
+    /// Converts the return message to the subscribed type and calls any callbacks
+    /// Panics if publish is received for unexpected topic
+    fn handle_publish(&mut self, data: Value) {
+        let msg: RoslibPublish<NodeStatusMsg> =
+            serde_json::from_value(data).expect("Un-parsable publish message received");
+
+        let callbacks = self.subscriptions.get(msg.topic.as_str());
+        let callbacks = match callbacks {
+            Some(callbacks) => callbacks,
+            _ => panic!("Received publish message for unsubscribed topic!"),
+        };
+        for i in callbacks {
+            i(serde_json::to_string(&msg.msg).unwrap().as_str())
+        }
+    }
+
+    /*
+    TODO:
+        * Unsubscribe
+        * Service call, is this going to need to return a future?
+        * Type generation from messages: A) static B) with cargo...
+        Low priority:
+            * advertise
+            * un-advertise
+     */
 }
