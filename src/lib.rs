@@ -1,4 +1,5 @@
 pub mod message_gen;
+pub mod gen_msgs;
 
 use std::collections::HashMap;
 use std::net::TcpStream;
@@ -19,13 +20,6 @@ struct RoslibPublish<Msg> {
     op: String,
     topic: String,
     msg: Msg,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct NodeStatusMsg {
-    node_name: String,
-    pid: usize,
-    status: usize,
 }
 
 pub struct Client {
@@ -116,7 +110,7 @@ impl Client {
     /// Converts the return message to the subscribed type and calls any callbacks
     /// Panics if publish is received for unexpected topic
     fn handle_publish(&mut self, data: Value) {
-        let msg: RoslibPublish<NodeStatusMsg> =
+        let msg: RoslibPublish<gen_msgs::NodeInfo> =
             serde_json::from_value(data).expect("Un-parsable publish message received");
 
         let callbacks = self.subscriptions.get(msg.topic.as_str());
