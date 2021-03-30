@@ -13,25 +13,18 @@ use serde::de::DeserializeOwned;
 
 type Callback = Box<dyn Fn(&str) -> ()>;
 
-#[derive(Deserialize, Serialize, Debug)]
-/// Represents a "publish" operation message in roslib
-/// Msg is assumed to be a serde_json serializable type
-struct RoslibPublish<Msg> {
-    op: String,
-    topic: String,
-    msg: Msg,
-}
-
+/// Basic "syncish" client representation.
+/// Holds a single websocket connection, requests will be processed by a spin_once or spin() call.
 pub struct Client {
     pub stream: tungstenite::WebSocket<TcpStream>,
     subscriptions: HashMap<String, Vec<Callback>>,
 }
 
 impl Client {
-    //! Connects a rosbridge instance at the given url
-    //! Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
-    //! Panics if connection fails
-    //! TODO better error handling
+    /// Connects a rosbridge instance at the given url
+    /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
+    /// Panics if connection fails
+    // TODO better error handling
     pub fn new(url: &str) -> Client {
         let (stream, _) = tungstenite::connect(url).expect("Failed to connect client");
         Client {
@@ -42,8 +35,8 @@ impl Client {
 
     /// Subscribe to a given topic expecting msgs of provided type
     pub fn subscribe<Msg: 'static>(&mut self, topic_name: &str, callback: fn(Msg))
-    where
-        Msg: DeserializeOwned,
+        where
+            Msg: DeserializeOwned,
     {
         // Register callback in callback map
         let topic = self
@@ -55,6 +48,7 @@ impl Client {
                 serde_json::from_str(data).expect("Could not interpret data as message type.");
             callback(msg)
         }));
+        // TODO single place to define rosbridge operations
         let msg = json!(
         {
         "op": "subscribe",
@@ -72,6 +66,7 @@ impl Client {
     /// TODO how to integrate with other event loops?
     /// TODO how will borrowing work with these callbacks
     /// TODO should we use something like 'bus' crate instead of callbacks?
+    /// TODO spin_once version?
     pub fn spin(&mut self) {
         loop {
             let read = self.stream.read_message().unwrap();
@@ -106,20 +101,17 @@ impl Client {
         }
     }
 
-    /// Response handler for recieved publish messages
+    /// Response handler for received publish messages
     /// Converts the return message to the subscribed type and calls any callbacks
     /// Panics if publish is received for unexpected topic
     fn handle_publish(&mut self, data: Value) {
-        let msg: RoslibPublish<gen_msgs::NodeInfo> =
-            serde_json::from_value(data).expect("Un-parsable publish message received");
-
-        let callbacks = self.subscriptions.get(msg.topic.as_str());
+        let callbacks = self.subscriptions.get(data.get("topic").unwrap().as_str().unwrap());
         let callbacks = match callbacks {
             Some(callbacks) => callbacks,
             _ => panic!("Received publish message for unsubscribed topic!"),
         };
         for i in callbacks {
-            i(serde_json::to_string(&msg.msg).unwrap().as_str())
+            i(serde_json::to_string(data.get("msg").unwrap()).unwrap().as_str())
         }
     }
 

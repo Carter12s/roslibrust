@@ -9,7 +9,7 @@ pub struct NodeInfo {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Float64Stamped {
-    header: Header,
+//    header: Header,
     value: f64,
 }
 
