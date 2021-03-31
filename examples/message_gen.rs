@@ -18,5 +18,5 @@ fn main() {
     let files = util::recursive_find_msg_files(source_path);
     info!("Running on files: {:?}", files);
 
-    message_gen::generate_messages(&files.into_iter().map(|e| e.path).collect(), dest_path)
+    message_gen::generate_messages(files.into_iter().map(|e| e.path).collect(), dest_path)
 }

@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use std::net::TcpStream;
 
 use log::*;
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio_tungstenite::*;
 use tungstenite::Message;

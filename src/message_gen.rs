@@ -1,12 +1,16 @@
-use std::collections::HashSet;
+use std::collections::{VecDeque, BTreeMap};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use codegen::{Field, Scope};
+use codegen::{Scope};
 use log::*;
 
 use super::util;
+
+/*
+Note: Dear god, I tried to use &str in these parse structs. It was painful...
+ */
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct FieldType {
@@ -15,89 +19,72 @@ pub struct FieldType {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct FieldInfo<'a> {
+pub struct FieldInfo {
     field_type: FieldType,
-    field_name: &'a str,
+    field_name: String,
 }
 
 #[derive(PartialEq, Debug)]
-pub struct ConstantInfo<'a> {
+pub struct ConstantInfo {
     constant_type: String,
-    constant_name: &'a str,
-    constant_value: &'a str,
+    constant_name: String,
+    constant_value: String,
 }
 
 #[derive(PartialEq, Debug)]
-pub struct MessageFile<'a> {
-    name: &'a str,
-    fields: Vec<FieldInfo<'a>>,
-    constants: Vec<ConstantInfo<'a>>,
+pub struct MessageFile {
+    name: String,
+    fields: Vec<FieldInfo>,
+    constants: Vec<ConstantInfo>,
 }
 
 /// Generates rust files (.rs) containing type representing the ros messages
-pub fn generate_messages(files: &Vec<PathBuf>, out_file: &Path) {
-    // Load files
-    let mut raw_data: Vec<(String, String)> = vec![];
-    for entry in files {
-        raw_data.push((
-            fs::read_to_string(entry).expect("Could not read file."),
-            entry.file_stem().unwrap().to_str().unwrap().to_string(),
-        ));
-    }
+pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path) {
+    // Parsing is implemented as iterative queue consumers
+    // Multiple sequential queues Load Files -> Parse Files -> Resolve Remotes
+    // Resolving remotes can add more more files to the load queue
+    // Iteration is continued until load queue is depleted
+    let mut files = VecDeque::from(files);
+    let mut parsed: BTreeMap<String, MessageFile> = BTreeMap::new();
 
-    // Parse into tokens
-    let mut parsed: Vec<MessageFile> = vec![];
-    for (file, name) in &raw_data {
-        let parse_result = parse_ros_message_file(file, name);
-        parsed.push(parse_result);
-    }
+    while let Some(entry) = files.pop_front() {
+        let file = fs::read_to_string(&entry).expect("Could not read file.");
+        let name = entry.file_stem().unwrap().to_str().unwrap().to_string();
+        let parse_result = parse_ros_message_file(file, name.clone());
 
-    // Resolve references to other files
-    // TODO could be nice iterator way of doing this, but i'mma be lazy
-    let mut remotes = HashSet::<FieldType>::new();
-    for f in &parsed {
-        for field in &f.fields {
-            if let Some(p) = &field.field_type.package_name {
-                remotes.insert(field.field_type.clone());
+        // Resolve remotes
+        let installed = util::get_installed_msgs();
+        // TODO could be nice iterator way of doing this
+        for field in &parse_result.fields {
+            if field.field_type.package_name.is_none() {
+                // Not a remote reference
+                continue;
             }
-        }
-    }
-
-    // Attempt to locate references is ROS_PACKAGE_PATH
-    let installed = util::get_installed_msgs();
-    let mut used_remotes = vec![];
-    for remote in &remotes {
-        for candidate in &installed {
-            if &candidate.package_name == remote.package_name.as_ref().unwrap() {
-                if candidate
-                    .path
-                    .file_stem()
-                    .unwrap()
-                    .to_string_lossy()
-                    .to_string()
-                    == remote.field_type
-                {
-                    used_remotes.push(candidate);
+            let package_name = field.field_type.package_name.as_ref().unwrap();
+            if parsed.contains_key(&field.field_type.field_type) {
+                // Reference already resolved
+                continue;
+            }
+            // Attempt to lookup reference in discovered installed files:
+            for candidate in &installed {
+                if &candidate.package_name == package_name {
+                    if &candidate
+                        .path
+                        .file_stem()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_string()
+                        == &field.field_type.field_type
+                    {
+                        // We've resolved the reference, add it to files that need to be resolved
+                        files.push_back(candidate.path.clone());
+                    }
                 }
             }
         }
-    }
 
-    let mut remote_data = vec![];
-    for remote in used_remotes {
-        remote_data.push((
-            fs::read_to_string(&remote.path).expect("Could not read file."),
-            remote
-                .path
-                .file_stem()
-                .unwrap()
-                .to_string_lossy()
-                .to_string(),
-        ));
-    }
-    for (file, name) in &remote_data {
-        let parse_result = parse_ros_message_file(file, name);
-        parsed.push(parse_result);
+        // Done processing move it away
+        parsed.insert(name.clone(), parse_result);
     }
 
     let code = generate_rust(parsed);
@@ -107,7 +94,7 @@ pub fn generate_messages(files: &Vec<PathBuf>, out_file: &Path) {
 }
 
 /// Converts a ros message file into a struct representation
-fn parse_ros_message_file<'a>(data: &'a str, name: &'a str) -> MessageFile<'a> {
+fn parse_ros_message_file(data: String, name: String) -> MessageFile {
     let mut result = MessageFile {
         fields: vec![],
         constants: vec![],
@@ -134,7 +121,7 @@ fn parse_ros_message_file<'a>(data: &'a str, name: &'a str) -> MessageFile<'a> {
         }
         result.fields.push(FieldInfo {
             field_type,
-            field_name,
+            field_name: field_name.to_string(),
         });
     }
     result
@@ -151,19 +138,19 @@ fn strip_comments(line: &str) -> &str {
 /// From a list of struct representations of ros msg files, generates a resulting rust module as
 /// a string.
 // TODO should this be public?
-pub fn generate_rust(msg_file: Vec<MessageFile>) -> String {
+pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>) -> String {
     let mut scope = Scope::new();
     scope.import("serde", "{Deserialize,Serialize}");
-    for file in &msg_file {
+    for (_name, file) in &msg_files {
         let struct_t = scope
-            .new_struct(file.name)
+            .new_struct(file.name.as_str())
             .derive("Deserialize")
             .derive("Serialize")
             .derive("Debug")
             .vis("pub");
         // TODO we could use doc to move comments from .msg files to rust code
         for field in &file.fields {
-            struct_t.field(field.field_name, &field.field_type.field_type);
+            struct_t.field(field.field_name.as_str(), &field.field_type.field_type);
         }
         // TODO we could detect constant naming convention and autogen enums?
         // for constant in &file.constants {
@@ -182,7 +169,6 @@ pub fn ros_type_to_rust(t: &str) -> FieldType {
         // Get type preceding square bracket and then wrap in Vec
         let mut sub_type = ros_type_to_rust(&t[..arr_index]);
         sub_type.field_type = format! {"Vec<{}>", sub_type.field_type};
-        sub_type;
     }
     match t {
         "bool" => FieldType {
@@ -231,11 +217,11 @@ pub fn ros_type_to_rust(t: &str) -> FieldType {
         },
         "time" => FieldType {
             package_name: Some("std_msgs".into()),
-            field_type: "time".into(),
+            field_type: "TimeI".into(),
         },
         "duration" => FieldType {
             package_name: Some("std_msgs".into()),
-            field_type: "duration".into(),
+            field_type: "DurationI".into(),
         },
         "Header" => FieldType {
             package_name: Some("std_msgs".into()),
