@@ -17,3 +17,10 @@ pub struct Float64Stamped {
 pub struct LoggerLevel {
     level: String,
 }
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Header {
+    seq: u32,
+    stamp: time,
+    frame_id: String,
+}

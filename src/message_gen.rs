@@ -1,14 +1,22 @@
+use std::collections::HashSet;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use codegen::{Field, Scope};
 use log::*;
-use walkdir::{DirEntry, WalkDir};
-use codegen::Scope;
-use std::io::Write;
+
+use super::util;
+
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub struct FieldType {
+    package_name: Option<String>,
+    field_type: String,
+}
 
 #[derive(PartialEq, Debug)]
 pub struct FieldInfo<'a> {
-    field_type: String,
+    field_type: FieldType,
     field_name: &'a str,
 }
 
@@ -44,9 +52,58 @@ pub fn generate_messages(files: &Vec<PathBuf>, out_file: &Path) {
         parsed.push(parse_result);
     }
 
+    // Resolve references to other files
+    // TODO could be nice iterator way of doing this, but i'mma be lazy
+    let mut remotes = HashSet::<FieldType>::new();
+    for f in &parsed {
+        for field in &f.fields {
+            if let Some(p) = &field.field_type.package_name {
+                remotes.insert(field.field_type.clone());
+            }
+        }
+    }
+
+    // Attempt to locate references is ROS_PACKAGE_PATH
+    let installed = util::get_installed_msgs();
+    let mut used_remotes = vec![];
+    for remote in &remotes {
+        for candidate in &installed {
+            if &candidate.package_name == remote.package_name.as_ref().unwrap() {
+                if candidate
+                    .path
+                    .file_stem()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+                    == remote.field_type
+                {
+                    used_remotes.push(candidate);
+                }
+            }
+        }
+    }
+
+    let mut remote_data = vec![];
+    for remote in used_remotes {
+        remote_data.push((
+            fs::read_to_string(&remote.path).expect("Could not read file."),
+            remote
+                .path
+                .file_stem()
+                .unwrap()
+                .to_string_lossy()
+                .to_string(),
+        ));
+    }
+    for (file, name) in &remote_data {
+        let parse_result = parse_ros_message_file(file, name);
+        parsed.push(parse_result);
+    }
+
     let code = generate_rust(parsed);
     let mut file = std::fs::File::create(out_file).expect("Could not open output file.");
-    file.write_all(code.as_bytes()).expect("Failed to write to file");
+    file.write_all(code.as_bytes())
+        .expect("Failed to write to file");
 }
 
 /// Converts a ros message file into a struct representation
@@ -63,7 +120,7 @@ fn parse_ros_message_file<'a>(data: &'a str, name: &'a str) -> MessageFile<'a> {
             continue;
         }
         let equal_i = line.find('=');
-        if let Some(equal_i) = equal_i {
+        if let Some(_equal_i) = equal_i {
             warn!("Constants not supported yet: {} will be omitted", line);
             continue;
         }
@@ -73,7 +130,7 @@ fn parse_ros_message_file<'a>(data: &'a str, name: &'a str) -> MessageFile<'a> {
         let field_type = ros_type_to_rust(field_type);
         let field_name = splitter.next().expect("Did not find field_name on line.");
         if let Some(extra) = splitter.next() {
-            panic!("Extra data detected on line past field_name");
+            panic!("Extra data detected on line past field_name: {}", extra);
         }
         result.fields.push(FieldInfo {
             field_type,
@@ -93,95 +150,113 @@ fn strip_comments(line: &str) -> &str {
 
 /// From a list of struct representations of ros msg files, generates a resulting rust module as
 /// a string.
+// TODO should this be public?
 pub fn generate_rust(msg_file: Vec<MessageFile>) -> String {
     let mut scope = Scope::new();
-    scope.import("serde","{Deserialize,Serialize}");
+    scope.import("serde", "{Deserialize,Serialize}");
     for file in &msg_file {
-        let struct_t = scope.new_struct(file.name)
+        let struct_t = scope
+            .new_struct(file.name)
             .derive("Deserialize")
             .derive("Serialize")
             .derive("Debug")
             .vis("pub");
         // TODO we could use doc to move comments from .msg files to rust code
         for field in &file.fields {
-            struct_t.field(field.field_name, &field.field_type);
+            struct_t.field(field.field_name, &field.field_type.field_type);
         }
         // TODO we could detect constant naming convention and autogen enums?
-        for constant in &file.constants {
-            // TODO disabled for now, feature pending on codegen lib
-            // https://github.com/carllerche/codegen/issues/27
-            // struct_t.field(constant.constant_name, &constant.constant_type);
-        }
+        // for constant in &file.constants {
+        // TODO disabled for now, feature pending on codegen lib
+        // https://github.com/carllerche/codegen/issues/27
+        // struct_t.field(constant.constant_name, &constant.constant_type);
+        // }
     }
     scope.to_string()
 }
 
-/// Searches in all sub-folders of a directory for files matching the supplied predicate
-// TODO figure out / test for how this handles symlinks and recursion?
-pub fn recursive_find_files(path: &Path, predicate: fn(&DirEntry) -> bool) -> Vec<PathBuf> {
-    WalkDir::new(".")
-        .follow_links(true)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| predicate(e))
-        .map(|e| e.path().to_path_buf())
-        .collect()
-}
-
 /// Basic mapping of ros type strings to rust types
-pub fn ros_type_to_rust(t: &str) -> String {
-    let arr_index = t.find("[]");
-    // TODO fixed size arrays?? Ignore and just use vecs, should still do better parsing
+pub fn ros_type_to_rust(t: &str) -> FieldType {
+    let arr_index = t.find("[");
     if let Some(arr_index) = arr_index {
-        return format!("Vec<{}>", ros_type_to_rust(&t[..arr_index]))
+        // Get type preceding square bracket and then wrap in Vec
+        let mut sub_type = ros_type_to_rust(&t[..arr_index]);
+        sub_type.field_type = format! {"Vec<{}>", sub_type.field_type};
+        sub_type;
     }
     match t {
-        "bool" => {
-            "bool"
+        "bool" => FieldType {
+            package_name: None,
+            field_type: "bool".to_string(),
         },
-        "int8" => {
-            "i8"
+        "int8" => FieldType {
+            package_name: None,
+            field_type: "i8".to_string(),
         },
-        "uint8" => {
-            "u8"
+        "uint8" => FieldType {
+            package_name: None,
+            field_type: "u8".to_string(),
         },
-        "int16" => {
-            "i16"
+        "int16" => FieldType {
+            package_name: None,
+            field_type: "i16".to_string(),
         },
-        "int32" => {
-            "i32"
+        "int32" => FieldType {
+            package_name: None,
+            field_type: "i32".to_string(),
         },
-        "uint32" => {
-            "u32"
+        "uint32" => FieldType {
+            package_name: None,
+            field_type: "u32".to_string(),
         },
-        "int64" => {
-            "i64"
+        "int64" => FieldType {
+            package_name: None,
+            field_type: "i64".to_string(),
         },
-        "uint64" => {
-            "u64"
+        "uint64" => FieldType {
+            package_name: None,
+            field_type: "u64".to_string(),
         },
-        "float32" => {
-            "f32"
+        "float32" => FieldType {
+            package_name: None,
+            field_type: "f32".to_string(),
         },
-        "float64" => {
-            "f64"
+        "float64" => FieldType {
+            package_name: None,
+            field_type: "f64".to_string(),
         },
-        "string" => {
-            "String"
+        "string" => FieldType {
+            package_name: None,
+            field_type: "String".to_string(),
         },
-        "time" => {
-            panic!("TODO implement time!")
-            //TODO wtf why are this integral types and not part of std_msgs
+        "time" => FieldType {
+            package_name: Some("std_msgs".into()),
+            field_type: "time".into(),
         },
-        "duration" => {
-            panic!("TODO implement duration!")
-        }
+        "duration" => FieldType {
+            package_name: Some("std_msgs".into()),
+            field_type: "duration".into(),
+        },
+        "Header" => FieldType {
+            package_name: Some("std_msgs".into()),
+            field_type: "Header".into(),
+        },
         _ => {
-            // Assume this is a reference to another type, use directly
-            // TODO how to separate out package specifiers
-            t
+            // Reference to another package
+            let mut s = t.split("/");
+            FieldType {
+                package_name: Some(
+                    s.next()
+                        .expect(&format!("Could not determine package name for {}", t))
+                        .into(),
+                ),
+                field_type: s
+                    .next()
+                    .expect(&format!("Could not determine field type for {}", t))
+                    .into(),
+            }
         }
-    }.to_string()
+    }
 }
 
 #[cfg(test)]
@@ -209,15 +284,16 @@ mod tests {
             MessageFile {
                 fields: vec![
                     FieldInfo {
-                        field_type: "field",
+                        field_type: FieldType::Local("field".to_string()),
                         field_name: "name"
                     },
                     FieldInfo {
-                        field_type: "additional",
+                        field_type: FieldType::Local("additional".to_string()),
                         field_name: "field"
                     },
                 ],
-                name: "name"
+                name: "name",
+                constants: vec![]
             }
         )
     }

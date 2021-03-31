@@ -1,5 +1,6 @@
 pub mod message_gen;
 pub mod gen_msgs;
+pub mod util;
 
 use std::collections::HashMap;
 use std::net::TcpStream;
