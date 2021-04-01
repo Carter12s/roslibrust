@@ -1,6 +1,7 @@
 pub mod message_gen;
 pub mod gen_msgs;
 pub mod util;
+pub mod gen_msgs_amp;
 
 use std::collections::HashMap;
 use std::net::TcpStream;
@@ -34,9 +35,9 @@ impl Client {
     }
 
     /// Subscribe to a given topic expecting msgs of provided type
-    pub fn subscribe<Msg: 'static>(&mut self, topic_name: &str, callback: fn(Msg))
+    pub fn subscribe<Msg>(&mut self, topic_name: &str, callback: fn(Msg))
         where
-            Msg: DeserializeOwned,
+            Msg: 'static + DeserializeOwned,
     {
         // Register callback in callback map
         let topic = self

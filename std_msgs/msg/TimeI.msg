@@ -1,2 +1,2 @@
-uint32 sec
-uint32 nsec
+uint32 secs
+uint32 nsecs

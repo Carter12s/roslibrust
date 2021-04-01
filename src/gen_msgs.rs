@@ -19,6 +19,19 @@ pub struct LoggerLevel {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+pub struct Metric {
+    name: String,
+    time: f64,
+    data: Vec<MetricPair>,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct MetricPair {
+    key: String,
+    value: f64,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct NodeInfo {
     node_name: String,
     pid: i64,

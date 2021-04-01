@@ -1,7 +1,7 @@
 use log::*;
 use simple_logger::SimpleLogger;
 
-use roslibrust::gen_msgs::*;
+use roslibrust::gen_msgs_amp::*;
 
 pub fn main() -> Result<(), String> {
     SimpleLogger::new().with_level(log::LevelFilter::Debug).init().unwrap();
@@ -11,6 +11,9 @@ pub fn main() -> Result<(), String> {
     });
     client.subscribe("/NodeStatus/camera_file", |msg: NodeInfo|{
         info!("Got camera_file status: {:?}", msg);
+    });
+    client.subscribe("/system_monitor/memory", |msg: Memory| {
+        info!("Got Memory: {:?}", msg);
     });
     client.spin();
 
