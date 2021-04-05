@@ -1,16 +1,15 @@
-pub mod message_gen;
 pub mod gen_msgs;
+pub mod message_gen;
 pub mod util;
-pub mod gen_msgs_amp;
 
 use std::collections::HashMap;
 use std::net::TcpStream;
 
 use log::*;
+use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
 use tokio_tungstenite::*;
 use tungstenite::Message;
-use serde::de::DeserializeOwned;
 
 type Callback = Box<dyn Fn(&str) -> ()>;
 
@@ -36,8 +35,8 @@ impl Client {
 
     /// Subscribe to a given topic expecting msgs of provided type
     pub fn subscribe<Msg>(&mut self, topic_name: &str, callback: fn(Msg))
-        where
-            Msg: 'static + DeserializeOwned,
+    where
+        Msg: 'static + DeserializeOwned,
     {
         // Register callback in callback map
         let topic = self
@@ -59,10 +58,24 @@ impl Client {
         let msg = tungstenite::Message::Text(msg.to_string());
         self.stream
             .write_message(msg)
-            .expect("Failed to write subscription message!");
+            .expect("Failed to write subscribe message!");
     }
 
-    /// Core read loop, recivies messages from rosbridge and dispatches them.
+    pub fn unsubscribe(&mut self, topic_name: &str) {
+        self.subscriptions.remove(topic_name);
+        let msg = json!(
+        {
+        "op": "unsubscribe",
+        "topic": topic_name,
+        }
+        );
+        let msg = tungstenite::Message::Text(msg.to_string());
+        self.stream
+            .write_message(msg)
+            .expect("Failed to write unsubscribe message.");
+    }
+
+    /// Core read loop, receives messages from rosbridge and dispatches them.
     /// TODO async version?
     /// TODO how to integrate with other event loops?
     /// TODO how will borrowing work with these callbacks
@@ -106,13 +119,17 @@ impl Client {
     /// Converts the return message to the subscribed type and calls any callbacks
     /// Panics if publish is received for unexpected topic
     fn handle_publish(&mut self, data: Value) {
-        let callbacks = self.subscriptions.get(data.get("topic").unwrap().as_str().unwrap());
+        let callbacks = self
+            .subscriptions
+            .get(data.get("topic").unwrap().as_str().unwrap());
         let callbacks = match callbacks {
             Some(callbacks) => callbacks,
             _ => panic!("Received publish message for unsubscribed topic!"),
         };
         for i in callbacks {
-            i(serde_json::to_string(data.get("msg").unwrap()).unwrap().as_str())
+            i(serde_json::to_string(data.get("msg").unwrap())
+                .unwrap()
+                .as_str())
         }
     }
 
@@ -121,6 +138,7 @@ impl Client {
         * Unsubscribe
         * Service call, is this going to need to return a future?
         * Type generation from messages: A) static B) with cargo...
+        * Testing?
         Low priority:
             * advertise
             * un-advertise
