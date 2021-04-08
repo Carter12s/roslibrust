@@ -153,17 +153,25 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>) -> String {
             .derive("Deserialize")
             .derive("Serialize")
             .derive("Debug")
+            .derive("Default")
+            .derive("Clone")
             .vis("pub");
         // TODO we could use doc to move comments from .msg files to rust code
         // TODO we could use package_name to group into modules (would then match name collision rules)
         // TODO we could detect constant naming convention and autogen enums?
         for field in &file.fields {
             if field.field_type.is_vec {
-                struct_t.field(
+                let mut f = codegen::Field::new(
                     field.field_name.as_str(),
-                    format!("Vec<{}>" , &field.field_type.field_type ));
+                    format!("Vec<{}>", &field.field_type.field_type),
+                );
+                f.annotation(vec!["pub"]);
+                struct_t.push_field(f);
             } else {
-                struct_t.field(field.field_name.as_str(), &field.field_type.field_type);
+                let mut f =
+                    codegen::Field::new(field.field_name.as_str(), &field.field_type.field_type);
+                f.annotation(vec!["pub"]);
+                struct_t.push_field(f);
             }
         }
 
