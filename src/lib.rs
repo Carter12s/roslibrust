@@ -35,7 +35,7 @@ pub trait RosMessageType: 'static + DeserializeOwned + Default + Send + Sync + C
 pub struct Client {
     stream: Stream,
     subscriptions: HashMap<String, Subscription>,
-    url: &'static str,
+    url: String,
 }
 
 impl Client {
@@ -44,7 +44,7 @@ impl Client {
     /// When awaited will not resolve until connection is completed
     // TODO better error handling
     // TODO spawn spin task here?
-    pub async fn new(url: &'static str) -> Result<Client, Box<dyn Error>> {
+    pub async fn new(url: String) -> Result<Client, Box<dyn Error>> {
         Ok(Client {
             stream: Client::stubborn_connect(url.to_string()).await,
             subscriptions: HashMap::new(),
@@ -144,6 +144,15 @@ impl Client {
                             warn!("Unhandled op type {}", op)
                         }
                     }
+                }
+                Message::Close(close) => {
+                    panic!("Close requested from server");
+                }
+                Message::Ping(ping) => {
+                    debug!("Ping received");
+                }
+                Message::Pong(pong) => {
+                    debug!("Pong received");
                 }
                 _ => {
                     panic!("Non-text response received");
