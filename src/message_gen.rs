@@ -12,19 +12,28 @@ use super::util;
 Note: Dear god, I tried to use &str in these parse structs. It was painful...
  */
 
+/// Describes the type for an individual field in a message
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct FieldType {
+    // Present when an externally referenced package is used
+    // Note: support for messages within same package is spotty...
     package_name: Option<String>,
+    // Explicit text of type without array specifier
     field_type: String,
+    // true iff "[]" or "[#]" are found
+    // Note: no support for fixed size arrays yet
     is_vec: bool,
 }
 
+/// Describes all information for an individual field
 #[derive(PartialEq, Debug)]
 pub struct FieldInfo {
     field_type: FieldType,
     field_name: String,
 }
 
+/// Describes all information for a constant within a message
+/// Note: Constants are not fully supported yet (waiting on codegen support)
 #[derive(PartialEq, Debug)]
 pub struct ConstantInfo {
     constant_type: String,
@@ -32,9 +41,11 @@ pub struct ConstantInfo {
     constant_value: String,
 }
 
+/// Describes all information for a single message file
 #[derive(PartialEq, Debug)]
 pub struct MessageFile {
     name: String,
+    package: String,
     fields: Vec<FieldInfo>,
     constants: Vec<ConstantInfo>,
 }
@@ -52,7 +63,8 @@ pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path) {
     while let Some(entry) = files.pop_front() {
         let file = fs::read_to_string(&entry).expect("Could not read file.");
         let name = entry.file_stem().unwrap().to_str().unwrap().to_string();
-        let parse_result = parse_ros_message_file(file, name.clone());
+        let package = util::find_package_from_path(&entry);
+        let parse_result = parse_ros_message_file(file, name.clone(), package);
 
         // Resolve remotes
         // TODO could be nice iterator way of doing this
@@ -97,11 +109,12 @@ pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path) {
 }
 
 /// Converts a ros message file into a struct representation
-fn parse_ros_message_file(data: String, name: String) -> MessageFile {
+fn parse_ros_message_file(data: String, name: String, package: String) -> MessageFile {
     let mut result = MessageFile {
         fields: vec![],
         constants: vec![],
         name,
+        package,
     };
     for line in data.lines() {
         let line = strip_comments(line).trim();
@@ -109,26 +122,36 @@ fn parse_ros_message_file(data: String, name: String) -> MessageFile {
             // Comment only line skip
             continue;
         }
-        let equal_i = line.find('=');
-        if let Some(_equal_i) = equal_i {
-            warn!("Constants not supported yet: {} will be omitted", line);
-            continue;
-        }
 
-        let mut splitter = line.split_whitespace();
-        let field_type = splitter.next().expect("Did not find field_type on line.");
-        let field_type = ros_type_to_rust(field_type);
-        let field_name = splitter.next().expect("Did not find field_name on line.");
-        if let Some(extra) = splitter.next() {
-            panic!(
-                "Extra data detected on line past field_name: {}\n source_line: {}",
-                extra, line
-            );
+        let equal_i = line.find('=');
+        if let Some(equal_i) = equal_i {
+            let sep = line.find(' ').unwrap();
+            let mut constant_type = ros_type_to_rust(line[..sep].trim()).field_type;
+            let constant_name = line[sep + 1..equal_i].trim().to_string();
+            // Handling dumb case here, TODO find better spot
+            if constant_type == "String" {
+                constant_type = "&'static str".to_string();
+            }
+
+            let constant_value = line[equal_i + 1..].trim().to_string();
+            // Is a constant
+            result.constants.push(ConstantInfo {
+                // NOTE: Bug here, no idea how to support constant vectors etc...
+                constant_type,
+                constant_name,
+                constant_value,
+            })
+        } else {
+            // Is regular field
+            let mut splitter = line.split_whitespace();
+            let field_type = splitter.next().expect("Did not find field_type on line.");
+            let field_type = ros_type_to_rust(field_type);
+            let field_name = splitter.next().expect("Did not find field_name on line.");
+            result.fields.push(FieldInfo {
+                field_type,
+                field_name: field_name.to_string(),
+            });
         }
-        result.fields.push(FieldInfo {
-            field_type,
-            field_name: field_name.to_string(),
-        });
     }
     result
 }
@@ -147,6 +170,7 @@ fn strip_comments(line: &str) -> &str {
 pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>) -> String {
     let mut scope = Scope::new();
     scope.import("serde", "{Deserialize,Serialize}");
+    scope.import("roslibrust", "RosMessageType");
     for (_name, file) in &msg_files {
         let struct_t = scope
             .new_struct(file.name.as_str())
@@ -165,6 +189,7 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>) -> String {
                     field.field_name.as_str(),
                     format!("Vec<{}>", &field.field_type.field_type),
                 );
+                // TODO I don't think annotations should be used for this...
                 f.annotation(vec!["pub"]);
                 struct_t.push_field(f);
             } else {
@@ -175,11 +200,24 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>) -> String {
             }
         }
 
-        // TODO disabled for now, feature pending on codegen lib
-        // for constant in &file.constants {
-        // https://github.com/carllerche/codegen/issues/27
-        // struct_t.field(constant.constant_name, &constant.constant_type);
-        // }
+        // Implement ros message type
+        let mut imp = scope.new_impl(file.name.as_str());
+        imp.impl_trait("RosMessageType");
+        imp.associate_const(
+            "ROS_TYPE_NAME",
+            "&'static str",
+            &["\"", &file.package, "/", &file.name, "\""].join(""),
+        );
+
+        // Implement associated constants, TODO: Enums?
+        let mut imp = scope.new_impl(file.name.as_str());
+        for constant in &file.constants {
+            imp.associate_const(
+                constant.constant_name.as_str(),
+                constant.constant_type.clone(),
+                constant.constant_value.as_str(),
+            );
+        }
     }
     scope.to_string()
 }
