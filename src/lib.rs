@@ -10,6 +10,7 @@ use futures::{SinkExt, StreamExt};
 use log::*;
 use serde::de::DeserializeOwned;
 use serde_json::{json, Value};
+use std::fmt::Debug;
 use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
 use tokio_tungstenite::tungstenite::client::AutoStream;
@@ -27,7 +28,9 @@ struct Subscription {
 
 /// Fundamental traits for message types this works with
 /// This trait will be satisfied for any types generate with this crate's message_gen
-pub trait RosMessageType: 'static + DeserializeOwned + Default + Send + Sync + Clone {
+pub trait RosMessageType:
+    'static + DeserializeOwned + Default + Send + Sync + Clone + Debug
+{
     const ROS_TYPE_NAME: &'static str;
 }
 
@@ -88,7 +91,17 @@ impl Client {
         // Move the tx into a callback that takes raw string data
         // This allows us to store the callbacks generic on type, Msg conversion is embedded here
         let send_cb = Box::new(move |data: &str| {
-            let converted: Msg = serde_json::from_str(data).unwrap();
+            let converted = serde_json::from_str(data);
+            // TODO makes sense for callback to return Result<>, instead of this handling
+            if converted.is_err() {
+                error!(
+                    "Failed to deserialize ros message: {:?}. Message will be skipped!",
+                    converted.err().unwrap()
+                );
+                return;
+            }
+            let converted = converted.unwrap();
+
             tx.broadcast(converted);
         });
 
