@@ -51,7 +51,8 @@ pub struct MessageFile {
 }
 
 /// Generates rust files (.rs) containing type representing the ros messages
-pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path) {
+/// @param local Used to indicate if generate file should reference roslibrust as 'crate'
+pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path, local: bool) {
     // Parsing is implemented as iterative queue consumers
     // Multiple sequential queues Load Files -> Parse Files -> Resolve Remotes
     // Resolving remotes can add more more files to the load queue
@@ -102,7 +103,7 @@ pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path) {
         parsed.insert(name.clone(), parse_result);
     }
 
-    let code = generate_rust(parsed);
+    let code = generate_rust(parsed, local);
     let mut file = std::fs::File::create(out_file).expect("Could not open output file.");
     file.write_all(code.as_bytes())
         .expect("Failed to write to file");
@@ -167,10 +168,18 @@ fn strip_comments(line: &str) -> &str {
 /// From a list of struct representations of ros msg files, generates a resulting rust module as
 /// a string.
 // TODO should this be public?
-pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>) -> String {
+pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> String {
     let mut scope = Scope::new();
+
+    // Required imports
     scope.import("serde", "{Deserialize,Serialize}");
-    scope.import("roslibrust", "RosMessageType");
+    if !local {
+        scope.import("roslibrust", "RosMessageType");
+    } else {
+        scope.import("crate", "RosMessageType");
+    }
+
+    // For each message type
     for (_name, file) in &msg_files {
         let struct_t = scope
             .new_struct(file.name.as_str())
@@ -190,6 +199,7 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>) -> String {
                     format!("Vec<{}>", &field.field_type.field_type),
                 );
                 // TODO I don't think annotations should be used for this...
+                // Crate not offering me an alternative yet...
                 f.annotation(vec!["pub"]);
                 struct_t.push_field(f);
             } else {

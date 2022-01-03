@@ -1,5 +1,11 @@
+// Contains tools for generating message definitions from ROS1 .msg and .srv files
 pub mod message_gen;
+// Utilities functions primarily for working with ros env vars and package structures
 pub mod util;
+
+// Contains generated messages created by message_gen from the test_msgs directory
+// TODO look into restricting visilbity of this... #[cfg(test)] and pub(crate) not working as needed
+pub mod test_msgs;
 
 use std::collections::HashMap;
 use std::error::Error;
@@ -9,16 +15,19 @@ use futures::future::BoxFuture;
 use futures::{SinkExt, StreamExt};
 use log::*;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use serde_json::{json, Value};
+use std::borrow::BorrowMut;
 use std::fmt::Debug;
+use std::ops::Deref;
+use std::sync::{Arc, RwLock};
 use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
-use tokio_tungstenite::tungstenite::client::AutoStream;
 use tokio_tungstenite::*;
 use tungstenite::Message;
 
 type Callback = Box<dyn Fn(&str) -> () + Send>;
-type Stream = Box<tokio_tungstenite::WebSocketStream<TcpStream>>;
+type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
 
 struct Subscription {
     pub handles: Vec<Callback>,
@@ -29,15 +38,17 @@ struct Subscription {
 /// Fundamental traits for message types this works with
 /// This trait will be satisfied for any types generate with this crate's message_gen
 pub trait RosMessageType:
-    'static + DeserializeOwned + Default + Send + Sync + Clone + Debug
+    'static + DeserializeOwned + Default + Send + Serialize + Sync + Clone + Debug
 {
     const ROS_TYPE_NAME: &'static str;
 }
 
 /// Holds a single websocket connection, requests will be processed by a spin_once or spin() call.
+#[derive(Clone)]
 pub struct Client {
-    stream: Stream,
-    subscriptions: HashMap<String, Subscription>,
+    // Note: assuming stream doesn't need an RwLock because of AsyncWrite / AsyncRead traits
+    stream: Arc<RwLock<Stream>>,
+    subscriptions: Arc<RwLock<HashMap<String, Subscription>>>,
     url: String,
 }
 
@@ -47,16 +58,26 @@ impl Client {
     /// When awaited will not resolve until connection is completed
     // TODO better error handling
     // TODO spawn spin task here?
-    pub async fn new(url: String) -> Result<Client, Box<dyn Error>> {
-        Ok(Client {
-            stream: Client::stubborn_connect(url.to_string()).await,
-            subscriptions: HashMap::new(),
+    pub async fn new<S: Into<String>>(url: S) -> Result<Client, Box<dyn Error>> {
+        let url = url.into();
+        let client = Client {
+            stream: Arc::new(RwLock::new(Client::stubborn_connect(url.clone()).await)),
+            subscriptions: Arc::new(RwLock::new(HashMap::new())),
             url,
-        })
+        };
+
+        // Spawn the spin task
+        let client_copy = client.clone();
+        let _jh = tokio::task::spawn(client_copy.stubborn_spin());
+
+        Ok(client)
     }
 
     /// Subscribe to a given topic expecting msgs of provided type
-    pub async fn subscribe<Msg>(&mut self, topic_name: &str) -> tokio::sync::watch::Receiver<Msg>
+    pub async fn subscribe<Msg>(
+        &mut self,
+        topic_name: &str,
+    ) -> Result<tokio::sync::watch::Receiver<Msg>, Box<dyn std::error::Error>>
     where
         Msg: RosMessageType,
     {
@@ -85,8 +106,12 @@ impl Client {
         // Create a new watch channel for this topic
         let (tx, mut rx) = tokio::sync::watch::channel(Msg::default());
 
-        // Do a dummy  recieve to purge the default... watch feels like wrong choice again...
-        let x = rx.recv().await;
+        // Do a dummy receive to purge the default... watch feels like wrong choice again...
+        let _ = rx.changed().await?;
+        {
+            // Mark the value as received
+            let x = rx.borrow_and_update();
+        }
 
         // Move the tx into a callback that takes raw string data
         // This allows us to store the callbacks generic on type, Msg conversion is embedded here
@@ -102,14 +127,14 @@ impl Client {
             }
             let converted = converted.unwrap();
 
-            tx.broadcast(converted);
+            tx.send(converted);
         });
 
         // Store callback
         cbs.handles.push(send_cb);
 
         // Return a subscription handle
-        rx
+        Ok(rx)
     }
 
     pub async fn unsubscribe(&mut self, topic_name: &str) {
@@ -128,13 +153,17 @@ impl Client {
     pub async fn spin(&mut self) -> Result<(), Box<dyn Error>> {
         debug!("Start spin");
         loop {
-            let read = self.stream.next().await;
+            let read = {
+                let mut stream = self.stream.write().unwrap();
+                stream.next().await
+            };
             let read = match read {
                 Some(r) => r?,
                 None => {
+                    // TODO can we do better than using SimpleError? Define our own?
                     return Err(Box::new(simple_error::SimpleError::new(
                         "WTF does none mean here?",
-                    )))
+                    )));
                 }
             };
             match read {
@@ -159,13 +188,15 @@ impl Client {
                     }
                 }
                 Message::Close(close) => {
-                    panic!("Close requested from server");
+                    // TODO how should we respond to this?
+                    // How do we represent connection status via our API well?
+                    panic!("Close requested from server: {:?}", close);
                 }
                 Message::Ping(ping) => {
-                    debug!("Ping received");
+                    debug!("Ping received: {:?}", ping);
                 }
                 Message::Pong(pong) => {
-                    debug!("Pong received");
+                    debug!("Pong received {:?}", pong);
                 }
                 _ => {
                     panic!("Non-text response received");
@@ -175,23 +206,36 @@ impl Client {
     }
 
     /// Wraps spin in retry logic to handle reconnections automagically
-    pub async fn stubborn_spin(&mut self) -> Result<(), Box<dyn Error>> {
+    pub async fn stubborn_spin(mut self) -> Result<(), Box<dyn Error + Send>> {
         debug!("Starting stubborn_spin");
         loop {
-            let res = self.spin().await;
-            if res.is_err() {
-                warn!(
-                    "Spin failed with error: {}, attempting to reconnect",
-                    res.err().unwrap()
-                );
-            } else {
-                panic!("Spin should not exit cleanly?");
+            {
+                let res = self.spin().await;
+                if res.is_err() {
+                    warn!(
+                        "Spin failed with error: {}, attempting to reconnect",
+                        res.err().unwrap()
+                    );
+                } else {
+                    panic!("Spin should not exit cleanly?");
+                }
             }
             // Reconnect stream
-            self.stream = Client::stubborn_connect(self.url.to_string()).await;
+            self.stream = Arc::new(RwLock::new(
+                Client::stubborn_connect(self.url.to_string()).await,
+            ));
+
             // Resend rosbridge our subscription requests to re-establish inflight subscriptions
-            for (topic, sub) in &self.subscriptions {
-                Client::send_subscribe_request(&mut self.stream, &topic, &sub.topic_type).await;
+            // Clone here is dumb, but required due to async
+            let subs: Vec<(String, String)> = {
+                let subs = self.subscriptions.read().unwrap();
+                (*subs)
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.topic_type.clone()))
+                    .collect()
+            };
+            for (topic, topic_type) in &subs {
+                Client::send_subscribe_request(&mut self.stream, topic, topic_type).await;
             }
         }
     }
@@ -221,23 +265,27 @@ impl Client {
         loop {
             let connection_attempt = tokio_tungstenite::connect_async(&url).await;
             if connection_attempt.is_err() {
-                warn!("Failed to reconnect: {}", connection_attempt.err().unwrap());
+                warn!(
+                    "Failed to reconnect: {:?}",
+                    connection_attempt.err().unwrap()
+                );
                 // TODO configurable rate?
-                tokio::time::delay_for(tokio::time::Duration::from_millis(200)).await;
+                tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
                 continue;
             }
             let (stream, _) = connection_attempt.unwrap();
-            return Box::new(stream);
+            return stream;
         }
     }
 
     /// Sends a subscribe request packet to rosbridge
     // Note: doesn't borrow self only stream so we can iterate subscriptions and call simultaneously
     async fn send_subscribe_request(
-        stream: &mut Stream,
+        stream: &Arc<RwLock<Stream>>,
         topic: &String,
         msg_type: &String,
     ) -> Result<(), Box<dyn Error>> {
+        let mut stream = stream.write().unwrap();
         let msg = json!(
         {
         "op": "subscribe",
@@ -247,6 +295,45 @@ impl Client {
         );
         let msg = tungstenite::Message::Text(msg.to_string());
         stream.send(msg).await?;
+        Ok(())
+    }
+
+    pub async fn publish<T, S>(
+        &mut self,
+        topic: S,
+        msg: T,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        T: RosMessageType,
+        S: Into<String>,
+    {
+        let msg = json!(
+            {
+                "op": "publish",
+                "topic": topic.into(),
+                "type": T::ROS_TYPE_NAME,
+                "msg": &msg,
+            }
+        );
+        let msg = tungstenite::Message::Text(msg.to_string());
+        self.stream.send(msg).await?;
+        Ok(())
+    }
+
+    pub async fn advertise<T, S>(&mut self, topic: S) -> Result<(), Box<dyn std::error::Error>>
+    where
+        T: RosMessageType,
+        S: Into<String>,
+    {
+        let msg = json!(
+            {
+                "op": "advertise",
+                "topic": topic.into(),
+                "type": T::ROS_TYPE_NAME,
+            }
+        );
+        let msg = tungstenite::Message::Text(msg.to_string());
+        self.stream.send(msg).await?;
         Ok(())
     }
 
