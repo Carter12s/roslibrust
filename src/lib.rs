@@ -9,20 +9,16 @@ pub mod test_msgs;
 
 use std::collections::HashMap;
 use std::error::Error;
-use tokio::sync::watch;
 
-use futures::future::BoxFuture;
 use futures::{SinkExt, StreamExt};
 use log::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::borrow::BorrowMut;
 use std::fmt::Debug;
-use std::ops::Deref;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use tokio::net::TcpStream;
-use tokio::task::JoinHandle;
+use tokio::sync::RwLock;
 use tokio_tungstenite::*;
 use tungstenite::Message;
 
@@ -68,7 +64,9 @@ impl Client {
 
         // Spawn the spin task
         let client_copy = client.clone();
-        let _jh = tokio::task::spawn(client_copy.stubborn_spin());
+        // Okay we can't do this yet, because somehow doing this breaks Send
+        // I don't understand exactly why quite yet, but it does
+        // let _jh = tokio::task::spawn(client_copy.stubborn_spin());
 
         Ok(client)
     }
@@ -81,13 +79,11 @@ impl Client {
     where
         Msg: RosMessageType,
     {
-        let cbs = self
-            .subscriptions
-            .entry(topic_name.to_string())
-            .or_insert(Subscription {
-                handles: vec![],
-                topic_type: Msg::ROS_TYPE_NAME.to_string(),
-            });
+        let mut lock = self.subscriptions.write().await;
+        let cbs = lock.entry(topic_name.to_string()).or_insert(Subscription {
+            handles: vec![],
+            topic_type: Msg::ROS_TYPE_NAME.to_string(),
+        });
 
         // TODO single place to define rosbridge operations
         // Send subscribe message to rosbridge to initiate it sending us messages
@@ -138,7 +134,7 @@ impl Client {
     }
 
     pub async fn unsubscribe(&mut self, topic_name: &str) {
-        self.subscriptions.remove(topic_name);
+        self.subscriptions.write().await.remove(topic_name);
         let msg = json!(
         {
         "op": "unsubscribe",
@@ -146,7 +142,8 @@ impl Client {
         }
         );
         let msg = tungstenite::Message::Text(msg.to_string());
-        self.stream.send(msg).await;
+        let mut stream = self.stream.write().await;
+        stream.send(msg).await;
     }
 
     /// Core read loop, receives messages from rosbridge and dispatches them.
@@ -154,7 +151,7 @@ impl Client {
         debug!("Start spin");
         loop {
             let read = {
-                let mut stream = self.stream.write().unwrap();
+                let mut stream = self.stream.write().await;
                 stream.next().await
             };
             let read = match read {
@@ -227,13 +224,14 @@ impl Client {
 
             // Resend rosbridge our subscription requests to re-establish inflight subscriptions
             // Clone here is dumb, but required due to async
-            let subs: Vec<(String, String)> = {
-                let subs = self.subscriptions.read().unwrap();
-                (*subs)
-                    .iter()
-                    .map(|(k, v)| (k.clone(), v.topic_type.clone()))
-                    .collect()
-            };
+            let mut subs: Vec<(String, String)> = vec![];
+            {
+                let lock = self.subscriptions.read();
+                let lock = lock.await;
+                for (k, v) in lock.iter() {
+                    subs.push((k.clone(), v.topic_type.clone()))
+                }
+            }
             for (topic, topic_type) in &subs {
                 Client::send_subscribe_request(&mut self.stream, topic, topic_type).await;
             }
@@ -243,10 +241,10 @@ impl Client {
     /// Response handler for received publish messages
     /// Converts the return message to the subscribed type and calls any callbacks
     /// Panics if publish is received for unexpected topic
-    fn handle_publish(&mut self, data: Value) {
-        let callbacks = self
-            .subscriptions
-            .get(data.get("topic").unwrap().as_str().unwrap());
+    async fn handle_publish(&mut self, data: Value) {
+        // TODO lots of error handling!
+        let lock = self.subscriptions.read().await;
+        let callbacks = lock.get(data.get("topic").unwrap().as_str().unwrap());
         let callbacks = match callbacks {
             Some(callbacks) => callbacks,
             _ => panic!("Received publish message for unsubscribed topic!"),
@@ -285,7 +283,7 @@ impl Client {
         topic: &String,
         msg_type: &String,
     ) -> Result<(), Box<dyn Error>> {
-        let mut stream = stream.write().unwrap();
+        let mut stream = stream.write().await;
         let msg = json!(
         {
         "op": "subscribe",
@@ -316,7 +314,8 @@ impl Client {
             }
         );
         let msg = tungstenite::Message::Text(msg.to_string());
-        self.stream.send(msg).await?;
+        let mut stream = self.stream.write().await;
+        stream.send(msg).await?;
         Ok(())
     }
 
@@ -333,7 +332,8 @@ impl Client {
             }
         );
         let msg = tungstenite::Message::Text(msg.to_string());
-        self.stream.send(msg).await?;
+        let mut stream = self.stream.write().await;
+        stream.send(msg).await?;
         Ok(())
     }
 

@@ -357,7 +357,8 @@ mod tests {
             time[3] field
             # Some comment"
                     .to_string(),
-                "name".to_string()
+                "name".to_string(),
+                "package".to_string()
             ),
             MessageFile {
                 fields: vec![
@@ -379,7 +380,8 @@ mod tests {
                     },
                 ],
                 name: "name".to_string(),
-                constants: vec![]
+                constants: vec![],
+                package: "package".to_string(),
             }
         )
     }
