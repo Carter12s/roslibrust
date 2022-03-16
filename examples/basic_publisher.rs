@@ -2,7 +2,7 @@ use log::*;
 use roslibrust::test_msgs::Header;
 use roslibrust::Client;
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
@@ -15,10 +15,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         let msg = Header::default();
-        client.publish("talker", msg).await;
+        info!("About to publish");
+        client.publish("talker", msg).await.unwrap();
         info!("Published msg...");
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
-
-    Ok(())
 }

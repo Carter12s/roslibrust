@@ -18,9 +18,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Successfully subscribed to topic: talker");
 
     loop {
-        client.spin();
-        rx.changed().await;
-        let msg = rx.borrow_and_update();
+        let _ = rx.changed().await;
+        let msg = rx.borrow();
         info!("Got msg: {:?}", msg);
     }
 

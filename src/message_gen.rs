@@ -4,7 +4,6 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use codegen::Scope;
-use log::*;
 
 use super::util;
 
@@ -211,7 +210,7 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> S
         }
 
         // Implement ros message type
-        let mut imp = scope.new_impl(file.name.as_str());
+        let imp = scope.new_impl(file.name.as_str());
         imp.impl_trait("RosMessageType");
         imp.associate_const(
             "ROS_TYPE_NAME",
@@ -220,7 +219,7 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> S
         );
 
         // Implement associated constants, TODO: Enums?
-        let mut imp = scope.new_impl(file.name.as_str());
+        let imp = scope.new_impl(file.name.as_str());
         for constant in &file.constants {
             imp.associate_const(
                 constant.constant_name.as_str(),

@@ -22,7 +22,7 @@ use tokio::sync::RwLock;
 use tokio_tungstenite::*;
 use tungstenite::Message;
 
-type Callback = Box<dyn Fn(&str) -> () + Send>;
+type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
 type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
 
 struct Subscription {
@@ -66,7 +66,7 @@ impl Client {
         let client_copy = client.clone();
         // Okay we can't do this yet, because somehow doing this breaks Send
         // I don't understand exactly why quite yet, but it does
-        // let _jh = tokio::task::spawn(client_copy.stubborn_spin());
+        let _jh = tokio::task::spawn(client_copy.stubborn_spin());
 
         Ok(client)
     }
@@ -80,6 +80,7 @@ impl Client {
         Msg: RosMessageType,
     {
         let mut lock = self.subscriptions.write().await;
+        debug!("Subscribe got write lock");
         let cbs = lock.entry(topic_name.to_string()).or_insert(Subscription {
             handles: vec![],
             topic_type: Msg::ROS_TYPE_NAME.to_string(),
@@ -92,7 +93,7 @@ impl Client {
             &topic_name.to_string(),
             &Msg::ROS_TYPE_NAME.to_string(),
         )
-        .await;
+        .await?;
 
         // TODO we have spsc, so watch is kinda overkill? Buffer of 1 is nice...
         // Note: Type erasure with callback is forcing generating a new channel per subscription
@@ -100,14 +101,7 @@ impl Client {
         // I can't figure out how to store rx's with different types...
         // Trait objects can't
         // Create a new watch channel for this topic
-        let (tx, mut rx) = tokio::sync::watch::channel(Msg::default());
-
-        // Do a dummy receive to purge the default... watch feels like wrong choice again...
-        let _ = rx.changed().await?;
-        {
-            // Mark the value as received
-            let x = rx.borrow_and_update();
-        }
+        let (tx, rx) = tokio::sync::watch::channel(Msg::default());
 
         // Move the tx into a callback that takes raw string data
         // This allows us to store the callbacks generic on type, Msg conversion is embedded here
@@ -123,7 +117,7 @@ impl Client {
             }
             let converted = converted.unwrap();
 
-            tx.send(converted);
+            tx.send(converted).unwrap();
         });
 
         // Store callback
@@ -133,7 +127,11 @@ impl Client {
         Ok(rx)
     }
 
-    pub async fn unsubscribe(&mut self, topic_name: &str) {
+    // TODO don't expose this error type
+    pub async fn unsubscribe(
+        &mut self,
+        topic_name: &str,
+    ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
         self.subscriptions.write().await.remove(topic_name);
         let msg = json!(
         {
@@ -143,7 +141,8 @@ impl Client {
         );
         let msg = tungstenite::Message::Text(msg.to_string());
         let mut stream = self.stream.write().await;
-        stream.send(msg).await;
+        stream.send(msg).await?;
+        Ok(())
     }
 
     /// Core read loop, receives messages from rosbridge and dispatches them.
@@ -152,7 +151,19 @@ impl Client {
         loop {
             let read = {
                 let mut stream = self.stream.write().await;
-                stream.next().await
+                // Okay this is what I want to do, but I can't because this actually block publishes
+                // We have to instead settle for some periodic bullshit.
+                // TODO figure out how to properly duplex the websocket...
+                // stream.next().await
+                match tokio::time::timeout(tokio::time::Duration::from_millis(1), stream.next())
+                    .await
+                {
+                    Ok(read) => read,
+                    Err(_) => {
+                        // Timed out, release mutex so other tasks can use stream
+                        continue;
+                    }
+                }
             };
             let read = match read {
                 Some(r) => r?,
@@ -163,10 +174,12 @@ impl Client {
                     )));
                 }
             };
+            debug!("Got message: {:?}", read);
             match read {
                 Message::Text(text) => {
                     debug!("got message: {}", text);
-                    let parsed: serde_json::Value = serde_json::from_str(text.as_str())?;
+                    // TODO better error handling here serde_json::Error not send
+                    let parsed: serde_json::Value = serde_json::from_str(text.as_str()).unwrap();
                     let parsed_object = parsed
                         .as_object()
                         .expect("Recieved non-object json response");
@@ -177,7 +190,7 @@ impl Client {
                         .expect("Op field was not of string type.");
                     match op {
                         "publish" => {
-                            self.handle_publish(parsed);
+                            self.handle_publish(parsed).await;
                         }
                         _ => {
                             warn!("Unhandled op type {}", op)
@@ -203,7 +216,7 @@ impl Client {
     }
 
     /// Wraps spin in retry logic to handle reconnections automagically
-    pub async fn stubborn_spin(mut self) -> Result<(), Box<dyn Error + Send>> {
+    async fn stubborn_spin(mut self) -> Result<(), Box<dyn Error + Send>> {
         debug!("Starting stubborn_spin");
         loop {
             {
@@ -233,7 +246,10 @@ impl Client {
                 }
             }
             for (topic, topic_type) in &subs {
-                Client::send_subscribe_request(&mut self.stream, topic, topic_type).await;
+                // TODO bubble error up
+                Client::send_subscribe_request(&mut self.stream, topic, topic_type)
+                    .await
+                    .unwrap();
             }
         }
     }
