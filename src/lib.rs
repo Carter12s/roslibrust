@@ -19,7 +19,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::RwLock;
-use tokio::time::{Duration, timeout};
+use tokio::time::{Duration};
 use tokio_tungstenite::*;
 use tungstenite::Message;
 
@@ -44,8 +44,8 @@ pub trait RosMessageType:
 
 // TODO: Potential options to add
 //  * stubborn reconnect interval
-//  * Default internal timeout handling
 //  * Automatic header Seq / Stamp setting
+#[derive(Clone)]
 pub struct ClientOptions {
     url: String,
     timeout: Option<Duration>,
@@ -69,6 +69,7 @@ impl ClientOptions {
     }
 }
 
+
 /// Holds a single websocket connection, requests will be processed by a spin_once or spin() call.
 #[derive(Clone)]
 pub struct Client {
@@ -78,7 +79,21 @@ pub struct Client {
 }
 
 impl Client {
-    async fn _new(opts: ClientOptions) -> Result<Client, Box<dyn Error>> {
+    /// Implementation of timeout that is a no-op if timeout is 0 or unconfigured
+    /// Only works on functions that already return our result type
+    // This might not be needed but reading tokio::timeout docs I couldn't confirm this
+    async fn timeout<F,T>(timeout: Option<Duration>, future: F) -> Result<T, Box<dyn Error>>
+    where
+    F: futures::Future<Output = Result<T, Box<dyn Error>>>,
+    {
+        if let Some(t) = timeout {
+            tokio::time::timeout(t, future).await?
+        }else{
+            future.await
+        }
+    }
+
+    pub async fn _new(opts: ClientOptions) -> Result<Client, Box<dyn Error>>{
         let client = Client {
             stream: Arc::new(RwLock::new(Client::stubborn_connect(opts.url.clone()).await)),
             subscriptions: Arc::new(RwLock::new(HashMap::new())),
@@ -95,11 +110,8 @@ impl Client {
     }
 
     pub async fn new_with_options(opts: ClientOptions) -> Result<Client, Box<dyn Error>>{
-        if let Some(t) = opts.timeout {
-            timeout(t, Client::_new(opts)).await?
-        }else{
-            Client::_new(opts).await
-        }
+        // TODO clone here is dumb but was most ergonomic option I found
+        Client::timeout(opts.timeout, Client::_new(opts)).await
     }
 
     /// Connects a rosbridge instance at the given url
@@ -171,11 +183,7 @@ impl Client {
     where
         Msg: RosMessageType,
     {
-        if let Some(t) = self.opts.timeout {
-            timeout(t, self._subscribe(topic_name)).await?
-        }else{
-            self._subscribe(topic_name).await
-        }
+        Client::timeout(self.opts.timeout, self._subscribe(topic_name)).await
     }
 
     // TODO don't expose this error type
@@ -417,6 +425,9 @@ impl Client {
 }
 
 
+// TODO all tests in this mod require a running rosbridge_server at localhost:9090
+// How to set that up before this module runs?
+// How to test against both rosbridge_1 and rosbridge_2 automagically?
 #[cfg(test)]
 mod general_usage {
     use std::error::Error;
@@ -471,7 +482,7 @@ mod general_usage {
     }
 
     #[tokio::test]
-    async fn default_timeouts_new() {
+    async fn timeouts_new() {
         // Intentionally a port where there won't be a server at
         let opts = ClientOptions::new("ws://localhost:666").timeout(TIMEOUT);
         assert!(Client::new_with_options(opts).await.is_err());
@@ -482,5 +493,8 @@ mod general_usage {
         let opts = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
         assert!(Client::new_with_options(opts).await.is_ok());
     }
+
+    #[tokio::test]
+    async fn timeouts_subscribe() {}
 
 }
