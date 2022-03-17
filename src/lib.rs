@@ -429,6 +429,7 @@ impl Client {
 // How to set that up before this module runs?
 // How to test against both rosbridge_1 and rosbridge_2 automagically?
 #[cfg(test)]
+#[cfg(running_bridge)]
 mod general_usage {
     use crate::test_msgs::Header;
     use crate::{Client, ClientOptions};
