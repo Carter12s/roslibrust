@@ -1,0 +1,4 @@
+rosbridge:
+  image: joaquingimenez1/noetic-rosbridge:1.1.2
+  ports:
+    - 9090:9090

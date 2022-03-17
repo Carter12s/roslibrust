@@ -87,6 +87,8 @@ pub fn get_installed_msgs() -> Vec<RosFile> {
 mod tests {
     use super::*;
 
+    //TODO this test only works if you have ROS installed and ROS_PACKAGE_PATH defined
+    //How to test this better?
     #[test]
     fn get_installed_msgs_test() {
         let v = get_installed_msgs();

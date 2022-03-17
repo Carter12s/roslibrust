@@ -16,7 +16,7 @@ impl RosMessageType for Float64Stamped {
 impl Float64Stamped {
 }
 
-#[derive(Deserialize, Serialize, Debug, Default, Clone)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Header {
     pub
     seq: u32,
@@ -101,7 +101,7 @@ impl NodeInfo {
     const STATUS_SHUTDOWN: u8 = 5;
 }
 
-#[derive(Deserialize, Serialize, Debug, Default, Clone)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 pub struct TimeI {
     pub
     secs: u32,

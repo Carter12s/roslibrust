@@ -4,7 +4,7 @@ pub mod message_gen;
 pub mod util;
 
 // Contains generated messages created by message_gen from the test_msgs directory
-// TODO look into restricting visilbity of this... #[cfg(test)] and pub(crate) not working as needed
+// TODO look into restricting visibility of this... #[cfg(test)] and pub(crate) not working as needed
 pub mod test_msgs;
 
 use std::collections::HashMap;
@@ -22,12 +22,13 @@ use tokio::sync::RwLock;
 use tokio_tungstenite::*;
 use tungstenite::Message;
 
+/// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
 type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
 
 struct Subscription {
     pub handles: Vec<Callback>,
-    // Name of ros type (package_name/message_name), used for re-subscribes
+    /// Name of ros type (package_name/message_name), used for re-subscribes
     pub topic_type: String,
 }
 
@@ -42,7 +43,6 @@ pub trait RosMessageType:
 /// Holds a single websocket connection, requests will be processed by a spin_once or spin() call.
 #[derive(Clone)]
 pub struct Client {
-    // Note: assuming stream doesn't need an RwLock because of AsyncWrite / AsyncRead traits
     stream: Arc<RwLock<Stream>>,
     subscriptions: Arc<RwLock<HashMap<String, Subscription>>>,
     url: String,
@@ -146,7 +146,7 @@ impl Client {
     }
 
     /// Core read loop, receives messages from rosbridge and dispatches them.
-    pub async fn spin(&mut self) -> Result<(), Box<dyn Error>> {
+    async fn spin(&mut self) -> Result<(), Box<dyn Error>> {
         debug!("Start spin");
         loop {
             let read = {
@@ -352,10 +352,8 @@ impl Client {
         stream.send(msg).await?;
         Ok(())
     }
-
     /*
     TODO:
-        * Unsubscribe
         * Service call, is this going to need to return a future?
         * Type generation from messages: A) static B) with cargo...
         * Testing?
@@ -363,4 +361,44 @@ impl Client {
             * advertise
             * un-advertise
      */
+}
+
+
+#[cfg(test)]
+mod general_usage {
+    use crate::Client;
+    use tokio::time::timeout;
+    use tokio::time::Duration;
+    use crate::test_msgs::Header;
+
+    /**
+    This test does a round trip publish subscribe for real
+
+    Requires a runnping local rosbridge
+
+    TODO figure out how to automate setting up the needed environment for this
+    */
+    #[tokio::test]
+    async fn self_publish() {
+        // 100ms allowance for connecting so tests still fails
+        let mut client = timeout(Duration::from_millis(100), Client::new("ws://localhost:9090")).await.unwrap().unwrap();
+
+        let topic = "self_publish";
+
+        client.advertise::<Header, _>(topic).await.unwrap();
+        let mut rx = client.subscribe::<Header>(topic).await.unwrap();
+
+        let msg_out = Header {
+            seq: 666,
+            stamp: Default::default(),
+            frame_id: "self_publish".to_string()
+        };
+
+        client.publish(topic, msg_out.clone());
+
+        rx.changed().await;
+        let msg_in = rx.borrow().clone();
+        assert_eq!(msg_in, msg_out);
+    }
+
 }
