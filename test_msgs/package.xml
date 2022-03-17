@@ -1,0 +1,9 @@
+<package format="2">
+  <name>test_msgs</name>
+  <version>1.2.4</version>
+  <description>
+    This package provides foo capability.
+  </description>
+  <maintainer email="carter@notreal.email">Carter</maintainer>
+  <license>BSD</license>
+</package>
