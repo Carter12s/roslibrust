@@ -277,6 +277,16 @@ impl Client {
     /// Connects to websocket at specified URL, retries indefinitely
     async fn stubborn_connect(url: String) -> Stream {
         loop {
+            // TODO had a failure on my system:
+            /*
+            thread 'main' panicked at 'Could not determine the UTC offset on this system.
+            Possible causes are that the time crate does not implement "local_offset_at" on your system, or that you are running in a multi-threaded environment and the time crate is returning "None" from "local_offset_at" to avoid unsafe behaviour.
+            See the time crate's documentation for more information.
+             */
+            // Need to figure out how to not panic if this occurs
+            // Seems potentially to be coming from SimpleLogger?
+            // 100% is coming from SimpleLogger used in examples wtf...
+            // Only origin from this line is the fact that this next line logs internally
             let connection_attempt = tokio_tungstenite::connect_async(&url).await;
             if connection_attempt.is_err() {
                 warn!(
@@ -331,6 +341,7 @@ impl Client {
         );
         let msg = tungstenite::Message::Text(msg.to_string());
         let mut stream = self.stream.write().await;
+        debug!("Publish got write lock on stream");
         stream.send(msg).await?;
         Ok(())
     }
@@ -373,20 +384,34 @@ mod general_usage {
 
     /**
     This test does a round trip publish subscribe for real
-
-    Requires a runnping local rosbridge
-
+    Requires a running local rosbridge
     TODO figure out how to automate setting up the needed environment for this
     */
     #[tokio::test]
     async fn self_publish() {
+        // TODO figure out better logging for tests
+        simple_logger::SimpleLogger::new()
+            .with_level(log::LevelFilter::Debug)
+            // TODO had to remove timestamps here to prevent a panic on my laptop with
+            // "Could not determine UTC offset on this system"
+            // need to investigate futher at some point
+            .without_timestamps()
+            .init()
+            .unwrap();
+
+        const TOPIC: &str = "self_publish";
+        // On my laptop test was ~90% reliable at 10ms
+        const TIMEOUT: Duration = Duration::from_millis(20);
         // 100ms allowance for connecting so tests still fails
-        let mut client = timeout(Duration::from_millis(100), Client::new("ws://localhost:9090")).await.unwrap().unwrap();
+        let mut client = timeout(TIMEOUT, Client::new("ws://localhost:9090")).await.expect("Failed to create client in time").unwrap();
 
-        let topic = "self_publish";
 
-        client.advertise::<Header, _>(topic).await.unwrap();
-        let mut rx = client.subscribe::<Header>(topic).await.unwrap();
+        timeout(TIMEOUT, client.advertise::<Header, _>(TOPIC)).await.expect("Failed to advertise in time").unwrap();
+        let mut rx = timeout(TIMEOUT,client.subscribe::<Header>(TOPIC)).await.expect("Failed to subscribe in time").unwrap();
+
+        // Delay here to allow subscribe to complete before publishing
+        // Test is flaky without it
+        tokio::time::sleep(TIMEOUT).await;
 
         let msg_out = Header {
             seq: 666,
@@ -394,9 +419,9 @@ mod general_usage {
             frame_id: "self_publish".to_string()
         };
 
-        client.publish(topic, msg_out.clone());
+        timeout(TIMEOUT, client.publish(TOPIC, msg_out.clone())).await.expect("Failed to publish in time").unwrap();
 
-        rx.changed().await;
+        timeout(TIMEOUT, rx.changed()).await.expect("Failed to receive in time");
         let msg_in = rx.borrow().clone();
         assert_eq!(msg_in, msg_out);
     }

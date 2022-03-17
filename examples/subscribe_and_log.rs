@@ -6,6 +6,10 @@ use roslibrust::{test_msgs::*, Client};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
+        // TODO had to remove timestamps here to prevent a panic on my laptop with
+        // "Could not determine UTC offset on this system"
+        // need to investigate futher at some point
+        .without_timestamps()
         .init()
         .unwrap();
 
