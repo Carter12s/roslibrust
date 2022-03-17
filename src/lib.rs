@@ -40,6 +40,26 @@ pub trait RosMessageType:
     const ROS_TYPE_NAME: &'static str;
 }
 
+
+// TODO: Potential options to add
+//  * stubborn reconnect interval
+//  * Default internal timeout handling
+//  * Automatic header Seq / Stamp setting
+pub struct ClientOptions {
+    url: String,
+}
+
+impl ClientOptions {
+
+    /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
+    /// URL is required to be set
+    pub fn new<S: Into<String>>(url: S) -> ClientOptions {
+        ClientOptions {
+            url: url.into()
+        }
+    }
+}
+
 /// Holds a single websocket connection, requests will be processed by a spin_once or spin() call.
 #[derive(Clone)]
 pub struct Client {
@@ -49,17 +69,12 @@ pub struct Client {
 }
 
 impl Client {
-    /// Connects a rosbridge instance at the given url
-    /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
-    /// When awaited will not resolve until connection is completed
-    // TODO better error handling
-    // TODO spawn spin task here?
-    pub async fn new<S: Into<String>>(url: S) -> Result<Client, Box<dyn Error>> {
-        let url = url.into();
+
+    pub async fn new_with_options(opts: ClientOptions) -> Result<Client, Box<dyn Error>>{
         let client = Client {
-            stream: Arc::new(RwLock::new(Client::stubborn_connect(url.clone()).await)),
+            stream: Arc::new(RwLock::new(Client::stubborn_connect(opts.url.clone()).await)),
             subscriptions: Arc::new(RwLock::new(HashMap::new())),
-            url,
+            url: opts.url
         };
 
         // Spawn the spin task
@@ -69,6 +84,15 @@ impl Client {
         let _jh = tokio::task::spawn(client_copy.stubborn_spin());
 
         Ok(client)
+    }
+
+    /// Connects a rosbridge instance at the given url
+    /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
+    /// When awaited will not resolve until connection is completed
+    // TODO better error handling
+    // TODO spawn spin task here?
+    pub async fn new<S: Into<String>>(url: S) -> Result<Client, Box<dyn Error>> {
+        Client::new_with_options(ClientOptions::new(url)).await
     }
 
     /// Subscribe to a given topic expecting msgs of provided type
@@ -381,6 +405,7 @@ mod general_usage {
     use tokio::time::timeout;
     use tokio::time::Duration;
     use crate::test_msgs::Header;
+    const LOCAL_WS: &str = "ws://localhost:9090";
 
     /**
     This test does a round trip publish subscribe for real
@@ -403,7 +428,7 @@ mod general_usage {
         // On my laptop test was ~90% reliable at 10ms
         const TIMEOUT: Duration = Duration::from_millis(20);
         // 100ms allowance for connecting so tests still fails
-        let mut client = timeout(TIMEOUT, Client::new("ws://localhost:9090")).await.expect("Failed to create client in time").unwrap();
+        let mut client = timeout(TIMEOUT, Client::new(LOCAL_WS)).await.expect("Failed to create client in time").unwrap();
 
 
         timeout(TIMEOUT, client.advertise::<Header, _>(TOPIC)).await.expect("Failed to advertise in time").unwrap();
@@ -424,6 +449,12 @@ mod general_usage {
         timeout(TIMEOUT, rx.changed()).await.expect("Failed to receive in time");
         let msg_in = rx.borrow().clone();
         assert_eq!(msg_in, msg_out);
+    }
+
+    #[tokio::test]
+    async fn unsubscribe_resubscribe() {
+
+
     }
 
 }
