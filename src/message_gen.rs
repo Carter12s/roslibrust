@@ -51,14 +51,15 @@ pub struct MessageFile {
 
 /// Generates rust files (.rs) containing type representing the ros messages
 /// @param local Used to indicate if generate file should reference roslibrust as 'crate'
-pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path, local: bool) {
+//TODO error type here
+pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path, local: bool) -> Result<(), Box<dyn std::error::Error>>{
     // Parsing is implemented as iterative queue consumers
     // Multiple sequential queues Load Files -> Parse Files -> Resolve Remotes
     // Resolving remotes can add more more files to the load queue
     // Iteration is continued until load queue is depleted
     let mut files = VecDeque::from(files);
     let mut parsed: BTreeMap<String, MessageFile> = BTreeMap::new();
-    let installed = util::get_installed_msgs();
+    let installed = util::get_installed_msgs()?;
 
     while let Some(entry) = files.pop_front() {
         let file = fs::read_to_string(&entry).expect("Could not read file.");
@@ -106,6 +107,7 @@ pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path, local: bool) {
     let mut file = std::fs::File::create(out_file).expect("Could not open output file.");
     file.write_all(code.as_bytes())
         .expect("Failed to write to file");
+    Ok(())
 }
 
 /// Converts a ros message file into a struct representation

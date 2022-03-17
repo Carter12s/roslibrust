@@ -69,8 +69,8 @@ pub fn recursive_find_action_files(path: &Path) -> Vec<RosFile> {
 }
 
 /// Looks up all messages installed in ros paths
-pub fn get_installed_msgs() -> Vec<RosFile> {
-    let rpp = env::var("ROS_PACKAGE_PATH").expect("ROS_PACKAGE_PATH env var not defined");
+pub fn get_installed_msgs() -> Result<Vec<RosFile>, Box<dyn std::error::Error>> {
+    let rpp = env::var("ROS_PACKAGE_PATH")?;
     let rpp = rpp + concat!(":", env!("CARGO_MANIFEST_DIR"), "/std_msgs");
 
     // Assuming unix path delimiter, please don't ask me to make this work on windows...
@@ -80,7 +80,7 @@ pub fn get_installed_msgs() -> Vec<RosFile> {
     for path in paths {
         res.append(&mut recursive_find_msg_files(Path::new(path)));
     }
-    res
+    Ok(res)
 }
 
 #[cfg(test)]
@@ -91,7 +91,8 @@ mod tests {
     //How to test this better?
     #[test]
     fn get_installed_msgs_test() {
-        let v = get_installed_msgs();
-        print!("Installed msgs: {:?}", v);
+        if let Ok(v) = get_installed_msgs() {
+            print!("Installed msgs: {:?}", v);
+        }
     }
 }
