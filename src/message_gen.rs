@@ -52,7 +52,11 @@ pub struct MessageFile {
 /// Generates rust files (.rs) containing type representing the ros messages
 /// @param local Used to indicate if generate file should reference roslibrust as 'crate'
 //TODO error type here
-pub fn generate_messages(files: Vec<PathBuf>, out_file: &Path, local: bool) -> Result<(), Box<dyn std::error::Error>>{
+pub fn generate_messages(
+    files: Vec<PathBuf>,
+    out_file: &Path,
+    local: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Parsing is implemented as iterative queue consumers
     // Multiple sequential queues Load Files -> Parse Files -> Resolve Remotes
     // Resolving remotes can add more more files to the load queue

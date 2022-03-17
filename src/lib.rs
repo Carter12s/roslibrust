@@ -19,7 +19,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::RwLock;
-use tokio::time::{Duration};
+use tokio::time::Duration;
 use tokio_tungstenite::*;
 use tungstenite::Message;
 
@@ -41,7 +41,6 @@ pub trait RosMessageType:
     const ROS_TYPE_NAME: &'static str;
 }
 
-
 // TODO: Potential options to add
 //  * stubborn reconnect interval
 //  * Automatic header Seq / Stamp setting
@@ -52,7 +51,6 @@ pub struct ClientOptions {
 }
 
 impl ClientOptions {
-
     /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
     /// URL is required to be set
     pub fn new<S: Into<String>>(url: S) -> ClientOptions {
@@ -69,7 +67,6 @@ impl ClientOptions {
     }
 }
 
-
 /// Holds a single websocket connection, requests will be processed by a spin_once or spin() call.
 #[derive(Clone)]
 pub struct Client {
@@ -82,20 +79,22 @@ impl Client {
     /// Implementation of timeout that is a no-op if timeout is 0 or unconfigured
     /// Only works on functions that already return our result type
     // This might not be needed but reading tokio::timeout docs I couldn't confirm this
-    async fn timeout<F,T>(timeout: Option<Duration>, future: F) -> Result<T, Box<dyn Error>>
+    async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> Result<T, Box<dyn Error>>
     where
-    F: futures::Future<Output = Result<T, Box<dyn Error>>>,
+        F: futures::Future<Output = Result<T, Box<dyn Error>>>,
     {
         if let Some(t) = timeout {
             tokio::time::timeout(t, future).await?
-        }else{
+        } else {
             future.await
         }
     }
 
-    pub async fn _new(opts: ClientOptions) -> Result<Client, Box<dyn Error>>{
+    pub async fn _new(opts: ClientOptions) -> Result<Client, Box<dyn Error>> {
         let client = Client {
-            stream: Arc::new(RwLock::new(Client::stubborn_connect(opts.url.clone()).await)),
+            stream: Arc::new(RwLock::new(
+                Client::stubborn_connect(opts.url.clone()).await,
+            )),
             subscriptions: Arc::new(RwLock::new(HashMap::new())),
             opts: Arc::new(opts),
         };
@@ -109,7 +108,7 @@ impl Client {
         Ok(client)
     }
 
-    pub async fn new_with_options(opts: ClientOptions) -> Result<Client, Box<dyn Error>>{
+    pub async fn new_with_options(opts: ClientOptions) -> Result<Client, Box<dyn Error>> {
         // TODO clone here is dumb but was most ergonomic option I found
         Client::timeout(opts.timeout, Client::_new(opts)).await
     }
@@ -122,9 +121,11 @@ impl Client {
         Client::new_with_options(ClientOptions::new(url)).await
     }
 
-    async fn _subscribe<Msg>(&mut self, topic_name: &str)
-    -> Result<tokio::sync::watch::Receiver<Msg>, Box<dyn std::error::Error>>
-        where
+    async fn _subscribe<Msg>(
+        &mut self,
+        topic_name: &str,
+    ) -> Result<tokio::sync::watch::Receiver<Msg>, Box<dyn std::error::Error>>
+    where
         Msg: RosMessageType,
     {
         let mut lock = self.subscriptions.write().await;
@@ -141,7 +142,7 @@ impl Client {
             &topic_name.to_string(),
             &Msg::ROS_TYPE_NAME.to_string(),
         )
-            .await?;
+        .await?;
 
         // TODO we have spsc, so watch is kinda overkill? Buffer of 1 is nice...
         // Note: Type erasure with callback is forcing generating a new channel per subscription
@@ -424,17 +425,16 @@ impl Client {
     }
 }
 
-
 // TODO all tests in this mod require a running rosbridge_server at localhost:9090
 // How to set that up before this module runs?
 // How to test against both rosbridge_1 and rosbridge_2 automagically?
 #[cfg(test)]
 mod general_usage {
-    use std::error::Error;
+    use crate::test_msgs::Header;
     use crate::{Client, ClientOptions};
+    use std::error::Error;
     use tokio::time::timeout;
     use tokio::time::Duration;
-    use crate::test_msgs::Header;
     const LOCAL_WS: &str = "ws://localhost:9090";
     // On my laptop test was ~90% reliable at 10ms
     const TIMEOUT: Duration = Duration::from_millis(20);
@@ -458,11 +458,19 @@ mod general_usage {
 
         const TOPIC: &str = "self_publish";
         // 100ms allowance for connecting so tests still fails
-        let mut client = timeout(TIMEOUT, Client::new(LOCAL_WS)).await.expect("Failed to create client in time").unwrap();
+        let mut client = timeout(TIMEOUT, Client::new(LOCAL_WS))
+            .await
+            .expect("Failed to create client in time")
+            .unwrap();
 
-
-        timeout(TIMEOUT, client.advertise::<Header, _>(TOPIC)).await.expect("Failed to advertise in time").unwrap();
-        let mut rx = timeout(TIMEOUT,client.subscribe::<Header>(TOPIC)).await.expect("Failed to subscribe in time").unwrap();
+        timeout(TIMEOUT, client.advertise::<Header, _>(TOPIC))
+            .await
+            .expect("Failed to advertise in time")
+            .unwrap();
+        let mut rx = timeout(TIMEOUT, client.subscribe::<Header>(TOPIC))
+            .await
+            .expect("Failed to subscribe in time")
+            .unwrap();
 
         // Delay here to allow subscribe to complete before publishing
         // Test is flaky without it
@@ -471,12 +479,17 @@ mod general_usage {
         let msg_out = Header {
             seq: 666,
             stamp: Default::default(),
-            frame_id: "self_publish".to_string()
+            frame_id: "self_publish".to_string(),
         };
 
-        timeout(TIMEOUT, client.publish(TOPIC, msg_out.clone())).await.expect("Failed to publish in time").unwrap();
+        timeout(TIMEOUT, client.publish(TOPIC, msg_out.clone()))
+            .await
+            .expect("Failed to publish in time")
+            .unwrap();
 
-        timeout(TIMEOUT, rx.changed()).await.expect("Failed to receive in time");
+        timeout(TIMEOUT, rx.changed())
+            .await
+            .expect("Failed to receive in time");
         let msg_in = rx.borrow().clone();
         assert_eq!(msg_in, msg_out);
     }
@@ -496,5 +509,4 @@ mod general_usage {
 
     #[tokio::test]
     async fn timeouts_subscribe() {}
-
 }
