@@ -19,6 +19,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::RwLock;
+use tokio::time::{Duration, timeout};
 use tokio_tungstenite::*;
 use tungstenite::Message;
 
@@ -47,6 +48,7 @@ pub trait RosMessageType:
 //  * Automatic header Seq / Stamp setting
 pub struct ClientOptions {
     url: String,
+    timeout: Option<Duration>,
 }
 
 impl ClientOptions {
@@ -55,8 +57,15 @@ impl ClientOptions {
     /// URL is required to be set
     pub fn new<S: Into<String>>(url: S) -> ClientOptions {
         ClientOptions {
-            url: url.into()
+            url: url.into(),
+            timeout: None,
         }
+    }
+
+    /// Configures a default timeout for all operations
+    pub fn timeout<T: Into<Duration>>(mut self, duration: T) -> ClientOptions {
+        self.timeout = Some(duration.into());
+        self
     }
 }
 
@@ -65,16 +74,15 @@ impl ClientOptions {
 pub struct Client {
     stream: Arc<RwLock<Stream>>,
     subscriptions: Arc<RwLock<HashMap<String, Subscription>>>,
-    url: String,
+    opts: Arc<ClientOptions>,
 }
 
 impl Client {
-
-    pub async fn new_with_options(opts: ClientOptions) -> Result<Client, Box<dyn Error>>{
+    async fn _new(opts: ClientOptions) -> Result<Client, Box<dyn Error>> {
         let client = Client {
             stream: Arc::new(RwLock::new(Client::stubborn_connect(opts.url.clone()).await)),
             subscriptions: Arc::new(RwLock::new(HashMap::new())),
-            url: opts.url
+            opts: Arc::new(opts),
         };
 
         // Spawn the spin task
@@ -86,21 +94,25 @@ impl Client {
         Ok(client)
     }
 
+    pub async fn new_with_options(opts: ClientOptions) -> Result<Client, Box<dyn Error>>{
+        if let Some(t) = opts.timeout {
+            timeout(t, Client::_new(opts)).await?
+        }else{
+            Client::_new(opts).await
+        }
+    }
+
     /// Connects a rosbridge instance at the given url
     /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
     /// When awaited will not resolve until connection is completed
     // TODO better error handling
-    // TODO spawn spin task here?
     pub async fn new<S: Into<String>>(url: S) -> Result<Client, Box<dyn Error>> {
         Client::new_with_options(ClientOptions::new(url)).await
     }
 
-    /// Subscribe to a given topic expecting msgs of provided type
-    pub async fn subscribe<Msg>(
-        &mut self,
-        topic_name: &str,
-    ) -> Result<tokio::sync::watch::Receiver<Msg>, Box<dyn std::error::Error>>
-    where
+    async fn _subscribe<Msg>(&mut self, topic_name: &str)
+    -> Result<tokio::sync::watch::Receiver<Msg>, Box<dyn std::error::Error>>
+        where
         Msg: RosMessageType,
     {
         let mut lock = self.subscriptions.write().await;
@@ -117,7 +129,7 @@ impl Client {
             &topic_name.to_string(),
             &Msg::ROS_TYPE_NAME.to_string(),
         )
-        .await?;
+            .await?;
 
         // TODO we have spsc, so watch is kinda overkill? Buffer of 1 is nice...
         // Note: Type erasure with callback is forcing generating a new channel per subscription
@@ -149,6 +161,21 @@ impl Client {
 
         // Return a subscription handle
         Ok(rx)
+    }
+
+    /// Subscribe to a given topic expecting msgs of provided type
+    pub async fn subscribe<Msg>(
+        &mut self,
+        topic_name: &str,
+    ) -> Result<tokio::sync::watch::Receiver<Msg>, Box<dyn std::error::Error>>
+    where
+        Msg: RosMessageType,
+    {
+        if let Some(t) = self.opts.timeout {
+            timeout(t, self._subscribe(topic_name)).await?
+        }else{
+            self._subscribe(topic_name).await
+        }
     }
 
     // TODO don't expose this error type
@@ -256,7 +283,7 @@ impl Client {
             }
             // Reconnect stream
             self.stream = Arc::new(RwLock::new(
-                Client::stubborn_connect(self.url.to_string()).await,
+                Client::stubborn_connect(self.opts.url.to_string()).await,
             ));
 
             // Resend rosbridge our subscription requests to re-establish inflight subscriptions
@@ -387,25 +414,19 @@ impl Client {
         stream.send(msg).await?;
         Ok(())
     }
-    /*
-    TODO:
-        * Service call, is this going to need to return a future?
-        * Type generation from messages: A) static B) with cargo...
-        * Testing?
-        Low priority:
-            * advertise
-            * un-advertise
-     */
 }
 
 
 #[cfg(test)]
 mod general_usage {
-    use crate::Client;
+    use std::error::Error;
+    use crate::{Client, ClientOptions};
     use tokio::time::timeout;
     use tokio::time::Duration;
     use crate::test_msgs::Header;
     const LOCAL_WS: &str = "ws://localhost:9090";
+    // On my laptop test was ~90% reliable at 10ms
+    const TIMEOUT: Duration = Duration::from_millis(20);
 
     /**
     This test does a round trip publish subscribe for real
@@ -425,8 +446,6 @@ mod general_usage {
             .unwrap();
 
         const TOPIC: &str = "self_publish";
-        // On my laptop test was ~90% reliable at 10ms
-        const TIMEOUT: Duration = Duration::from_millis(20);
         // 100ms allowance for connecting so tests still fails
         let mut client = timeout(TIMEOUT, Client::new(LOCAL_WS)).await.expect("Failed to create client in time").unwrap();
 
@@ -452,9 +471,16 @@ mod general_usage {
     }
 
     #[tokio::test]
-    async fn unsubscribe_resubscribe() {
-
-
+    async fn default_timeouts_new() {
+        // Intentionally a port where there won't be a server at
+        let opts = ClientOptions::new("ws://localhost:666").timeout(TIMEOUT);
+        assert!(Client::new_with_options(opts).await.is_err());
+        // Impossibly short to actually work
+        let opts = ClientOptions::new(LOCAL_WS).timeout(Duration::from_nanos(1));
+        assert!(Client::new_with_options(opts).await.is_err());
+        // Doesn't timeout if given enough time
+        let opts = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
+        assert!(Client::new_with_options(opts).await.is_ok());
     }
 
 }
