@@ -1,9 +1,12 @@
 use std::collections::{BTreeMap, VecDeque};
+use std::error::Error;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use crate::util::RosFile;
 use codegen::Scope;
+use log::{debug, warn};
 
 use super::util;
 
@@ -63,12 +66,24 @@ pub fn generate_messages(
     // Iteration is continued until load queue is depleted
     let mut files = VecDeque::from(files);
     let mut parsed: BTreeMap<String, MessageFile> = BTreeMap::new();
-    let installed = util::get_installed_msgs()?;
+    let installed = match util::get_installed_msgs() {
+        Ok(installed) => installed,
+        Err(e) => {
+            warn!("Failed to find installed ros messages: {:?}", e);
+            vec![]
+        }
+    };
 
     while let Some(entry) = files.pop_front() {
+        debug!("Processing {:?}", entry);
         let file = fs::read_to_string(&entry).expect("Could not read file.");
         let name = entry.file_stem().unwrap().to_str().unwrap().to_string();
-        let package = util::find_package_from_path(&entry);
+        let package = match util::find_package_from_path(&entry) {
+            // Use an empty package name if we couldn't find one
+            // TODO this is likely a brittle hack that will break some use cases
+            None => "".to_string(),
+            Some(s) => s,
+        };
         let parse_result = parse_ros_message_file(file, name.clone(), package);
 
         // Resolve remotes
