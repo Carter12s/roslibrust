@@ -1,3 +1,4 @@
+use log::warn;
 use std::env;
 use std::path::{Path, PathBuf};
 use walkdir::{DirEntry, WalkDir};
@@ -21,7 +22,7 @@ pub fn recursive_find_files(path: &Path, predicate: fn(&DirEntry) -> bool) -> Ve
         .filter(|e| predicate(e))
         .map(|e| e.path().to_path_buf())
         .map(|e| {
-            let pkg_name = find_package_from_path(&e);
+            let pkg_name = find_package_from_path(&e).unwrap_or("".to_string());
             RosFile {
                 path: e,
                 package_name: pkg_name,
@@ -32,7 +33,7 @@ pub fn recursive_find_files(path: &Path, predicate: fn(&DirEntry) -> bool) -> Ve
 
 /// Finds package name be walking up directory until package.xml is found
 /// Panics if package.xml is not found
-pub fn find_package_from_path(e: &PathBuf) -> String {
+pub fn find_package_from_path(e: &PathBuf) -> Option<String> {
     let mut package_name: Option<String> = None;
     for dir in e.ancestors() {
         if dir.join("package.xml").exists() {
@@ -46,12 +47,13 @@ pub fn find_package_from_path(e: &PathBuf) -> String {
         }
     }
     if package_name.is_none() {
-        panic!(
+        warn!(
             "Found ros file, but could not determine package name: {:?}",
             e
         );
+        return None;
     }
-    package_name.unwrap()
+    Some(package_name.unwrap())
 }
 
 pub fn recursive_find_msg_files(path: &Path) -> Vec<RosFile> {
