@@ -54,12 +54,22 @@ pub struct MessageFile {
 
 /// Generates rust files (.rs) containing type representing the ros messages
 /// @param local Used to indicate if generate file should reference roslibrust as 'crate'
-//TODO error type here
 pub fn generate_messages(
     files: Vec<PathBuf>,
     out_file: &Path,
     local: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let data = generate_messages_str(files, local)?;
+    std::fs::write(out_file, data)?;
+    Ok(())
+}
+
+/// Generates rust type code for convenient access to messages
+/// returns the generated code as a string
+pub fn generate_messages_str(
+    files: Vec<PathBuf>,
+    local: bool,
+) -> Result<String, Box<dyn std::error::Error>> {
     // Parsing is implemented as iterative queue consumers
     // Multiple sequential queues Load Files -> Parse Files -> Resolve Remotes
     // Resolving remotes can add more more files to the load queue
@@ -123,10 +133,7 @@ pub fn generate_messages(
     }
 
     let code = generate_rust(parsed, local);
-    let mut file = std::fs::File::create(out_file).expect("Could not open output file.");
-    file.write_all(code.as_bytes())
-        .expect("Failed to write to file");
-    Ok(())
+    Ok(code)
 }
 
 /// Converts a ros message file into a struct representation
