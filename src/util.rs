@@ -48,7 +48,7 @@ pub fn find_package_from_path(e: &PathBuf) -> Option<String> {
         }
     }
     if package_name.is_none() {
-        warn!(
+        debug!(
             "Found ros file, but could not determine package name: {:?}",
             e
         );

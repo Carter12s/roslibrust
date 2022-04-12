@@ -191,7 +191,7 @@ pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, Box<dyn st
             // Use an empty package name if we couldn't find one
             // TODO this is likely a brittle hack that will break some use cases
             None => {
-                warn!("Failed to find package for file: {:?} using default", &file);
+                debug!("Failed to find package for file: {:?} using default", &file);
                 if let Some(name) = &opts.default_package {
                     name.clone()
                 } else {
