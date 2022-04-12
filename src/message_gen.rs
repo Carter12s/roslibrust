@@ -12,7 +12,92 @@ use super::util;
 
 /*
 Note: Dear god, I tried to use &str in these parse structs. It was painful...
+TODO revisit, we could make message_gen more efficient with less copies if everything was references
  */
+
+/// Specify how resolution of std_msgs should be handled during generation
+pub enum MsgSource {
+    /// Use std message definitions bundled with this library, this is for use in environments
+    /// without ROS installed
+    Internal,
+    /// Try to find std_msgs using ROS_PACKAGE_PATH, this is the default method
+    /// Generation will fail if messages are not found.
+    Environment,
+}
+
+/// Configurable options for message generation following the builder pattern
+pub struct MessageGenOpts {
+    /// Should `rustfmt` be called on generated file
+    /// ignored when generating to a string
+    format: bool,
+    /// Files to run generation against, all files referenced in a single generation call will be
+    /// bundled into a single output file. Multiple calls to generation can be made if separate
+    /// files are desired
+    targets: Vec<PathBuf>,
+    /// Which source of std_msgs definitions should be used (useful for generation without ros installed)
+    msg_source: MsgSource,
+    // TODO this being optional is slightly awkward... Consider different form...
+    /// Destination file to generate to
+    /// ignored if generating to file
+    destination: Option<PathBuf>,
+
+    //TODO this is a hack and should be removed, but I need it for now
+    /// Defines a default package name to use when package discovery fails
+    /// When given a file we walk up the directory structure looking for package.xml
+    /// However always having a package.xml can be problematic, and it is nice to be able to generate
+    /// on raw message files without them being in a package, so this lets you override that.
+    /// Probably dumb, but fits my needs today - Carter 4/11/22
+    default_package: Option<String>,
+
+    /// Only used for internal testing with the crate
+    /// Generated file will use 'crate' instead of 'roslibrust' when referring to types defined
+    /// in this package
+    //TODO find a better mechanism for this
+    local: bool,
+}
+
+impl MessageGenOpts {
+    pub fn new<T: Into<PathBuf>>(targets: Vec<T>) -> MessageGenOpts {
+        MessageGenOpts {
+            format: true,
+            targets: targets.into_iter().map(|t| t.into()).collect(),
+            msg_source: MsgSource::Environment,
+            local: false,
+            destination: None,
+            default_package: None,
+        }
+    }
+
+    pub fn format(mut self, format: bool) -> MessageGenOpts {
+        self.format = format;
+        self
+    }
+
+    pub fn std_msgs_source(mut self, source: MsgSource) -> MessageGenOpts {
+        self.msg_source = source;
+        self
+    }
+
+    pub fn targets<T: Into<PathBuf>>(mut self, targets: Vec<T>) -> MessageGenOpts {
+        self.targets = targets.into_iter().map(|t| t.into()).collect();
+        self
+    }
+
+    pub fn destination<T: Into<PathBuf>>(mut self, destination: T) -> MessageGenOpts {
+        self.destination = Some(destination.into());
+        self
+    }
+
+    pub fn default_package<S: AsRef<str>>(mut self, package_name: S) -> MessageGenOpts {
+        self.default_package = Some(package_name.as_ref().to_string());
+        self
+    }
+
+    fn local(mut self, local: bool) -> MessageGenOpts {
+        self.local = local;
+        self
+    }
+}
 
 /// Describes the type for an individual field in a message
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
@@ -54,33 +139,47 @@ pub struct MessageFile {
 
 /// Generates rust files (.rs) containing type representing the ros messages
 /// @param local Used to indicate if generate file should reference roslibrust as 'crate'
-pub fn generate_messages(
-    files: Vec<PathBuf>,
-    out_file: &Path,
-    local: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let data = generate_messages_str(files, local)?;
+pub fn generate_messages(opts: &MessageGenOpts) -> Result<(), Box<dyn std::error::Error>> {
+    let data = generate_messages_str(opts)?;
+    let out_file = opts
+        .destination
+        .as_ref()
+        .expect("Attempted to generate to a file without specifying an output file");
     std::fs::write(out_file, data)?;
+    if opts.format {
+        std::process::Command::new("rustfmt")
+            .arg(&out_file)
+            .output()?;
+    }
     Ok(())
 }
 
 /// Generates rust type code for convenient access to messages
 /// returns the generated code as a string
-pub fn generate_messages_str(
-    files: Vec<PathBuf>,
-    local: bool,
-) -> Result<String, Box<dyn std::error::Error>> {
+pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, Box<dyn std::error::Error>> {
     // Parsing is implemented as iterative queue consumers
     // Multiple sequential queues Load Files -> Parse Files -> Resolve Remotes
     // Resolving remotes can add more more files to the load queue
     // Iteration is continued until load queue is depleted
-    let mut files = VecDeque::from(files);
+    let mut files = VecDeque::from(opts.targets.clone());
     let mut parsed: BTreeMap<String, MessageFile> = BTreeMap::new();
-    let installed = match util::get_installed_msgs() {
-        Ok(installed) => installed,
-        Err(e) => {
-            warn!("Failed to find installed ros messages: {:?}", e);
-            vec![]
+    let installed = match opts.msg_source {
+        MsgSource::Environment => match util::get_installed_msgs() {
+            Ok(installed) => {
+                debug!("Using msgs from ROS_PACKAGE_PATH");
+                debug!("Found {} installed msgs", installed.len());
+                installed
+            }
+            Err(e) => {
+                warn!("Failed to find installed ros messages: {:?}", e);
+                vec![]
+            }
+        },
+        MsgSource::Internal => {
+            debug!("Using locally installed msgs");
+            let msgs = util::get_local_msgs();
+            debug!("Found {} locally installed msgs", msgs.len());
+            msgs
         }
     };
 
@@ -91,7 +190,14 @@ pub fn generate_messages_str(
         let package = match util::find_package_from_path(&entry) {
             // Use an empty package name if we couldn't find one
             // TODO this is likely a brittle hack that will break some use cases
-            None => "".to_string(),
+            None => {
+                warn!("Failed to find package for file: {:?} using default", &file);
+                if let Some(name) = &opts.default_package {
+                    name.clone()
+                } else {
+                    "".to_string()
+                }
+            }
             Some(s) => s,
         };
         let parse_result = parse_ros_message_file(file, name.clone(), package);
@@ -132,7 +238,7 @@ pub fn generate_messages_str(
         parsed.insert(name.clone(), parse_result);
     }
 
-    let code = generate_rust(parsed, local);
+    let code = generate_rust(parsed, opts.local);
     Ok(code)
 }
 

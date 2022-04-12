@@ -1,4 +1,4 @@
-use log::warn;
+use log::{debug, warn};
 use std::env;
 use std::path::{Path, PathBuf};
 use walkdir::{DirEntry, WalkDir};
@@ -22,6 +22,7 @@ pub fn recursive_find_files(path: &Path, predicate: fn(&DirEntry) -> bool) -> Ve
         .filter(|e| predicate(e))
         .map(|e| e.path().to_path_buf())
         .map(|e| {
+            debug!("Found installed ros file @ {:?}", &e);
             let pkg_name = find_package_from_path(&e).unwrap_or("".to_string());
             RosFile {
                 path: e,
@@ -32,7 +33,7 @@ pub fn recursive_find_files(path: &Path, predicate: fn(&DirEntry) -> bool) -> Ve
 }
 
 /// Finds package name be walking up directory until package.xml is found
-/// Panics if package.xml is not found
+/// Returns None if package.xml is not found
 pub fn find_package_from_path(e: &PathBuf) -> Option<String> {
     let mut package_name: Option<String> = None;
     for dir in e.ancestors() {
@@ -73,7 +74,7 @@ pub fn recursive_find_action_files(path: &Path) -> Vec<RosFile> {
 /// Looks up all messages installed in ros paths
 pub fn get_installed_msgs() -> Result<Vec<RosFile>, Box<dyn std::error::Error>> {
     let rpp = env::var("ROS_PACKAGE_PATH")?;
-    let rpp = rpp + concat!(":", env!("CARGO_MANIFEST_DIR"), "/std_msgs");
+    let rpp = rpp + concat!(":", env!("CARGO_MANIFEST_DIR"), "local_msgs/std_msgs");
 
     // Assuming unix path delimiter, please don't ask me to make this work on windows...
     let paths = rpp.split(":");
@@ -83,6 +84,14 @@ pub fn get_installed_msgs() -> Result<Vec<RosFile>, Box<dyn std::error::Error>> 
         res.append(&mut recursive_find_msg_files(Path::new(path)));
     }
     Ok(res)
+}
+
+/// Get the locally installed message definitions within the package
+/// This is useful for message generation in environments where ROS is not installed
+pub fn get_local_msgs() -> Vec<RosFile> {
+    let rpp = concat!(env!("CARGO_MANIFEST_DIR"), "/local_msgs");
+    debug!("Looking for locally installed msgs in: {}", &rpp);
+    recursive_find_msg_files(Path::new(rpp))
 }
 
 #[cfg(test)]
