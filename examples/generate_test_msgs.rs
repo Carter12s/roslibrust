@@ -15,8 +15,13 @@ fn main() {
 
     let source_path = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/test_msgs"));
     let dest_path = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/src/test_msgs.rs"));
-    let files = util::recursive_find_msg_files(source_path);
+    // Here we use a utility function to find message files, but then convert to just regular paths
+    let files = util::recursive_find_msg_files(source_path)
+        .into_iter()
+        .map(|f| f.path)
+        .collect();
     info!("Running on files: {:?}", files);
 
-    message_gen::generate_messages(files.into_iter().map(|e| e.path).collect(), dest_path, true);
+    let opts = message_gen::MessageGenOpts::new(files).destination(dest_path);
+    message_gen::generate_messages(&opts).expect("Failed to generate");
 }

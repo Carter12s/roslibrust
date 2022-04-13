@@ -1,4 +1,4 @@
-use log::{debug, warn};
+use log::*;
 use std::env;
 use std::path::{Path, PathBuf};
 use walkdir::{DirEntry, WalkDir};

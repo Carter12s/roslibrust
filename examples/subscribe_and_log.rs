@@ -1,5 +1,5 @@
 use log::*;
-use roslibrust::{test_msgs::*, Client};
+use roslibrust::Client;
 
 /// A basic example of connecting and subscribing to data
 #[tokio::main]
@@ -26,6 +26,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let msg = rx.borrow();
         info!("Got msg: {:?}", msg);
     }
-
-    Ok(())
 }

@@ -1,10 +1,7 @@
 use std::collections::{BTreeMap, VecDeque};
-use std::error::Error;
 use std::fs;
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use crate::util::RosFile;
 use codegen::Scope;
 use log::{debug, warn};
 
@@ -93,7 +90,7 @@ impl MessageGenOpts {
         self
     }
 
-    fn local(mut self, local: bool) -> MessageGenOpts {
+    pub fn local(mut self, local: bool) -> MessageGenOpts {
         self.local = local;
         self
     }
