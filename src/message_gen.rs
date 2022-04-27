@@ -350,13 +350,15 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> S
         );
 
         // Implement associated constants, TODO: Enums?
-        let imp = scope.new_impl(file.name.as_str());
-        for constant in &file.constants {
-            imp.associate_const(
-                constant.constant_name.as_str(),
-                constant.constant_type.clone(),
-                constant.constant_value.as_str(),
-            );
+        if file.constants.len() > 0 {
+            let imp = scope.new_impl(file.name.as_str());
+            for constant in &file.constants {
+                imp.associate_const(
+                    constant.constant_name.as_str(),
+                    constant.constant_type.clone(),
+                    constant.constant_value.as_str(),
+                );
+            }
         }
     }
     scope.to_string()
