@@ -24,3 +24,7 @@ codegen = { git = "https://github.com/carter12s/codegen.git", branch = "associat
 [dev-dependencies]
 # Used for logging in examples
 simple_logger = "1.11.0"
+
+[features]
+# Intended for use with tests, includes tests that rely on a locally running rosbridge
+running_bridge = []

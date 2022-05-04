@@ -318,6 +318,7 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> S
             .derive("Debug")
             .derive("Default")
             .derive("Clone")
+            .derive("PartialEq")
             .vis("pub");
         // TODO we could use doc to move comments from .msg files to rust code
         // TODO we could use package_name to group into modules (would then match name collision rules)

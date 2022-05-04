@@ -430,7 +430,7 @@ impl Client {
 // How to test against both rosbridge_1 and rosbridge_2 automagically?
 #[cfg(test)]
 mod general_usage {
-    use crate::test_msgs::{NodeInfo, Header, self};
+    use crate::test_msgs::{self, Header, NodeInfo};
     use crate::{Client, ClientOptions};
     use std::error::Error;
     use tokio::time::timeout;
@@ -454,7 +454,7 @@ mod general_usage {
     TODO figure out how to automate setting up the needed environment for this
     */
     #[tokio::test]
-    #[cfg(running_bridge)]
+    #[cfg(feature = "running_bridge")]
     async fn self_publish() {
         // TODO figure out better logging for tests
         simple_logger::SimpleLogger::new()
@@ -500,12 +500,13 @@ mod general_usage {
         timeout(TIMEOUT, rx.changed())
             .await
             .expect("Failed to receive in time");
+
         let msg_in = rx.borrow().clone();
         assert_eq!(msg_in, msg_out);
     }
 
     #[tokio::test]
-    #[cfg(running_bridge)]
+    #[cfg(feature = "running_bridge")]
     async fn timeouts_new() {
         // Intentionally a port where there won't be a server at
         let opts = ClientOptions::new("ws://localhost:666").timeout(TIMEOUT);
