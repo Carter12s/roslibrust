@@ -15,11 +15,11 @@ jobs:
     defaults:
       run:
         shell: bash
-    container: carter12s/roslibrust-ci:v0.0.1
+    container: carter12s/roslibrust-ci:v0.0.2
     steps:
     - uses: actions/checkout@v3
-    - name: Debug
-      run: echo $PATH; source /root/.cargo/env; echo $PATH
+    - name: Setup Enviroment Since Github Hates M
+      run: echo $PATH; source /root/.cargo/env; source /opt/ros/noetic/setup.bash; echo $PATH
     - name: Build
       run: source /root/.cargo/env; cargo build
     - name: Unit Tests

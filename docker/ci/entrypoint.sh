@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
+set -a
 
-source "/opt/ros/noetic/setup.bash"
-source "/root/.cargo/env"
+. "/opt/ros/noetic/setup.bash"
+. "/root/.cargo/env"
 
 exec "$@"
