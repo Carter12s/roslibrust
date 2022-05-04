@@ -21,4 +21,5 @@ jobs:
     - name: Wait for server to come up
       run: sleep 1
     - name: Run integration tests
+      shell: bash
       run: cargo test --features running_bridge -- --test-threads 1
