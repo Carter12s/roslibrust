@@ -15,6 +15,8 @@ jobs:
     container: carter12s/roslibrust-ci:v0.0.1
     steps:
     - uses: actions/checkout@v3
+    - name: Debug
+      run: echo $PATH; ls /root/.cargo
     - name: Build
       run: source /root/.cargo/env; cargo build
     - name: Unit Tests
