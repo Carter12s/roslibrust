@@ -1,4 +1,4 @@
-name: Integration
+name: Build
 
 on:
   push:
@@ -20,8 +20,10 @@ jobs:
     - name: Unit Tests
       run: cargo test
     - name: Start rosbridge
-      shell: bash
       run: roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
     - name: Integration Tests
-      shell: bash
       run: cargo test --features running_bridge -- --test-threads 1
+
+defaults:
+  run:
+    shell: bash
