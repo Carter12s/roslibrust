@@ -1,3 +1,5 @@
+[![Rust](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml)
+
 # RosLibRust
 This package aims to provide a convenient intermediary between ROS1's rosbridge and Rust similar to roslibpy.
 
