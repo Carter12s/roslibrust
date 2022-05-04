@@ -16,10 +16,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: source /root/.cargo/env & cargo build
+      run: source /root/.cargo/env; cargo build
     - name: Unit Tests
-      run: source /root/.cargo/env & cargo test
+      run: source /root/.cargo/env; cargo test
     - name: Start rosbridge
       run: roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
     - name: Integration Tests
-      run: source /root/.cargo/env & cargo test --features running_bridge -- --test-threads 1
+      run: source /root/.cargo/env; cargo test --features running_bridge -- --test-threads 1
