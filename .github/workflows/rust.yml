@@ -15,14 +15,14 @@ jobs:
     defaults:
       run:
         shell: bash
-    container: carter12s/roslibrust-ci:v0.0.2
+    container: carter12s/roslibrust-ci:v0.0.3
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: source /root/.cargo/env; cargo build
+      run: cargo build
     - name: Unit Tests
-      run: source /root/.cargo/env; cargo test
+      run: cargo test
     - name: Start rosbridge
-      run: source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
+      run: roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
     - name: Integration Tests
-      run: source /root/.cargo/env; cargo test --features running_bridge -- --test-threads 1
+      run: cargo test --features running_bridge -- --test-threads 1
