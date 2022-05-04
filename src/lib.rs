@@ -437,7 +437,7 @@ mod general_usage {
     use tokio::time::Duration;
     const LOCAL_WS: &str = "ws://localhost:9090";
     // On my laptop test was ~90% reliable at 10ms
-    const TIMEOUT: Duration = Duration::from_millis(20);
+    const TIMEOUT: Duration = Duration::from_millis(100);
 
     /// Ensures that associate constants are generated on the test_msgs correctly
     /// requires test_msgs gen_code to have been generated.
