@@ -1,6 +1,7 @@
-[![Rust](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml)
-
 # RosLibRust
+[![Rust](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml)
+[![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This package aims to provide a convenient intermediary between ROS1's rosbridge and Rust similar to roslibpy.
 
 Information about the protocol can be found [here](https://github.com/RobotWebTools/rosbridge_suite).
