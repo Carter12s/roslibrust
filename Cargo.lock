@@ -61,7 +61,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "codegen"
 version = "0.1.3"
-source = "git+https://github.com/gregdhill/codegen.git?branch=associated-consts#9a41c4e205e25091d760e01302a4d2694853f3b7"
+source = "git+https://github.com/carter12s/codegen.git?branch=associated-consts#a0e829ecad59151bcd2cd7607815de6eb4683c9d"
 dependencies = [
  "indexmap",
 ]

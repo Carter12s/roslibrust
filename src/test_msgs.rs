@@ -11,9 +11,7 @@ impl RosMessageType for Float64Stamped {
     const ROS_TYPE_NAME: &'static str = "test_msgs/Float64Stamped";
 }
 
-impl Float64Stamped {}
-
-#[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Header {
     pub seq: u32,
     pub stamp: TimeI,
@@ -24,8 +22,6 @@ impl RosMessageType for Header {
     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
 }
 
-impl Header {}
-
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct LoggerLevel {
     pub level: String,
@@ -34,8 +30,6 @@ pub struct LoggerLevel {
 impl RosMessageType for LoggerLevel {
     const ROS_TYPE_NAME: &'static str = "test_msgs/LoggerLevel";
 }
-
-impl LoggerLevel {}
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Metric {
@@ -48,8 +42,6 @@ impl RosMessageType for Metric {
     const ROS_TYPE_NAME: &'static str = "test_msgs/Metric";
 }
 
-impl Metric {}
-
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct MetricPair {
     pub key: String,
@@ -59,8 +51,6 @@ pub struct MetricPair {
 impl RosMessageType for MetricPair {
     const ROS_TYPE_NAME: &'static str = "test_msgs/MetricPair";
 }
-
-impl MetricPair {}
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct NodeInfo {
@@ -74,15 +64,15 @@ impl RosMessageType for NodeInfo {
 }
 
 impl NodeInfo {
-    const STATUS_UNINITIALIZED: u8 = 0;
-    const STATUS_DISCONNECTED: u8 = 1;
-    const STATUS_RUNNING: u8 = 2;
-    const STATUS_RUN_ERROR: u8 = 3;
-    const STATUS_SHUTTING_DOWN: u8 = 4;
-    const STATUS_SHUTDOWN: u8 = 5;
+    pub const STATUS_UNINITIALIZED: u8 = 0;
+    pub const STATUS_DISCONNECTED: u8 = 1;
+    pub const STATUS_RUNNING: u8 = 2;
+    pub const STATUS_RUN_ERROR: u8 = 3;
+    pub const STATUS_SHUTTING_DOWN: u8 = 4;
+    pub const STATUS_SHUTDOWN: u8 = 5;
 }
 
-#[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct TimeI {
     pub secs: u32,
     pub nsecs: u32,
@@ -91,5 +81,3 @@ pub struct TimeI {
 impl RosMessageType for TimeI {
     const ROS_TYPE_NAME: &'static str = "std_msgs/TimeI";
 }
-
-impl TimeI {}

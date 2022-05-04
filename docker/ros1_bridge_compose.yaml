@@ -1,4 +1,6 @@
-rosbridge:
-  image: joaquingimenez1/noetic-rosbridge:1.1.2
-  ports:
-    - 9090:9090
+version: "3.9"
+services:
+  rosbridge:
+    image: joaquingimenez1/noetic-rosbridge:1.1.2
+    ports:
+      - "9090:9090"

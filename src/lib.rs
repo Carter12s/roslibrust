@@ -429,9 +429,8 @@ impl Client {
 // How to set that up before this module runs?
 // How to test against both rosbridge_1 and rosbridge_2 automagically?
 #[cfg(test)]
-#[cfg(running_bridge)]
 mod general_usage {
-    use crate::test_msgs::Header;
+    use crate::test_msgs::{NodeInfo, Header, self};
     use crate::{Client, ClientOptions};
     use std::error::Error;
     use tokio::time::timeout;
@@ -440,12 +439,22 @@ mod general_usage {
     // On my laptop test was ~90% reliable at 10ms
     const TIMEOUT: Duration = Duration::from_millis(20);
 
+    /// Ensures that associate constants are generated on the test_msgs correctly
+    /// requires test_msgs gen_code to have been generated.
+    /// Compliation is passing for this test
+    //TODO may move this code somewhere else
+    #[test]
+    fn test_associated_contants() {
+        let _ = NodeInfo::STATUS_UNINITIALIZED;
+    }
+
     /**
     This test does a round trip publish subscribe for real
     Requires a running local rosbridge
     TODO figure out how to automate setting up the needed environment for this
     */
     #[tokio::test]
+    #[cfg(running_bridge)]
     async fn self_publish() {
         // TODO figure out better logging for tests
         simple_logger::SimpleLogger::new()
@@ -496,6 +505,7 @@ mod general_usage {
     }
 
     #[tokio::test]
+    #[cfg(running_bridge)]
     async fn timeouts_new() {
         // Intentionally a port where there won't be a server at
         let opts = ClientOptions::new("ws://localhost:666").timeout(TIMEOUT);

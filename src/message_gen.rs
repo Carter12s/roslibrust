@@ -347,9 +347,11 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> S
             "ROS_TYPE_NAME",
             "&'static str",
             &["\"", &file.package, "/", &file.name, "\""].join(""),
+            "",
         );
 
-        // Implement associated constants, TODO: Enums?
+        // Implement associated constants
+        // TODO: Enums?
         if file.constants.len() > 0 {
             let imp = scope.new_impl(file.name.as_str());
             for constant in &file.constants {
@@ -357,6 +359,7 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> S
                     constant.constant_name.as_str(),
                     constant.constant_type.clone(),
                     constant.constant_value.as_str(),
+                    "pub",
                 );
             }
         }
