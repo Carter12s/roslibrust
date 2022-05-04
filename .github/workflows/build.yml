@@ -12,6 +12,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     container: carter12s/roslibrust-ci:latest
     steps:
     - uses: actions/checkout@v3
@@ -23,7 +26,3 @@ jobs:
       run: roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
     - name: Integration Tests
       run: cargo test --features running_bridge -- --test-threads 1
-
-defaults:
-  run:
-    shell: bash
