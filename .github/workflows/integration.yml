@@ -15,11 +15,13 @@ jobs:
     container: carter12s/roslibrust-ci:latest
     steps:
     - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build
+    - name: Unit Tests
+      run: cargo test
     - name: Start rosbridge
       shell: bash
-      run: roslaunch rosbridge_server rosbridge_websocket.launch & disown
-    - name: Wait for server to come up
-      run: sleep 1
-    - name: Run integration tests
+      run: roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
+    - name: Integration Tests
       shell: bash
       run: cargo test --features running_bridge -- --test-threads 1
