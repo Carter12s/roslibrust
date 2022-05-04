@@ -1,4 +1,4 @@
-name: Build
+name: Rust
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    container: carter12s/roslibrust-ci:latest
+    container: carter12s/roslibrust-ci:v0.0.1
     steps:
     - uses: actions/checkout@v3
     - name: Build
