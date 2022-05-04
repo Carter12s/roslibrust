@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Debug
-      run: echo $PATH; ps -p $$; source /root/.cargo/env; echo $PATH
+      run: echo $PATH; ps -p $$; USER=root; source /root/.cargo/env; echo $PATH
     - name: Build
       run: source /root/.cargo/env; cargo build
     - name: Unit Tests
