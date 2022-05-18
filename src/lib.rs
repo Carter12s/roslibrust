@@ -430,14 +430,7 @@ impl Client {
 // How to test against both rosbridge_1 and rosbridge_2 automagically?
 #[cfg(test)]
 mod general_usage {
-    use crate::test_msgs::{self, Header, NodeInfo};
-    use crate::{Client, ClientOptions};
-    use std::error::Error;
-    use tokio::time::timeout;
-    use tokio::time::Duration;
-    const LOCAL_WS: &str = "ws://localhost:9090";
-    // On my laptop test was ~90% reliable at 10ms
-    const TIMEOUT: Duration = Duration::from_millis(100);
+    use crate::test_msgs::NodeInfo;
 
     /// Ensures that associate constants are generated on the test_msgs correctly
     /// requires test_msgs gen_code to have been generated.
@@ -447,6 +440,18 @@ mod general_usage {
     fn test_associated_contants() {
         let _ = NodeInfo::STATUS_UNINITIALIZED;
     }
+}
+
+#[cfg(test)]
+#[cfg(feature = "running_bridge")]
+mod integration_tests {
+    use crate::test_msgs::Header;
+    use crate::{Client, ClientOptions};
+    use tokio::time::timeout;
+    const LOCAL_WS: &str = "ws://localhost:9090";
+    // On my laptop test was ~90% reliable at 10ms
+    const TIMEOUT: Duration = Duration::from_millis(100);
+    use tokio::time::Duration;
 
     /**
     This test does a round trip publish subscribe for real
@@ -454,7 +459,6 @@ mod general_usage {
     TODO figure out how to automate setting up the needed environment for this
     */
     #[tokio::test]
-    #[cfg(feature = "running_bridge")]
     async fn self_publish() {
         // TODO figure out better logging for tests
         simple_logger::SimpleLogger::new()
@@ -499,14 +503,14 @@ mod general_usage {
 
         timeout(TIMEOUT, rx.changed())
             .await
-            .expect("Failed to receive in time");
+            .expect("Failed to receive in time")
+            .unwrap();
 
         let msg_in = rx.borrow().clone();
         assert_eq!(msg_in, msg_out);
     }
 
     #[tokio::test]
-    #[cfg(feature = "running_bridge")]
     async fn timeouts_new() {
         // Intentionally a port where there won't be a server at
         let opts = ClientOptions::new("ws://localhost:666").timeout(TIMEOUT);
@@ -518,7 +522,4 @@ mod general_usage {
         let opts = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
         assert!(Client::new_with_options(opts).await.is_ok());
     }
-
-    #[tokio::test]
-    async fn timeouts_subscribe() {}
 }
