@@ -2,19 +2,23 @@
 pub mod message_gen;
 // Utilities functions primarily for working with ros env vars and package structures
 pub mod util;
-
+// Communication primitives for the rosbridge_suite protocol
+pub mod comm;
 // Contains generated messages created by message_gen from the test_msgs directory
 // TODO look into restricting visibility of this... #[cfg(test)] and pub(crate) not working as needed
 pub mod test_msgs;
 
-use std::collections::HashMap;
-use std::error::Error;
-
-use futures::{SinkExt, StreamExt};
+use comm::RosBridgeComm;
+use futures::StreamExt;
 use log::*;
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::Value;
+use simple_error::bail;
+use std::collections::HashMap;
+use std::error::Error;
 use std::fmt::Debug;
 use std::sync::Arc;
 use tokio::net::TcpStream;
@@ -26,6 +30,10 @@ use tungstenite::Message;
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
 type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
+
+// TODO someday make this more specific / easier to handle
+type RosBridgeError = Box<dyn Error>;
+type RosBridgeResult<T> = Result<T, RosBridgeError>;
 
 struct Subscription {
     pub handles: Vec<Callback>,
@@ -67,15 +75,56 @@ impl ClientOptions {
     }
 }
 
-/// Holds a single websocket connection, requests will be processed by a spin_once or spin() call.
+// Fundamental structure for a client
 #[derive(Clone)]
 pub struct Client {
-    stream: Arc<RwLock<Stream>>,
+    // TODO split stream into read and write halves
+    // TODO replace Stream with trait RosBridgeComm to allow mocking
+    comm: Arc<RwLock<Stream>>,
     subscriptions: Arc<RwLock<HashMap<String, Subscription>>>,
+    // Contains any outstanding service calls we're waiting for a response on
+    // Map key will be a uniquely generated id for each call
+    service_calls: Arc<RwLock<HashMap<String, tokio::sync::oneshot::Sender<Value>>>>,
     opts: Arc<ClientOptions>,
 }
 
 impl Client {
+    // TODO apparently rosbridge doesn't support this!
+    // TODO get them to! and then implement!
+    // /// Advertises a service and returns a handle to the service server
+    // /// Serivce will be active until the handle is dropped!
+    // pub async fn advertise_service(
+    //     &mut self,
+    //     topic: &str,
+    // ) -> Result<ServiceServer, Box<dyn Error>> {
+    //     unimplemented!()
+    // }
+
+    async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+        &mut self,
+        service: &str,
+        req: Req,
+    ) -> RosBridgeResult<Res> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let rand_string: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(30)
+            .map(char::from)
+            .collect();
+        {
+            let mut service_calls = self.service_calls.write().await;
+            if service_calls.insert(rand_string.clone(), tx).is_some() {
+                error!("ID collision encounted in call_service");
+            }
+        }
+        {
+            let mut comm = self.comm.write().await;
+            comm.call_service(service, &rand_string, req).await?;
+        }
+        let msg = rx.await?;
+        Ok(serde_json::from_value(msg)?)
+    }
+
     /// Implementation of timeout that is a no-op if timeout is 0 or unconfigured
     /// Only works on functions that already return our result type
     // This might not be needed but reading tokio::timeout docs I couldn't confirm this
@@ -90,12 +139,14 @@ impl Client {
         }
     }
 
-    pub async fn _new(opts: ClientOptions) -> Result<Client, Box<dyn Error>> {
+    // internal implementation of new
+    async fn _new(opts: ClientOptions) -> Result<Client, Box<dyn Error>> {
         let client = Client {
-            stream: Arc::new(RwLock::new(
+            comm: Arc::new(RwLock::new(
                 Client::stubborn_connect(opts.url.clone()).await,
             )),
             subscriptions: Arc::new(RwLock::new(HashMap::new())),
+            service_calls: Arc::new(RwLock::new(HashMap::new())),
             opts: Arc::new(opts),
         };
 
@@ -121,6 +172,7 @@ impl Client {
         Client::new_with_options(ClientOptions::new(url)).await
     }
 
+    // Internal implementation of subscribe
     async fn _subscribe<Msg>(
         &mut self,
         topic_name: &str,
@@ -138,7 +190,7 @@ impl Client {
         // TODO single place to define rosbridge operations
         // Send subscribe message to rosbridge to initiate it sending us messages
         Client::send_subscribe_request(
-            &mut self.stream,
+            &mut self.comm,
             &topic_name.to_string(),
             &Msg::ROS_TYPE_NAME.to_string(),
         )
@@ -187,33 +239,24 @@ impl Client {
         Client::timeout(self.opts.timeout, self._subscribe(topic_name)).await
     }
 
-    // TODO don't expose this error type
-    pub async fn unsubscribe(
-        &mut self,
-        topic_name: &str,
-    ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
+    pub async fn unsubscribe(&mut self, topic_name: &str) -> RosBridgeResult<()> {
         self.subscriptions.write().await.remove(topic_name);
-        let msg = json!(
-        {
-        "op": "unsubscribe",
-        "topic": topic_name,
-        }
-        );
-        let msg = tungstenite::Message::Text(msg.to_string());
-        let mut stream = self.stream.write().await;
-        stream.send(msg).await?;
+        let mut stream = self.comm.write().await;
+        stream.unsubscribe(topic_name).await?;
         Ok(())
     }
 
     /// Core read loop, receives messages from rosbridge and dispatches them.
+    // Creating a client spawns a task which calls stubborn spin, which in turn calls this funtion
     async fn spin(&mut self) -> Result<(), Box<dyn Error>> {
         debug!("Start spin");
         loop {
             let read = {
-                let mut stream = self.stream.write().await;
+                let mut stream = self.comm.write().await;
                 // Okay this is what I want to do, but I can't because this actually block publishes
                 // We have to instead settle for some periodic bullshit.
                 // TODO figure out how to properly duplex the websocket...
+                // We need to split the channel into seperate halves with indpendently blocking read / write halves
                 // stream.next().await
                 match tokio::time::timeout(tokio::time::Duration::from_millis(1), stream.next())
                     .await
@@ -229,9 +272,7 @@ impl Client {
                 Some(r) => r?,
                 None => {
                     // TODO can we do better than using SimpleError? Define our own?
-                    return Err(Box::new(simple_error::SimpleError::new(
-                        "WTF does none mean here?",
-                    )));
+                    bail!("Wtf does none mean here?");
                 }
             };
             debug!("Got message: {:?}", read);
@@ -291,7 +332,7 @@ impl Client {
                 }
             }
             // Reconnect stream
-            self.stream = Arc::new(RwLock::new(
+            self.comm = Arc::new(RwLock::new(
                 Client::stubborn_connect(self.opts.url.to_string()).await,
             ));
 
@@ -307,7 +348,7 @@ impl Client {
             }
             for (topic, topic_type) in &subs {
                 // TODO bubble error up
-                Client::send_subscribe_request(&mut self.stream, topic, topic_type)
+                Client::send_subscribe_request(&mut self.comm, topic, topic_type)
                     .await
                     .unwrap();
             }
@@ -370,57 +411,31 @@ impl Client {
         msg_type: &String,
     ) -> Result<(), Box<dyn Error>> {
         let mut stream = stream.write().await;
-        let msg = json!(
-        {
-        "op": "subscribe",
-        "topic": topic,
-        "type": msg_type,
-        }
-        );
-        let msg = tungstenite::Message::Text(msg.to_string());
-        stream.send(msg).await?;
-        Ok(())
+        stream.subscribe(topic, msg_type).await
     }
 
-    pub async fn publish<T, S>(
+    /// Publishes a message
+    // TODO publish shouldn't be a function directly on client, instead client needs to return a Publisher, which mananges lifetime of advertise / unadvertise
+    pub async fn publish<T>(
         &mut self,
-        topic: S,
+        topic: &str,
         msg: T,
     ) -> Result<(), Box<dyn std::error::Error>>
     where
         T: RosMessageType,
-        S: Into<String>,
     {
-        let msg = json!(
-            {
-                "op": "publish",
-                "topic": topic.into(),
-                "type": T::ROS_TYPE_NAME,
-                "msg": &msg,
-            }
-        );
-        let msg = tungstenite::Message::Text(msg.to_string());
-        let mut stream = self.stream.write().await;
-        debug!("Publish got write lock on stream");
-        stream.send(msg).await?;
+        let mut stream = self.comm.write().await;
+        debug!("Publish got write lock on comm");
+        stream.publish(topic, msg).await?;
         Ok(())
     }
 
-    pub async fn advertise<T, S>(&mut self, topic: S) -> Result<(), Box<dyn std::error::Error>>
+    pub async fn advertise<T>(&mut self, topic: &str) -> Result<(), Box<dyn std::error::Error>>
     where
         T: RosMessageType,
-        S: Into<String>,
     {
-        let msg = json!(
-            {
-                "op": "advertise",
-                "topic": topic.into(),
-                "type": T::ROS_TYPE_NAME,
-            }
-        );
-        let msg = tungstenite::Message::Text(msg.to_string());
-        let mut stream = self.stream.write().await;
-        stream.send(msg).await?;
+        let mut stream = self.comm.write().await;
+        stream.advertise::<T>(topic).await?;
         Ok(())
     }
 }
@@ -431,6 +446,8 @@ impl Client {
 #[cfg(test)]
 mod general_usage {
     use crate::test_msgs::NodeInfo;
+    #[allow(dead_code)]
+    pub const LOCAL_WS: &str = "ws://localhost:9090";
 
     /// Ensures that associate constants are generated on the test_msgs correctly
     /// requires test_msgs gen_code to have been generated.
@@ -445,10 +462,10 @@ mod general_usage {
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
+    use crate::general_usage::LOCAL_WS;
     use crate::test_msgs::Header;
     use crate::{Client, ClientOptions};
     use tokio::time::timeout;
-    const LOCAL_WS: &str = "ws://localhost:9090";
     // On my laptop test was ~90% reliable at 10ms
     const TIMEOUT: Duration = Duration::from_millis(100);
     use tokio::time::Duration;
@@ -477,7 +494,7 @@ mod integration_tests {
             .expect("Failed to create client in time")
             .unwrap();
 
-        timeout(TIMEOUT, client.advertise::<Header, _>(TOPIC))
+        timeout(TIMEOUT, client.advertise::<Header>(TOPIC))
             .await
             .expect("Failed to advertise in time")
             .unwrap();
@@ -521,5 +538,29 @@ mod integration_tests {
         // Doesn't timeout if given enough time
         let opts = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
         assert!(Client::new_with_options(opts).await.is_ok());
+    }
+
+    /// This test doesn't actually do much, but instead confirms the internal structure of the lib is multi-threaded correclty
+    /// The whole goal here is to catch send / sync complier errors
+    #[tokio::test]
+    async fn parrallel_construnction() {
+        let mut client = Client::new(LOCAL_WS)
+            .await
+            .expect("Failed to construct client");
+
+        let mut client_1 = client.clone();
+        tokio::task::spawn(async move {
+            let _ = client_1
+                .advertise::<Header>("parrallel_1")
+                .await
+                .expect("Failed to advertise _1");
+        });
+
+        tokio::task::spawn(async move {
+            let _ = client
+                .subscribe::<Header>("parrallel_1")
+                .await
+                .expect("Failed to subscribe _1");
+        });
     }
 }

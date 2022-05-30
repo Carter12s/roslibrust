@@ -1,7 +1,9 @@
 use log::*;
 use roslibrust::Client;
 
-/// A basic example of connecting and subscribing to data
+/// A basic example of connecting and subscribing to data.
+/// This example will log recieved messages if run at the same time as "basic_publisher".
+/// A running rosbridge websocker server at the default port (9090) is required to run this example.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     simple_logger::SimpleLogger::new()
