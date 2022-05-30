@@ -20,6 +20,7 @@ use simple_error::bail;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::Debug;
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::RwLock;
@@ -100,7 +101,7 @@ impl Client {
     //     unimplemented!()
     // }
 
-    async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+    pub async fn call_service<Req: RosMessageType, Res: RosMessageType>(
         &mut self,
         service: &str,
         req: Req,
@@ -289,9 +290,13 @@ impl Client {
                         .expect("Op field not present on returned object.")
                         .as_str()
                         .expect("Op field was not of string type.");
+                    let op = comm::Ops::from_str(op)?;
                     match op {
-                        "publish" => {
+                        comm::Ops::Publish => {
                             self.handle_publish(parsed).await;
+                        }
+                        comm::Ops::ServiceResponse => {
+                            self.handle_response(parsed).await;
                         }
                         _ => {
                             warn!("Unhandled op type {}", op)
@@ -373,6 +378,21 @@ impl Client {
                     .as_str(),
             )
         }
+    }
+
+    async fn handle_response(&mut self, data: Value) {
+        // TODO lots of error handling!
+        let id = data.get("id").unwrap().as_str().unwrap();
+        let mut service_calls = self.service_calls.write().await;
+        let call = service_calls.remove(id).unwrap();
+        let res = data
+            .get("values")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .get(0)
+            .unwrap();
+        call.send(res.clone()).unwrap();
     }
 
     /// Connects to websocket at specified URL, retries indefinitely
