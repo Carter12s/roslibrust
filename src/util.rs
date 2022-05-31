@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use walkdir::{DirEntry, WalkDir};
 
 /// Identifier for ros data files which is combination of package_name and path
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RosFile {
     pub package_name: String,
     pub path: PathBuf,
@@ -92,6 +92,21 @@ pub fn get_local_msgs() -> Vec<RosFile> {
     let rpp = concat!(env!("CARGO_MANIFEST_DIR"), "/local_msgs");
     debug!("Looking for locally installed msgs in: {}", &rpp);
     recursive_find_msg_files(Path::new(rpp))
+}
+
+/// This returns a subset of the local messages that define special types e.g. time
+pub fn get_special_msgs() -> Vec<RosFile> {
+    let rpp = concat!(env!("CARGO_MANIFEST_DIR"), "/local_msgs");
+    vec![
+        RosFile {
+            package_name: "std_msgs".to_string(),
+            path: Path::new(rpp).join("std_msgs/msg/TimeI.msg"),
+        },
+        RosFile {
+            package_name: "std_msgs".to_string(),
+            path: Path::new(rpp).join("std_msgs/msg/DurationI.msg"),
+        },
+    ]
 }
 
 #[cfg(test)]

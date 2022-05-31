@@ -385,13 +385,7 @@ impl Client {
         let id = data.get("id").unwrap().as_str().unwrap();
         let mut service_calls = self.service_calls.write().await;
         let call = service_calls.remove(id).unwrap();
-        let res = data
-            .get("values")
-            .unwrap()
-            .as_array()
-            .unwrap()
-            .get(0)
-            .unwrap();
+        let res = data.get("values").unwrap();
         call.send(res.clone()).unwrap();
     }
 

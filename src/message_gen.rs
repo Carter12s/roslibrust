@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use codegen::Scope;
 use log::{debug, warn};
+use simple_error::bail;
 
 use super::util;
 
@@ -165,6 +166,8 @@ pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, Box<dyn st
             Ok(installed) => {
                 debug!("Using msgs from ROS_PACKAGE_PATH");
                 debug!("Found {} installed msgs", installed.len());
+                let mut installed = installed.clone();
+                installed.append(&mut util::get_special_msgs());
                 installed
             }
             Err(e) => {
@@ -182,7 +185,8 @@ pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, Box<dyn st
 
     while let Some(entry) = files.pop_front() {
         debug!("Processing {:?}", entry);
-        let file = fs::read_to_string(&entry).expect("Could not read file.");
+        let file =
+            fs::read_to_string(&entry).expect(&format!("Could not read file @ {:?}", &entry));
         let name = entry.file_stem().unwrap().to_str().unwrap().to_string();
         let package = match util::find_package_from_path(&entry) {
             // Use an empty package name if we couldn't find one
@@ -197,46 +201,68 @@ pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, Box<dyn st
             }
             Some(s) => s,
         };
-        let parse_result = parse_ros_message_file(file, name.clone(), package);
+        let parse_results = match entry.extension().unwrap().to_str().unwrap() {
+            "srv" => parse_ros_srv_file(file, &name, &package),
+            "msg" => {
+                vec![parse_ros_message_file(file, name.clone(), package)]
+            }
+            _ => {
+                bail!("Unregcognized file extension: {:?}", entry);
+            }
+        };
 
         // Resolve remotes
         // TODO could be nice iterator way of doing this
-        'per_file: for field in &parse_result.fields {
-            if field.field_type.package_name.is_none() {
-                // Not a remote reference
-                continue;
-            }
-            let package_name = field.field_type.package_name.as_ref().unwrap();
-            if parsed.contains_key(&field.field_type.field_type) {
-                // Reference already resolved
-                continue;
-            }
-            // Attempt to lookup reference in discovered installed files:
-            for candidate in &installed {
-                if &candidate.package_name == package_name {
-                    if &candidate
-                        .path
-                        .file_stem()
-                        .unwrap()
-                        .to_string_lossy()
-                        .to_string()
-                        == &field.field_type.field_type
-                    {
-                        // We've resolved the reference, add it to files that need to be resolved
-                        files.push_back(candidate.path.clone());
-                        continue 'per_file;
+        for parse_result in parse_results.into_iter() {
+            'per_file: for field in &parse_result.fields {
+                if field.field_type.package_name.is_none() {
+                    // Not a remote reference
+                    continue;
+                }
+                let package_name = field.field_type.package_name.as_ref().unwrap();
+                if parsed.contains_key(&field.field_type.field_type) {
+                    // Reference already resolved
+                    continue;
+                }
+                // Attempt to lookup reference in discovered installed files:
+                for candidate in &installed {
+                    if &candidate.package_name == package_name {
+                        if &candidate
+                            .path
+                            .file_stem()
+                            .unwrap()
+                            .to_string_lossy()
+                            .to_string()
+                            == &field.field_type.field_type
+                        {
+                            // We've resolved the reference, add it to files that need to be resolved
+                            files.push_back(candidate.path.clone());
+                            continue 'per_file;
+                        }
                     }
                 }
+                panic!("Failed to resolve reference for: {:?}", field);
             }
-            panic!("Failed to resolve reference for: {:?}", field);
+            // Done processing move it away
+            parsed.insert(name.clone(), parse_result);
         }
-
-        // Done processing move it away
-        parsed.insert(name.clone(), parse_result);
     }
 
     let code = generate_rust(parsed, opts.local);
     Ok(code)
+}
+
+fn parse_ros_srv_file(data: String, name: &str, package: &str) -> Vec<MessageFile> {
+    let index = data.find("---").expect(&format!(
+        "Failed to find delimeter line '---' in {} name: {}",
+        &data, &name
+    ));
+    let req_str = data[..index].to_string();
+    let res_str = data[index + 3..].to_string();
+    vec![
+        parse_ros_message_file(req_str, format!("{}Request", &name), package.to_string()),
+        parse_ros_message_file(res_str, format!("{}Response", &name), package.to_string()),
+    ]
 }
 
 /// Converts a ros message file into a struct representation
@@ -275,9 +301,13 @@ fn parse_ros_message_file(data: String, name: String, package: String) -> Messag
         } else {
             // Is regular field
             let mut splitter = line.split_whitespace();
-            let field_type = splitter.next().expect("Did not find field_type on line.");
+            let field_type = splitter
+                .next()
+                .expect(&format!("Did not find field_type on line: {}", &line));
             let field_type = ros_type_to_rust(field_type);
-            let field_name = splitter.next().expect("Did not find field_name on line.");
+            let field_name = splitter
+                .next()
+                .expect(&format!("Did not find field_name on line: {}", &line));
             result.fields.push(FieldInfo {
                 field_type,
                 field_name: field_name.to_string(),

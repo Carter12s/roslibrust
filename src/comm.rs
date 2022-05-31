@@ -149,7 +149,7 @@ impl RosBridgeComm for Stream {
     ) -> RosBridgeResult<()> {
         let msg = json!(
             {
-                "op": Ops::Publish.to_string(),
+                "op": Ops::CallService.to_string(),
                 "service": service,
                 "id": id,
                 "args": [req],
