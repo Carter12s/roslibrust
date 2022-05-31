@@ -50,6 +50,11 @@ pub trait RosMessageType:
     const ROS_TYPE_NAME: &'static str;
 }
 
+/// This special impl allows for services with no args / returns
+impl RosMessageType for () {
+    const ROS_TYPE_NAME: &'static str = "";
+}
+
 // TODO: Potential options to add
 //  * stubborn reconnect interval
 //  * Automatic header Seq / Stamp setting
@@ -481,7 +486,8 @@ mod integration_tests {
     use crate::{Client, ClientOptions};
     use tokio::time::timeout;
     // On my laptop test was ~90% reliable at 10ms
-    const TIMEOUT: Duration = Duration::from_millis(100);
+    // Had 1 spurious github failure at 100
+    const TIMEOUT: Duration = Duration::from_millis(200);
     use tokio::time::Duration;
 
     /**

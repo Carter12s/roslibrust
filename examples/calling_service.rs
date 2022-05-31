@@ -5,6 +5,8 @@ use roslibrust::test_msgs::{self, Header, TimeI};
 use roslibrust::{message_gen, util, Client, RosMessageType};
 use serde::{Deserialize, Serialize};
 
+/// This struct was generated using the gen_rosapi_msgs fn at the bottom of this file
+/// and then manually placed here
 #[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 pub struct GetTimeResponse {
     pub time: TimeI,
@@ -12,14 +14,6 @@ pub struct GetTimeResponse {
 
 impl RosMessageType for GetTimeResponse {
     const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeResponse";
-}
-
-#[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
-struct Empty {}
-
-// TODO this is hack for now
-impl RosMessageType for Empty {
-    const ROS_TYPE_NAME: &'static str = "";
 }
 
 /// This example shows calling a service
@@ -31,7 +25,7 @@ impl RosMessageType for Empty {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
-        .without_timestamps()
+        .without_timestamps() // Required for running in wsl2
         .init()
         .unwrap();
 
@@ -41,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = Client::new("ws://localhost:9090").await?;
 
     let result = client
-        .call_service::<Empty, GetTimeResponse>("/rosapi/get_time", Empty {})
+        .call_service::<(), GetTimeResponse>("/rosapi/get_time", ())
         .await
         .expect("Error while calling get_time service");
 
@@ -51,6 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// This function can be used to generate the types place manually in the source above
 /// Running this requires ros installed (and sourced) and rosapi installed
+/// This serves as an additional example of how to generate message definitions.
 fn gen_rosapi_msgs() {
     let rosapi_path = std::process::Command::new("rospack")
         .args(["find", "rosapi"])

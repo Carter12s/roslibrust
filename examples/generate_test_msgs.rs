@@ -13,6 +13,7 @@ use roslibrust::util;
 fn main() {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
+        .without_timestamps() // Required for running in wsl2
         .init()
         .unwrap();
 

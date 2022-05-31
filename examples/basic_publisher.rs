@@ -11,6 +11,7 @@ use roslibrust::Client;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
+        .without_timestamps() // required for running wsl2
         .init()
         .unwrap();
 

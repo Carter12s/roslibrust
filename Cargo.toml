@@ -25,7 +25,7 @@ walkdir = "2.3.2"
 
 [dev-dependencies]
 # Used for logging in examples
-simple_logger = "1.11.0"
+simple_logger = "2.1.0"
 
 [features]
 # Intended for use with tests, includes tests that rely on a locally running rosbridge
