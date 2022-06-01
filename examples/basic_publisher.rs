@@ -8,7 +8,7 @@ use roslibrust::Client;
 /// To run this example a rosbridge websocket server should be running at the deafult port (9090).
 
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
         .without_timestamps() // required for running wsl2
@@ -17,12 +17,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut client = Client::new("ws://localhost:9090").await?;
 
-    client.advertise::<Header>("talker").await?;
+    let mut publisher = client.advertise::<Header>("talker").await?;
 
     loop {
         let msg = Header::default();
         info!("About to publish");
-        client.publish("talker", msg).await.unwrap();
+        publisher.publish(msg).await.unwrap();
         info!("Published msg...");
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }

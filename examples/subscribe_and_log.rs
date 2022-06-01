@@ -5,7 +5,7 @@ use roslibrust::Client;
 /// This example will log received messages if run at the same time as "basic_publisher".
 /// A running rosbridge websocket server at the default port (9090) is required to run this example.
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
         .without_timestamps() // required for running in wsl2

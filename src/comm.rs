@@ -4,6 +4,7 @@ use std::{fmt::Display, str::FromStr};
 
 use async_trait::async_trait;
 use futures::SinkExt;
+use log::debug;
 use serde_json::json;
 use simple_error::bail;
 use tokio_tungstenite::tungstenite::Message;
@@ -32,6 +33,7 @@ impl Display for Ops {
     }
 }
 
+// TODO should replace this with impl Serialize
 impl Into<&str> for &Ops {
     fn into(self) -> &'static str {
         match self {
@@ -53,6 +55,7 @@ impl Into<&str> for &Ops {
     }
 }
 
+// TODO should replace this with deserialize
 impl FromStr for Ops {
     type Err = RosBridgeError;
     fn from_str(s: &str) -> Result<Self, RosBridgeError> {
@@ -85,6 +88,7 @@ pub trait RosBridgeComm {
         id: &str,
         req: Req,
     ) -> RosBridgeResult<()>;
+    async fn unadvertise(&mut self, topic: &str) -> RosBridgeResult<()>;
 }
 
 #[async_trait]
@@ -155,6 +159,19 @@ impl RosBridgeComm for Stream {
                 "args": [req],
             }
         );
+        let msg = Message::Text(msg.to_string());
+        self.send(msg).await?;
+        Ok(())
+    }
+
+    async fn unadvertise(&mut self, topic: &str) -> RosBridgeResult<()> {
+        debug!("Sending unadvertise on {}", topic);
+        let msg = json! {
+            {
+                "op": Ops::Unadvertise.to_string(),
+                "topic": topic
+            }
+        };
         let msg = Message::Text(msg.to_string());
         self.send(msg).await?;
         Ok(())

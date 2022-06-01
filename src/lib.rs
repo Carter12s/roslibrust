@@ -33,7 +33,7 @@ type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
 type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
 
 // TODO someday make this more specific / easier to handle
-type RosBridgeError = Box<dyn Error>;
+type RosBridgeError = Box<dyn Error + Send + Sync>;
 type RosBridgeResult<T> = Result<T, RosBridgeError>;
 
 struct Subscription {
@@ -41,6 +41,45 @@ struct Subscription {
     /// Name of ros type (package_name/message_name), used for re-subscribes
     pub topic_type: String,
 }
+
+/// The type given to someone when they advertise a topic
+// TODO do we need to if multiple publishers to same topic are created and only unadvertise
+// when all are dropped?
+// Instead of giving back a publisher should we give back a reference to one, and give back the
+// same reference when you advertise multiple times? Would require non-mut references?
+// TODO how should we handle multiple advertise to same topic with different message types?
+// Is this something we care about detecting? Force singleton publishers?
+pub struct Publisher<T: RosMessageType> {
+    topic: String,
+    // auto incrementing sequence number increased once per publish
+    // TODO have to somehow detect if message has header
+    // We likely want to implement a Stamped trait and impl it automatically in message gen
+    // if we detect a `Header header` in the .msg/.srv
+    seq: usize,
+    // Stores a copy of the client so that we can de-register ourselves
+    client: Client,
+    _marker: std::marker::PhantomData<T>,
+}
+
+struct PublisherHandle {
+    topic: String,
+    msg_type: String,
+}
+
+impl<T: RosMessageType> Drop for Publisher<T> {
+    fn drop(&mut self) {
+        self.client.unadvertise(&self.topic);
+    }
+}
+
+impl<T: RosMessageType> Publisher<T> {
+    /// The "standard" publish function sends the message out, returns when publish succeeds
+    pub async fn publish(&mut self, msg: T) -> RosBridgeResult<()> {
+        self.client.publish(&self.topic, msg).await
+    }
+}
+
+// TODO we probably want to impl futures sink or some shit?
 
 /// Fundamental traits for message types this works with
 /// This trait will be satisfied for any types generate with this crate's message_gen
@@ -87,6 +126,8 @@ pub struct Client {
     // TODO split stream into read and write halves
     // TODO replace Stream with trait RosBridgeComm to allow mocking
     comm: Arc<RwLock<Stream>>,
+    // Stores a record of the publishers we've handed out
+    publishers: Arc<RwLock<HashMap<String, PublisherHandle>>>,
     subscriptions: Arc<RwLock<HashMap<String, Subscription>>>,
     // Contains any outstanding service calls we're waiting for a response on
     // Map key will be a uniquely generated id for each call
@@ -134,9 +175,9 @@ impl Client {
     /// Implementation of timeout that is a no-op if timeout is 0 or unconfigured
     /// Only works on functions that already return our result type
     // This might not be needed but reading tokio::timeout docs I couldn't confirm this
-    async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> Result<T, Box<dyn Error>>
+    async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> RosBridgeResult<T>
     where
-        F: futures::Future<Output = Result<T, Box<dyn Error>>>,
+        F: futures::Future<Output = RosBridgeResult<T>>,
     {
         if let Some(t) = timeout {
             tokio::time::timeout(t, future).await?
@@ -146,11 +187,12 @@ impl Client {
     }
 
     // internal implementation of new
-    async fn _new(opts: ClientOptions) -> Result<Client, Box<dyn Error>> {
+    async fn _new(opts: ClientOptions) -> RosBridgeResult<Client> {
         let client = Client {
             comm: Arc::new(RwLock::new(
                 Client::stubborn_connect(opts.url.clone()).await,
             )),
+            publishers: Arc::new(RwLock::new(HashMap::new())),
             subscriptions: Arc::new(RwLock::new(HashMap::new())),
             service_calls: Arc::new(RwLock::new(HashMap::new())),
             opts: Arc::new(opts),
@@ -165,7 +207,7 @@ impl Client {
         Ok(client)
     }
 
-    pub async fn new_with_options(opts: ClientOptions) -> Result<Client, Box<dyn Error>> {
+    pub async fn new_with_options(opts: ClientOptions) -> RosBridgeResult<Client> {
         // TODO clone here is dumb but was most ergonomic option I found
         Client::timeout(opts.timeout, Client::_new(opts)).await
     }
@@ -174,7 +216,7 @@ impl Client {
     /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
     /// When awaited will not resolve until connection is completed
     // TODO better error handling
-    pub async fn new<S: Into<String>>(url: S) -> Result<Client, Box<dyn Error>> {
+    pub async fn new<S: Into<String>>(url: S) -> RosBridgeResult<Client> {
         Client::new_with_options(ClientOptions::new(url)).await
     }
 
@@ -182,7 +224,7 @@ impl Client {
     async fn _subscribe<Msg>(
         &mut self,
         topic_name: &str,
-    ) -> Result<tokio::sync::watch::Receiver<Msg>, Box<dyn std::error::Error>>
+    ) -> RosBridgeResult<tokio::sync::watch::Receiver<Msg>>
     where
         Msg: RosMessageType,
     {
@@ -195,12 +237,8 @@ impl Client {
 
         // TODO single place to define rosbridge operations
         // Send subscribe message to rosbridge to initiate it sending us messages
-        Client::send_subscribe_request(
-            &mut self.comm,
-            &topic_name.to_string(),
-            &Msg::ROS_TYPE_NAME.to_string(),
-        )
-        .await?;
+        let mut stream = self.comm.write().await;
+        stream.subscribe(&topic_name, &Msg::ROS_TYPE_NAME).await?;
 
         // TODO we have spsc, so watch is kinda overkill? Buffer of 1 is nice...
         // Note: Type erasure with callback is forcing generating a new channel per subscription
@@ -224,7 +262,15 @@ impl Client {
             }
             let converted = converted.unwrap();
 
-            tx.send(converted).unwrap();
+            match tx.send(converted) {
+                Ok(_) => {}
+                Err(e) => {
+                    error!(
+                        "Subscriber was dropped without being de-registered? {:?}",
+                        e
+                    );
+                }
+            }
         });
 
         // Store callback
@@ -238,7 +284,7 @@ impl Client {
     pub async fn subscribe<Msg>(
         &mut self,
         topic_name: &str,
-    ) -> Result<tokio::sync::watch::Receiver<Msg>, Box<dyn std::error::Error>>
+    ) -> RosBridgeResult<tokio::sync::watch::Receiver<Msg>>
     where
         Msg: RosMessageType,
     {
@@ -252,9 +298,34 @@ impl Client {
         Ok(())
     }
 
+    // This function is not async specifically so it can be called from drop
+    // It same reason it doesn't return anything
+    fn unadvertise(&mut self, topic_name: &str) {
+        let copy = self.clone();
+        let topic_name_copy = topic_name.to_string();
+        tokio::spawn(async move {
+            // Remove publisher from our records
+            {
+                let mut table = copy.publishers.write().await;
+                debug!("Unadvertise got publisher lock");
+                table.remove(&topic_name_copy);
+            }
+
+            // Send unadvertise message
+            {
+                debug!("Unadvertise waiting for comm lock");
+                let mut comm = copy.comm.write().await;
+                debug!("Unadvertise got comm lock");
+                if let Err(e) = comm.unadvertise(&topic_name_copy).await {
+                    error!("Failed to send unadvertise in comm layer: {:?}", e);
+                }
+            }
+        });
+    }
+
     /// Core read loop, receives messages from rosbridge and dispatches them.
     // Creating a client spawns a task which calls stubborn spin, which in turn calls this funtion
-    async fn spin(&mut self) -> Result<(), Box<dyn Error>> {
+    async fn spin(&mut self) -> RosBridgeResult<()> {
         debug!("Start spin");
         loop {
             let read = {
@@ -327,7 +398,7 @@ impl Client {
     }
 
     /// Wraps spin in retry logic to handle reconnections automagically
-    async fn stubborn_spin(mut self) -> Result<(), Box<dyn Error + Send>> {
+    async fn stubborn_spin(mut self) -> RosBridgeResult<()> {
         debug!("Starting stubborn_spin");
         loop {
             {
@@ -356,11 +427,9 @@ impl Client {
                     subs.push((k.clone(), v.topic_type.clone()))
                 }
             }
+            let mut stream = self.comm.write().await;
             for (topic, topic_type) in &subs {
-                // TODO bubble error up
-                Client::send_subscribe_request(&mut self.comm, topic, topic_type)
-                    .await
-                    .unwrap();
+                stream.subscribe(topic, topic_type).await?;
             }
         }
     }
@@ -422,24 +491,8 @@ impl Client {
         }
     }
 
-    /// Sends a subscribe request packet to rosbridge
-    // Note: doesn't borrow self only stream so we can iterate subscriptions and call simultaneously
-    async fn send_subscribe_request(
-        stream: &Arc<RwLock<Stream>>,
-        topic: &String,
-        msg_type: &String,
-    ) -> Result<(), Box<dyn Error>> {
-        let mut stream = stream.write().await;
-        stream.subscribe(topic, msg_type).await
-    }
-
     /// Publishes a message
-    // TODO publish shouldn't be a function directly on client, instead client needs to return a Publisher, which mananges lifetime of advertise / unadvertise
-    pub async fn publish<T>(
-        &mut self,
-        topic: &str,
-        msg: T,
-    ) -> Result<(), Box<dyn std::error::Error>>
+    async fn publish<T>(&mut self, topic: &str, msg: T) -> RosBridgeResult<()>
     where
         T: RosMessageType,
     {
@@ -449,13 +502,42 @@ impl Client {
         Ok(())
     }
 
-    pub async fn advertise<T>(&mut self, topic: &str) -> Result<(), Box<dyn std::error::Error>>
+    pub async fn advertise<T>(&mut self, topic: &str) -> RosBridgeResult<Publisher<T>>
     where
         T: RosMessageType,
     {
-        let mut stream = self.comm.write().await;
-        stream.advertise::<T>(topic).await?;
-        Ok(())
+        {
+            let mut publishers = self.publishers.write().await;
+            match publishers.get(topic) {
+                Some(_) => {
+                    // TODO if we ever remove this restriction we should still check types match
+                    bail!(
+                        "Attempted to create two publishers to same topic, this is not supported"
+                    );
+                }
+                None => {
+                    publishers.insert(
+                        topic.to_string(),
+                        PublisherHandle {
+                            topic: topic.to_string(),
+                            msg_type: T::ROS_TYPE_NAME.to_string(),
+                        },
+                    );
+                }
+            }
+        }
+
+        {
+            let mut stream = self.comm.write().await;
+            debug!("Advertise got lock on comm");
+            stream.advertise::<T>(topic).await?;
+        }
+        Ok(Publisher {
+            topic: topic.to_string(),
+            seq: 0,
+            client: self.clone(),
+            _marker: Default::default(),
+        })
     }
 }
 
@@ -483,7 +565,9 @@ mod general_usage {
 mod integration_tests {
     use crate::general_usage::LOCAL_WS;
     use crate::test_msgs::Header;
-    use crate::{Client, ClientOptions};
+    use crate::{Client, ClientOptions, RosBridgeResult};
+    use log::debug;
+    use simple_error::bail;
     use tokio::time::timeout;
     // On my laptop test was ~90% reliable at 10ms
     // Had 1 spurious github failure at 100
@@ -498,14 +582,11 @@ mod integration_tests {
     #[tokio::test]
     async fn self_publish() {
         // TODO figure out better logging for tests
-        simple_logger::SimpleLogger::new()
+
+        let _ = simple_logger::SimpleLogger::new()
             .with_level(log::LevelFilter::Debug)
-            // TODO had to remove timestamps here to prevent a panic on my laptop with
-            // "Could not determine UTC offset on this system"
-            // need to investigate futher at some point
             .without_timestamps()
-            .init()
-            .unwrap();
+            .init();
 
         const TOPIC: &str = "self_publish";
         // 100ms allowance for connecting so tests still fails
@@ -582,5 +663,65 @@ mod integration_tests {
                 .await
                 .expect("Failed to subscribe _1");
         });
+    }
+
+    /// Tests that dropping a publisher correctly unadvertises
+    #[tokio::test]
+    // This test is currently broken, it seems that rosbridge still sends the message regardless
+    // of advertise / unadvertise status. Unclear how to confirm whether advertise was sent or not
+    // #[ignore]
+    async fn unadvertise() -> RosBridgeResult<()> {
+        simple_logger::SimpleLogger::new()
+            .with_level(log::LevelFilter::Debug)
+            .without_timestamps()
+            .init()
+            .unwrap();
+
+        // Flow:
+        //  1. Create a publisher and subscriber
+        //  2. Send a message and confirm connection works (topic was advertised)
+        //  3. Drop the publisher, unadvertise should be sent
+        //  4. Manually send a message without a publisher it should fail since topic was unadvertised
+        const TOPIC: &str = "/unadvertise";
+        debug!("Start unadvertise test");
+
+        let opt = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
+
+        let mut client = Client::new_with_options(opt).await?;
+        let mut publisher = client.advertise(TOPIC).await?;
+        debug!("Got publisher");
+
+        let mut sub = client.subscribe::<Header>(TOPIC).await?;
+        debug!("Got subscriber");
+
+        let msg = Header::default();
+        publisher.publish(msg).await?;
+        timeout(TIMEOUT, sub.changed()).await??;
+        // Mark message as seen
+        sub.borrow_and_update();
+
+        debug!("Dropping publisher");
+        // drop subscriber so it doesn't keep topic open
+        std::mem::drop(sub);
+        // unadvertise should happen here
+        std::mem::drop(publisher);
+
+        // Wait for drop to complete
+        tokio::time::sleep(TIMEOUT).await;
+
+        let mut sub = client.subscribe::<Header>(TOPIC).await?;
+        // manually publishing using private api
+        let msg = Header::default();
+        client.publish(TOPIC, msg).await?;
+
+        match timeout(TIMEOUT, sub.changed()).await {
+            Ok(_msg) => {
+                bail!("Received message after unadvertised!");
+            }
+            Err(_e) => {
+                // All good! Timeout should expire
+            }
+        }
+        Ok(())
     }
 }
