@@ -669,13 +669,12 @@ mod integration_tests {
     #[tokio::test]
     // This test is currently broken, it seems that rosbridge still sends the message regardless
     // of advertise / unadvertise status. Unclear how to confirm whether advertise was sent or not
-    // #[ignore]
+    #[ignore]
     async fn unadvertise() -> RosBridgeResult<()> {
-        simple_logger::SimpleLogger::new()
+        let _ = simple_logger::SimpleLogger::new()
             .with_level(log::LevelFilter::Debug)
             .without_timestamps()
-            .init()
-            .unwrap();
+            .init();
 
         // Flow:
         //  1. Create a publisher and subscriber
