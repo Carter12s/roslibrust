@@ -8,6 +8,7 @@ pub mod comm;
 // TODO look into restricting visibility of this... #[cfg(test)] and pub(crate) not working as needed
 pub mod test_msgs;
 
+use anyhow::anyhow;
 use comm::RosBridgeComm;
 use futures::StreamExt;
 use log::*;
@@ -16,9 +17,7 @@ use rand::{thread_rng, Rng};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::Value;
-use simple_error::bail;
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt::Debug;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -32,9 +31,31 @@ use tungstenite::Message;
 type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
 type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
 
+/// For now starting with a central error type, may break this up more in future
+#[derive(thiserror::Error, Debug)]
+pub enum RosLibRustError {
+    #[error("Not currently connected to ros master / bridge")]
+    Disconnected,
+    #[error("Websoket communication error: {0}")]
+    CommFailure(tokio_tungstenite::tungstenite::Error),
+    #[error("Operation timed out: {0}")]
+    Timeout(#[from] tokio::time::error::Elapsed),
+    #[error("Failed to parse message from JSON: {0}")]
+    InvalidMessage(#[from] serde_json::Error),
+    #[error(transparent)]
+    Unexpected(#[from] anyhow::Error),
+}
+
+impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
+    fn from(e: tokio_tungstenite::tungstenite::Error) -> Self {
+        // TODO we probably want to expand this type and do some matching here
+        RosLibRustError::CommFailure(e)
+    }
+}
+
 // TODO someday make this more specific / easier to handle
-type RosBridgeError = Box<dyn Error + Send + Sync>;
-type RosBridgeResult<T> = Result<T, RosBridgeError>;
+// type RosBridgeError = Box<dyn Error + Send + Sync>;
+type RosBridgeResult<T> = Result<T, RosLibRustError>;
 
 struct Subscription {
     pub handles: Vec<Callback>,
@@ -47,14 +68,13 @@ struct Subscription {
 // when all are dropped?
 // Instead of giving back a publisher should we give back a reference to one, and give back the
 // same reference when you advertise multiple times? Would require non-mut references?
-// TODO how should we handle multiple advertise to same topic with different message types?
-// Is this something we care about detecting? Force singleton publishers?
 pub struct Publisher<T: RosMessageType> {
     topic: String,
     // auto incrementing sequence number increased once per publish
     // TODO have to somehow detect if message has header
     // We likely want to implement a Stamped trait and impl it automatically in message gen
     // if we detect a `Header header` in the .msg/.srv
+    #[allow(dead_code)]
     seq: usize,
     // Stores a copy of the client so that we can de-register ourselves
     client: Client,
@@ -62,7 +82,9 @@ pub struct Publisher<T: RosMessageType> {
 }
 
 struct PublisherHandle {
+    #[allow(dead_code)]
     topic: String,
+    #[allow(dead_code)]
     msg_type: String,
 }
 
@@ -168,7 +190,12 @@ impl Client {
             let mut comm = self.comm.write().await;
             comm.call_service(service, &rand_string, req).await?;
         }
-        let msg = rx.await?;
+        // TODO timeout impl here
+        let msg = match rx.await {
+            Ok(msg) => msg,
+            Err(e) =>
+            panic!("The sender end of a service channel was dropped while rx was being awaited, this should not be possible: {}", e),
+        };
         Ok(serde_json::from_value(msg)?)
     }
 
@@ -199,16 +226,15 @@ impl Client {
         };
 
         // Spawn the spin task
+        // The internal stubborn spin task continues to try to reconnect on failure
+        // TODO MAJOR! Dropping the returned client doesn't shut down this task right now! That's a problem!
         let client_copy = client.clone();
-        // Okay we can't do this yet, because somehow doing this breaks Send
-        // I don't understand exactly why quite yet, but it does
         let _jh = tokio::task::spawn(client_copy.stubborn_spin());
 
         Ok(client)
     }
 
     pub async fn new_with_options(opts: ClientOptions) -> RosBridgeResult<Client> {
-        // TODO clone here is dumb but was most ergonomic option I found
         Client::timeout(opts.timeout, Client::_new(opts)).await
     }
 
@@ -348,8 +374,9 @@ impl Client {
             let read = match read {
                 Some(r) => r?,
                 None => {
-                    // TODO can we do better than using SimpleError? Define our own?
-                    bail!("Wtf does none mean here?");
+                    return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                        "Wtf does none mean here?"
+                    )));
                 }
             };
             debug!("Got message: {:?}", read);
@@ -511,9 +538,9 @@ impl Client {
             match publishers.get(topic) {
                 Some(_) => {
                     // TODO if we ever remove this restriction we should still check types match
-                    bail!(
-                        "Attempted to create two publishers to same topic, this is not supported"
-                    );
+                    return Err(RosLibRustError::Unexpected(anyhow!(
+                        "Attempted to create two publisher to same topic, this is not supported"
+                    )));
                 }
                 None => {
                     publishers.insert(
@@ -567,12 +594,13 @@ mod integration_tests {
     use crate::test_msgs::Header;
     use crate::{Client, ClientOptions, RosBridgeResult};
     use log::debug;
-    use simple_error::bail;
     use tokio::time::timeout;
     // On my laptop test was ~90% reliable at 10ms
     // Had 1 spurious github failure at 100
     const TIMEOUT: Duration = Duration::from_millis(200);
     use tokio::time::Duration;
+
+    type TestResult = Result<(), anyhow::Error>;
 
     /**
     This test does a round trip publish subscribe for real
@@ -670,7 +698,7 @@ mod integration_tests {
     // This test is currently broken, it seems that rosbridge still sends the message regardless
     // of advertise / unadvertise status. Unclear how to confirm whether advertise was sent or not
     #[ignore]
-    async fn unadvertise() -> RosBridgeResult<()> {
+    async fn unadvertise() -> TestResult {
         let _ = simple_logger::SimpleLogger::new()
             .with_level(log::LevelFilter::Debug)
             .without_timestamps()
@@ -715,7 +743,7 @@ mod integration_tests {
 
         match timeout(TIMEOUT, sub.changed()).await {
             Ok(_msg) => {
-                bail!("Received message after unadvertised!");
+                anyhow::bail!("Received message after unadvertised!");
             }
             Err(_e) => {
                 // All good! Timeout should expire

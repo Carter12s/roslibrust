@@ -2,14 +2,14 @@
 
 use std::{fmt::Display, str::FromStr};
 
+use anyhow::bail;
 use async_trait::async_trait;
 use futures::SinkExt;
 use log::debug;
 use serde_json::json;
-use simple_error::bail;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::{RosBridgeError, RosBridgeResult, RosMessageType, Stream};
+use crate::{RosBridgeResult, RosMessageType, Stream};
 
 /// Describes all documented rosbridge server operations
 pub enum Ops {
@@ -57,8 +57,8 @@ impl Into<&str> for &Ops {
 
 // TODO should replace this with deserialize
 impl FromStr for Ops {
-    type Err = RosBridgeError;
-    fn from_str(s: &str) -> Result<Self, RosBridgeError> {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
         Ok(match s {
             "advertise" => Ops::Advertise,
             "unadvertise" => Ops::Unadvertise,

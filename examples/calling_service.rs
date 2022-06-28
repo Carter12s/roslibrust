@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use log::*;
-use roslibrust::test_msgs::{self, Header, TimeI};
+use roslibrust::test_msgs::TimeI;
 use roslibrust::{message_gen, util, Client, RosMessageType};
 use serde::{Deserialize, Serialize};
 
@@ -46,6 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 /// This function can be used to generate the types place manually in the source above
 /// Running this requires ros installed (and sourced) and rosapi installed
 /// This serves as an additional example of how to generate message definitions.
+#[allow(dead_code)]
 fn gen_rosapi_msgs() {
     let rosapi_path = std::process::Command::new("rospack")
         .args(["find", "rosapi"])

@@ -2,9 +2,9 @@ use std::collections::{BTreeMap, VecDeque};
 use std::fs;
 use std::path::PathBuf;
 
+use anyhow::bail;
 use codegen::Scope;
 use log::{debug, warn};
-use simple_error::bail;
 
 use super::util;
 
@@ -154,7 +154,8 @@ pub fn generate_messages(opts: &MessageGenOpts) -> Result<(), Box<dyn std::error
 
 /// Generates rust type code for convenient access to messages
 /// returns the generated code as a string
-pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, Box<dyn std::error::Error>> {
+// TODO better error handling here
+pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, anyhow::Error> {
     // Parsing is implemented as iterative queue consumers
     // Multiple sequential queues Load Files -> Parse Files -> Resolve Remotes
     // Resolving remotes can add more more files to the load queue
