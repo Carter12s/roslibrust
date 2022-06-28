@@ -34,8 +34,9 @@ type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStre
 /// For now starting with a central error type, may break this up more in future
 #[derive(thiserror::Error, Debug)]
 pub enum RosLibRustError {
-    #[error("Not currently connected to ros master / bridge")]
-    Disconnected,
+    // TODO would like to add support for this error, but for now you'll just get CommFailures
+    // #[error("Not currently connected to ros master / bridge")]
+    // Disconnected,
     #[error("Websoket communication error: {0}")]
     CommFailure(tokio_tungstenite::tungstenite::Error),
     #[error("Operation timed out: {0}")]
@@ -55,7 +56,7 @@ impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
 
 // TODO someday make this more specific / easier to handle
 // type RosBridgeError = Box<dyn Error + Send + Sync>;
-type RosBridgeResult<T> = Result<T, RosLibRustError>;
+type RosLibRustResult<T> = Result<T, RosLibRustError>;
 
 struct Subscription {
     pub handles: Vec<Callback>,
@@ -96,7 +97,7 @@ impl<T: RosMessageType> Drop for Publisher<T> {
 
 impl<T: RosMessageType> Publisher<T> {
     /// The "standard" publish function sends the message out, returns when publish succeeds
-    pub async fn publish(&mut self, msg: T) -> RosBridgeResult<()> {
+    pub async fn publish(&mut self, msg: T) -> RosLibRustResult<()> {
         self.client.publish(&self.topic, msg).await
     }
 }
@@ -173,7 +174,7 @@ impl Client {
         &mut self,
         service: &str,
         req: Req,
-    ) -> RosBridgeResult<Res> {
+    ) -> RosLibRustResult<Res> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let rand_string: String = thread_rng()
             .sample_iter(&Alphanumeric)
@@ -202,9 +203,9 @@ impl Client {
     /// Implementation of timeout that is a no-op if timeout is 0 or unconfigured
     /// Only works on functions that already return our result type
     // This might not be needed but reading tokio::timeout docs I couldn't confirm this
-    async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> RosBridgeResult<T>
+    async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> RosLibRustResult<T>
     where
-        F: futures::Future<Output = RosBridgeResult<T>>,
+        F: futures::Future<Output = RosLibRustResult<T>>,
     {
         if let Some(t) = timeout {
             tokio::time::timeout(t, future).await?
@@ -214,11 +215,9 @@ impl Client {
     }
 
     // internal implementation of new
-    async fn _new(opts: ClientOptions) -> RosBridgeResult<Client> {
+    async fn _new(opts: ClientOptions) -> RosLibRustResult<Client> {
         let client = Client {
-            comm: Arc::new(RwLock::new(
-                Client::stubborn_connect(opts.url.clone()).await,
-            )),
+            comm: Arc::new(RwLock::new(Client::stubborn_connect(&opts.url).await)),
             publishers: Arc::new(RwLock::new(HashMap::new())),
             subscriptions: Arc::new(RwLock::new(HashMap::new())),
             service_calls: Arc::new(RwLock::new(HashMap::new())),
@@ -234,7 +233,7 @@ impl Client {
         Ok(client)
     }
 
-    pub async fn new_with_options(opts: ClientOptions) -> RosBridgeResult<Client> {
+    pub async fn new_with_options(opts: ClientOptions) -> RosLibRustResult<Client> {
         Client::timeout(opts.timeout, Client::_new(opts)).await
     }
 
@@ -242,7 +241,7 @@ impl Client {
     /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
     /// When awaited will not resolve until connection is completed
     // TODO better error handling
-    pub async fn new<S: Into<String>>(url: S) -> RosBridgeResult<Client> {
+    pub async fn new<S: Into<String>>(url: S) -> RosLibRustResult<Client> {
         Client::new_with_options(ClientOptions::new(url)).await
     }
 
@@ -250,7 +249,7 @@ impl Client {
     async fn _subscribe<Msg>(
         &mut self,
         topic_name: &str,
-    ) -> RosBridgeResult<tokio::sync::watch::Receiver<Msg>>
+    ) -> RosLibRustResult<tokio::sync::watch::Receiver<Msg>>
     where
         Msg: RosMessageType,
     {
@@ -310,14 +309,14 @@ impl Client {
     pub async fn subscribe<Msg>(
         &mut self,
         topic_name: &str,
-    ) -> RosBridgeResult<tokio::sync::watch::Receiver<Msg>>
+    ) -> RosLibRustResult<tokio::sync::watch::Receiver<Msg>>
     where
         Msg: RosMessageType,
     {
         Client::timeout(self.opts.timeout, self._subscribe(topic_name)).await
     }
 
-    pub async fn unsubscribe(&mut self, topic_name: &str) -> RosBridgeResult<()> {
+    pub async fn unsubscribe(&mut self, topic_name: &str) -> RosLibRustResult<()> {
         self.subscriptions.write().await.remove(topic_name);
         let mut stream = self.comm.write().await;
         stream.unsubscribe(topic_name).await?;
@@ -351,7 +350,7 @@ impl Client {
 
     /// Core read loop, receives messages from rosbridge and dispatches them.
     // Creating a client spawns a task which calls stubborn spin, which in turn calls this funtion
-    async fn spin(&mut self) -> RosBridgeResult<()> {
+    async fn spin(&mut self) -> RosLibRustResult<()> {
         debug!("Start spin");
         loop {
             let read = {
@@ -425,7 +424,7 @@ impl Client {
     }
 
     /// Wraps spin in retry logic to handle reconnections automagically
-    async fn stubborn_spin(mut self) -> RosBridgeResult<()> {
+    async fn stubborn_spin(mut self) -> RosLibRustResult<()> {
         debug!("Starting stubborn_spin");
         loop {
             {
@@ -440,9 +439,7 @@ impl Client {
                 }
             }
             // Reconnect stream
-            self.comm = Arc::new(RwLock::new(
-                Client::stubborn_connect(self.opts.url.to_string()).await,
-            ));
+            self.comm = Arc::new(RwLock::new(Client::stubborn_connect(&self.opts.url).await));
 
             // Resend rosbridge our subscription requests to re-establish inflight subscriptions
             // Clone here is dumb, but required due to async
@@ -491,35 +488,33 @@ impl Client {
     }
 
     /// Connects to websocket at specified URL, retries indefinitely
-    async fn stubborn_connect(url: String) -> Stream {
+    async fn stubborn_connect(url: &str) -> Stream {
         loop {
-            // TODO had a failure on my system:
-            /*
-            thread 'main' panicked at 'Could not determine the UTC offset on this system.
-            Possible causes are that the time crate does not implement "local_offset_at" on your system, or that you are running in a multi-threaded environment and the time crate is returning "None" from "local_offset_at" to avoid unsafe behaviour.
-            See the time crate's documentation for more information.
-             */
-            // Need to figure out how to not panic if this occurs
-            // Seems potentially to be coming from SimpleLogger?
-            // 100% is coming from SimpleLogger used in examples wtf...
-            // Only origin from this line is the fact that this next line logs internally
-            let connection_attempt = tokio_tungstenite::connect_async(&url).await;
-            if connection_attempt.is_err() {
-                warn!(
-                    "Failed to reconnect: {:?}",
-                    connection_attempt.err().unwrap()
-                );
-                // TODO configurable rate?
-                tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
-                continue;
+            match Client::connect(&url).await {
+                Err(e) => {
+                    warn!("Failed to reconnect: {:?}", e);
+                    // TODO configurable rate?
+                    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+                    continue;
+                }
+                Ok(stream) => {
+                    return stream;
+                }
             }
-            let (stream, _) = connection_attempt.unwrap();
-            return stream;
+        }
+    }
+
+    /// Bassic connection attempt and error wrapping
+    async fn connect(url: &str) -> RosLibRustResult<Stream> {
+        let attempt = tokio_tungstenite::connect_async(url).await;
+        match attempt {
+            Ok((stream, _response)) => Ok(stream),
+            Err(e) => Err(e.into()),
         }
     }
 
     /// Publishes a message
-    async fn publish<T>(&mut self, topic: &str, msg: T) -> RosBridgeResult<()>
+    async fn publish<T>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()>
     where
         T: RosMessageType,
     {
@@ -529,7 +524,7 @@ impl Client {
         Ok(())
     }
 
-    pub async fn advertise<T>(&mut self, topic: &str) -> RosBridgeResult<Publisher<T>>
+    pub async fn advertise<T>(&mut self, topic: &str) -> RosLibRustResult<Publisher<T>>
     where
         T: RosMessageType,
     {
@@ -585,6 +580,19 @@ mod general_usage {
     fn test_associated_contants() {
         let _ = NodeInfo::STATUS_UNINITIALIZED;
     }
+
+    // TODO would like some test like this when we support disconnected...
+    // For now this test should hang on stubborn connect
+    // #[tokio::test]
+    // /// Tests the correct error is returned when failing to connect
+    // async fn test_disconnected_on_bad_client() {
+    //     // This is an intentionally valid address point where we DO NOT expect a bridge to be running
+    //     match Client::new("ws://localhost:9999").await {
+    //         Ok(_) => assert!(false, "Client should not be able to connect here!"),
+    //         Err(RosLibRustError::Disconnected) => {} // test passes hooray!,
+    //         Err(_) => assert!(false, "Got some other error!"),
+    //     }
+    // }
 }
 
 #[cfg(test)]
@@ -592,7 +600,7 @@ mod general_usage {
 mod integration_tests {
     use crate::general_usage::LOCAL_WS;
     use crate::test_msgs::Header;
-    use crate::{Client, ClientOptions, RosBridgeResult};
+    use crate::{Client, ClientOptions};
     use log::debug;
     use tokio::time::timeout;
     // On my laptop test was ~90% reliable at 10ms

@@ -9,7 +9,7 @@ use log::debug;
 use serde_json::json;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::{RosBridgeResult, RosMessageType, Stream};
+use crate::{RosLibRustResult, RosMessageType, Stream};
 
 /// Describes all documented rosbridge server operations
 pub enum Ops {
@@ -77,23 +77,23 @@ impl FromStr for Ops {
 /// Describes the low level comm capabilities of talking to a rosbridge server
 #[async_trait]
 pub trait RosBridgeComm {
-    async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosBridgeResult<()>;
-    async fn unsubscribe(&mut self, topic: &str) -> RosBridgeResult<()>;
-    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosBridgeResult<()>;
+    async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
+    async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()>;
+    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()>;
     // TODO may provide a verison of advertise that takes explicit string for msg_type
-    async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosBridgeResult<()>;
+    async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn call_service<Req: RosMessageType>(
         &mut self,
         service: &str,
         id: &str,
         req: Req,
-    ) -> RosBridgeResult<()>;
-    async fn unadvertise(&mut self, topic: &str) -> RosBridgeResult<()>;
+    ) -> RosLibRustResult<()>;
+    async fn unadvertise(&mut self, topic: &str) -> RosLibRustResult<()>;
 }
 
 #[async_trait]
 impl RosBridgeComm for Stream {
-    async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosBridgeResult<()> {
+    async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()> {
         let msg = json!(
         {
         "op": Ops::Subscribe.to_string(),
@@ -106,7 +106,7 @@ impl RosBridgeComm for Stream {
         Ok(())
     }
 
-    async fn unsubscribe(&mut self, topic: &str) -> RosBridgeResult<()> {
+    async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()> {
         let msg = json!(
         {
         "op": Ops::Unsubscribe.to_string(),
@@ -118,7 +118,7 @@ impl RosBridgeComm for Stream {
         Ok(())
     }
 
-    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosBridgeResult<()> {
+    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()> {
         let msg = json!(
             {
                 "op": Ops::Publish.to_string(),
@@ -132,7 +132,7 @@ impl RosBridgeComm for Stream {
         Ok(())
     }
 
-    async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosBridgeResult<()> {
+    async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosLibRustResult<()> {
         let msg = json!(
             {
                 "op": Ops::Advertise.to_string(),
@@ -150,7 +150,7 @@ impl RosBridgeComm for Stream {
         service: &str,
         id: &str,
         req: Req,
-    ) -> RosBridgeResult<()> {
+    ) -> RosLibRustResult<()> {
         let msg = json!(
             {
                 "op": Ops::CallService.to_string(),
@@ -164,7 +164,7 @@ impl RosBridgeComm for Stream {
         Ok(())
     }
 
-    async fn unadvertise(&mut self, topic: &str) -> RosBridgeResult<()> {
+    async fn unadvertise(&mut self, topic: &str) -> RosLibRustResult<()> {
         debug!("Sending unadvertise on {}", topic);
         let msg = json! {
             {
