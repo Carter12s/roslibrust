@@ -602,6 +602,7 @@ mod integration_tests {
     use crate::test_msgs::Header;
     use crate::{Client, ClientOptions};
     use log::debug;
+    use tokio::sync::watch::Receiver;
     use tokio::time::timeout;
     // On my laptop test was ~90% reliable at 10ms
     // Had 1 spurious github failure at 100
@@ -662,6 +663,39 @@ mod integration_tests {
 
         let msg_in = rx.borrow().clone();
         assert_eq!(msg_in, msg_out);
+    }
+
+    #[tokio::test]
+    /// Designed to test behavior when receiving a message of unexpected type on a topic
+    // TODO this test is good, but actually shows how bad the ergonomics are and how we want to improve them!
+    // We want a failed message parse / type mismatch to come through to the subscriber
+    async fn bad_message_recv() -> TestResult {
+        let mut client = Client::new_with_options(
+            ClientOptions::new(crate::general_usage::LOCAL_WS).timeout(TIMEOUT),
+        )
+        .await?;
+
+        let mut publisher = client
+            .advertise::<crate::test_msgs::TimeI>("/bad_message_recv/topic")
+            .await?;
+
+        let mut sub: Receiver<crate::test_msgs::Header> =
+            client.subscribe("/bad_message_recv/topic").await?;
+
+        publisher
+            .publish(crate::test_msgs::TimeI { secs: 0, nsecs: 0 })
+            .await?;
+
+        match timeout(TIMEOUT, sub.changed()).await {
+            Err(_elapsed) => {
+                // Test passed! it should timeout
+                // Not actually behavior we want, error of some kind should come through subscription
+            }
+            _ => {
+                assert!(false, "Bad message made it throught");
+            }
+        }
+        Ok(())
     }
 
     #[tokio::test]
