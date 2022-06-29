@@ -10,6 +10,7 @@ pub mod test_msgs;
 
 use anyhow::anyhow;
 use comm::RosBridgeComm;
+use dashmap::DashMap;
 use futures::StreamExt;
 use log::*;
 use rand::distributions::Alphanumeric;
@@ -17,7 +18,6 @@ use rand::{thread_rng, Rng};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -43,6 +43,8 @@ pub enum RosLibRustError {
     Timeout(#[from] tokio::time::error::Elapsed),
     #[error("Failed to parse message from JSON: {0}")]
     InvalidMessage(#[from] serde_json::Error),
+    // Generic catch-all error type for not-yet-handled errors
+    // TODO ultimately this type will be removed from API of library
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
 }
@@ -150,11 +152,11 @@ pub struct Client {
     // TODO replace Stream with trait RosBridgeComm to allow mocking
     comm: Arc<RwLock<Stream>>,
     // Stores a record of the publishers we've handed out
-    publishers: Arc<RwLock<HashMap<String, PublisherHandle>>>,
-    subscriptions: Arc<RwLock<HashMap<String, Subscription>>>,
+    publishers: Arc<DashMap<String, PublisherHandle>>,
+    subscriptions: Arc<DashMap<String, Subscription>>,
     // Contains any outstanding service calls we're waiting for a response on
     // Map key will be a uniquely generated id for each call
-    service_calls: Arc<RwLock<HashMap<String, tokio::sync::oneshot::Sender<Value>>>>,
+    service_calls: Arc<DashMap<String, tokio::sync::oneshot::Sender<Value>>>,
     opts: Arc<ClientOptions>,
 }
 
@@ -182,8 +184,7 @@ impl Client {
             .map(char::from)
             .collect();
         {
-            let mut service_calls = self.service_calls.write().await;
-            if service_calls.insert(rand_string.clone(), tx).is_some() {
+            if self.service_calls.insert(rand_string.clone(), tx).is_some() {
                 error!("ID collision encounted in call_service");
             }
         }
@@ -218,9 +219,9 @@ impl Client {
     async fn _new(opts: ClientOptions) -> RosLibRustResult<Client> {
         let client = Client {
             comm: Arc::new(RwLock::new(Client::stubborn_connect(&opts.url).await)),
-            publishers: Arc::new(RwLock::new(HashMap::new())),
-            subscriptions: Arc::new(RwLock::new(HashMap::new())),
-            service_calls: Arc::new(RwLock::new(HashMap::new())),
+            publishers: Arc::new(DashMap::new()),
+            subscriptions: Arc::new(DashMap::new()),
+            service_calls: Arc::new(DashMap::new()),
             opts: Arc::new(opts),
         };
 
@@ -253,12 +254,13 @@ impl Client {
     where
         Msg: RosMessageType,
     {
-        let mut lock = self.subscriptions.write().await;
-        debug!("Subscribe got write lock");
-        let cbs = lock.entry(topic_name.to_string()).or_insert(Subscription {
-            handles: vec![],
-            topic_type: Msg::ROS_TYPE_NAME.to_string(),
-        });
+        let mut cbs = self
+            .subscriptions
+            .entry(topic_name.to_string())
+            .or_insert(Subscription {
+                handles: vec![],
+                topic_type: Msg::ROS_TYPE_NAME.to_string(),
+            });
 
         // TODO single place to define rosbridge operations
         // Send subscribe message to rosbridge to initiate it sending us messages
@@ -317,7 +319,7 @@ impl Client {
     }
 
     pub async fn unsubscribe(&mut self, topic_name: &str) -> RosLibRustResult<()> {
-        self.subscriptions.write().await.remove(topic_name);
+        self.subscriptions.remove(topic_name);
         let mut stream = self.comm.write().await;
         stream.unsubscribe(topic_name).await?;
         Ok(())
@@ -330,11 +332,7 @@ impl Client {
         let topic_name_copy = topic_name.to_string();
         tokio::spawn(async move {
             // Remove publisher from our records
-            {
-                let mut table = copy.publishers.write().await;
-                debug!("Unadvertise got publisher lock");
-                table.remove(&topic_name_copy);
-            }
+            copy.publishers.remove(&topic_name_copy);
 
             // Send unadvertise message
             {
@@ -441,14 +439,13 @@ impl Client {
             // Reconnect stream
             self.comm = Arc::new(RwLock::new(Client::stubborn_connect(&self.opts.url).await));
 
+            // TODO re-advertise!
             // Resend rosbridge our subscription requests to re-establish inflight subscriptions
             // Clone here is dumb, but required due to async
             let mut subs: Vec<(String, String)> = vec![];
             {
-                let lock = self.subscriptions.read();
-                let lock = lock.await;
-                for (k, v) in lock.iter() {
-                    subs.push((k.clone(), v.topic_type.clone()))
+                for sub in self.subscriptions.iter() {
+                    subs.push((sub.key().clone(), sub.value().topic_type.clone()))
                 }
             }
             let mut stream = self.comm.write().await;
@@ -463,8 +460,9 @@ impl Client {
     /// Panics if publish is received for unexpected topic
     async fn handle_publish(&mut self, data: Value) {
         // TODO lots of error handling!
-        let lock = self.subscriptions.read().await;
-        let callbacks = lock.get(data.get("topic").unwrap().as_str().unwrap());
+        let callbacks = self
+            .subscriptions
+            .get(data.get("topic").unwrap().as_str().unwrap());
         let callbacks = match callbacks {
             Some(callbacks) => callbacks,
             _ => panic!("Received publish message for unsubscribed topic!"),
@@ -481,8 +479,7 @@ impl Client {
     async fn handle_response(&mut self, data: Value) {
         // TODO lots of error handling!
         let id = data.get("id").unwrap().as_str().unwrap();
-        let mut service_calls = self.service_calls.write().await;
-        let call = service_calls.remove(id).unwrap();
+        let (_id, call) = self.service_calls.remove(id).unwrap();
         let res = data.get("values").unwrap();
         call.send(res.clone()).unwrap();
     }
@@ -529,8 +526,7 @@ impl Client {
         T: RosMessageType,
     {
         {
-            let mut publishers = self.publishers.write().await;
-            match publishers.get(topic) {
+            match self.publishers.get(topic) {
                 Some(_) => {
                     // TODO if we ever remove this restriction we should still check types match
                     return Err(RosLibRustError::Unexpected(anyhow!(
@@ -538,7 +534,8 @@ impl Client {
                     )));
                 }
                 None => {
-                    publishers.insert(
+                    // TODO can we insert while holding a get in dashmap?
+                    self.publishers.insert(
                         topic.to_string(),
                         PublisherHandle {
                             topic: topic.to_string(),
