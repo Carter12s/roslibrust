@@ -8,6 +8,8 @@ use crate::{Client, MessageQueue, RosMessageType};
 
 pub struct Subscriber<T: RosMessageType> {
     // Holds an internal copy of client to reference back to for dropping
+    // TODO needs to use to auto-unsubscriber
+    #[allow(dead_code)]
     client: Client,
     queue: Arc<MessageQueue<T>>,
 }

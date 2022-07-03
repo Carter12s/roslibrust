@@ -116,24 +116,22 @@ impl<T: RosMessageType> Publisher<T> {
     }
 }
 
-// TODO we probably want to impl futures sink or some shit?
-
-/// Fundamental traits for message types this works with
-/// This trait will be satisfied for any types generate with this crate's message_gen
+/// Fundamental traits for message types this crate works with
+/// This trait will be satisfied for any types generated with this crate's message_gen functionality
 pub trait RosMessageType:
     'static + DeserializeOwned + Default + Send + Serialize + Sync + Clone + Debug
 {
+    /// Expected to be the combination pkg_name/type_name string describing the type to ros
+    /// Example: std_msgs/Header
     const ROS_TYPE_NAME: &'static str;
 }
 
-/// This special impl allows for services with no args / returns
+// This special impl allows for services with no args / returns
 impl RosMessageType for () {
     const ROS_TYPE_NAME: &'static str = "";
 }
 
-// TODO: Potential options to add
-//  * stubborn reconnect interval
-//  * Automatic header Seq / Stamp setting
+/// Builder options for creating a client
 #[derive(Clone)]
 pub struct ClientOptions {
     url: String,
@@ -142,7 +140,6 @@ pub struct ClientOptions {
 
 impl ClientOptions {
     /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
-    /// URL is required to be set
     pub fn new<S: Into<String>>(url: S) -> ClientOptions {
         ClientOptions {
             url: url.into(),
@@ -150,7 +147,9 @@ impl ClientOptions {
         }
     }
 
-    /// Configures a default timeout for all operations
+    /// Configures a default timeout for all operations.
+    /// Underlying communication implementations may define their own timeouts, this options does
+    /// not affect those timeouts, but adds an additional on top to prempt any operations.
     pub fn timeout<T: Into<Duration>>(mut self, duration: T) -> ClientOptions {
         self.timeout = Some(duration.into());
         self
@@ -343,7 +342,9 @@ impl Client {
         Client::timeout(self.opts.timeout, self._subscribe(topic_name)).await
     }
 
-    pub async fn unsubscribe(&mut self, topic_name: &str) -> RosLibRustResult<()> {
+    // TODO this needs to be called automatically when last publisher is dropped
+    #[allow(dead_code)]
+    async fn unsubscribe(&mut self, topic_name: &str) -> RosLibRustResult<()> {
         self.subscriptions.remove(topic_name);
         let mut stream = self.comm.write().await;
         stream.unsubscribe(topic_name).await?;
@@ -351,7 +352,8 @@ impl Client {
     }
 
     // This function is not async specifically so it can be called from drop
-    // It same reason it doesn't return anything
+    // same reason why it doesn't return anything
+    // Called automatically when Publisher is dropped
     fn unadvertise(&mut self, topic_name: &str) {
         let copy = self.clone();
         let topic_name_copy = topic_name.to_string();
@@ -578,7 +580,6 @@ impl Client {
         }
         Ok(Publisher {
             topic: topic.to_string(),
-            seq: 0,
             client: self.clone(),
             _marker: Default::default(),
         })
