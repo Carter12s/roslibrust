@@ -15,14 +15,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut client = Client::new("ws://localhost:9090").await?;
     info!("Client connected");
 
-    let mut rx = client
+    let rx = client
         .subscribe::<roslibrust::test_msgs::Header>("talker")
         .await?;
     info!("Successfully subscribed to topic: talker");
 
     loop {
-        let _ = rx.changed().await;
-        let msg = rx.borrow();
+        let msg = rx.next().await;
         info!("Got msg: {:?}", msg);
     }
 }

@@ -8,6 +8,11 @@ pub mod comm;
 // TODO look into restricting visibility of this... #[cfg(test)] and pub(crate) not working as needed
 pub mod test_msgs;
 
+// Subscriber is a transparent module, we directly expose internal types
+// Module exists only to organize source code.
+mod subscriber;
+pub use subscriber::*;
+
 use anyhow::anyhow;
 use comm::RosBridgeComm;
 use dashmap::DashMap;
@@ -29,7 +34,15 @@ use tungstenite::Message;
 
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
+
+/// Our underlying comunication type
+//TODO we really want to split this into seperate read/write heads that can be locked seperatly
 type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
+
+type MessageQueue<T> = deadqueue::limited::Queue<T>;
+
+// TODO queue size should be configurable for both subscribers and publishers
+const QUEUE_SIZE: usize = 1_000;
 
 /// For now starting with a central error type, may break this up more in future
 #[derive(thiserror::Error, Debug)]
@@ -56,8 +69,6 @@ impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
     }
 }
 
-// TODO someday make this more specific / easier to handle
-// type RosBridgeError = Box<dyn Error + Send + Sync>;
 type RosLibRustResult<T> = Result<T, RosLibRustError>;
 
 struct Subscription {
@@ -247,13 +258,11 @@ impl Client {
     }
 
     // Internal implementation of subscribe
-    async fn _subscribe<Msg>(
-        &mut self,
-        topic_name: &str,
-    ) -> RosLibRustResult<tokio::sync::watch::Receiver<Msg>>
+    async fn _subscribe<Msg>(&mut self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
     where
         Msg: RosMessageType,
     {
+        // Lookup / create a subscription entry for tracking
         let mut cbs = self
             .subscriptions
             .entry(topic_name.to_string())
@@ -262,40 +271,58 @@ impl Client {
                 topic_type: Msg::ROS_TYPE_NAME.to_string(),
             });
 
-        // TODO single place to define rosbridge operations
+        // TODO Possible bug here? We send a subscribe message each time even if already subscribed
         // Send subscribe message to rosbridge to initiate it sending us messages
         let mut stream = self.comm.write().await;
         stream.subscribe(&topic_name, &Msg::ROS_TYPE_NAME).await?;
 
-        // TODO we have spsc, so watch is kinda overkill? Buffer of 1 is nice...
-        // Note: Type erasure with callback is forcing generating a new channel per subscription
-        // instead of allowing us to re-use the subscription.
-        // I can't figure out how to store rx's with different types...
-        // Trait objects can't
         // Create a new watch channel for this topic
-        let (tx, rx) = tokio::sync::watch::channel(Msg::default());
+        let queue = Arc::new(MessageQueue::new(QUEUE_SIZE));
 
         // Move the tx into a callback that takes raw string data
         // This allows us to store the callbacks generic on type, Msg conversion is embedded here
+        let topic_name_copy = topic_name.to_string();
+        let queue_copy = queue.clone();
         let send_cb = Box::new(move |data: &str| {
-            let converted = serde_json::from_str(data);
-            // TODO makes sense for callback to return Result<>, instead of this handling
-            if converted.is_err() {
-                error!(
-                    "Failed to deserialize ros message: {:?}. Message will be skipped!",
-                    converted.err().unwrap()
-                );
-                return;
-            }
-            let converted = converted.unwrap();
-
-            match tx.send(converted) {
-                Ok(_) => {}
+            let converted = match serde_json::from_str::<Msg>(data) {
                 Err(e) => {
+                    // TODO makes sense for callback to return Result<>, instead of this handling
+                    // Should do better error propogation
                     error!(
-                        "Subscriber was dropped without being de-registered? {:?}",
+                        "Failed to deserialize ros message: {:?}. Message will be skipped!",
                         e
                     );
+                    return;
+                }
+                Ok(t) => t,
+            };
+
+            match queue_copy.try_push(converted) {
+                Ok(()) => {
+                    // Msg queued succesfully
+                }
+                Err(msg) => {
+                    info!(
+                        "Queue on topic {} is full attempting to drop oldest messgae",
+                        &topic_name_copy
+                    );
+                    let _dropped = queue_copy.try_pop();
+                    // Retry pushing into queue
+                    match queue_copy.try_push(msg) {
+                        Ok(()) => {
+                            trace!("Msg was queued succesfully after dropping front");
+                        }
+                        Err(msg) => {
+                            // We don't expect to see this, the only way this should be possible
+                            // would be if due to a race condition a message was inserted into queue
+                            // between the try_pop and try_push.
+                            // This closure should be the only place where push occurs, so this is not
+                            // expected
+                            error!(
+                                "Msg was dropped during recieve because queue could not be emptied: {:?}", msg
+                            );
+                        }
+                    }
                 }
             }
         });
@@ -304,14 +331,11 @@ impl Client {
         cbs.handles.push(send_cb);
 
         // Return a subscription handle
-        Ok(rx)
+        Ok(Subscriber::new(self.clone(), queue))
     }
 
     /// Subscribe to a given topic expecting msgs of provided type
-    pub async fn subscribe<Msg>(
-        &mut self,
-        topic_name: &str,
-    ) -> RosLibRustResult<tokio::sync::watch::Receiver<Msg>>
+    pub async fn subscribe<Msg>(&mut self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
     where
         Msg: RosMessageType,
     {
@@ -597,9 +621,8 @@ mod general_usage {
 mod integration_tests {
     use crate::general_usage::LOCAL_WS;
     use crate::test_msgs::Header;
-    use crate::{Client, ClientOptions};
+    use crate::{Client, ClientOptions, Subscriber};
     use log::debug;
-    use tokio::sync::watch::Receiver;
     use tokio::time::timeout;
     // On my laptop test was ~90% reliable at 10ms
     // Had 1 spurious github failure at 100
@@ -633,7 +656,7 @@ mod integration_tests {
             .await
             .expect("Failed to advertise in time")
             .unwrap();
-        let mut rx = timeout(TIMEOUT, client.subscribe::<Header>(TOPIC))
+        let rx = timeout(TIMEOUT, client.subscribe::<Header>(TOPIC))
             .await
             .expect("Failed to subscribe in time")
             .unwrap();
@@ -653,12 +676,10 @@ mod integration_tests {
             .expect("Failed to publish in time")
             .unwrap();
 
-        timeout(TIMEOUT, rx.changed())
+        let msg_in = timeout(TIMEOUT, rx.next())
             .await
-            .expect("Failed to receive in time")
-            .unwrap();
+            .expect("Failed to receive in time");
 
-        let msg_in = rx.borrow().clone();
         assert_eq!(msg_in, msg_out);
     }
 
@@ -676,14 +697,14 @@ mod integration_tests {
             .advertise::<crate::test_msgs::TimeI>("/bad_message_recv/topic")
             .await?;
 
-        let mut sub: Receiver<crate::test_msgs::Header> =
+        let sub: Subscriber<crate::test_msgs::Header> =
             client.subscribe("/bad_message_recv/topic").await?;
 
         publisher
             .publish(crate::test_msgs::TimeI { secs: 0, nsecs: 0 })
             .await?;
 
-        match timeout(TIMEOUT, sub.changed()).await {
+        match timeout(TIMEOUT, sub.next()).await {
             Err(_elapsed) => {
                 // Test passed! it should timeout
                 // Not actually behavior we want, error of some kind should come through subscription
@@ -757,14 +778,12 @@ mod integration_tests {
         let mut publisher = client.advertise(TOPIC).await?;
         debug!("Got publisher");
 
-        let mut sub = client.subscribe::<Header>(TOPIC).await?;
+        let sub = client.subscribe::<Header>(TOPIC).await?;
         debug!("Got subscriber");
 
         let msg = Header::default();
         publisher.publish(msg).await?;
-        timeout(TIMEOUT, sub.changed()).await??;
-        // Mark message as seen
-        sub.borrow_and_update();
+        timeout(TIMEOUT, sub.next()).await?;
 
         debug!("Dropping publisher");
         // drop subscriber so it doesn't keep topic open
@@ -775,12 +794,12 @@ mod integration_tests {
         // Wait for drop to complete
         tokio::time::sleep(TIMEOUT).await;
 
-        let mut sub = client.subscribe::<Header>(TOPIC).await?;
+        let sub = client.subscribe::<Header>(TOPIC).await?;
         // manually publishing using private api
         let msg = Header::default();
         client.publish(TOPIC, msg).await?;
 
-        match timeout(TIMEOUT, sub.changed()).await {
+        match timeout(TIMEOUT, sub.next()).await {
             Ok(_msg) => {
                 anyhow::bail!("Received message after unadvertised!");
             }

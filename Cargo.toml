@@ -14,6 +14,7 @@ async-trait = "0.1.53"
 codegen = { git = "https://github.com/carter12s/codegen.git", branch = "associated-consts" }
 #codegen = "0.1.3"
 dashmap = "5.3.4"
+deadqueue = "0.2.2"
 futures = "0.3.13"
 log = "0.4.14"
 rand = "0.8.5"
