@@ -88,8 +88,9 @@ pub struct Publisher<T: RosMessageType> {
     // TODO have to somehow detect if message has header
     // We likely want to implement a Stamped trait and impl it automatically in message gen
     // if we detect a `Header header` in the .msg/.srv
-    #[allow(dead_code)]
-    seq: usize,
+    // For now, leaving seq off of Publisher until it is fully supported
+    // #[allow(dead_code)]
+    // seq: usize,
     // Stores a copy of the client so that we can de-register ourselves
     client: Client,
     _marker: std::marker::PhantomData<T>,
