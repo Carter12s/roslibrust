@@ -15,7 +15,8 @@ codegen = { git = "https://github.com/carter12s/codegen.git", branch = "associat
 #codegen = "0.1.3"
 dashmap = "5.3.4"
 deadqueue = "0.2.2"
-futures = "0.3.13"
+futures = "0.3.21"
+futures-util = "0.3.21"
 log = "0.4.14"
 rand = "0.8.5"
 serde = { version = "1.0.125", features = ["derive"] }

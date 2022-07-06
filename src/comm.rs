@@ -1,15 +1,15 @@
 //! This module covers communication with the server
 
-use std::{fmt::Display, str::FromStr};
+use std::{fmt::Display, str::FromStr, string::ToString};
 
 use anyhow::bail;
 use async_trait::async_trait;
-use futures::SinkExt;
+use futures_util::SinkExt;
 use log::debug;
 use serde_json::json;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::{RosLibRustResult, RosMessageType, Stream};
+use crate::{RosLibRustResult, RosMessageType, Writer};
 
 /// Describes all documented rosbridge server operations
 pub enum Ops {
@@ -92,7 +92,7 @@ pub trait RosBridgeComm {
 }
 
 #[async_trait]
-impl RosBridgeComm for Stream {
+impl RosBridgeComm for Writer {
     async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()> {
         let msg = json!(
         {

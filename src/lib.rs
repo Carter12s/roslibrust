@@ -24,7 +24,7 @@ mod integration_tests;
 use anyhow::anyhow;
 use comm::RosBridgeComm;
 use dashmap::DashMap;
-use futures::StreamExt;
+use futures_util::stream::{SplitSink, SplitStream, StreamExt};
 use log::*;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
@@ -46,7 +46,9 @@ type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
 
 /// Our underlying comunication type
 //TODO we really want to split this into seperate read/write heads that can be locked seperatly
-type Stream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
+type Socket = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
+type Reader = SplitStream<Socket>;
+type Writer = SplitSink<Socket, Message>;
 
 type MessageQueue<T> = deadqueue::limited::Queue<T>;
 
@@ -139,9 +141,9 @@ impl ClientOptions {
 // Fundamental structure for a client
 #[derive(Clone)]
 pub struct Client {
-    // TODO split stream into read and write halves
-    // TODO replace Stream with trait RosBridgeComm to allow mocking
-    comm: Arc<RwLock<Stream>>,
+    // TODO replace Socket with trait RosBridgeComm to allow mocking
+    reader: Arc<RwLock<Reader>>,
+    writer: Arc<RwLock<Writer>>,
     // Stores a record of the publishers we've handed out
     publishers: Arc<DashMap<String, PublisherHandle>>,
     subscriptions: Arc<DashMap<String, Subscription>>,
@@ -152,64 +154,12 @@ pub struct Client {
 }
 
 impl Client {
-    // TODO apparently rosbridge doesn't support this!
-    // TODO get them to! and then implement!
-    // /// Advertises a service and returns a handle to the service server
-    // /// Serivce will be active until the handle is dropped!
-    // pub async fn advertise_service(
-    //     &mut self,
-    //     topic: &str,
-    // ) -> Result<ServiceServer, Box<dyn Error>> {
-    //     unimplemented!()
-    // }
-
-    pub async fn call_service<Req: RosMessageType, Res: RosMessageType>(
-        &mut self,
-        service: &str,
-        req: Req,
-    ) -> RosLibRustResult<Res> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        let rand_string: String = thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(30)
-            .map(char::from)
-            .collect();
-        {
-            if self.service_calls.insert(rand_string.clone(), tx).is_some() {
-                error!("ID collision encounted in call_service");
-            }
-        }
-        {
-            let mut comm = self.comm.write().await;
-            comm.call_service(service, &rand_string, req).await?;
-        }
-        // TODO timeout impl here
-        let msg = match rx.await {
-            Ok(msg) => msg,
-            Err(e) =>
-            panic!("The sender end of a service channel was dropped while rx was being awaited, this should not be possible: {}", e),
-        };
-        Ok(serde_json::from_value(msg)?)
-    }
-
-    /// Implementation of timeout that is a no-op if timeout is 0 or unconfigured
-    /// Only works on functions that already return our result type
-    // This might not be needed but reading tokio::timeout docs I couldn't confirm this
-    async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> RosLibRustResult<T>
-    where
-        F: futures::Future<Output = RosLibRustResult<T>>,
-    {
-        if let Some(t) = timeout {
-            tokio::time::timeout(t, future).await?
-        } else {
-            future.await
-        }
-    }
-
     // internal implementation of new
     async fn _new(opts: ClientOptions) -> RosLibRustResult<Client> {
+        let (writer, reader) = Client::stubborn_connect(&opts.url).await;
         let client = Client {
-            comm: Arc::new(RwLock::new(Client::stubborn_connect(&opts.url).await)),
+            reader: Arc::new(RwLock::new(reader)),
+            writer: Arc::new(RwLock::new(writer)),
             publishers: Arc::new(DashMap::new()),
             subscriptions: Arc::new(DashMap::new()),
             service_calls: Arc::new(DashMap::new()),
@@ -253,7 +203,7 @@ impl Client {
 
         // TODO Possible bug here? We send a subscribe message each time even if already subscribed
         // Send subscribe message to rosbridge to initiate it sending us messages
-        let mut stream = self.comm.write().await;
+        let mut stream = self.writer.write().await;
         stream.subscribe(&topic_name, &Msg::ROS_TYPE_NAME).await?;
 
         // Create a new watch channel for this topic
@@ -356,7 +306,7 @@ impl Client {
         let topic_copy = topic_name.to_string();
         // Actually send the unsubscribe message in a task so subscriber::Drop can call this function
         tokio::spawn(async move {
-            let mut stream = client_copy.comm.write().await;
+            let mut stream = client_copy.writer.write().await;
             match stream.unsubscribe(&topic_copy).await {
                 Ok(_) => {}
                 Err(e) => error!(
@@ -381,7 +331,7 @@ impl Client {
             // Send unadvertise message
             {
                 debug!("Unadvertise waiting for comm lock");
-                let mut comm = copy.comm.write().await;
+                let mut comm = copy.writer.write().await;
                 debug!("Unadvertise got comm lock");
                 if let Err(e) = comm.unadvertise(&topic_name_copy).await {
                     error!("Failed to send unadvertise in comm layer: {:?}", e);
@@ -390,34 +340,77 @@ impl Client {
         });
     }
 
+    // TODO apparently rosbridge doesn't support this!
+    // TODO get them to! and then implement!
+    // /// Advertises a service and returns a handle to the service server
+    // /// Serivce will be active until the handle is dropped!
+    // pub async fn advertise_service(
+    //     &mut self,
+    //     topic: &str,
+    // ) -> Result<ServiceServer, Box<dyn Error>> {
+    //     unimplemented!()
+    // }
+
+    pub async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+        &mut self,
+        service: &str,
+        req: Req,
+    ) -> RosLibRustResult<Res> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let rand_string: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(30)
+            .map(char::from)
+            .collect();
+        {
+            if self.service_calls.insert(rand_string.clone(), tx).is_some() {
+                error!("ID collision encounted in call_service");
+            }
+        }
+        {
+            let mut comm = self.writer.write().await;
+            comm.call_service(service, &rand_string, req).await?;
+        }
+        // TODO timeout impl here
+        let msg = match rx.await {
+            Ok(msg) => msg,
+            Err(e) =>
+            panic!("The sender end of a service channel was dropped while rx was being awaited, this should not be possible: {}", e),
+        };
+        Ok(serde_json::from_value(msg)?)
+    }
+
+    /// Implementation of timeout that is a no-op if timeout is 0 or unconfigured
+    /// Only works on functions that already return our result type
+    // This might not be needed but reading tokio::timeout docs I couldn't confirm this
+    async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> RosLibRustResult<T>
+    where
+        F: futures::Future<Output = RosLibRustResult<T>>,
+    {
+        if let Some(t) = timeout {
+            tokio::time::timeout(t, future).await?
+        } else {
+            future.await
+        }
+    }
+
     /// Core read loop, receives messages from rosbridge and dispatches them.
     // Creating a client spawns a task which calls stubborn spin, which in turn calls this funtion
     async fn spin(&mut self) -> RosLibRustResult<()> {
         debug!("Start spin");
         loop {
             let read = {
-                let mut stream = self.comm.write().await;
-                // Okay this is what I want to do, but I can't because this actually block publishes
-                // We have to instead settle for some periodic bullshit.
-                // TODO figure out how to properly duplex the websocket...
-                // We need to split the channel into seperate halves with indpendently blocking read / write halves
-                // stream.next().await
-                match tokio::time::timeout(tokio::time::Duration::from_millis(1), stream.next())
-                    .await
-                {
-                    Ok(read) => read,
-                    Err(_) => {
-                        // Timed out, release mutex so other tasks can use stream
-                        continue;
+                let mut stream = self.reader.write().await;
+                match stream.next().await {
+                    Some(Ok(msg)) => msg,
+                    Some(Err(e)) => {
+                        return Err(e.into());
                     }
-                }
-            };
-            let read = match read {
-                Some(r) => r?,
-                None => {
-                    return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
-                        "Wtf does none mean here?"
-                    )));
+                    None => {
+                        return Err(RosLibRustError::Unexpected(anyhow!(
+                            "Wtf does none mean here?"
+                        )));
+                    }
                 }
             };
             debug!("Got message: {:?}", read);
@@ -481,7 +474,9 @@ impl Client {
                 }
             }
             // Reconnect stream
-            self.comm = Arc::new(RwLock::new(Client::stubborn_connect(&self.opts.url).await));
+            let (writer, reader) = Client::stubborn_connect(&self.opts.url).await;
+            self.reader = Arc::new(RwLock::new(reader));
+            self.writer = Arc::new(RwLock::new(writer));
 
             // TODO re-advertise!
             // Resend rosbridge our subscription requests to re-establish inflight subscriptions
@@ -492,7 +487,7 @@ impl Client {
                     subs.push((sub.key().clone(), sub.value().topic_type.clone()))
                 }
             }
-            let mut stream = self.comm.write().await;
+            let mut stream = self.writer.write().await;
             for (topic, topic_type) in &subs {
                 stream.subscribe(topic, topic_type).await?;
             }
@@ -529,7 +524,7 @@ impl Client {
     }
 
     /// Connects to websocket at specified URL, retries indefinitely
-    async fn stubborn_connect(url: &str) -> Stream {
+    async fn stubborn_connect(url: &str) -> (Writer, Reader) {
         loop {
             match Client::connect(&url).await {
                 Err(e) => {
@@ -539,14 +534,15 @@ impl Client {
                     continue;
                 }
                 Ok(stream) => {
-                    return stream;
+                    let (writer, reader) = stream.split();
+                    return (writer, reader);
                 }
             }
         }
     }
 
     /// Bassic connection attempt and error wrapping
-    async fn connect(url: &str) -> RosLibRustResult<Stream> {
+    async fn connect(url: &str) -> RosLibRustResult<Socket> {
         let attempt = tokio_tungstenite::connect_async(url).await;
         match attempt {
             Ok((stream, _response)) => Ok(stream),
@@ -559,7 +555,7 @@ impl Client {
     where
         T: RosMessageType,
     {
-        let mut stream = self.comm.write().await;
+        let mut stream = self.writer.write().await;
         debug!("Publish got write lock on comm");
         stream.publish(topic, msg).await?;
         Ok(())
@@ -591,7 +587,7 @@ impl Client {
         }
 
         {
-            let mut stream = self.comm.write().await;
+            let mut stream = self.writer.write().await;
             debug!("Advertise got lock on comm");
             stream.advertise::<T>(topic).await?;
         }
