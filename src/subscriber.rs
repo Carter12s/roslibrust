@@ -4,9 +4,15 @@
 
 use std::sync::Arc;
 
+use log::error;
+
 use crate::{Client, MessageQueue, RosMessageType};
 
 pub struct Subscriber<T: RosMessageType> {
+    // Randomly generated unique id of the subscriber used to track its lifetime with the client
+    id: uuid::Uuid,
+    // ROS topic name this is subscribed to, currently only used in Drop impl to help client
+    topic: String,
     // Holds an internal copy of client to reference back to for dropping
     // TODO needs to use to auto-unsubscriber
     #[allow(dead_code)]
@@ -15,8 +21,13 @@ pub struct Subscriber<T: RosMessageType> {
 }
 
 impl<T: RosMessageType> Subscriber<T> {
-    pub fn new(client: Client, queue: Arc<MessageQueue<T>>) -> Self {
-        Subscriber { client, queue }
+    pub fn new(client: Client, queue: Arc<MessageQueue<T>>, topic: String) -> Self {
+        Subscriber {
+            id: uuid::Uuid::new_v4(),
+            topic,
+            client,
+            queue,
+        }
     }
 
     /// Returns the number of messages currently queued in the subscriber
@@ -39,5 +50,20 @@ impl<T: RosMessageType> Subscriber<T> {
             let _ = self.queue.try_pop();
         }
         self.queue.pop().await
+    }
+
+    pub(crate) fn get_id(&self) -> &uuid::Uuid {
+        &self.id
+    }
+}
+
+impl<T: RosMessageType> Drop for Subscriber<T> {
+    fn drop(&mut self) {
+        match self.client.unsubscribe(&self.topic, &self.id) {
+            Ok(_) => {}
+            Err(e) => {
+                error!("Failed to unsubscribe while dropping subscriber: topic={:?}, id={:?}, err={:?}", &self.topic, &self.id, e);
+            }
+        }
     }
 }

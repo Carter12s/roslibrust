@@ -1,7 +1,6 @@
 use std::path::{Path, PathBuf};
 
 use log::*;
-use roslibrust::test_msgs::TimeI;
 use roslibrust::{message_gen, util, Client, RosMessageType};
 use serde::{Deserialize, Serialize};
 
@@ -14,6 +13,16 @@ pub struct GetTimeResponse {
 
 impl RosMessageType for GetTimeResponse {
     const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeResponse";
+}
+
+#[derive(Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
+pub struct TimeI {
+    pub secs: u32,
+    pub nsecs: u32,
+}
+
+impl RosMessageType for TimeI {
+    const ROS_TYPE_NAME: &'static str = "std_msgs/TimeI";
 }
 
 /// This example shows calling a service
