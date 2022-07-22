@@ -1,0 +1,9 @@
+[package]
+name = "roslibrust_test"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }

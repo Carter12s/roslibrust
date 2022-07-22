@@ -1,0 +1,11 @@
+[package]
+name = "roslibrust_rospack"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+xml-rs = "0.8"
+
+[[test]]
+name = "rospack_package_search"
+path = "tests/package_search.rs"
