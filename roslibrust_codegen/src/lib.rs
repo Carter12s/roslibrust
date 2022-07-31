@@ -1,14 +1,19 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use std::path::PathBuf;
+use proc_macro2::TokenStream;
+use syn::parse_quote;
+
+pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
+
+    "".parse().unwrap()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+fn derive_attrs() -> Vec<syn::Attribute> {
+    vec![
+        parse_quote! { #[derive(Deserialize)] },
+        parse_quote! { #[derive(Serialize)] },
+        parse_quote! { #[derive(Debug)] },
+        parse_quote! { #[derive(Default)] },
+        parse_quote! { #[derive(Clone)] },
+        parse_quote! { #[derive(PartialEq)] },
+    ]
 }
