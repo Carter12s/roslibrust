@@ -557,6 +557,7 @@ name = "roslibrust_codegen"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
+ "roslibrust_rospack",
  "syn",
 ]
 
