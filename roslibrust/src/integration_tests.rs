@@ -6,7 +6,7 @@
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
     use crate::test_msgs::{Header, NodeInfo, TimeI};
-    use crate::{Client, ClientOptions, Subscriber};
+    use crate::{publisher, Client, ClientOptions, Subscriber};
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms

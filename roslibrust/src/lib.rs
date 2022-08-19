@@ -1,11 +1,21 @@
-// Contains tools for generating message definitions from ROS1 .msg and .srv files
+//! A crate for interfacing to ROS (the Robot Operating System) via the [rosbridge_suite](http://wiki.ros.org/rosbridge_suite)
+
+/// Communication primitives for the rosbridge_suite protocol
+mod comm;
+/// Contains tools for generating message definitions from ROS1 .msg and .srv files
+///
+/// We currently only support a run-one / build.rs method of message generation and not
+/// a macro based approach.
+///
+/// Roadmap:
+///   - Move message generation into its own crate with a public API
+///   - Provide and example build.rs to show how this can be well integrated into a project
 pub mod message_gen;
-// Utilities functions primarily for working with ros env vars and package structures
+/// Utilities functions primarily for working with ros env vars and package structures
 pub mod util;
-// Communication primitives for the rosbridge_suite protocol
-pub mod comm;
 
 // TODO look into restricting visibility, right now very useful for examples / integration tests
+/// Provides example message generations created from the crate, useful for testing and learning
 pub mod test_msgs;
 
 // Subscriber is a transparent module, we directly expose internal types
@@ -138,7 +148,7 @@ impl ClientOptions {
     }
 }
 
-// Fundamental structure for a client
+/// A client connection to the rosbridge_server that allows for publishing and subscribing to topics
 #[derive(Clone)]
 pub struct Client {
     // TODO replace Socket with trait RosBridgeComm to allow mocking
@@ -274,8 +284,8 @@ impl Client {
         Client::timeout(self.opts.timeout, self._subscribe(topic_name)).await
     }
 
-    /// This function remobes the entry for a subscriber in from the client, and if it is the last
-    /// subscriber for a given topic then dispatchs an unsubscribe message to the master/bridge
+    /// This function removes the entry for a subscriber in from the client, and if it is the last
+    /// subscriber for a given topic then dispatches an unsubscribe message to the master/bridge
     fn unsubscribe(&mut self, topic_name: &str, id: &uuid::Uuid) -> RosLibRustResult<()> {
         // Identify the subscription entry for the subscriber
         let mut subscription = self.subscriptions.get_mut(topic_name).ok_or(
@@ -351,6 +361,14 @@ impl Client {
     //     unimplemented!()
     // }
 
+    /// Calls a ros service and returns the response
+    ///
+    /// Service calls can fail if communication is interrupted.
+    /// This method is currently unaffected by the clients Timeout configuration.
+    ///
+    /// Roadmap:
+    ///   - Provide better error information when a service call fails
+    ///   - Integrate with Client's timeout better
     pub async fn call_service<Req: RosMessageType, Res: RosMessageType>(
         &mut self,
         service: &str,
@@ -375,6 +393,7 @@ impl Client {
         let msg = match rx.await {
             Ok(msg) => msg,
             Err(e) =>
+            // TODO remove panic! here, this could result from dropping communication, need to handle disconnect better
             panic!("The sender end of a service channel was dropped while rx was being awaited, this should not be possible: {}", e),
         };
         Ok(serde_json::from_value(msg)?)
@@ -395,7 +414,7 @@ impl Client {
     }
 
     /// Core read loop, receives messages from rosbridge and dispatches them.
-    // Creating a client spawns a task which calls stubborn spin, which in turn calls this funtion
+    // Creating a client spawns a task which calls stubborn spin, which in turn calls this function
     async fn spin(&mut self) -> RosLibRustResult<()> {
         debug!("Start spin");
         loop {
@@ -551,7 +570,7 @@ impl Client {
     }
 
     /// Publishes a message
-    pub(crate) async fn publish<T>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()>
+    pub(crate) async fn publish<T>(&self, topic: &str, msg: T) -> RosLibRustResult<()>
     where
         T: RosMessageType,
     {

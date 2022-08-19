@@ -25,36 +25,25 @@ pub enum MsgSource {
 
 /// Configurable options for message generation following the builder pattern
 pub struct MessageGenOpts {
-    /// Should `rustfmt` be called on generated file
-    /// ignored when generating to a string
     format: bool,
-    /// Files to run generation against, all files referenced in a single generation call will be
-    /// bundled into a single output file. Multiple calls to generation can be made if separate
-    /// files are desired
     targets: Vec<PathBuf>,
-    /// Which source of std_msgs definitions should be used (useful for generation without ros installed)
     msg_source: MsgSource,
-    // TODO this being optional is slightly awkward... Consider different form...
-    /// Destination file to generate to
-    /// ignored if generating to file
     destination: Option<PathBuf>,
-
-    //TODO this is a hack and should be removed, but I need it for now
-    /// Defines a default package name to use when package discovery fails
-    /// When given a file we walk up the directory structure looking for package.xml
-    /// However always having a package.xml can be problematic, and it is nice to be able to generate
-    /// on raw message files without them being in a package, so this lets you override that.
-    /// Probably dumb, but fits my needs today - Carter 4/11/22
     default_package: Option<String>,
-
-    /// Only used for internal testing with the crate
-    /// Generated file will use 'crate' instead of 'roslibrust' when referring to types defined
-    /// in this package
-    //TODO find a better mechanism for this
     local: bool,
 }
 
 impl MessageGenOpts {
+    /// Creates a new message generation builder.
+    ///
+    /// ## Example
+    /// ```
+    /// use roslibrust::message_gen::{MessageGenOpts, generate_messages_str};
+    ///
+    /// let targets = vec!["my_file.msg"];
+    /// let opts = MessageGenOpts::new(targets);
+    /// let _ = generate_messages_str(&opts);
+    /// ```
     pub fn new<T: Into<PathBuf>>(targets: Vec<T>) -> MessageGenOpts {
         MessageGenOpts {
             format: true,
@@ -66,31 +55,55 @@ impl MessageGenOpts {
         }
     }
 
+    /// Indicates whether or `rustfmt` should be invoked on the result of generation
+    /// `rustfmt` must be installed and executable on the host to use this option.
+    /// Ignored when generating to a string.
     pub fn format(mut self, format: bool) -> MessageGenOpts {
         self.format = format;
         self
     }
 
+    /// Which source of std_msgs definitions should be used (useful for generation without ros installed)
+    /// If set to INTERNAL, generation uses std_msgs that are shipped with this crate;
+    /// otherwise, std_msgs are looked for on the host system
+    ///
+    /// Roadmap:
+    ///   - Better documentation on what messages we ship with, it is more than std_msgs right now
     pub fn std_msgs_source(mut self, source: MsgSource) -> MessageGenOpts {
         self.msg_source = source;
         self
     }
 
+    /// Files to run generation against, all files referenced in a single generation call will be
+    /// bundled into a single output file. Multiple calls to generation can be made if separate
+    /// files are desired
     pub fn targets<T: Into<PathBuf>>(mut self, targets: Vec<T>) -> MessageGenOpts {
         self.targets = targets.into_iter().map(|t| t.into()).collect();
         self
     }
 
+    // TODO this being optional is slightly awkward... Consider different form...
+    /// Destination file to generate to.
+    /// Ignored if generating to file.
     pub fn destination<T: Into<PathBuf>>(mut self, destination: T) -> MessageGenOpts {
         self.destination = Some(destination.into());
         self
     }
 
+    //TODO this is a hack and should be removed, but I need it for now
+    /// Defines a default package name to use when package discovery fails
+    /// When given a file we walk up the directory structure looking for package.xml
+    /// However always having a package.xml can be problematic, and it is nice to be able to generate
+    /// on raw message files without them being in a package, so this lets you override that.
     pub fn default_package<S: AsRef<str>>(mut self, package_name: S) -> MessageGenOpts {
         self.default_package = Some(package_name.as_ref().to_string());
         self
     }
 
+    /// Only used for internal testing with the crate
+    /// Generated file will use 'crate' instead of 'roslibrust' when referring to types defined
+    /// in this package
+    //TODO find a better mechanism for this
     pub fn local(mut self, local: bool) -> MessageGenOpts {
         self.local = local;
         self
@@ -99,7 +112,7 @@ impl MessageGenOpts {
 
 /// Describes the type for an individual field in a message
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
-pub struct FieldType {
+pub(crate) struct FieldType {
     // Present when an externally referenced package is used
     // Note: support for messages within same package is spotty...
     package_name: Option<String>,
@@ -112,7 +125,7 @@ pub struct FieldType {
 
 /// Describes all information for an individual field
 #[derive(PartialEq, Debug)]
-pub struct FieldInfo {
+pub(crate) struct FieldInfo {
     field_type: FieldType,
     field_name: String,
 }
@@ -120,7 +133,7 @@ pub struct FieldInfo {
 /// Describes all information for a constant within a message
 /// Note: Constants are not fully supported yet (waiting on codegen support)
 #[derive(PartialEq, Debug)]
-pub struct ConstantInfo {
+pub(crate) struct ConstantInfo {
     constant_type: String,
     constant_name: String,
     constant_value: String,
@@ -128,7 +141,7 @@ pub struct ConstantInfo {
 
 /// Describes all information for a single message file
 #[derive(PartialEq, Debug)]
-pub struct MessageFile {
+pub(crate) struct MessageFile {
     name: String,
     package: String,
     fields: Vec<FieldInfo>,
@@ -186,8 +199,7 @@ pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, anyhow::Er
 
     while let Some(entry) = files.pop_front() {
         debug!("Processing {:?}", entry);
-        let file =
-            fs::read_to_string(&entry).expect(&format!("Could not read file @ {:?}", &entry));
+        let file = fs::read_to_string(&entry)?;
         let name = entry.file_stem().unwrap().to_str().unwrap().to_string();
         let package = match util::find_package_from_path(&entry) {
             // Use an empty package name if we couldn't find one
@@ -329,7 +341,7 @@ fn strip_comments(line: &str) -> &str {
 /// From a list of struct representations of ros msg files, generates a resulting rust module as
 /// a string.
 // TODO should this be public?
-pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> String {
+fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> String {
     let mut scope = Scope::new();
 
     // Required imports
@@ -400,7 +412,7 @@ pub fn generate_rust(msg_files: BTreeMap<String, MessageFile>, local: bool) -> S
 }
 
 /// Basic mapping of ros type strings to rust types
-pub fn ros_type_to_rust(t: &str) -> FieldType {
+fn ros_type_to_rust(t: &str) -> FieldType {
     let arr_index = t.find("[");
     let is_vec = arr_index.is_some();
     let i = arr_index.unwrap_or(t.len());

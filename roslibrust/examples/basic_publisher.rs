@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let mut client = Client::new("ws://localhost:9090").await?;
 
-    let mut publisher = client.advertise::<Header>("talker").await?;
+    let publisher = client.advertise::<Header>("talker").await?;
 
     loop {
         let msg = Header::default();
