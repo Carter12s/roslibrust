@@ -197,11 +197,9 @@ pub fn generate_messages_str(opts: &MessageGenOpts) -> Result<String, anyhow::Er
         }
     };
 
-    while let Some(entry) = files.pop_front() 
-    {
+    while let Some(entry) = files.pop_front() {
         debug!("Processing {:?}", entry);
-        let file =
-         fs::read_to_string(&entry)?;
+        let file = fs::read_to_string(&entry)?;
         let name = entry.file_stem().unwrap().to_str().unwrap().to_string();
         let package = match util::find_package_from_path(&entry) {
             // Use an empty package name if we couldn't find one
