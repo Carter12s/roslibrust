@@ -15,6 +15,8 @@ use crate::{Client, MessageQueue, RosMessageType};
 /// When the last subscriber is dropped the topic is automatically un-subscribed to.
 /// The internal message queue is currently fixed sized at 1_000 item maximum.
 ///
+/// The internal message queue is internally mutex'ed meaning const access to this class is sufficient for use.
+///
 /// Roadmap:
 ///  - Expose queue size control
 ///  - Provide unlimited queue (maybe?)
@@ -24,9 +26,7 @@ pub struct Subscriber<T: RosMessageType> {
     id: uuid::Uuid,
     // ROS topic name this is subscribed to, currently only used in Drop impl to help client
     topic: String,
-    // Holds an internal copy of client to reference back to for dropping
-    // TODO needs to use to auto-unsubscriber
-    #[allow(dead_code)]
+    // Holds an internal copy of client to reference back to when being drop'ed
     client: Client,
     queue: Arc<MessageQueue<T>>,
 }
