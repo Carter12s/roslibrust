@@ -113,6 +113,30 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
     result
 }
 
+pub fn parse_ros_service_file(
+    data: String,
+    name: String,
+    package: &String,
+) -> [(MessageFile, String); 2] {
+    let dash_index = data.find("---").expect(&format!(
+        "Failed to find delimiter line '---' in {package}/{name}"
+    ));
+    // TODO Stop copying strings with reckless abandon
+    let request_str = data[..dash_index].to_string();
+    let response_str = data[dash_index + 3..].to_string();
+
+    [
+        (
+            parse_ros_message_file(request_str.clone(), format!("{name}Request"), package),
+            request_str,
+        ),
+        (
+            parse_ros_message_file(response_str.clone(), format!("{name}Response"), package),
+            response_str,
+        ),
+    ]
+}
+
 pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
     msg.constants = msg
         .constants

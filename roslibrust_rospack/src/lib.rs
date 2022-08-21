@@ -118,19 +118,25 @@ fn is_metapackage(package_xml_path: &Path) -> io::Result<bool> {
 }
 
 pub fn get_message_files(pkg: &Package) -> io::Result<Vec<PathBuf>> {
-    message_files_from_path(pkg.path.as_path())
+    message_files_from_path(pkg.path.as_path(), "msg")
 }
 
-fn message_files_from_path(path: &Path) -> io::Result<Vec<PathBuf>> {
+pub fn get_service_files(pkg: &Package) -> io::Result<Vec<PathBuf>> {
+    message_files_from_path(pkg.path.as_path(), "srv")
+}
+
+fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
     let mut msg_files = vec![];
     for entry in std::fs::read_dir(path)? {
         if let Ok(entry) = entry {
-            if entry.path().as_path().is_dir()
-                && entry.path().file_name().unwrap().to_str().unwrap() == "msg"
-            {
-                msg_files = [msg_files, message_files_from_path(entry.path().as_path())?].concat()
+            if entry.path().as_path().is_dir() {
+                msg_files = [
+                    msg_files,
+                    message_files_from_path(entry.path().as_path(), ext)?,
+                ]
+                .concat()
             } else if entry.path().as_path().is_file()
-                && entry.path().extension().unwrap().to_str().unwrap() == "msg"
+                && entry.path().extension().unwrap().to_str().unwrap() == ext
             {
                 msg_files.push(entry.path())
             }
