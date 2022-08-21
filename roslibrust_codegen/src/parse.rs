@@ -1,3 +1,27 @@
+use std::collections::HashMap;
+
+lazy_static::lazy_static! {
+    pub static ref ROS_TYPE_TO_RUST_TYPE_MAP: HashMap<&'static str, &'static str> = vec![
+        ("bool", "bool"),
+        ("int8", "i8"),
+        ("uint8", "u8"),
+        ("byte", "u8"),
+        ("char", "char"),
+        ("int16", "i16"),
+        ("uint16", "u16"),
+        ("int32", "i32"),
+        ("uint32", "u32"),
+        ("int64", "i64"),
+        ("uint64", "u64"),
+        ("float32", "f32"),
+        ("float64", "f64"),
+        ("string", "std::string::String"),
+        ("time", "TimeI"),
+        ("duration", "DurationI"),
+        ("Header", "Header"),
+    ].into_iter().collect();
+}
+
 /// Describes the type for an individual field in a message
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct FieldType {
@@ -54,9 +78,10 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
         let equal_i = line.find('=');
         if let Some(equal_i) = equal_i {
             let sep = line.find(' ').unwrap();
-            let mut constant_type = parse_type(line[..sep].trim()).field_type;
+            let mut constant_type = parse_type(line[..sep].trim(), package).field_type;
             let constant_name = line[sep + 1..equal_i].trim().to_string();
             // Handling dumb case here, TODO find better spot
+            // TODO: Moved where we resolve the ROS types to Rust types, this needs to be revisited
             if constant_type == "String" {
                 constant_type = "&'static str".to_string();
             }
@@ -75,7 +100,7 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
             let field_type = splitter
                 .next()
                 .expect(&format!("Did not find field_type on line: {}", &line));
-            let field_type = parse_type(field_type);
+            let field_type = parse_type(field_type, package);
             let field_name = splitter
                 .next()
                 .expect(&format!("Did not find field_name on line: {}", &line));
@@ -88,6 +113,34 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
     result
 }
 
+pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
+    msg.constants = msg
+        .constants
+        .into_iter()
+        .map(|mut constant| {
+            if ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(constant.constant_type.as_str()) {
+                constant.constant_type = ROS_TYPE_TO_RUST_TYPE_MAP
+                    .get(constant.constant_type.as_str())
+                    .unwrap()
+                    .to_string();
+            }
+            constant
+        })
+        .collect();
+    msg.fields = msg
+        .fields
+        .into_iter()
+        .map(|mut field| {
+            field.field_type.field_type = ROS_TYPE_TO_RUST_TYPE_MAP
+                .get(field.field_type.field_type.as_str())
+                .unwrap_or(&field.field_type.field_type.as_str())
+                .to_string();
+            field
+        })
+        .collect();
+    msg
+}
+
 /// Looks for # comment character and sub-slices for characters preceding it
 fn strip_comments(line: &str) -> &str {
     if let Some(token) = line.find('#') {
@@ -96,11 +149,15 @@ fn strip_comments(line: &str) -> &str {
     line
 }
 
-fn parse_field_type(type_str: &str, is_vec: bool) -> FieldType {
+fn parse_field_type(type_str: &str, is_vec: bool, current_pkg: &String) -> FieldType {
     let items = type_str.split('/').collect::<Vec<&str>>();
     if items.len() == 1 {
         FieldType {
-            package_name: None,
+            package_name: if ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(type_str) {
+                None
+            } else {
+                Some(current_pkg.clone())
+            },
             field_type: items[0].to_string(),
             is_vec,
         }
@@ -113,17 +170,13 @@ fn parse_field_type(type_str: &str, is_vec: bool) -> FieldType {
     }
 }
 
-fn parse_type(type_str: &str) -> FieldType {
+fn parse_type(type_str: &str, current_pkg: &String) -> FieldType {
     let open_bracket_idx = type_str.find("[");
     let is_array_type = open_bracket_idx.is_some();
     let type_str = match is_array_type {
-        true => {
-            &type_str[..open_bracket_idx.unwrap()]
-        },
-        false => {
-            &type_str[..]
-        }
+        true => &type_str[..open_bracket_idx.unwrap()],
+        false => &type_str[..],
     };
 
-    parse_field_type(type_str, is_array_type)
+    parse_field_type(type_str, is_array_type, current_pkg)
 }

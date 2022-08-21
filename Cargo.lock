@@ -556,7 +556,9 @@ dependencies = [
 name = "roslibrust_codegen"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
  "proc-macro2",
+ "quote",
  "roslibrust_rospack",
  "syn",
 ]
@@ -582,7 +584,10 @@ dependencies = [
 name = "roslibrust_test"
 version = "0.1.0"
 dependencies = [
+ "roslibrust",
+ "roslibrust_codegen",
  "roslibrust_codegen_macro",
+ "serde",
 ]
 
 [[package]]

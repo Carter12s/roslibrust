@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+lazy_static = "1.4"
 proc-macro2 = "1.0"
+quote = "1.0"
 roslibrust_rospack = { path = "../roslibrust_rospack" }
 syn = "1.0"

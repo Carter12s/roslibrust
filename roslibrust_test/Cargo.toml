@@ -6,4 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+roslibrust = { path = "../roslibrust" }
+roslibrust_codegen = { path = "../roslibrust_codegen" }
 roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
+serde = { version = "1.0", features = ["derive"] }
