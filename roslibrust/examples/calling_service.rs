@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use log::*;
-use roslibrust::{message_gen, util, Client, RosMessageType};
+use roslibrust::{util, Client, RosMessageType};
 use serde::{Deserialize, Serialize};
 
 /// This struct was generated using the gen_rosapi_msgs fn at the bottom of this file

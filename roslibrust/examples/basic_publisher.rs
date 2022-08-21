@@ -1,5 +1,4 @@
 use log::*;
-use roslibrust::test_msgs::Header;
 use roslibrust::Client;
 
 /// This example creates a client, and publishes a message to the topic "talker"
@@ -17,10 +16,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let mut client = Client::new("ws://localhost:9090").await?;
 
-    let mut publisher = client.advertise::<Header>("talker").await?;
+    let mut publisher = client.advertise::<roslibrust_test::Header>("talker").await?;
 
     loop {
-        let msg = Header::default();
+        let msg = roslibrust_test::Header::default();
         info!("About to publish");
         publisher.publish(msg).await.unwrap();
         info!("Published msg...");

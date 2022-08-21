@@ -31,6 +31,7 @@ thiserror = "1.0.31"
 [dev-dependencies]
 # Used for logging in examples
 simple_logger = "2.1.0"
+roslibrust_test = { path = "../roslibrust_test" }
 
 [features]
 # Intended for use with tests, includes tests that rely on a locally running rosbridge

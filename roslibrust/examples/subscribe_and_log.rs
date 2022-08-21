@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     info!("Client connected");
 
     let rx = client
-        .subscribe::<roslibrust::test_msgs::Header>("talker")
+        .subscribe::<roslibrust_test::Header>("talker")
         .await?;
     info!("Successfully subscribed to topic: talker");
 

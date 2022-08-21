@@ -542,6 +542,7 @@ dependencies = [
  "futures-util",
  "log",
  "rand",
+ "roslibrust_test",
  "serde",
  "serde_json",
  "simple_logger",
