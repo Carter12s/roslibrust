@@ -16,7 +16,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let mut client = Client::new("ws://localhost:9090").await?;
 
-    let mut publisher = client.advertise::<roslibrust_test::Header>("talker").await?;
+    let mut publisher = client
+        .advertise::<roslibrust_test::Header>("talker")
+        .await?;
 
     loop {
         let msg = roslibrust_test::Header::default();
