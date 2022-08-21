@@ -32,7 +32,7 @@ impl GoalStatus {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct GoalStatusArray {
     pub header: Header,
-    pub status_list: GoalStatus,
+    pub status_list: std::vec::Vec<GoalStatus>,
 }
 impl ::roslibrust::RosMessageType for GoalStatusArray {
     const ROS_TYPE_NAME: &'static str = "actionlib_msgs/GoalStatusArray";
@@ -41,7 +41,7 @@ impl GoalStatusArray {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct DiagnosticArray {
     pub header: Header,
-    pub status: DiagnosticStatus,
+    pub status: std::vec::Vec<DiagnosticStatus>,
 }
 impl ::roslibrust::RosMessageType for DiagnosticArray {
     const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/DiagnosticArray";
@@ -53,7 +53,7 @@ pub struct DiagnosticStatus {
     pub name: std::string::String,
     pub message: std::string::String,
     pub hardware_id: std::string::String,
-    pub values: KeyValue,
+    pub values: std::vec::Vec<KeyValue>,
 }
 impl ::roslibrust::RosMessageType for DiagnosticStatus {
     const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/DiagnosticStatus";
@@ -94,7 +94,7 @@ impl AccelStamped {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct AccelWithCovariance {
     pub accel: Accel,
-    pub covariance: f64,
+    pub covariance: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for AccelWithCovariance {
     const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelWithCovariance";
@@ -164,7 +164,7 @@ impl ::roslibrust::RosMessageType for PointStamped {
 impl PointStamped {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Polygon {
-    pub points: Point32,
+    pub points: std::vec::Vec<Point32>,
 }
 impl ::roslibrust::RosMessageType for Polygon {
     const ROS_TYPE_NAME: &'static str = "geometry_msgs/Polygon";
@@ -201,7 +201,7 @@ impl Pose2D {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct PoseArray {
     pub header: Header,
-    pub poses: Pose,
+    pub poses: std::vec::Vec<Pose>,
 }
 impl ::roslibrust::RosMessageType for PoseArray {
     const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseArray";
@@ -219,7 +219,7 @@ impl PoseStamped {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct PoseWithCovariance {
     pub pose: Pose,
-    pub covariance: f64,
+    pub covariance: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for PoseWithCovariance {
     const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseWithCovariance";
@@ -294,7 +294,7 @@ impl TwistStamped {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct TwistWithCovariance {
     pub twist: Twist,
-    pub covariance: f64,
+    pub covariance: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for TwistWithCovariance {
     const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistWithCovariance";
@@ -351,7 +351,7 @@ pub struct GridCells {
     pub header: Header,
     pub cell_width: f32,
     pub cell_height: f32,
-    pub cells: Point,
+    pub cells: std::vec::Vec<Point>,
 }
 impl ::roslibrust::RosMessageType for GridCells {
     const ROS_TYPE_NAME: &'static str = "nav_msgs/GridCells";
@@ -373,7 +373,7 @@ impl MapMetaData {}
 pub struct OccupancyGrid {
     pub header: Header,
     pub info: MapMetaData,
-    pub data: i8,
+    pub data: std::vec::Vec<i8>,
 }
 impl ::roslibrust::RosMessageType for OccupancyGrid {
     const ROS_TYPE_NAME: &'static str = "nav_msgs/OccupancyGrid";
@@ -393,7 +393,7 @@ impl Odometry {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Path {
     pub header: Header,
-    pub poses: PoseStamped,
+    pub poses: std::vec::Vec<PoseStamped>,
 }
 impl ::roslibrust::RosMessageType for Path {
     const ROS_TYPE_NAME: &'static str = "nav_msgs/Path";
@@ -413,8 +413,8 @@ pub struct BatteryState {
     pub power_supply_health: u8,
     pub power_supply_technology: u8,
     pub present: bool,
-    pub cell_voltage: f32,
-    pub cell_temperature: f32,
+    pub cell_voltage: std::vec::Vec<f32>,
+    pub cell_temperature: std::vec::Vec<f32>,
     pub location: std::string::String,
     pub serial_number: std::string::String,
 }
@@ -450,10 +450,10 @@ pub struct CameraInfo {
     pub height: u32,
     pub width: u32,
     pub distortion_model: std::string::String,
-    pub D: f64,
-    pub K: f64,
-    pub R: f64,
-    pub P: f64,
+    pub D: std::vec::Vec<f64>,
+    pub K: std::vec::Vec<f64>,
+    pub R: std::vec::Vec<f64>,
+    pub P: std::vec::Vec<f64>,
     pub binning_x: u32,
     pub binning_y: u32,
     pub roi: RegionOfInterest,
@@ -465,7 +465,7 @@ impl CameraInfo {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct ChannelFloat32 {
     pub name: std::string::String,
-    pub values: f32,
+    pub values: std::vec::Vec<f32>,
 }
 impl ::roslibrust::RosMessageType for ChannelFloat32 {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/ChannelFloat32";
@@ -475,7 +475,7 @@ impl ChannelFloat32 {}
 pub struct CompressedImage {
     pub header: Header,
     pub format: std::string::String,
-    pub data: u8,
+    pub data: std::vec::Vec<u8>,
 }
 impl ::roslibrust::RosMessageType for CompressedImage {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/CompressedImage";
@@ -509,7 +509,7 @@ pub struct Image {
     pub encoding: std::string::String,
     pub is_bigendian: u8,
     pub step: u32,
-    pub data: u8,
+    pub data: std::vec::Vec<u8>,
 }
 impl ::roslibrust::RosMessageType for Image {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/Image";
@@ -519,11 +519,11 @@ impl Image {}
 pub struct Imu {
     pub header: Header,
     pub orientation: Quaternion,
-    pub orientation_covariance: f64,
+    pub orientation_covariance: std::vec::Vec<f64>,
     pub angular_velocity: Vector3,
-    pub angular_velocity_covariance: f64,
+    pub angular_velocity_covariance: std::vec::Vec<f64>,
     pub linear_acceleration: Vector3,
-    pub linear_acceleration_covariance: f64,
+    pub linear_acceleration_covariance: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for Imu {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/Imu";
@@ -532,10 +532,10 @@ impl Imu {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct JointState {
     pub header: Header,
-    pub name: std::string::String,
-    pub position: f64,
-    pub velocity: f64,
-    pub effort: f64,
+    pub name: std::vec::Vec<std::string::String>,
+    pub position: std::vec::Vec<f64>,
+    pub velocity: std::vec::Vec<f64>,
+    pub effort: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for JointState {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/JointState";
@@ -544,8 +544,8 @@ impl JointState {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Joy {
     pub header: Header,
-    pub axes: f32,
-    pub buttons: i32,
+    pub axes: std::vec::Vec<f32>,
+    pub buttons: std::vec::Vec<i32>,
 }
 impl ::roslibrust::RosMessageType for Joy {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/Joy";
@@ -567,7 +567,7 @@ impl JoyFeedback {
 }
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct JoyFeedbackArray {
-    pub array: JoyFeedback,
+    pub array: std::vec::Vec<JoyFeedback>,
 }
 impl ::roslibrust::RosMessageType for JoyFeedbackArray {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/JoyFeedbackArray";
@@ -575,7 +575,7 @@ impl ::roslibrust::RosMessageType for JoyFeedbackArray {
 impl JoyFeedbackArray {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct LaserEcho {
-    pub echoes: f32,
+    pub echoes: std::vec::Vec<f32>,
 }
 impl ::roslibrust::RosMessageType for LaserEcho {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/LaserEcho";
@@ -591,8 +591,8 @@ pub struct LaserScan {
     pub scan_time: f32,
     pub range_min: f32,
     pub range_max: f32,
-    pub ranges: f32,
-    pub intensities: f32,
+    pub ranges: std::vec::Vec<f32>,
+    pub intensities: std::vec::Vec<f32>,
 }
 impl ::roslibrust::RosMessageType for LaserScan {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/LaserScan";
@@ -602,7 +602,7 @@ impl LaserScan {}
 pub struct MagneticField {
     pub header: Header,
     pub magnetic_field: Vector3,
-    pub magnetic_field_covariance: f64,
+    pub magnetic_field_covariance: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for MagneticField {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/MagneticField";
@@ -611,10 +611,10 @@ impl MagneticField {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct MultiDOFJointState {
     pub header: Header,
-    pub joint_names: std::string::String,
-    pub transforms: Transform,
-    pub twist: Twist,
-    pub wrench: Wrench,
+    pub joint_names: std::vec::Vec<std::string::String>,
+    pub transforms: std::vec::Vec<Transform>,
+    pub twist: std::vec::Vec<Twist>,
+    pub wrench: std::vec::Vec<Wrench>,
 }
 impl ::roslibrust::RosMessageType for MultiDOFJointState {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/MultiDOFJointState";
@@ -630,8 +630,8 @@ pub struct MultiEchoLaserScan {
     pub scan_time: f32,
     pub range_min: f32,
     pub range_max: f32,
-    pub ranges: LaserEcho,
-    pub intensities: LaserEcho,
+    pub ranges: std::vec::Vec<LaserEcho>,
+    pub intensities: std::vec::Vec<LaserEcho>,
 }
 impl ::roslibrust::RosMessageType for MultiEchoLaserScan {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/MultiEchoLaserScan";
@@ -644,7 +644,7 @@ pub struct NavSatFix {
     pub latitude: f64,
     pub longitude: f64,
     pub altitude: f64,
-    pub position_covariance: f64,
+    pub position_covariance: std::vec::Vec<f64>,
     pub position_covariance_type: u8,
 }
 impl ::roslibrust::RosMessageType for NavSatFix {
@@ -677,8 +677,8 @@ impl NavSatStatus {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct PointCloud {
     pub header: Header,
-    pub points: Point32,
-    pub channels: ChannelFloat32,
+    pub points: std::vec::Vec<Point32>,
+    pub channels: std::vec::Vec<ChannelFloat32>,
 }
 impl ::roslibrust::RosMessageType for PointCloud {
     const ROS_TYPE_NAME: &'static str = "sensor_msgs/PointCloud";
@@ -689,11 +689,11 @@ pub struct PointCloud2 {
     pub header: Header,
     pub height: u32,
     pub width: u32,
-    pub fields: PointField,
+    pub fields: std::vec::Vec<PointField>,
     pub is_bigendian: bool,
     pub point_step: u32,
     pub row_step: u32,
-    pub data: u8,
+    pub data: std::vec::Vec<u8>,
     pub is_dense: bool,
 }
 impl ::roslibrust::RosMessageType for PointCloud2 {
@@ -780,8 +780,8 @@ impl ::roslibrust::RosMessageType for TimeReference {
 impl TimeReference {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Mesh {
-    pub triangles: MeshTriangle,
-    pub vertices: Point,
+    pub triangles: std::vec::Vec<MeshTriangle>,
+    pub vertices: std::vec::Vec<Point>,
 }
 impl ::roslibrust::RosMessageType for Mesh {
     const ROS_TYPE_NAME: &'static str = "shape_msgs/Mesh";
@@ -789,7 +789,7 @@ impl ::roslibrust::RosMessageType for Mesh {
 impl Mesh {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct MeshTriangle {
-    pub vertex_indices: u32,
+    pub vertex_indices: std::vec::Vec<u32>,
 }
 impl ::roslibrust::RosMessageType for MeshTriangle {
     const ROS_TYPE_NAME: &'static str = "shape_msgs/MeshTriangle";
@@ -797,7 +797,7 @@ impl ::roslibrust::RosMessageType for MeshTriangle {
 impl MeshTriangle {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Plane {
-    pub coef: f64,
+    pub coef: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for Plane {
     const ROS_TYPE_NAME: &'static str = "shape_msgs/Plane";
@@ -806,7 +806,7 @@ impl Plane {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct SolidPrimitive {
     pub r#type: u8,
-    pub dimensions: f64,
+    pub dimensions: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for SolidPrimitive {
     const ROS_TYPE_NAME: &'static str = "shape_msgs/SolidPrimitive";
@@ -844,7 +844,7 @@ impl Byte {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct ByteMultiArray {
     pub layout: MultiArrayLayout,
-    pub data: u8,
+    pub data: std::vec::Vec<u8>,
 }
 impl ::roslibrust::RosMessageType for ByteMultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/ByteMultiArray";
@@ -903,7 +903,7 @@ impl Float32 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Float32MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: f32,
+    pub data: std::vec::Vec<f32>,
 }
 impl ::roslibrust::RosMessageType for Float32MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/Float32MultiArray";
@@ -920,7 +920,7 @@ impl Float64 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Float64MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: f64,
+    pub data: std::vec::Vec<f64>,
 }
 impl ::roslibrust::RosMessageType for Float64MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/Float64MultiArray";
@@ -947,7 +947,7 @@ impl Int16 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Int16MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: i16,
+    pub data: std::vec::Vec<i16>,
 }
 impl ::roslibrust::RosMessageType for Int16MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/Int16MultiArray";
@@ -964,7 +964,7 @@ impl Int32 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Int32MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: i32,
+    pub data: std::vec::Vec<i32>,
 }
 impl ::roslibrust::RosMessageType for Int32MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/Int32MultiArray";
@@ -981,7 +981,7 @@ impl Int64 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Int64MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: i64,
+    pub data: std::vec::Vec<i64>,
 }
 impl ::roslibrust::RosMessageType for Int64MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/Int64MultiArray";
@@ -998,7 +998,7 @@ impl Int8 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Int8MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: i8,
+    pub data: std::vec::Vec<i8>,
 }
 impl ::roslibrust::RosMessageType for Int8MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/Int8MultiArray";
@@ -1016,7 +1016,7 @@ impl ::roslibrust::RosMessageType for MultiArrayDimension {
 impl MultiArrayDimension {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct MultiArrayLayout {
-    pub dim: MultiArrayDimension,
+    pub dim: std::vec::Vec<MultiArrayDimension>,
     pub data_offset: u32,
 }
 impl ::roslibrust::RosMessageType for MultiArrayLayout {
@@ -1059,7 +1059,7 @@ impl UInt16 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct UInt16MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: u16,
+    pub data: std::vec::Vec<u16>,
 }
 impl ::roslibrust::RosMessageType for UInt16MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/UInt16MultiArray";
@@ -1076,7 +1076,7 @@ impl UInt32 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct UInt32MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: u32,
+    pub data: std::vec::Vec<u32>,
 }
 impl ::roslibrust::RosMessageType for UInt32MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/UInt32MultiArray";
@@ -1093,7 +1093,7 @@ impl UInt64 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct UInt64MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: u64,
+    pub data: std::vec::Vec<u64>,
 }
 impl ::roslibrust::RosMessageType for UInt64MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/UInt64MultiArray";
@@ -1110,7 +1110,7 @@ impl UInt8 {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct UInt8MultiArray {
     pub layout: MultiArrayLayout,
-    pub data: u8,
+    pub data: std::vec::Vec<u8>,
 }
 impl ::roslibrust::RosMessageType for UInt8MultiArray {
     const ROS_TYPE_NAME: &'static str = "std_msgs/UInt8MultiArray";
@@ -1152,7 +1152,7 @@ impl LoggerLevel {}
 pub struct Metric {
     pub name: std::string::String,
     pub time: f64,
-    pub data: MetricPair,
+    pub data: std::vec::Vec<MetricPair>,
 }
 impl ::roslibrust::RosMessageType for Metric {
     const ROS_TYPE_NAME: &'static str = "test_msgs/Metric";
@@ -1187,8 +1187,8 @@ impl NodeInfo {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct JointTrajectory {
     pub header: Header,
-    pub joint_names: std::string::String,
-    pub points: JointTrajectoryPoint,
+    pub joint_names: std::vec::Vec<std::string::String>,
+    pub points: std::vec::Vec<JointTrajectoryPoint>,
 }
 impl ::roslibrust::RosMessageType for JointTrajectory {
     const ROS_TYPE_NAME: &'static str = "trajectory_msgs/JointTrajectory";
@@ -1196,10 +1196,10 @@ impl ::roslibrust::RosMessageType for JointTrajectory {
 impl JointTrajectory {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct JointTrajectoryPoint {
-    pub positions: f64,
-    pub velocities: f64,
-    pub accelerations: f64,
-    pub effort: f64,
+    pub positions: std::vec::Vec<f64>,
+    pub velocities: std::vec::Vec<f64>,
+    pub accelerations: std::vec::Vec<f64>,
+    pub effort: std::vec::Vec<f64>,
     pub time_from_start: DurationI,
 }
 impl ::roslibrust::RosMessageType for JointTrajectoryPoint {
@@ -1209,8 +1209,8 @@ impl JointTrajectoryPoint {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct MultiDOFJointTrajectory {
     pub header: Header,
-    pub joint_names: std::string::String,
-    pub points: MultiDOFJointTrajectoryPoint,
+    pub joint_names: std::vec::Vec<std::string::String>,
+    pub points: std::vec::Vec<MultiDOFJointTrajectoryPoint>,
 }
 impl ::roslibrust::RosMessageType for MultiDOFJointTrajectory {
     const ROS_TYPE_NAME: &'static str = "trajectory_msgs/MultiDOFJointTrajectory";
@@ -1218,9 +1218,9 @@ impl ::roslibrust::RosMessageType for MultiDOFJointTrajectory {
 impl MultiDOFJointTrajectory {}
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct MultiDOFJointTrajectoryPoint {
-    pub transforms: Transform,
-    pub velocities: Twist,
-    pub accelerations: Twist,
+    pub transforms: std::vec::Vec<Transform>,
+    pub velocities: std::vec::Vec<Twist>,
+    pub accelerations: std::vec::Vec<Twist>,
     pub time_from_start: DurationI,
 }
 impl ::roslibrust::RosMessageType for MultiDOFJointTrajectoryPoint {
@@ -1240,8 +1240,8 @@ pub struct ImageMarker {
     pub filled: u8,
     pub fill_color: ColorRGBA,
     pub lifetime: DurationI,
-    pub points: Point,
-    pub outline_colors: ColorRGBA,
+    pub points: std::vec::Vec<Point>,
+    pub outline_colors: std::vec::Vec<ColorRGBA>,
 }
 impl ::roslibrust::RosMessageType for ImageMarker {
     const ROS_TYPE_NAME: &'static str = "visualization_msgs/ImageMarker";
@@ -1262,8 +1262,8 @@ pub struct InteractiveMarker {
     pub name: std::string::String,
     pub description: std::string::String,
     pub scale: f32,
-    pub menu_entries: MenuEntry,
-    pub controls: InteractiveMarkerControl,
+    pub menu_entries: std::vec::Vec<MenuEntry>,
+    pub controls: std::vec::Vec<InteractiveMarkerControl>,
 }
 impl ::roslibrust::RosMessageType for InteractiveMarker {
     const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarker";
@@ -1276,7 +1276,7 @@ pub struct InteractiveMarkerControl {
     pub orientation_mode: u8,
     pub interaction_mode: u8,
     pub always_visible: bool,
-    pub markers: Marker,
+    pub markers: std::vec::Vec<Marker>,
     pub independent_marker_orientation: bool,
     pub description: std::string::String,
 }
@@ -1325,7 +1325,7 @@ impl InteractiveMarkerFeedback {
 pub struct InteractiveMarkerInit {
     pub server_id: std::string::String,
     pub seq_num: u64,
-    pub markers: InteractiveMarker,
+    pub markers: std::vec::Vec<InteractiveMarker>,
 }
 impl ::roslibrust::RosMessageType for InteractiveMarkerInit {
     const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerInit";
@@ -1346,9 +1346,9 @@ pub struct InteractiveMarkerUpdate {
     pub server_id: std::string::String,
     pub seq_num: u64,
     pub r#type: u8,
-    pub markers: InteractiveMarker,
-    pub poses: InteractiveMarkerPose,
-    pub erases: std::string::String,
+    pub markers: std::vec::Vec<InteractiveMarker>,
+    pub poses: std::vec::Vec<InteractiveMarkerPose>,
+    pub erases: std::vec::Vec<std::string::String>,
 }
 impl ::roslibrust::RosMessageType for InteractiveMarkerUpdate {
     const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerUpdate";
@@ -1369,8 +1369,8 @@ pub struct Marker {
     pub color: ColorRGBA,
     pub lifetime: DurationI,
     pub frame_locked: bool,
-    pub points: Point,
-    pub colors: ColorRGBA,
+    pub points: std::vec::Vec<Point>,
+    pub colors: std::vec::Vec<ColorRGBA>,
     pub text: std::string::String,
     pub mesh_resource: std::string::String,
     pub mesh_use_embedded_materials: bool,
@@ -1398,7 +1398,7 @@ impl Marker {
 }
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct MarkerArray {
-    pub markers: Marker,
+    pub markers: std::vec::Vec<Marker>,
 }
 impl ::roslibrust::RosMessageType for MarkerArray {
     const ROS_TYPE_NAME: &'static str = "visualization_msgs/MarkerArray";

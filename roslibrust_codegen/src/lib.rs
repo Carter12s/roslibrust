@@ -115,7 +115,12 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
         .fields
         .into_iter()
         .map(|field| {
-            let field_type = TokenStream::from_str(field.field_type.field_type.as_str()).unwrap();
+            let field_type = if field.field_type.is_vec {
+                format!("std::vec::Vec<{}>", field.field_type.field_type)
+            } else {
+                field.field_type.field_type
+            };
+            let field_type = TokenStream::from_str(field_type.as_str()).unwrap();
 
             let field_name = if field.field_name.as_str() == "type" {
                 format_ident!("r#{}", field.field_name)
