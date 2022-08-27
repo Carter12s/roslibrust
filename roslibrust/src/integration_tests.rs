@@ -5,7 +5,9 @@
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
-    use crate::test_msgs::{Header, NodeInfo, TimeI};
+    roslibrust_codegen_macro::find_and_generate_ros_messages!("roslibrust");
+    use std_msgs::{Header, TimeI};
+    use test_msgs::NodeInfo;
     use crate::{Client, ClientOptions, Subscriber};
     use log::debug;
     use tokio::time::{timeout, Duration};

@@ -5,5 +5,5 @@ members = [
     "roslibrust_codegen",
     "roslibrust_codegen_macro",
     "roslibrust_rospack",
-    "roslibrust_test" # todo: remove me before merge
+    "roslibrust_test"
 ]
