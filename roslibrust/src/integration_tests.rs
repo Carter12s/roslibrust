@@ -5,10 +5,8 @@
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
-    roslibrust_codegen_macro::find_and_generate_ros_messages!("roslibrust");
-    use std_msgs::{Header, TimeI};
-    use test_msgs::NodeInfo;
-    use crate::{Client, ClientOptions, Subscriber};
+
+    use crate::{Client, ClientOptions, RosMessageType, Subscriber};
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
@@ -16,15 +14,27 @@ mod integration_tests {
     const TIMEOUT: Duration = Duration::from_millis(200);
     const LOCAL_WS: &str = "ws://localhost:9090";
 
-    type TestResult = Result<(), anyhow::Error>;
-    /// Ensures that associate constants are generated on the test_msgs correctly
-    /// requires test_msgs gen_code to have been generated.
-    /// Compliation is passing for this test
-    //TODO may move this code somewhere else
-    #[test]
-    fn test_associated_contants() {
-        let _ = NodeInfo::STATUS_UNINITIALIZED;
+    // Just defining these types manually here as this crate is not responsible for code generation
+    #[derive(serde::Deserialize, serde::Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct Header {
+        pub seq: u32,
+        pub stamp: TimeI,
+        pub frame_id: std::string::String,
     }
+    impl RosMessageType for Header {
+        const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
+    }
+
+    #[derive(serde::Deserialize, serde::Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct TimeI {
+        pub secs: u32,
+        pub nsecs: u32,
+    }
+    impl RosMessageType for TimeI {
+        const ROS_TYPE_NAME: &'static str = "std_msgs/TimeI";
+    }
+
+    type TestResult = Result<(), anyhow::Error>;
 
     /**
     This test does a round trip publish subscribe for real
@@ -34,7 +44,6 @@ mod integration_tests {
     #[tokio::test]
     async fn self_publish() {
         // TODO figure out better logging for tests
-
         let _ = simple_logger::SimpleLogger::new()
             .with_level(log::LevelFilter::Debug)
             .without_timestamps()
@@ -120,7 +129,7 @@ mod integration_tests {
     /// This test doesn't actually do much, but instead confirms the internal structure of the lib is multi-threaded correclty
     /// The whole goal here is to catch send / sync complier errors
     #[tokio::test]
-    async fn parrallel_construnction() {
+    async fn parrallel_construction() {
         let mut client = Client::new(LOCAL_WS)
             .await
             .expect("Failed to construct client");

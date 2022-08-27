@@ -1,7 +1,10 @@
 use log::*;
 use roslibrust::Client;
 
-roslibrust_codegen_macro::find_and_generate_ros_messages!("roslibrust/local_msgs", "roslibrust/examples/rosapi");
+roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    "roslibrust/local_msgs",
+    "roslibrust/examples/rosapi"
+);
 
 /// This example shows calling a service
 /// To run this example rosbridge and a roscore should be running
