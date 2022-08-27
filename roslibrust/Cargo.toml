@@ -5,8 +5,10 @@ authors = ["carter <carter@amprobotics.com>"]
 edition = "2021"
 license = "MIT"
 readme = "../README.md"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "An library for interfacing with the ROS's rosbridge_server"
+repository = "https://github.com/Carter12s/roslibrust"
+keywords = ["ROS", "robotics", "websocket", "json", "async"]
+categories = ["science::robotics"]
 
 [dependencies]
 anyhow = "1.0.58"
