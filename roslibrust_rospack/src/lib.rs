@@ -1,13 +1,10 @@
 use std::io;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
-use xml::reader::{EventReader, XmlEvent};
 
 #[derive(Clone, Debug)]
 pub struct Package {
     pub name: String,
     pub path: PathBuf,
-    pub is_metapackage: bool,
 }
 
 const CATKIN_IGNORE: &'static str = "CATKIN_IGNORE";
@@ -31,11 +28,17 @@ pub fn get_search_paths() -> Vec<PathBuf> {
     }
 }
 
+/// Finds ROS packages within a list of search paths.
+///
+/// This function may panic if it reaches a maximum search depth. If this function
+/// panics while you're using it, you may have some infinite loop in your paths
+/// due to symlinking.
 pub fn crawl(search_paths: Vec<PathBuf>) -> Vec<Package> {
     let mut packages = vec![];
 
     for path in search_paths {
-        if let Ok(found_packages) = packages_from_path(path, 1000) {
+        const MAX_RECURSION_DEPTH: u16 = 1000;
+        if let Ok(found_packages) = packages_from_path(path, MAX_RECURSION_DEPTH) {
             packages = [packages, found_packages].concat();
         }
     }
@@ -64,12 +67,10 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
             path.push(PACKAGE_FILE_NAME);
             if path.as_path().is_file() {
                 // And there's a package.xml here!
-                let package_xml_path = path.clone();
                 assert!(path.pop());
                 found_packages.push(Package {
                     name: String::from(path.file_name().unwrap().to_string_lossy()),
                     path: path,
-                    is_metapackage: is_metapackage(package_xml_path.as_path()).unwrap_or(false),
                 });
             } else {
                 // No file here, we'll have to go deeper
@@ -95,26 +96,6 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
     }
 
     Ok(found_packages)
-}
-
-fn is_metapackage(package_xml_path: &Path) -> io::Result<bool> {
-    let file = std::fs::File::open(package_xml_path)?;
-    let parser = EventReader::new(io::BufReader::new(file));
-    let mut is_metapackage = false;
-    for event in parser {
-        match event {
-            Ok(XmlEvent::EndElement { name }) => {
-                if name == xml::name::OwnedName::from_str("metapackage").unwrap() {
-                    is_metapackage = true;
-                    break;
-                }
-            }
-            _ => {
-                continue;
-            }
-        }
-    }
-    Ok(is_metapackage)
 }
 
 pub fn get_message_files(pkg: &Package) -> io::Result<Vec<PathBuf>> {

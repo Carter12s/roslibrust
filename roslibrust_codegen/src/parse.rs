@@ -138,6 +138,7 @@ pub fn parse_ros_service_file(
 }
 
 pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
+    const INTERNAL_STD_MSGS: [&str; 3] = ["Header", "TimeI", "DurationI"];
     msg.constants = msg
         .constants
         .into_iter()
@@ -147,6 +148,9 @@ pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
                     .get(constant.constant_type.as_str())
                     .unwrap()
                     .to_string();
+                // We do not need to consider the package for constants as they're required
+                // to be built-in types other than Time and Duration (I think Header is not
+                // technically built-in)
             }
             constant
         })
@@ -159,6 +163,11 @@ pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
                 .get(field.field_type.field_type.as_str())
                 .unwrap_or(&field.field_type.field_type.as_str())
                 .to_string();
+            for std_msg in INTERNAL_STD_MSGS {
+                if field.field_type.field_type.as_str() == std_msg {
+                    field.field_type.package_name = Some("std_msgs".into());
+                }
+            }
             field
         })
         .collect();

@@ -9,6 +9,12 @@ use syn::parse_quote;
 mod parse;
 use parse::*;
 
+/// Searches a list of paths for ROS packages and generates struct definitions
+/// and implementations for message files and service files in packages it finds.
+///
+/// * `additional_search_paths` - A list of additional paths to search beyond those
+/// found in ROS_PACKAGE_PATH environment variable.
+///
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
     let mut search_paths = rospack::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
@@ -18,7 +24,14 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
         .iter()
         .map(|pkg| {
             rospack::get_message_files(pkg)
-                .unwrap()
+                .unwrap_or_else(|err| {
+                    eprintln!(
+                        "Unable to get paths to message files for {}: {}",
+                        pkg.name, err
+                    );
+                    // Return an empty vec so that one package doesn't necessarily fail the process
+                    vec![]
+                })
                 .into_iter()
                 .map(|path| (pkg.name.clone(), path))
         })
@@ -28,7 +41,14 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
         .iter()
         .map(|pkg| {
             rospack::get_service_files(pkg)
-                .unwrap()
+                .unwrap_or_else(|err| {
+                    eprintln!(
+                        "Unable to get paths to service files for {}: {}",
+                        pkg.name, err
+                    );
+                    // Return an empty vec so that one package doesn't necessarily fail the process
+                    vec![]
+                })
                 .into_iter()
                 .map(|path| (pkg.name.clone(), path))
         })
@@ -36,13 +56,29 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
         .collect::<Vec<_>>();
     message_files.extend_from_slice(&service_files[..]);
     let messages = parse_message_files(message_files).unwrap();
-    let struct_definitions = messages
+    let mut modules_to_struct_definitions: BTreeMap<String, Vec<TokenStream>> = BTreeMap::new();
+
+    messages.into_iter().for_each(|(_, message)| {
+        let pkg_name = message.package.clone();
+        let definition = generate_struct(message);
+        if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
+            entry.push(definition);
+        } else {
+            modules_to_struct_definitions.insert(pkg_name, vec![definition]);
+        }
+    });
+    let all_pkgs = modules_to_struct_definitions
+        .iter()
+        .map(|(k, _)| k)
+        .cloned()
+        .collect::<Vec<String>>();
+    let module_definitions = modules_to_struct_definitions
         .into_iter()
-        .map(|(_, message)| generate_struct(message))
-        .collect::<Vec<TokenStream>>();
+        .map(|(pkg, struct_defs)| generate_mod(pkg, struct_defs, &all_pkgs[..]))
+        .collect::<Vec<_>>();
 
     quote! {
-        #(#struct_definitions)*
+        #(#module_definitions)*
 
     }
 }
@@ -109,16 +145,12 @@ fn resolve_message_dependencies(
     }) = parsed_msgs.pop_front()
     {
         if seen_count > MAX_PARSE_ITER_LIMIT {
-            parsed.fields.iter().for_each(|field| {
-                if ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str()) {
-                    println!("RESOLVED PRIMITIVE: {}", field.field_type.field_type);
-                } else if message_map.contains_key(&field.field_type.field_type) {
-                    println!("RESOLVED MSG: {}", field.field_type.field_type);
-                } else {
-                    println!("UNRESOLVED: {}", field.field_type.field_type);
-                }
-            });
-            panic!("Unable to resolve depedencies, message: {package}/{}: \nMessage Definition:\n{unparsed}\n\nParsed: {parsed:#?}", parsed.name);
+            panic!("Unable to resolve dependencies after reaching iteration limit ({MAX_PARSE_ITER_LIMIT}).\n\
+                    Message: {package}/{}\n\
+                    Message Definition:\n\
+                    {unparsed}\n\n\
+                    Parsed: {parsed:#?}", 
+                    parsed.name);
         }
 
         // Check if each dependency of the message is a primitive or has been resolved
@@ -171,7 +203,17 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
     let fields = msg
         .fields
         .into_iter()
-        .map(|field| {
+        .map(|mut field| {
+            field.field_type.field_type = match field.field_type.package_name {
+                Some(pkg) => {
+                    if pkg.as_str() == msg.package.as_str() {
+                        format!("self::{}", field.field_type.field_type)
+                    } else {
+                        format!("{}::{}", pkg, field.field_type.field_type)
+                    }
+                }
+                None => field.field_type.field_type,
+            };
             let field_type = if field.field_type.is_vec {
                 format!("std::vec::Vec<{}>", field.field_type.field_type)
             } else {
@@ -226,5 +268,27 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
             #(#constants )*
         }
 
+    }
+}
+
+fn generate_mod(
+    pkg_name: String,
+    struct_definitions: Vec<TokenStream>,
+    all_pkgs: &[String],
+) -> TokenStream {
+    let mod_name = format_ident!("{}", &pkg_name);
+    let all_pkgs = all_pkgs
+        .iter()
+        .filter(|item| item.as_str() != pkg_name.as_str())
+        .map(|pkg| format_ident!("{}", pkg))
+        .collect::<Vec<_>>();
+
+    quote! {
+        #[allow(unused_imports)]
+        pub mod #mod_name {
+            #(use super::#all_pkgs; )*
+
+            #(#struct_definitions )*
+        }
     }
 }

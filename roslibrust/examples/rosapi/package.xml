@@ -2,7 +2,7 @@
   <name>test_msgs</name>
   <version>0.1.0</version>
   <description>
-    This is a test package with message definitions.
+    This is a test package with message definitions for some rosapi services.
   </description>
   <maintainer email="ssnover95@gmail.com">ssnover</maintainer>
   <license>MIT</license>

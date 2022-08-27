@@ -1,10 +1,9 @@
 use proc_macro::TokenStream;
-use std::path::PathBuf;
 use syn::parse::{Parse, ParseStream};
 use syn::{parse_macro_input, Token};
 
 struct RosLibRustMessagePaths {
-    paths: Vec<PathBuf>,
+    paths: Vec<std::path::PathBuf>,
 }
 
 /// Parses a comma-separated list of str literals specifying paths.
