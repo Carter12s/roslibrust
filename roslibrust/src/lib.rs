@@ -2,21 +2,9 @@
 
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
-/// Contains tools for generating message definitions from ROS1 .msg and .srv files
-///
-/// We currently only support a run-one / build.rs method of message generation and not
-/// a macro based approach.
-///
-/// Roadmap:
-///   - Move message generation into its own crate with a public API
-///   - Provide and example build.rs to show how this can be well integrated into a project
-pub mod message_gen;
+
 /// Utilities functions primarily for working with ros env vars and package structures
 pub mod util;
-
-// TODO look into restricting visibility, right now very useful for examples / integration tests
-/// Provides example message generations created from the crate, useful for testing and learning
-pub mod test_msgs;
 
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.

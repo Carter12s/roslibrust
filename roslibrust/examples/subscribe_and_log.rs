@@ -1,6 +1,8 @@
 use log::*;
 use roslibrust::Client;
 
+roslibrust_codegen_macro::find_and_generate_ros_messages!("roslibrust/local_msgs");
+
 /// A basic example of connecting and subscribing to data.
 /// This example will log received messages if run at the same time as "basic_publisher".
 /// A running rosbridge websocket server at the default port (9090) is required to run this example.
@@ -15,9 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut client = Client::new("ws://localhost:9090").await?;
     info!("Client connected");
 
-    let rx = client
-        .subscribe::<roslibrust::test_msgs::Header>("talker")
-        .await?;
+    let rx = client.subscribe::<std_msgs::Header>("talker").await?;
     info!("Successfully subscribed to topic: talker");
 
     loop {
