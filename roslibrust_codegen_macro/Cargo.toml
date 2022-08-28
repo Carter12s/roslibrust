@@ -14,5 +14,7 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
-roslibrust_codegen = { path = "../roslibrust_codegen" }
+roslibrust_codegen = "0.1.0"
+# For development
+# roslibrust_codegen = { path = "../roslibrust_codegen" }
 syn = "1.0"

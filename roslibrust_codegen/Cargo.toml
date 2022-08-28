@@ -12,5 +12,7 @@ repository = "https://github.com/Carter12s/roslibrust"
 lazy_static = "1.4"
 proc-macro2 = "1.0"
 quote = "1.0"
-roslibrust_rospack = { path = "../roslibrust_rospack" }
+roslibrust_rospack = "0.1.0"
+# For Development
+# roslibrust_rospack = { path = "../roslibrust_rospack" }
 syn = "1.0"

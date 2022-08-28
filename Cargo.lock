@@ -76,14 +76,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "codegen"
-version = "0.1.3"
-source = "git+https://github.com/carter12s/codegen.git?branch=associated-consts#a0e829ecad59151bcd2cd7607815de6eb4683c9d"
-dependencies = [
- "indexmap",
-]
-
-[[package]]
 name = "colored"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -335,16 +327,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "indexmap"
-version = "1.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10a35a97730320ffe8e2d410b5d3b69279b98d2c14bdb8b70ea89ecf7888d41e"
-dependencies = [
- "autocfg",
- "hashbrown",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -530,14 +512,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "codegen",
  "dashmap",
  "deadqueue",
  "futures",
  "futures-util",
  "log",
  "rand",
- "roslibrust_codegen_macro",
+ "roslibrust_codegen_macro 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "simple_logger",
@@ -555,7 +536,20 @@ dependencies = [
  "lazy_static",
  "proc-macro2",
  "quote",
- "roslibrust_rospack",
+ "roslibrust_rospack 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn",
+]
+
+[[package]]
+name = "roslibrust_codegen"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19bbf49760d51c9dabbdb0d3360b6354cd236d2fd448b738d693e41e5bd123eb"
+dependencies = [
+ "lazy_static",
+ "proc-macro2",
+ "quote",
+ "roslibrust_rospack 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn",
 ]
 
@@ -565,7 +559,19 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "roslibrust_codegen",
+ "roslibrust_codegen 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn",
+]
+
+[[package]]
+name = "roslibrust_codegen_macro"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f55d2f7f8da15adf7ac837f9adec7b9f824fd5e439fd868a01c1aaa960843f34"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "roslibrust_codegen 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn",
 ]
 
@@ -574,12 +580,18 @@ name = "roslibrust_rospack"
 version = "0.1.0"
 
 [[package]]
+name = "roslibrust_rospack"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9dc38bafd90cbfca3e638474a524c2939eda767142d16aa41df70aa6ea30b8c2"
+
+[[package]]
 name = "roslibrust_test"
 version = "0.1.0"
 dependencies = [
  "roslibrust",
- "roslibrust_codegen",
- "roslibrust_codegen_macro",
+ "roslibrust_codegen 0.1.0",
+ "roslibrust_codegen_macro 0.1.0",
  "serde",
 ]
 
