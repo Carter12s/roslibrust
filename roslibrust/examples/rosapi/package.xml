@@ -1,0 +1,21 @@
+<package>
+  <name>rosapi</name>
+  <version>0.1.0</version>
+  <description>
+    This is a test package with message definitions for some rosapi services.
+  </description>
+  <maintainer email="ssnover95@gmail.com">ssnover</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+
+  <export>
+    <architecture_independent/>
+  </export>
+</package>

@@ -1,12 +1,7 @@
-// Contains tools for generating message definitions from ROS1 .msg and .srv files
-pub mod message_gen;
 // Utilities functions primarily for working with ros env vars and package structures
 pub mod util;
 // Communication primitives for the rosbridge_suite protocol
 pub mod comm;
-
-// TODO look into restricting visibility, right now very useful for examples / integration tests
-pub mod test_msgs;
 
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
