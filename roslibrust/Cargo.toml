@@ -13,9 +13,6 @@ categories = ["science::robotics"]
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
-# Using this branch for unmerged support for constants
-codegen = { git = "https://github.com/carter12s/codegen.git", branch = "associated-consts" }
-#codegen = "0.1.3"
 dashmap = "5.3"
 deadqueue = "0.2"
 futures = "0.3"
