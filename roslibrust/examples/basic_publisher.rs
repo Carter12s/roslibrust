@@ -5,7 +5,7 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("roslibrust/local_msgs
 
 /// This example creates a client, and publishes a message to the topic "talker"
 /// Running this example at the same time as subscribe_and_log will have the two examples
-/// pass messages between eachother.
+/// pass messages between each other.
 /// To run this example a rosbridge websocket server should be running at the deafult port (9090).
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

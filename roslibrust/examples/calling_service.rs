@@ -10,7 +10,6 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!(
 /// To run this example rosbridge and a roscore should be running
 /// As well as the rosapi node.
 /// This node calls a service on the rosapi node to get the current ros time.
-
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     simple_logger::SimpleLogger::new()
@@ -18,9 +17,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .without_timestamps() // Required for running in wsl2
         .init()
         .unwrap();
-
-    // Uncomment this line if you want to test message generation for the rosapi package
-    // gen_rosapi_msgs();
 
     let mut client = Client::new("ws://localhost:9090").await?;
 
