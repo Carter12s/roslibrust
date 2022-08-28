@@ -76,14 +76,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "codegen"
-version = "0.1.3"
-source = "git+https://github.com/carter12s/codegen.git?branch=associated-consts#a0e829ecad59151bcd2cd7607815de6eb4683c9d"
-dependencies = [
- "indexmap",
-]
-
-[[package]]
 name = "colored"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -335,16 +327,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "indexmap"
-version = "1.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10a35a97730320ffe8e2d410b5d3b69279b98d2c14bdb8b70ea89ecf7888d41e"
-dependencies = [
- "autocfg",
- "hashbrown",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -530,7 +512,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "codegen",
  "dashmap",
  "deadqueue",
  "futures",
