@@ -5,7 +5,6 @@
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
-
     use crate::{Client, ClientOptions, RosMessageType, Subscriber};
     use log::debug;
     use tokio::time::{timeout, Duration};

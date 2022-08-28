@@ -1,5 +1,3 @@
-//! This module covers communication with the server
-
 use std::{fmt::Display, str::FromStr, string::ToString};
 
 use anyhow::bail;
@@ -12,11 +10,17 @@ use tokio_tungstenite::tungstenite::Message;
 use crate::{RosLibRustResult, RosMessageType, Writer};
 
 /// Describes all documented rosbridge server operations
-pub enum Ops {
+pub(crate) enum Ops {
+    // These are in the definition, but not used right now
+    #[allow(dead_code)]
     Status,
+    #[allow(dead_code)]
     SetLevel,
+    #[allow(dead_code)]
     Fragment,
+    #[allow(dead_code)]
     Auth,
+    // Below here are in use
     Advertise,
     Unadvertise,
     Publish,
@@ -76,7 +80,7 @@ impl FromStr for Ops {
 
 /// Describes the low level comm capabilities of talking to a rosbridge server
 #[async_trait]
-pub trait RosBridgeComm {
+pub(crate) trait RosBridgeComm {
     async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
     async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()>;
