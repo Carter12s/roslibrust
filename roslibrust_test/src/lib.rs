@@ -1892,4 +1892,3 @@ pub mod visualization_msgs {
         pub const ROSLAUNCH: u8 = 2;
     }
 }
-

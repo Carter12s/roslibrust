@@ -239,11 +239,15 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
             } else {
                 format_ident!("{}", constant.constant_name)
             };
-            let (constant_type, constant_value) = if constant.constant_type == "std::string::String" {
+            let (constant_type, constant_value) = if constant.constant_type == "std::string::String"
+            {
                 let constant_value = constant.constant_value;
-                (String::from("&'static str"), quote!{ #constant_value })
+                (String::from("&'static str"), quote! { #constant_value })
             } else {
-                (constant.constant_type, TokenStream::from_str(constant.constant_value.as_str()).unwrap())
+                (
+                    constant.constant_type,
+                    TokenStream::from_str(constant.constant_value.as_str()).unwrap(),
+                )
             };
             let constant_type = TokenStream::from_str(constant_type.as_str()).unwrap();
             quote! { pub const #constant_name: #constant_type = #constant_value; }
