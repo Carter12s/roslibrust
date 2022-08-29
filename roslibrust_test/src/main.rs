@@ -3,7 +3,8 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 
 fn main() {
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec!["..".into()]);
+    let tokens =
+        roslibrust_codegen::find_and_generate_ros_messages(vec!["roslibrust".into()]);
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
     println!("{}", source);
 }
