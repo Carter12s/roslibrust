@@ -14,5 +14,3 @@ uint8 STATUS_SHUTTING_DOWN=4
 # Node is stopped.
 uint8 STATUS_SHUTDOWN=5
 uint8 status
-
-string TEST_STR=/topic
