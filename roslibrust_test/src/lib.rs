@@ -1548,6 +1548,15 @@ pub mod test_msgs {
     impl AddTwoIntsResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct Constants {}
+    impl ::roslibrust::RosMessageType for Constants {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/Constants";
+    }
+    impl Constants {
+        pub const TEST_STR: &'static str = "/topic";
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float64Stamped {
         pub header: std_msgs::Header,
         pub value: f64,
