@@ -111,6 +111,16 @@ impl RosMessageType for () {
     const ROS_TYPE_NAME: &'static str = "";
 }
 
+/// Fundamental traits for service types this crate works with
+/// This trait will be satisfied for any services definitions generated with this crate's message_gen functionality
+pub trait RosServiceType {
+    /// Name of the ros service e.g. `rospy_tutorials/AddTwoInts`
+    const ROS_SERVICE_NAME: &'static str;
+    /// The type of data being sent in the request
+    type Request: RosMessageType;
+    type Response: RosMessageType;
+}
+
 /// Builder options for creating a client
 #[derive(Clone)]
 pub struct ClientOptions {
@@ -338,16 +348,21 @@ impl Client {
         });
     }
 
-    // TODO apparently rosbridge doesn't support this!
-    // TODO get them to! and then implement!
-    // /// Advertises a service and returns a handle to the service server
-    // /// Serivce will be active until the handle is dropped!
-    // pub async fn advertise_service(
-    //     &mut self,
-    //     topic: &str,
-    // ) -> Result<ServiceServer, Box<dyn Error>> {
-    //     unimplemented!()
-    // }
+    /// Advertises a service and returns a handle to the service server
+    /// Serivce will be active until the handle is dropped!
+    pub async fn advertise_service<T: RosServiceType>(
+        &mut self,
+        topic: &str,
+    ) -> RosLibRustResult<()> {
+        let mut writer = self.writer.write().await;
+        writer.advertise_service(topic, "temp").await?;
+
+        //TODO needs to take in callback
+        //TODO need to store callback
+        //TODO need to provide unadvertise and drop callback
+
+        Ok(())
+    }
 
     /// Calls a ros service and returns the response
     ///

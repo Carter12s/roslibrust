@@ -28,6 +28,7 @@ pub(crate) enum Ops {
     Unsubscribe,
     CallService,
     ServiceResponse,
+    AdvertiseService,
 }
 
 impl Display for Ops {
@@ -55,6 +56,7 @@ impl Into<&str> for &Ops {
             Ops::Unsubscribe => "unsubscribe",
             Ops::CallService => "call_service",
             Ops::ServiceResponse => "service_response",
+            Ops::AdvertiseService => "advertise_service",
         }
     }
 }
@@ -71,6 +73,7 @@ impl FromStr for Ops {
             "unsubscribe" => Ops::Unsubscribe,
             "call_service" => Ops::CallService,
             "service_response" => Ops::ServiceResponse,
+            "advertise_service" => Ops::AdvertiseService,
             // Leaving other unimplmented to catch bugs
             // TODO implement these
             _ => bail!("Un-recognized op: {}", s),
@@ -84,7 +87,6 @@ pub(crate) trait RosBridgeComm {
     async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
     async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()>;
-    // TODO may provide a verison of advertise that takes explicit string for msg_type
     async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn call_service<Req: RosMessageType>(
         &mut self,
@@ -93,6 +95,7 @@ pub(crate) trait RosBridgeComm {
         req: Req,
     ) -> RosLibRustResult<()>;
     async fn unadvertise(&mut self, topic: &str) -> RosLibRustResult<()>;
+    async fn advertise_service(&mut self, topic: &str, srv_type: &str) -> RosLibRustResult<()>;
 }
 
 #[async_trait]
@@ -174,6 +177,20 @@ impl RosBridgeComm for Writer {
             {
                 "op": Ops::Unadvertise.to_string(),
                 "topic": topic
+            }
+        };
+        let msg = Message::Text(msg.to_string());
+        self.send(msg).await?;
+        Ok(())
+    }
+
+    async fn advertise_service(&mut self, srv_name: &str, srv_type: &str) -> RosLibRustResult<()> {
+        debug!("Sending advertise service on {} w/ {}", srv_name, srv_type);
+        let msg = json! {
+            {
+                "op": Ops::AdvertiseService.to_string(),
+                "type": srv_type,
+                "service": srv_name
             }
         };
         let msg = Message::Text(msg.to_string());
