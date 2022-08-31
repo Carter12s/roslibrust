@@ -7,7 +7,7 @@ use log::debug;
 use serde_json::json;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::{RosLibRustResult, RosMessageType, Writer};
+use crate::{RosLibRustError, RosLibRustResult, RosMessageType, Writer};
 
 /// Describes all documented rosbridge server operations
 pub(crate) enum Ops {
@@ -96,6 +96,13 @@ pub(crate) trait RosBridgeComm {
     ) -> RosLibRustResult<()>;
     async fn unadvertise(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn advertise_service(&mut self, topic: &str, srv_type: &str) -> RosLibRustResult<()>;
+    async fn service_response(
+        &mut self,
+        topic: &str,
+        id: Option<String>,
+        result: bool,
+        value: String,
+    ) -> RosLibRustResult<()>;
 }
 
 #[async_trait]
@@ -191,6 +198,31 @@ impl RosBridgeComm for Writer {
                 "op": Ops::AdvertiseService.to_string(),
                 "type": srv_type,
                 "service": srv_name
+            }
+        };
+        let msg = Message::Text(msg.to_string());
+        self.send(msg).await?;
+        Ok(())
+    }
+
+    async fn service_response(
+        &mut self,
+        topic: &str,
+        id: Option<String>,
+        result: bool,
+        value: String,
+    ) -> RosLibRustResult<()> {
+        debug!(
+            "Sending service response on {:?} with {:?}, {:?}, {:?}",
+            topic, id, result, value
+        );
+        let msg = json! {
+            {
+                "op": Ops::ServiceResponse.to_string(),
+                "service": topic,
+                "id": id,
+                "result": result,
+                "value": value,
             }
         };
         let msg = Message::Text(msg.to_string());

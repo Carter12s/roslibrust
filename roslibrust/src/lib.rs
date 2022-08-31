@@ -41,9 +41,16 @@ use tungstenite::Message;
 
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
+/// Type erasure of callback for a service
+/// Internally this will covert the input string to the Request type
+/// Send that converted type into the user's callback
+/// Get the result of the user's callback and then serialize that so it can be transmitted
+// TODO need to implement drop logic on this
+type ServiceCallback =
+    Box<dyn Fn(&str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> + Send + Sync>;
 
-/// Our underlying comunication type
-//TODO we really want to split this into seperate read/write heads that can be locked seperatly
+/// Our underlying communication type
+//TODO we really want to split this into separate read/write heads that can be locked separately
 type Socket = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
 type Reader = SplitStream<Socket>;
 type Writer = SplitSink<Socket, Message>;
@@ -118,6 +125,7 @@ pub trait RosServiceType {
     const ROS_SERVICE_NAME: &'static str;
     /// The type of data being sent in the request
     type Request: RosMessageType;
+    /// The type of the data
     type Response: RosMessageType;
 }
 
@@ -155,6 +163,7 @@ pub struct Client {
     // Stores a record of the publishers we've handed out
     publishers: Arc<DashMap<String, PublisherHandle>>,
     subscriptions: Arc<DashMap<String, Subscription>>,
+    services: Arc<DashMap<String, ServiceCallback>>,
     // Contains any outstanding service calls we're waiting for a response on
     // Map key will be a uniquely generated id for each call
     service_calls: Arc<DashMap<String, tokio::sync::oneshot::Sender<Value>>>,
@@ -169,6 +178,7 @@ impl Client {
             reader: Arc::new(RwLock::new(reader)),
             writer: Arc::new(RwLock::new(writer)),
             publishers: Arc::new(DashMap::new()),
+            services: Arc::new(DashMap::new()),
             subscriptions: Arc::new(DashMap::new()),
             service_calls: Arc::new(DashMap::new()),
             opts: Arc::new(opts),
@@ -349,16 +359,37 @@ impl Client {
     }
 
     /// Advertises a service and returns a handle to the service server
-    /// Serivce will be active until the handle is dropped!
+    /// Service will be active until the handle is dropped!
     pub async fn advertise_service<T: RosServiceType>(
         &mut self,
         topic: &str,
+        server: fn(
+            T::Request,
+        )
+            -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
     ) -> RosLibRustResult<()> {
         let mut writer = self.writer.write().await;
-        writer.advertise_service(topic, "temp").await?;
+        writer.advertise_service(topic, T::ROS_SERVICE_NAME).await?;
 
-        //TODO needs to take in callback
-        //TODO need to store callback
+        // We need to do type erasure and hide the request by wrapping their closure in a generic closure
+        let erased_closure =
+            move |message: &str| -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+                // Type erase the incoming type
+                let parsed_msg = serde_json::from_str(message)?;
+                let response = server(parsed_msg)?;
+                // Type erase the outgoing type
+                let response_string = serde_json::to_string(&response)?;
+                Ok(response_string)
+            };
+
+        let res = self
+            .services
+            .insert(topic.to_string(), Box::new(erased_closure));
+        if let Some(_previous_server) = res {
+            warn!("Re-registering a server for a pre-existing topic? Are you sure you want to do this");
+            unimplemented!()
+        }
+
         //TODO need to provide unadvertise and drop callback
 
         Ok(())
@@ -457,6 +488,9 @@ impl Client {
                         comm::Ops::ServiceResponse => {
                             self.handle_response(parsed).await;
                         }
+                        comm::Ops::CallService => {
+                            self.handle_service(parsed).await;
+                        }
                         _ => {
                             warn!("Unhandled op type {}", op)
                         }
@@ -526,15 +560,45 @@ impl Client {
             .get(data.get("topic").unwrap().as_str().unwrap());
         let callbacks = match callbacks {
             Some(callbacks) => callbacks,
-            _ => panic!("Received publish message for unsubscribed topic!"),
+            _ => panic!("Received publish message for unsubscribed topic!"), // TODO probably shouldn't be a panic?
         };
         for (_id, callback) in &callbacks.handles {
             callback(
+                // TODO possible bug here if "msg" isn't defined remove this unwrap
                 serde_json::to_string(data.get("msg").unwrap())
                     .unwrap()
                     .as_str(),
             )
         }
+    }
+
+    /// Response handler for receiving a service call looks up if we have a service
+    /// registered for the incoming topic and if so dispatches to the callback
+    async fn handle_service(&mut self, data: Value) {
+        // Unwrap is okay
+        let topic = data.get("service").unwrap().as_str().unwrap();
+
+        // Lookup if we have a service for the message
+        let callback = self.services.get(topic);
+        let callback = match callback {
+            Some(callback) => callback,
+            _ => panic!("Received call_service for unadvertised service!"),
+        };
+        // TODO likely bugs here remove these unwraps()!
+        let request = data.get("args").unwrap().as_array().unwrap()[0]
+            .as_str()
+            .unwrap();
+        match callback(request) {
+            Ok(res) => {
+                let mut writer = self.writer.write().await;
+                writer.service_response(topic, id, result, value)
+            }
+            Err(e) => {
+                error!("A service callback on topic {:?} failed with {:?} sending response false in service_response", data.get("service"), e);
+            }
+        };
+
+        // Now we need to send the service_response back
     }
 
     async fn handle_response(&mut self, data: Value) {
