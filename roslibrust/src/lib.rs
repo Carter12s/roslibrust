@@ -46,8 +46,11 @@ type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
 /// Send that converted type into the user's callback
 /// Get the result of the user's callback and then serialize that so it can be transmitted
 // TODO need to implement drop logic on this
-type ServiceCallback =
-    Box<dyn Fn(&str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> + Send + Sync>;
+type ServiceCallback = Box<
+    dyn Fn(&str) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>
+        + Send
+        + Sync,
+>;
 
 /// Our underlying communication type
 //TODO we really want to split this into separate read/write heads that can be locked separately
@@ -372,15 +375,17 @@ impl Client {
         writer.advertise_service(topic, T::ROS_SERVICE_NAME).await?;
 
         // We need to do type erasure and hide the request by wrapping their closure in a generic closure
-        let erased_closure =
-            move |message: &str| -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-                // Type erase the incoming type
-                let parsed_msg = serde_json::from_str(message)?;
-                let response = server(parsed_msg)?;
-                // Type erase the outgoing type
-                let response_string = serde_json::to_string(&response)?;
-                Ok(response_string)
-            };
+        let erased_closure = move |message: &str| -> Result<
+            serde_json::Value,
+            Box<dyn std::error::Error + Send + Sync>,
+        > {
+            // Type erase the incoming type
+            let parsed_msg = serde_json::from_str(message)?;
+            let response = server(parsed_msg)?;
+            // Type erase the outgoing type
+            let response_string = serde_json::json!(response);
+            Ok(response_string)
+        };
 
         let res = self
             .services
@@ -416,15 +421,26 @@ impl Client {
             .collect();
         {
             if self.service_calls.insert(rand_string.clone(), tx).is_some() {
-                error!("ID collision encounted in call_service");
+                error!("ID collision encountered in call_service");
             }
         }
         {
             let mut comm = self.writer.write().await;
-            comm.call_service(service, &rand_string, req).await?;
+            Client::timeout(
+                self.opts.timeout,
+                comm.call_service(service, &rand_string, req),
+            )
+            .await?;
         }
-        // TODO timeout impl here
-        let msg = match rx.await {
+
+        // Having to do manual timeout logic here because of error types
+        let recv = if let Some(timeout) = self.opts.timeout {
+            tokio::time::timeout(timeout, rx).await?
+        } else {
+            rx.await
+        };
+
+        let msg = match recv {
             Ok(msg) => msg,
             Err(e) =>
             // TODO remove panic! here, this could result from dropping communication, need to handle disconnect better
@@ -483,12 +499,15 @@ impl Client {
                     let op = comm::Ops::from_str(op)?;
                     match op {
                         comm::Ops::Publish => {
+                            trace!("handling publish for {:?}", &parsed);
                             self.handle_publish(parsed).await;
                         }
                         comm::Ops::ServiceResponse => {
+                            trace!("handling service response for {:?}", &parsed);
                             self.handle_response(parsed).await;
                         }
                         comm::Ops::CallService => {
+                            trace!("handling call_service for {:?}", &parsed);
                             self.handle_service(parsed).await;
                         }
                         _ => {
@@ -575,8 +594,10 @@ impl Client {
     /// Response handler for receiving a service call looks up if we have a service
     /// registered for the incoming topic and if so dispatches to the callback
     async fn handle_service(&mut self, data: Value) {
-        // Unwrap is okay
+        // Unwrap is okay, field is fully required and strictly type
         let topic = data.get("service").unwrap().as_str().unwrap();
+        // Unwrap is okay, field is strictly typed to string
+        let id = data.get("id").map(|id| id.as_str().unwrap().to_string());
 
         // Lookup if we have a service for the message
         let callback = self.services.get(topic);
@@ -584,17 +605,20 @@ impl Client {
             Some(callback) => callback,
             _ => panic!("Received call_service for unadvertised service!"),
         };
-        // TODO likely bugs here remove these unwraps()!
-        let request = data.get("args").unwrap().as_array().unwrap()[0]
-            .as_str()
-            .unwrap();
-        match callback(request) {
+        // TODO likely bugs here remove this unwrap. Unclear what we are expected to get for empty service
+        let request = data.get("args").unwrap().to_string();
+        let mut writer = self.writer.write().await;
+        match callback(&request) {
             Ok(res) => {
-                let mut writer = self.writer.write().await;
-                writer.service_response(topic, id, result, value)
+                // TODO unwrap here is probably bad... Failure to write means disconnected?
+                writer.service_response(topic, id, true, res).await.unwrap();
             }
             Err(e) => {
                 error!("A service callback on topic {:?} failed with {:?} sending response false in service_response", data.get("service"), e);
+                writer
+                    .service_response(topic, id, false, serde_json::json!(format!("{e}")))
+                    .await
+                    .unwrap();
             }
         };
 
@@ -627,7 +651,7 @@ impl Client {
         }
     }
 
-    /// Bassic connection attempt and error wrapping
+    /// Basic connection attempt and error wrapping
     async fn connect(url: &str) -> RosLibRustResult<Socket> {
         let attempt = tokio_tungstenite::connect_async(url).await;
         match attempt {

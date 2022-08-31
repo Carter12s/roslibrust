@@ -7,7 +7,7 @@ use log::debug;
 use serde_json::json;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::{RosLibRustError, RosLibRustResult, RosMessageType, Writer};
+use crate::{RosLibRustResult, RosMessageType, Writer};
 
 /// Describes all documented rosbridge server operations
 pub(crate) enum Ops {
@@ -74,7 +74,7 @@ impl FromStr for Ops {
             "call_service" => Ops::CallService,
             "service_response" => Ops::ServiceResponse,
             "advertise_service" => Ops::AdvertiseService,
-            // Leaving other unimplmented to catch bugs
+            // Leaving other unimplemented to catch bugs
             // TODO implement these
             _ => bail!("Un-recognized op: {}", s),
         })
@@ -100,8 +100,8 @@ pub(crate) trait RosBridgeComm {
         &mut self,
         topic: &str,
         id: Option<String>,
-        result: bool,
-        value: String,
+        is_success: bool,
+        response: serde_json::Value,
     ) -> RosLibRustResult<()>;
 }
 
@@ -116,6 +116,7 @@ impl RosBridgeComm for Writer {
         }
         );
         let msg = Message::Text(msg.to_string());
+        debug!("Sending subscribe: {:?}", &msg);
         self.send(msg).await?;
         Ok(())
     }
@@ -128,6 +129,7 @@ impl RosBridgeComm for Writer {
         }
         );
         let msg = Message::Text(msg.to_string());
+        debug!("Sending unsubscribe: {:?}", &msg);
         self.send(msg).await?;
         Ok(())
     }
@@ -142,6 +144,7 @@ impl RosBridgeComm for Writer {
             }
         );
         let msg = Message::Text(msg.to_string());
+        debug!("Sending publish: {:?}", &msg);
         self.send(msg).await?;
         Ok(())
     }
@@ -155,6 +158,7 @@ impl RosBridgeComm for Writer {
             }
         );
         let msg = Message::Text(msg.to_string());
+        debug!("Sending advertise: {:?}", &msg);
         self.send(msg).await?;
         Ok(())
     }
@@ -170,10 +174,11 @@ impl RosBridgeComm for Writer {
                 "op": Ops::CallService.to_string(),
                 "service": service,
                 "id": id,
-                "args": [req],
+                "args": req,
             }
         );
         let msg = Message::Text(msg.to_string());
+        debug!("Sending call_service: {:?}", &msg);
         self.send(msg).await?;
         Ok(())
     }
@@ -187,6 +192,7 @@ impl RosBridgeComm for Writer {
             }
         };
         let msg = Message::Text(msg.to_string());
+        debug!("Sending unadvertise: {:?}", &msg);
         self.send(msg).await?;
         Ok(())
     }
@@ -201,6 +207,7 @@ impl RosBridgeComm for Writer {
             }
         };
         let msg = Message::Text(msg.to_string());
+        debug!("Sending advertise_service: {:?}", &msg);
         self.send(msg).await?;
         Ok(())
     }
@@ -209,23 +216,24 @@ impl RosBridgeComm for Writer {
         &mut self,
         topic: &str,
         id: Option<String>,
-        result: bool,
-        value: String,
+        is_success: bool,
+        response: serde_json::Value,
     ) -> RosLibRustResult<()> {
         debug!(
             "Sending service response on {:?} with {:?}, {:?}, {:?}",
-            topic, id, result, value
+            topic, id, is_success, response
         );
         let msg = json! {
             {
                 "op": Ops::ServiceResponse.to_string(),
                 "service": topic,
                 "id": id,
-                "result": result,
-                "value": value,
+                "result": is_success,
+                "values": response,
             }
         };
         let msg = Message::Text(msg.to_string());
+        debug!("Sending service_response: {:?}", &msg);
         self.send(msg).await?;
         Ok(())
     }
