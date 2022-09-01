@@ -1,3 +1,4 @@
+use log::*;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use roslibrust_rospack as rospack;
@@ -18,6 +19,10 @@ use parse::*;
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
     let mut search_paths = rospack::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
+    debug!(
+        "Codegen is looking in following paths for files: {:?}",
+        &search_paths
+    );
     let mut packages = rospack::crawl(search_paths);
     packages.dedup_by(|a, b| a.name == b.name);
     let mut message_files = packages

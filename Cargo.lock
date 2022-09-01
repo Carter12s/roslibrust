@@ -534,6 +534,7 @@ name = "roslibrust_codegen"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
+ "log",
  "proc-macro2",
  "quote",
  "roslibrust_rospack",
