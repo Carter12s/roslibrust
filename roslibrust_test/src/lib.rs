@@ -142,6 +142,18 @@ pub mod diagnostic_msgs {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/SelfTestResponse";
     }
     impl SelfTestResponse {}
+    pub struct AddDiagnostics {}
+    impl ::roslibrust::RosServiceType for AddDiagnostics {
+        const ROS_SERVICE_NAME: &'static str = "AddDiagnostics";
+        type Request = AddDiagnosticsRequest;
+        type Response = AddDiagnosticsResponse;
+    }
+    pub struct SelfTest {}
+    impl ::roslibrust::RosServiceType for SelfTest {
+        const ROS_SERVICE_NAME: &'static str = "SelfTest";
+        type Request = SelfTestRequest;
+        type Response = SelfTestResponse;
+    }
 }
 #[allow(unused_imports)]
 pub mod geometry_msgs {
@@ -610,6 +622,30 @@ pub mod nav_msgs {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/SetMapResponse";
     }
     impl SetMapResponse {}
+    pub struct GetPlan {}
+    impl ::roslibrust::RosServiceType for GetPlan {
+        const ROS_SERVICE_NAME: &'static str = "GetPlan";
+        type Request = GetPlanRequest;
+        type Response = GetPlanResponse;
+    }
+    pub struct GetMap {}
+    impl ::roslibrust::RosServiceType for GetMap {
+        const ROS_SERVICE_NAME: &'static str = "GetMap";
+        type Request = GetMapRequest;
+        type Response = GetMapResponse;
+    }
+    pub struct SetMap {}
+    impl ::roslibrust::RosServiceType for SetMap {
+        const ROS_SERVICE_NAME: &'static str = "SetMap";
+        type Request = SetMapRequest;
+        type Response = SetMapResponse;
+    }
+    pub struct LoadMap {}
+    impl ::roslibrust::RosServiceType for LoadMap {
+        const ROS_SERVICE_NAME: &'static str = "LoadMap";
+        type Request = LoadMapRequest;
+        type Response = LoadMapResponse;
+    }
 }
 #[allow(unused_imports)]
 pub mod rosapi {
@@ -640,6 +676,12 @@ pub mod rosapi {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeResponse";
     }
     impl GetTimeResponse {}
+    pub struct GetTime {}
+    impl ::roslibrust::RosServiceType for GetTime {
+        const ROS_SERVICE_NAME: &'static str = "GetTime";
+        type Request = GetTimeRequest;
+        type Response = GetTimeResponse;
+    }
 }
 #[allow(unused_imports)]
 pub mod sensor_msgs {
@@ -1079,6 +1121,12 @@ pub mod sensor_msgs {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/TimeReference";
     }
     impl TimeReference {}
+    pub struct SetCameraInfo {}
+    impl ::roslibrust::RosServiceType for SetCameraInfo {
+        const ROS_SERVICE_NAME: &'static str = "SetCameraInfo";
+        type Request = SetCameraInfoRequest;
+        type Response = SetCameraInfoResponse;
+    }
 }
 #[allow(unused_imports)]
 pub mod shape_msgs {
@@ -1612,6 +1660,12 @@ pub mod test_msgs {
         pub const STATUS_RUN_ERROR: u8 = 3;
         pub const STATUS_SHUTTING_DOWN: u8 = 4;
         pub const STATUS_SHUTDOWN: u8 = 5;
+    }
+    pub struct AddTwoInts {}
+    impl ::roslibrust::RosServiceType for AddTwoInts {
+        const ROS_SERVICE_NAME: &'static str = "AddTwoInts";
+        type Request = AddTwoIntsRequest;
+        type Response = AddTwoIntsResponse;
     }
 }
 #[allow(unused_imports)]
