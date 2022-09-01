@@ -16,8 +16,8 @@ lazy_static::lazy_static! {
         ("float32", "f32"),
         ("float64", "f64"),
         ("string", "std::string::String"),
-        ("time", "TimeI"),
-        ("duration", "DurationI"),
+        ("time", "::roslibrust::integral_types::Time"),
+        ("duration", "::roslibrust::integral_types::Duration"),
         ("Header", "Header"),
     ].into_iter().collect();
 }
@@ -151,7 +151,7 @@ pub fn parse_ros_service_file(data: String, name: String, package: &String) -> S
 }
 
 pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
-    const INTERNAL_STD_MSGS: [&str; 3] = ["Header", "TimeI", "DurationI"];
+    const INTERNAL_STD_MSGS: [&str; 1] = ["Header"];
     msg.constants = msg
         .constants
         .into_iter()

@@ -18,10 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
  - Support for service servers
+ - Into<> helpers for Time and Duration for tokio and std
 
 ### Fixed
  - Failure in message generation caused by files without extensions
  - Failure in message generation caused by failing to quote around string constants
+ - Failure in message generation caused by bad design of integral types TimeI and DurationI
 
 ## 0.1.0 - August 28, 2022
 Initial public release

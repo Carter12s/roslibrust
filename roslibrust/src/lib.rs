@@ -16,6 +16,9 @@ pub use subscriber::*;
 mod publisher;
 pub use publisher::*;
 
+// Contains definition of custom ROS types that codegen emits
+pub mod integral_types;
+
 // Tests are fully private module
 mod integration_tests;
 
