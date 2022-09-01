@@ -622,29 +622,29 @@ pub mod nav_msgs {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/SetMapResponse";
     }
     impl SetMapResponse {}
-    pub struct GetPlan {}
-    impl ::roslibrust::RosServiceType for GetPlan {
-        const ROS_SERVICE_NAME: &'static str = "nav_msgs/GetPlan";
-        type Request = GetPlanRequest;
-        type Response = GetPlanResponse;
-    }
     pub struct GetMap {}
     impl ::roslibrust::RosServiceType for GetMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/GetMap";
         type Request = GetMapRequest;
         type Response = GetMapResponse;
     }
-    pub struct SetMap {}
-    impl ::roslibrust::RosServiceType for SetMap {
-        const ROS_SERVICE_NAME: &'static str = "nav_msgs/SetMap";
-        type Request = SetMapRequest;
-        type Response = SetMapResponse;
+    pub struct GetPlan {}
+    impl ::roslibrust::RosServiceType for GetPlan {
+        const ROS_SERVICE_NAME: &'static str = "nav_msgs/GetPlan";
+        type Request = GetPlanRequest;
+        type Response = GetPlanResponse;
     }
     pub struct LoadMap {}
     impl ::roslibrust::RosServiceType for LoadMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/LoadMap";
         type Request = LoadMapRequest;
         type Response = LoadMapResponse;
+    }
+    pub struct SetMap {}
+    impl ::roslibrust::RosServiceType for SetMap {
+        const ROS_SERVICE_NAME: &'static str = "nav_msgs/SetMap";
+        type Request = SetMapRequest;
+        type Response = SetMapResponse;
     }
 }
 #[allow(unused_imports)]

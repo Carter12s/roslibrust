@@ -155,6 +155,7 @@ fn parse_ros_files(
             }
         }
     }
+    parsed_services.sort_by(|a, b| a.name.cmp(&b.name));
     Ok((
         resolve_message_dependencies(parsed_messages),
         parsed_services,
