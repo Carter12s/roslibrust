@@ -533,7 +533,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -543,7 +543,7 @@ dependencies = [
  "futures-util",
  "log",
  "rand",
- "roslibrust_codegen_macro",
+ "roslibrust_codegen_macro 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "simple_logger",
@@ -562,17 +562,43 @@ dependencies = [
  "log",
  "proc-macro2",
  "quote",
- "roslibrust_rospack",
+ "roslibrust_rospack 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn",
+]
+
+[[package]]
+name = "roslibrust_codegen"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "739b354eed99f0b6be349b0aabc3cb0f32b7ee3c403699446a3d8ec3507fcd6a"
+dependencies = [
+ "lazy_static",
+ "log",
+ "proc-macro2",
+ "quote",
+ "roslibrust_rospack 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn",
 ]
 
 [[package]]
 name = "roslibrust_codegen_macro"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "roslibrust_codegen",
+ "roslibrust_codegen 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn",
+]
+
+[[package]]
+name = "roslibrust_codegen_macro"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413f45f403c8db20869a152b5d573f7652989feac94b54dc6a0ee72616b184a0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "roslibrust_codegen 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn",
 ]
 
@@ -581,13 +607,19 @@ name = "roslibrust_rospack"
 version = "0.2.0"
 
 [[package]]
+name = "roslibrust_rospack"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ae484c2a958aa13edc7c61aa57cace5b08110ba94adf020d9a15af0c8e040d1"
+
+[[package]]
 name = "roslibrust_test"
 version = "0.1.0"
 dependencies = [
  "diffy",
  "roslibrust",
- "roslibrust_codegen",
- "roslibrust_codegen_macro",
+ "roslibrust_codegen 0.2.0",
+ "roslibrust_codegen_macro 0.2.0",
  "serde",
 ]
 
