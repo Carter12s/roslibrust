@@ -50,6 +50,12 @@ mod test {
         let lib_contents =
             std::fs::read_to_string(lib_path).expect("Failed to load current lib.rs contents");
 
-        assert_eq!(source, lib_contents);
+        // Creating a diff so if there are changes output in CI is sane
+        let diff = diffy::create_patch(&source, &lib_contents);
+        println!("Diff is \n{}", diff);
+
+        if source != lib_contents {
+            panic!("Changes detected see diff!");
+        }
     }
 }
