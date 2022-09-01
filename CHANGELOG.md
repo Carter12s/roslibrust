@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+### Added
+ - Support for service servers
+
 ### Fixed
  - Failure in message generation caused by files without extensions
  - Failure in message generation caused by failing to quote around string constants

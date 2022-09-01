@@ -2,25 +2,31 @@
 [![Rust](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml)
 [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This package aims to provide a convenient intermediary between ROS1's rosbridge and Rust similar to roslibpy.
+This package aims to provide a convenient intermediary between ROS1's rosbridge and Rust similar to roslibpy and roslibjs.
 
 Information about the protocol can be found [here](https://github.com/RobotWebTools/rosbridge_suite).
 
-Current Status: Not Ready for Production
+Current Status: Ready for Beta Testing / Early Access
 Intended Support: Noetic, Galactic, Rolling. Development currently focused on Noetic
 
 | Feature                      | Status                                                      |
 |------------------------------|-------------------------------------------------------------|
+| tutorials                    | Planned and upcoming                                        |
 | message_gen                  | Working and tested, some non-compliance with ROS likely     |
 | advertise                    | Working and tested, needs documentation and error reporting |
-| unadvertise                  | Not started, planned                                        |
+| unadvertise                  | Working untested                                            |
 | publish                      | Working and tested, needs documentation and error reporting |
 | subscribe                    | Working and tested, needs documentation and error reporting |
 | unsubscribe                  | Working and tested, needs documentation and error reporting | 
-| services                     | Not started, planned                                        |
-| fragment / png / compression | No support planned                                          |
-| automatic integration tests  | Started not complete                                        |
-| rosbridge status access      | Not started, planned                                        |
+| services                     | Working and tested                                          |
+| fragment / png / cbor        | No support planned                                          |
+| cbor-raw                     | Planned                                                     |
+| ros1 TCPROS / raw            | Planned                                                     |
+| automatic integration tests  | Started, basic coverage                                     |
+| rosbridge status access      | Planned                                                     |
+| ros2                         | Planned                                                     |
+| ros2 DDS / raw               | Uncertain if this package will support                      |
+| rosapi                       | Planned                                                     |
 
 ## Message Generation
 Message generation is provided in two APIs. The first, which is visible in `roslibrust/examples`, is a proc-macro which can be invoked to generate ROS message structs in place:
@@ -54,8 +60,3 @@ let output = find_and_generate_ros_messages(vec!["/path/to/noetic/packages"]);
 ```
 
 An example of the output based on message and service files in this repo can be found under `roslibrust_test/src/lib.rs`.
-
-## Testing
-//TODO In progress automatic integration tests
-
-

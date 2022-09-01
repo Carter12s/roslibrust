@@ -1,3 +1,4 @@
+use log::*;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use roslibrust_rospack as rospack;
@@ -18,6 +19,10 @@ use parse::*;
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
     let mut search_paths = rospack::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
+    debug!(
+        "Codegen is looking in following paths for files: {:?}",
+        &search_paths
+    );
     let mut packages = rospack::crawl(search_paths);
     packages.dedup_by(|a, b| a.name == b.name);
     let mut message_files = packages
@@ -55,9 +60,10 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
         .flatten()
         .collect::<Vec<_>>();
     message_files.extend_from_slice(&service_files[..]);
-    let messages = parse_message_files(message_files).unwrap();
+    let (messages, services) = parse_ros_files(message_files).unwrap();
     let mut modules_to_struct_definitions: BTreeMap<String, Vec<TokenStream>> = BTreeMap::new();
 
+    // Convert messages files into rust token streams and insert them into BTree organized by package
     messages.into_iter().for_each(|(_, message)| {
         let pkg_name = message.package.clone();
         let definition = generate_struct(message);
@@ -67,6 +73,17 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
             modules_to_struct_definitions.insert(pkg_name, vec![definition]);
         }
     });
+    // Do the same for services
+    services.into_iter().for_each(|service| {
+        let pkg_name = service.package.clone();
+        let definition = generate_service(service);
+        if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
+            entry.push(definition);
+        } else {
+            modules_to_struct_definitions.insert(pkg_name, vec![definition]);
+        }
+    });
+    // Now generate modules to wrap all of the TokenStreams in a module for each package
     let all_pkgs = modules_to_struct_definitions
         .iter()
         .map(|(k, _)| k)
@@ -91,26 +108,37 @@ struct MessageMetadata {
     pub unparsed: String,
 }
 
-fn parse_message_files(
+/// Parses all ROS file types and returns a final expanded set
+/// Currently supports service files and message files, no planned support for actions
+/// The returned BTree will contain all messages files including those buried within the service definitions
+/// and will have fully expanded and resolved referenced types in other packages.
+fn parse_ros_files(
     msg_paths: Vec<(String, PathBuf)>,
-) -> std::io::Result<BTreeMap<String, MessageFile>> {
+) -> std::io::Result<(BTreeMap<String, MessageFile>, Vec<ServiceFile>)> {
     let mut parsed_messages = VecDeque::new();
+    let mut parsed_services = Vec::new();
     for (pkg, path) in msg_paths {
         let contents = std::fs::read_to_string(&path)?;
         let name = path.file_stem().unwrap().to_str().unwrap();
         match path.extension().unwrap().to_str().unwrap() {
             "srv" => {
-                parse_ros_service_file(contents, name.to_string(), &pkg)
-                    .into_iter()
-                    .for_each(|(parsed, unparsed)| {
-                        parsed_messages.push_back(MessageMetadata {
-                            package: pkg.clone(),
-                            path: path.clone(),
-                            seen_count: 0,
-                            parsed,
-                            unparsed,
-                        });
-                    });
+                let srv_file = parse_ros_service_file(contents, name.to_string(), &pkg);
+                // TODO stop cloning with reckless abandon
+                parsed_messages.push_back(MessageMetadata {
+                    package: pkg.clone(),
+                    path: path.clone(),
+                    seen_count: 0,
+                    parsed: srv_file.request_type.clone(),
+                    unparsed: srv_file.request_type_raw.clone(),
+                });
+                parsed_messages.push_back(MessageMetadata {
+                    package: pkg.clone(),
+                    path: path.clone(),
+                    seen_count: 0,
+                    parsed: srv_file.response_type.clone(),
+                    unparsed: srv_file.response_type_raw.clone(),
+                });
+                parsed_services.push(srv_file);
             }
             "msg" => {
                 let msg = parse_ros_message_file(contents.clone(), name.to_string(), &pkg);
@@ -127,7 +155,11 @@ fn parse_message_files(
             }
         }
     }
-    Ok(resolve_message_dependencies(parsed_messages))
+    parsed_services.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok((
+        resolve_message_dependencies(parsed_messages),
+        parsed_services,
+    ))
 }
 
 fn resolve_message_dependencies(
@@ -196,6 +228,26 @@ fn derive_attrs() -> Vec<syn::Attribute> {
         parse_quote! { #[derive(Clone)] },
         parse_quote! { #[derive(PartialEq)] },
     ]
+}
+
+/// Generates the service for a given service file
+/// The service definition defines a struct representing the service an an implementation
+/// of the RosServiceType trait for that struct
+fn generate_service(service: ServiceFile) -> TokenStream {
+    let service_type_name = format!("{}/{}", &service.package, &service.name);
+    let struct_name = format_ident!("{}", service.name);
+    let request_name = format_ident!("{}", service.request_type.name);
+    let response_name = format_ident!("{}", service.response_type.name);
+    quote! {
+        pub struct #struct_name {
+
+        }
+        impl ::roslibrust::RosServiceType for #struct_name {
+            const ROS_SERVICE_NAME: &'static str = #service_type_name;
+            type Request = #request_name;
+            type Response = #response_name;
+        }
+    }
 }
 
 fn generate_struct(msg: MessageFile) -> TokenStream {

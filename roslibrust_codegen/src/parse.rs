@@ -36,7 +36,7 @@ pub struct FieldType {
 }
 
 /// Describes all information for an individual field
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct FieldInfo {
     pub field_type: FieldType,
     pub field_name: String,
@@ -44,7 +44,7 @@ pub struct FieldInfo {
 
 /// Describes all information for a constant within a message
 /// Note: Constants are not fully supported yet (waiting on codegen support)
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct ConstantInfo {
     pub constant_type: String,
     pub constant_name: String,
@@ -52,12 +52,23 @@ pub struct ConstantInfo {
 }
 
 /// Describes all information for a single message file
-#[derive(PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct MessageFile {
     pub name: String,
     pub package: String,
     pub fields: Vec<FieldInfo>,
     pub constants: Vec<ConstantInfo>,
+}
+
+/// Describes all information for a single service file
+pub struct ServiceFile {
+    pub name: String,
+    pub package: String,
+    // The names of these types will be auto generated as {name}Request and {name}Response
+    pub request_type: MessageFile,
+    pub request_type_raw: String, // needed elsewhere in generation, but would like to remove
+    pub response_type: MessageFile,
+    pub response_type_raw: String, // needed elsewhere in generation, but would like to remove
 }
 
 /// Converts a ros message file into a struct representation
@@ -113,11 +124,7 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
     result
 }
 
-pub fn parse_ros_service_file(
-    data: String,
-    name: String,
-    package: &String,
-) -> [(MessageFile, String); 2] {
+pub fn parse_ros_service_file(data: String, name: String, package: &String) -> ServiceFile {
     let dash_index = data.find("---").expect(&format!(
         "Failed to find delimiter line '---' in {package}/{name}"
     ));
@@ -125,16 +132,22 @@ pub fn parse_ros_service_file(
     let request_str = data[..dash_index].to_string();
     let response_str = data[dash_index + 3..].to_string();
 
-    [
-        (
-            parse_ros_message_file(request_str.clone(), format!("{name}Request"), package),
-            request_str,
+    ServiceFile {
+        name: name.clone(),
+        package: package.clone(),
+        request_type: parse_ros_message_file(
+            request_str.clone(),
+            format!("{name}Request"),
+            package,
         ),
-        (
-            parse_ros_message_file(response_str.clone(), format!("{name}Response"), package),
-            response_str,
+        request_type_raw: request_str,
+        response_type: parse_ros_message_file(
+            response_str.clone(),
+            format!("{name}Response"),
+            package,
         ),
-    ]
+        response_type_raw: response_str,
+    }
 }
 
 pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {

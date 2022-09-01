@@ -1,11 +1,11 @@
-/// Tests in this module require a running rosbridge server supportin websockets on port 9090
+/// Tests in this module require a running rosbridge server supporting websocket connections on port 9090
 /// run `docker-compose -f ros1_bridge_compose.yaml up` in the docker folder of this repo to start a bridge
 /// and then run `cargo test --features running bridge` to execute these tests
 /// NOTE: these aren't stored in "tests" dir as many tests need access to private functions like publish()
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
-    use crate::{Client, ClientOptions, RosMessageType, Subscriber};
+    use crate::{Client, ClientOptions, RosMessageType, RosServiceType, Subscriber};
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
@@ -34,6 +34,31 @@ mod integration_tests {
     }
 
     type TestResult = Result<(), anyhow::Error>;
+
+    // Note: have to use a real .srv which exists in our docker image
+    pub struct SetBoolSrv {}
+    impl RosServiceType for SetBoolSrv {
+        const ROS_SERVICE_NAME: &'static str = "std_srvs/SetBool";
+        type Request = SetBoolRequest;
+        type Response = SetBoolResponse;
+    }
+
+    #[derive(serde::Deserialize, serde::Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct SetBoolRequest {
+        data: bool,
+    }
+    impl RosMessageType for SetBoolRequest {
+        const ROS_TYPE_NAME: &'static str = "std_srvs/SetBool";
+    }
+
+    #[derive(serde::Deserialize, serde::Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct SetBoolResponse {
+        success: bool,
+        message: String,
+    }
+    impl RosMessageType for SetBoolResponse {
+        const ROS_TYPE_NAME: &'static str = "std_srvs/SetBool";
+    }
 
     /**
     This test does a round trip publish subscribe for real
@@ -94,7 +119,7 @@ mod integration_tests {
         let mut client =
             Client::new_with_options(ClientOptions::new(LOCAL_WS).timeout(TIMEOUT)).await?;
 
-        let mut publisher = client.advertise::<TimeI>("/bad_message_recv/topic").await?;
+        let publisher = client.advertise::<TimeI>("/bad_message_recv/topic").await?;
 
         let sub: Subscriber<Header> = client.subscribe("/bad_message_recv/topic").await?;
 
@@ -125,7 +150,7 @@ mod integration_tests {
         assert!(Client::new_with_options(opts).await.is_ok());
     }
 
-    /// This test doesn't actually do much, but instead confirms the internal structure of the lib is multi-threaded correclty
+    /// This test doesn't actually do much, but instead confirms the internal structure of the lib is multi-threaded correctly
     /// The whole goal here is to catch send / sync complier errors
     #[tokio::test]
     async fn parrallel_construction() {
@@ -171,7 +196,7 @@ mod integration_tests {
         let opt = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
 
         let mut client = Client::new_with_options(opt).await?;
-        let mut publisher = client.advertise(TOPIC).await?;
+        let publisher = client.advertise(TOPIC).await?;
         debug!("Got publisher");
 
         let sub = client.subscribe::<Header>(TOPIC).await?;
@@ -203,6 +228,44 @@ mod integration_tests {
                 // All good! Timeout should expire
             }
         }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn self_service_call() -> TestResult {
+        let _ = simple_logger::SimpleLogger::new()
+            .with_level(log::LevelFilter::Trace)
+            .without_timestamps()
+            .init();
+
+        let opt = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
+        let mut client = Client::new_with_options(opt).await?;
+
+        let cb =
+            |_req: SetBoolRequest| -> Result<SetBoolResponse, Box<dyn std::error::Error + Send + Sync>> {
+                Ok(SetBoolResponse {
+                    success: true,
+                    message: "call_success".to_string(),
+                })
+            };
+
+        let topic = "/self_service_call";
+
+        client
+            .advertise_service::<SetBoolSrv>(topic, cb)
+            .await
+            .expect("Failed to advertise service");
+
+        // Make sure service advertise makes it through
+        tokio::time::sleep(TIMEOUT).await;
+
+        let response: SetBoolResponse = client
+            .call_service(topic, SetBoolRequest { data: true })
+            .await
+            .expect("Failed to call service");
+
+        assert_eq!(response.message, "call_success");
+
         Ok(())
     }
 }

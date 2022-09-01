@@ -2,8 +2,11 @@ use std::borrow::Cow;
 use std::io::Write;
 use std::process::{Command, Stdio};
 
+/// This main function is used to generate the contents of lib.rs
+/// Invoke the following from the workspace root to regen: `cargo run --bin roslibrust_test > ./roslibrust_test/src/lib.rs`
 fn main() {
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec!["roslibrust".into()]);
+    let main_pkg_path = env!("CARGO_MANIFEST_DIR").to_string() + "/../roslibrust";
+    let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![main_pkg_path.into()]);
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
     println!("{}", source);
 }
@@ -31,4 +34,28 @@ fn format_rust_source(source: &str) -> Cow<'_, str> {
         }
     }
     Cow::Borrowed(source)
+}
+
+#[cfg(test)]
+mod test {
+    use crate::format_rust_source;
+
+    /// Confirms that codegen has been run and changes committed
+    #[test]
+    fn lib_is_up_to_date() {
+        let main_pkg_path = env!("CARGO_MANIFEST_DIR").to_string() + "/../roslibrust";
+        let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![main_pkg_path.into()]);
+        let source = format_rust_source(tokens.to_string().as_str()).to_string();
+        let lib_path = env!("CARGO_MANIFEST_DIR").to_string() + "/src/lib.rs";
+        let lib_contents =
+            std::fs::read_to_string(lib_path).expect("Failed to load current lib.rs contents");
+
+        // Creating a diff so if there are changes output in CI is sane
+        let diff = diffy::create_patch(&source, &lib_contents);
+        println!("Diff is \n{}", diff);
+
+        if source != lib_contents {
+            panic!("Changes detected see diff!");
+        }
+    }
 }
