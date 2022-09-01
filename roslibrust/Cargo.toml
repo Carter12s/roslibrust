@@ -31,7 +31,9 @@ thiserror = "1.0"
 # Used for logging in examples
 simple_logger = "2.1.0"
 # For generating messages for examples
-roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
+#roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
+roslibrust_codegen_macro = "0.2.0"
+
 
 [features]
 # Intended for use with tests, includes tests that rely on a locally running rosbridge

@@ -1,9 +1,9 @@
 [package]
 name = "roslibrust_rospack"
 description = "Re-implementation of ROS1's rospack to support various utilities."
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-authors = ["ssnover <ssnover95@gmail.com>"]
+authors = ["ssnover <ssnover95@gmail.com>", "Carter Schultz <carterjschultz@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/Carter12s/roslibrust"

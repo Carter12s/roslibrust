@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+## 0.2.0 - September 1, 2022
+
 ### Added
  - Support for service servers
  - Into<> helpers for Time and Duration for tokio and std
