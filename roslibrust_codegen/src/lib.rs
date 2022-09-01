@@ -228,7 +228,7 @@ fn derive_attrs() -> Vec<syn::Attribute> {
 /// The service definition defines a struct representing the service an an implementation
 /// of the RosServiceType trait for that struct
 fn generate_service(service: ServiceFile) -> TokenStream {
-    let service_type_name = &service.name;
+    let service_type_name = format!("{}/{}", &service.package, &service.name);
     let struct_name = format_ident!("{}", service.name);
     let request_name = format_ident!("{}", service.request_type.name);
     let response_name = format_ident!("{}", service.response_type.name);
