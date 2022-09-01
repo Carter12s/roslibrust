@@ -14,7 +14,7 @@ pub mod actionlib_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GoalID {
-        pub stamp: std_msgs::TimeI,
+        pub stamp: ::roslibrust::integral_types::Time,
         pub id: std::string::String,
     }
     impl ::roslibrust::RosMessageType for GoalID {
@@ -560,7 +560,7 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MapMetaData {
-        pub map_load_time: std_msgs::TimeI,
+        pub map_load_time: ::roslibrust::integral_types::Time,
         pub resolution: f32,
         pub width: u32,
         pub height: u32,
@@ -670,7 +670,7 @@ pub mod rosapi {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetTimeResponse {
-        pub data: std_msgs::TimeI,
+        pub data: ::roslibrust::integral_types::Time,
     }
     impl ::roslibrust::RosMessageType for GetTimeResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeResponse";
@@ -1114,7 +1114,7 @@ pub mod sensor_msgs {
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TimeReference {
         pub header: std_msgs::Header,
-        pub time_ref: std_msgs::TimeI,
+        pub time_ref: ::roslibrust::integral_types::Time,
         pub source: std::string::String,
     }
     impl ::roslibrust::RosMessageType for TimeReference {
@@ -1258,22 +1258,12 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Duration {
-        pub data: self::DurationI,
+        pub data: ::roslibrust::integral_types::Duration,
     }
     impl ::roslibrust::RosMessageType for Duration {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Duration";
     }
     impl Duration {}
-    #[allow(non_snake_case)]
-    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    pub struct DurationI {
-        pub sec: i32,
-        pub nsec: i32,
-    }
-    impl ::roslibrust::RosMessageType for DurationI {
-        const ROS_TYPE_NAME: &'static str = "std_msgs/DurationI";
-    }
-    impl DurationI {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Empty {}
@@ -1323,7 +1313,7 @@ pub mod std_msgs {
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Header {
         pub seq: u32,
-        pub stamp: self::TimeI,
+        pub stamp: ::roslibrust::integral_types::Time,
         pub frame_id: std::string::String,
     }
     impl ::roslibrust::RosMessageType for Header {
@@ -1439,22 +1429,12 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Time {
-        pub data: self::TimeI,
+        pub data: ::roslibrust::integral_types::Time,
     }
     impl ::roslibrust::RosMessageType for Time {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Time";
     }
     impl Time {}
-    #[allow(non_snake_case)]
-    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    pub struct TimeI {
-        pub secs: u32,
-        pub nsecs: u32,
-    }
-    impl ::roslibrust::RosMessageType for TimeI {
-        const ROS_TYPE_NAME: &'static str = "std_msgs/TimeI";
-    }
-    impl TimeI {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt16 {
@@ -1699,7 +1679,7 @@ pub mod trajectory_msgs {
         pub velocities: std::vec::Vec<f64>,
         pub accelerations: std::vec::Vec<f64>,
         pub effort: std::vec::Vec<f64>,
-        pub time_from_start: std_msgs::DurationI,
+        pub time_from_start: ::roslibrust::integral_types::Duration,
     }
     impl ::roslibrust::RosMessageType for JointTrajectoryPoint {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/JointTrajectoryPoint";
@@ -1722,7 +1702,7 @@ pub mod trajectory_msgs {
         pub transforms: std::vec::Vec<geometry_msgs::Transform>,
         pub velocities: std::vec::Vec<geometry_msgs::Twist>,
         pub accelerations: std::vec::Vec<geometry_msgs::Twist>,
-        pub time_from_start: std_msgs::DurationI,
+        pub time_from_start: ::roslibrust::integral_types::Duration,
     }
     impl ::roslibrust::RosMessageType for MultiDOFJointTrajectoryPoint {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/MultiDOFJointTrajectoryPoint";
@@ -1755,7 +1735,7 @@ pub mod visualization_msgs {
         pub outline_color: std_msgs::ColorRGBA,
         pub filled: u8,
         pub fill_color: std_msgs::ColorRGBA,
-        pub lifetime: std_msgs::DurationI,
+        pub lifetime: ::roslibrust::integral_types::Duration,
         pub points: std::vec::Vec<geometry_msgs::Point>,
         pub outline_colors: std::vec::Vec<std_msgs::ColorRGBA>,
     }
@@ -1890,7 +1870,7 @@ pub mod visualization_msgs {
         pub pose: geometry_msgs::Pose,
         pub scale: geometry_msgs::Vector3,
         pub color: std_msgs::ColorRGBA,
-        pub lifetime: std_msgs::DurationI,
+        pub lifetime: ::roslibrust::integral_types::Duration,
         pub frame_locked: bool,
         pub points: std::vec::Vec<geometry_msgs::Point>,
         pub colors: std::vec::Vec<std_msgs::ColorRGBA>,
