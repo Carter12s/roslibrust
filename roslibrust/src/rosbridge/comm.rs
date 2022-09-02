@@ -7,7 +7,7 @@ use log::debug;
 use serde_json::json;
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::{RosLibRustResult, RosMessageType, Writer};
+use crate::{RosLibRustResult, RosMessageType, rosbridge::Writer};
 
 /// Describes all documented rosbridge server operations
 pub(crate) enum Ops {

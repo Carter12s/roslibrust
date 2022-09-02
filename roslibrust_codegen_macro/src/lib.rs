@@ -26,5 +26,5 @@ impl Parse for RosLibRustMessagePaths {
 pub fn find_and_generate_ros_messages(input_stream: TokenStream) -> TokenStream {
     let RosLibRustMessagePaths { paths } =
         parse_macro_input!(input_stream as RosLibRustMessagePaths);
-    roslibrust_codegen::find_and_generate_ros_messages(paths).into()
+    roslibrust::find_and_generate_ros_messages(paths).into()
 }

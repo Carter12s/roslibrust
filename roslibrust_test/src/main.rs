@@ -6,7 +6,7 @@ use std::process::{Command, Stdio};
 /// Invoke the following from the workspace root to regen: `cargo run --bin roslibrust_test > ./roslibrust_test/src/lib.rs`
 fn main() {
     let main_pkg_path = env!("CARGO_MANIFEST_DIR").to_string() + "/../roslibrust";
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![main_pkg_path.into()]);
+    let tokens = roslibrust::find_and_generate_ros_messages(vec![main_pkg_path.into()]);
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
     println!("{}", source);
 }
@@ -44,7 +44,7 @@ mod test {
     #[test]
     fn lib_is_up_to_date() {
         let main_pkg_path = env!("CARGO_MANIFEST_DIR").to_string() + "/../roslibrust";
-        let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![main_pkg_path.into()]);
+        let tokens = roslibrust::find_and_generate_ros_messages(vec![main_pkg_path.into()]);
         let source = format_rust_source(tokens.to_string().as_str()).to_string();
         let lib_path = env!("CARGO_MANIFEST_DIR").to_string() + "/src/lib.rs";
         let lib_contents =

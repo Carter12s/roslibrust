@@ -47,12 +47,12 @@ find_and_generate_ros_messages!("/path/to/noetic/packages", "/path/to/my/package
 
 It's important to note that these macros have no way to know when the messages in the search paths change and changes to your msg and srv files won't trigger a re-compile. These macros are most useful if they're embedded directly in code that needs to use it (i.e. examples, one-off nodes that need to talk to an external ROS system).
 
-If you want to commit the generated code or create a crate that contains the generated messages, you should use the second mechanism; a library under `roslibrust_codegen`. The proc-macro is a thin wrapper around this macro so the results will be the same.
+If you want to commit the generated code or create a crate that contains the generated messages, you should use the second mechanism; a library under the optional `codegen` feature of `roslibrust`. The proc-macro is a thin wrapper around this function so the results will be the same.
 
 An example of invoking it can be found in `roslibrust_test/src/main.rs`, but it's very similar to the macro example:
 
 ```rust
-use roslibrust_codegen::find_and_generate_ros_messages;
+use roslibrust::find_and_generate_ros_messages;
 
 let output = find_and_generate_ros_messages(vec![]);
 // OR

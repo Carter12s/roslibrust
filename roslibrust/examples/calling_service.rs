@@ -2,7 +2,7 @@ use log::*;
 use roslibrust::Client;
 
 roslibrust_codegen_macro::find_and_generate_ros_messages!(
-    "roslibrust/local_msgs",
+    "example_msgs/local_msgs",
     "roslibrust/examples/rosapi"
 );
 

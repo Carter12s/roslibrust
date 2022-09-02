@@ -3,10 +3,9 @@
 // API which allows us to hide our underlying queue/channel type
 
 use std::sync::Arc;
-
 use log::error;
 
-use crate::{Client, MessageQueue, RosMessageType};
+use crate::{Client, rosbridge::MessageQueue, RosMessageType};
 
 /// Represents a single instance of listening to a topic, and provides the ability to extract messages
 ///
