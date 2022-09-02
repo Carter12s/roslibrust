@@ -3,7 +3,7 @@ use roslibrust::Client;
 
 roslibrust_codegen_macro::find_and_generate_ros_messages!(
     "example_msgs/local_msgs",
-    "roslibrust/examples/rosapi"
+    "example_msgs/rosapi"
 );
 
 /// This example shows calling a service

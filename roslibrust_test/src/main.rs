@@ -2,11 +2,12 @@ use std::borrow::Cow;
 use std::io::Write;
 use std::process::{Command, Stdio};
 
+const MAIN_PKG_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../example_msgs");
+
 /// This main function is used to generate the contents of lib.rs
 /// Invoke the following from the workspace root to regen: `cargo run --bin roslibrust_test > ./roslibrust_test/src/lib.rs`
 fn main() {
-    let main_pkg_path = env!("CARGO_MANIFEST_DIR").to_string() + "/../roslibrust";
-    let tokens = roslibrust::find_and_generate_ros_messages(vec![main_pkg_path.into()]);
+    let tokens = roslibrust::find_and_generate_ros_messages(vec![MAIN_PKG_PATH.into()]);
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
     println!("{}", source);
 }
@@ -38,13 +39,12 @@ fn format_rust_source(source: &str) -> Cow<'_, str> {
 
 #[cfg(test)]
 mod test {
-    use crate::format_rust_source;
+    use crate::*;
 
     /// Confirms that codegen has been run and changes committed
     #[test]
     fn lib_is_up_to_date() {
-        let main_pkg_path = env!("CARGO_MANIFEST_DIR").to_string() + "/../roslibrust";
-        let tokens = roslibrust::find_and_generate_ros_messages(vec![main_pkg_path.into()]);
+        let tokens = roslibrust::find_and_generate_ros_messages(vec![MAIN_PKG_PATH.into()]);
         let source = format_rust_source(tokens.to_string().as_str()).to_string();
         let lib_path = env!("CARGO_MANIFEST_DIR").to_string() + "/src/lib.rs";
         let lib_contents =
@@ -54,7 +54,7 @@ mod test {
         let diff = diffy::create_patch(&source, &lib_contents);
         println!("Diff is \n{}", diff);
 
-        if source != lib_contents {
+        if source.trim() != lib_contents.trim() {
             panic!("Changes detected see diff!");
         }
     }
