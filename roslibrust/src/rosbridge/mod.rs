@@ -11,10 +11,9 @@ pub use publisher::*;
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
 
-
+use crate::{RosLibRustError, RosLibRustResult, RosMessageType, RosServiceType};
 use anyhow::anyhow;
 use comm::RosBridgeComm;
-use crate::{RosLibRustError, RosLibRustResult, RosMessageType, RosServiceType};
 use dashmap::DashMap;
 use futures_util::stream::{SplitSink, SplitStream, StreamExt};
 use log::*;

@@ -2,10 +2,10 @@
 // The subscriber manages the lifetime of the subscription and provides an
 // API which allows us to hide our underlying queue/channel type
 
-use std::sync::Arc;
 use log::error;
+use std::sync::Arc;
 
-use crate::{Client, rosbridge::MessageQueue, RosMessageType};
+use crate::{rosbridge::MessageQueue, Client, RosMessageType};
 
 /// Represents a single instance of listening to a topic, and provides the ability to extract messages
 ///
