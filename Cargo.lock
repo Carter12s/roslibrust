@@ -541,12 +541,16 @@ dependencies = [
  "deadqueue",
  "futures",
  "futures-util",
+ "lazy_static",
  "log",
+ "proc-macro2",
+ "quote",
  "rand",
  "roslibrust_codegen_macro",
  "serde",
  "serde_json",
  "simple_logger",
+ "syn",
  "thiserror",
  "tokio",
  "tokio-tungstenite",
@@ -555,30 +559,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "roslibrust_codegen"
-version = "0.1.0"
-dependencies = [
- "lazy_static",
- "log",
- "proc-macro2",
- "quote",
- "roslibrust_rospack",
- "syn",
-]
-
-[[package]]
 name = "roslibrust_codegen_macro"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "roslibrust_codegen",
+ "roslibrust",
  "syn",
 ]
-
-[[package]]
-name = "roslibrust_rospack"
-version = "0.1.0"
 
 [[package]]
 name = "roslibrust_test"
@@ -586,8 +574,6 @@ version = "0.1.0"
 dependencies = [
  "diffy",
  "roslibrust",
- "roslibrust_codegen",
- "roslibrust_codegen_macro",
  "serde",
 ]
 

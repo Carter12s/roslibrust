@@ -2,8 +2,6 @@
 
 members = [
     "roslibrust",
-    "roslibrust_codegen",
     "roslibrust_codegen_macro",
-    "roslibrust_rospack",
     "roslibrust_test"
 ]
