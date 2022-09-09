@@ -8,6 +8,10 @@ pub use subscriber::*;
 mod publisher;
 pub use publisher::*;
 
+// Tests are fully private module
+#[cfg(test)]
+mod integration_tests;
+
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
 
@@ -22,6 +26,7 @@ use rand::{thread_rng, Rng};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::RwLock;
@@ -97,6 +102,7 @@ impl ClientOptions {
 #[derive(Clone)]
 pub struct Client {
     inner: Arc<RwLock<ClientInner>>,
+    is_disconnected: Arc<AtomicBool>,
 }
 
 impl Client {
@@ -106,11 +112,17 @@ impl Client {
         ));
         let inner_weak = Arc::downgrade(&inner);
 
+        // We connect when we create ClientInner
+        let is_disconnected = Arc::new(AtomicBool::new(false));
+
         // Spawn the spin task
         // The internal stubborn spin task continues to try to reconnect on failure
-        let _ = tokio::task::spawn(stubborn_spin(inner_weak));
+        let _ = tokio::task::spawn(stubborn_spin(inner_weak, is_disconnected.clone()));
 
-        Ok(Client { inner })
+        Ok(Client {
+            inner,
+            is_disconnected,
+        })
     }
 
     /// Connects a rosbridge instance at the given url
@@ -119,6 +131,13 @@ impl Client {
     // TODO better error handling
     pub async fn new<S: Into<String>>(url: S) -> RosLibRustResult<Self> {
         Self::new_with_options(ClientOptions::new(url)).await
+    }
+
+    fn check_for_disconnect(&self) -> RosLibRustResult<()> {
+        match self.is_disconnected.load(Ordering::Relaxed) {
+            false => Ok(()),
+            true => Err(RosLibRustError::Disconnected),
+        }
     }
 
     // Internal implementation of subscribe
@@ -206,6 +225,7 @@ impl Client {
     where
         Msg: RosMessageType,
     {
+        self.check_for_disconnect()?;
         timeout(
             self.inner.read().await.opts.timeout,
             self._subscribe(topic_name),
@@ -218,6 +238,7 @@ impl Client {
     where
         T: RosMessageType,
     {
+        self.check_for_disconnect()?;
         let client = self.inner.read().await;
         let mut stream = client.writer.write().await;
         debug!("Publish got write lock on comm");
@@ -229,6 +250,7 @@ impl Client {
     where
         T: RosMessageType,
     {
+        self.check_for_disconnect()?;
         let client = self.inner.read().await;
         if client.publishers.contains_key(topic) {
             // TODO if we ever remove this restriction we should still check types match
@@ -266,6 +288,7 @@ impl Client {
         service: &str,
         req: Req,
     ) -> RosLibRustResult<Res> {
+        self.check_for_disconnect()?;
         let (tx, rx) = tokio::sync::oneshot::channel();
         let rand_string: String = thread_rng()
             .sample_iter(&Alphanumeric)
@@ -317,6 +340,7 @@ impl Client {
         )
             -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
     ) -> RosLibRustResult<()> {
+        self.check_for_disconnect()?;
         let client = self.inner.read().await;
         let mut writer = client.writer.write().await;
         writer.advertise_service(topic, T::ROS_SERVICE_NAME).await?;
@@ -601,7 +625,10 @@ impl ClientInner {
 }
 
 /// Wraps spin in retry logic to handle reconnections automagically
-async fn stubborn_spin(client: std::sync::Weak<RwLock<ClientInner>>) -> RosLibRustResult<()> {
+async fn stubborn_spin(
+    client: std::sync::Weak<RwLock<ClientInner>>,
+    is_disconnected: Arc<AtomicBool>,
+) -> RosLibRustResult<()> {
     debug!("Starting stubborn_spin");
     while let Some(client) = client.upgrade() {
         const SPIN_DURATION: Duration = Duration::from_millis(10);
@@ -609,8 +636,10 @@ async fn stubborn_spin(client: std::sync::Weak<RwLock<ClientInner>>) -> RosLibRu
         match tokio::time::timeout(SPIN_DURATION, client.read().await.spin_once()).await {
             Ok(Ok(())) => {}
             Ok(Err(err)) => {
+                is_disconnected.store(true, Ordering::Relaxed);
                 warn!("Spin failed with error: {err}, attempting to reconnect");
-                client.write().await.reconnect().await?
+                client.write().await.reconnect().await?;
+                is_disconnected.store(false, Ordering::Relaxed);
             }
             Err(_) => {
                 // Time out occurred, so we'll check on our weak pointer again

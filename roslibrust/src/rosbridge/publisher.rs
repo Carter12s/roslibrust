@@ -12,7 +12,6 @@ use crate::{Client, RosLibRustResult, RosMessageType};
 ///   - Ability for publish to by const
 // Instead of giving back a publisher should we give back a reference to one, and give back the
 // same reference when you advertise multiple times? Would require non-mut references?
-#[derive(Clone)]
 pub struct Publisher<T: RosMessageType> {
     topic: String,
     // auto incrementing sequence number increased once per publish
