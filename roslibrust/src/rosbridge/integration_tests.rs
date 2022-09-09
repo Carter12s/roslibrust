@@ -8,7 +8,8 @@ mod integration_tests {
     use std::sync::Arc;
 
     use crate::{
-        ClientHandle, ClientHandleOptions, RosLibRustError, RosMessageType, RosServiceType, Subscriber,
+        ClientHandle, ClientHandleOptions, RosLibRustError, RosMessageType, RosServiceType,
+        Subscriber,
     };
     use log::debug;
     use tokio::time::{timeout, Duration};
@@ -121,7 +122,8 @@ mod integration_tests {
     // We want a failed message parse / type mismatch to come through to the subscriber
     async fn bad_message_recv() -> TestResult {
         let mut client =
-            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT)).await?;
+            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
+                .await?;
 
         let publisher = client.advertise::<TimeI>("/bad_message_recv/topic").await?;
 
@@ -306,7 +308,8 @@ mod integration_tests {
     #[tokio::test]
     async fn test_disconnect_returns_error() -> TestResult {
         let client =
-            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT)).await?;
+            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
+                .await?;
         client
             .is_disconnected
             .store(true, std::sync::atomic::Ordering::Relaxed);
