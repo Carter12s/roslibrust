@@ -1,5 +1,5 @@
 use log::*;
-use roslibrust::Client;
+use roslibrust::ClientHandle;
 
 roslibrust_codegen_macro::find_and_generate_ros_messages!("example_msgs/local_msgs");
 
@@ -14,8 +14,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .init()
         .unwrap();
 
-    let mut client = Client::new("ws://localhost:9090").await?;
-    info!("Client connected");
+    let mut client = ClientHandle::new("ws://localhost:9090").await?;
+    info!("ClientHandle connected");
 
     let rx = client.subscribe::<std_msgs::Header>("talker").await?;
     info!("Successfully subscribed to topic: talker");
