@@ -5,7 +5,11 @@
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
-    use crate::{Client, ClientOptions, RosMessageType, RosServiceType, Subscriber};
+    use std::sync::Arc;
+
+    use crate::{
+        Client, ClientOptions, RosLibRustError, RosMessageType, RosServiceType, Subscriber,
+    };
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
@@ -153,12 +157,12 @@ mod integration_tests {
     /// This test doesn't actually do much, but instead confirms the internal structure of the lib is multi-threaded correctly
     /// The whole goal here is to catch send / sync complier errors
     #[tokio::test]
-    async fn parrallel_construction() {
+    async fn parallel_construction() {
         let mut client = Client::new(LOCAL_WS)
             .await
             .expect("Failed to construct client");
 
-        let mut client_1 = client.clone();
+        let client_1 = client.clone();
         tokio::task::spawn(async move {
             let _ = client_1
                 .advertise::<Header>("parrallel_1")
@@ -265,6 +269,50 @@ mod integration_tests {
             .expect("Failed to call service");
 
         assert_eq!(response.message, "call_success");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_strong_and_weak_client_counts() -> TestResult {
+        let opt = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
+        let client = Client::new_with_options(opt).await?;
+        // Can't be certain what state the spin loop is in (it could be upgraded from WeakPtr) so we sum the two
+        assert_eq!(
+            Arc::strong_count(&client.inner) + Arc::weak_count(&client.inner),
+            2
+        );
+
+        {
+            let client_2 = client.clone();
+            assert_eq!(
+                Arc::strong_count(&client.inner) + Arc::weak_count(&client.inner),
+                3
+            );
+            assert_eq!(
+                Arc::strong_count(&client_2.inner) + Arc::weak_count(&client_2.inner),
+                3
+            );
+        }
+
+        assert_eq!(
+            Arc::strong_count(&client.inner) + Arc::weak_count(&client.inner),
+            2
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_disconnect_returns_error() -> TestResult {
+        let client =
+            Client::new_with_options(ClientOptions::new(LOCAL_WS).timeout(TIMEOUT)).await?;
+        client
+            .is_disconnected
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+
+        let res = client.advertise::<TimeI>("/bad_message_recv/topic").await;
+        assert!(matches!(res, Err(RosLibRustError::Disconnected)));
 
         Ok(())
     }

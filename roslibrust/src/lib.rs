@@ -15,10 +15,6 @@ pub use codegen::*;
 #[cfg(feature = "utils")]
 pub mod utils;
 
-// Tests are fully private module
-#[cfg(test)]
-mod integration_tests;
-
 use log::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -27,9 +23,8 @@ use std::fmt::Debug;
 /// For now starting with a central error type, may break this up more in future
 #[derive(thiserror::Error, Debug)]
 pub enum RosLibRustError {
-    // TODO would like to add support for this error, but for now you'll just get CommFailures
-    // #[error("Not currently connected to ros master / bridge")]
-    // Disconnected,
+    #[error("Not currently connected to ros master / bridge")]
+    Disconnected,
     #[error("Websocket communication error: {0}")]
     CommFailure(tokio_tungstenite::tungstenite::Error),
     #[error("Operation timed out: {0}")]
