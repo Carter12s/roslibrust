@@ -107,9 +107,7 @@ pub struct ClientHandle {
 
 impl ClientHandle {
     async fn new_with_options(opts: ClientHandleOptions) -> RosLibRustResult<Self> {
-        let inner = Arc::new(RwLock::new(
-            timeout(opts.timeout, Client::new(opts)).await?,
-        ));
+        let inner = Arc::new(RwLock::new(timeout(opts.timeout, Client::new(opts)).await?));
         let inner_weak = Arc::downgrade(&inner);
 
         // We connect when we create Client
