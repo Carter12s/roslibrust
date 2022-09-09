@@ -76,15 +76,15 @@ struct PublisherHandle {
 
 /// Builder options for creating a client
 #[derive(Clone)]
-pub struct ClientOptions {
+pub struct ClientHandleOptions {
     url: String,
     timeout: Option<Duration>,
 }
 
-impl ClientOptions {
+impl ClientHandleOptions {
     /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
-    pub fn new<S: Into<String>>(url: S) -> ClientOptions {
-        ClientOptions {
+    pub fn new<S: Into<String>>(url: S) -> ClientHandleOptions {
+        ClientHandleOptions {
             url: url.into(),
             timeout: None,
         }
@@ -93,33 +93,33 @@ impl ClientOptions {
     /// Configures a default timeout for all operations.
     /// Underlying communication implementations may define their own timeouts, this options does
     /// not affect those timeouts, but adds an additional on top to prempt any operations.
-    pub fn timeout<T: Into<Duration>>(mut self, duration: T) -> ClientOptions {
+    pub fn timeout<T: Into<Duration>>(mut self, duration: T) -> ClientHandleOptions {
         self.timeout = Some(duration.into());
         self
     }
 }
 
 #[derive(Clone)]
-pub struct Client {
-    inner: Arc<RwLock<ClientInner>>,
+pub struct ClientHandle {
+    inner: Arc<RwLock<Client>>,
     is_disconnected: Arc<AtomicBool>,
 }
 
-impl Client {
-    async fn new_with_options(opts: ClientOptions) -> RosLibRustResult<Self> {
+impl ClientHandle {
+    async fn new_with_options(opts: ClientHandleOptions) -> RosLibRustResult<Self> {
         let inner = Arc::new(RwLock::new(
-            timeout(opts.timeout, ClientInner::new(opts)).await?,
+            timeout(opts.timeout, Client::new(opts)).await?,
         ));
         let inner_weak = Arc::downgrade(&inner);
 
-        // We connect when we create ClientInner
+        // We connect when we create Client
         let is_disconnected = Arc::new(AtomicBool::new(false));
 
         // Spawn the spin task
         // The internal stubborn spin task continues to try to reconnect on failure
         let _ = tokio::task::spawn(stubborn_spin(inner_weak, is_disconnected.clone()));
 
-        Ok(Client {
+        Ok(ClientHandle {
             inner,
             is_disconnected,
         })
@@ -130,7 +130,7 @@ impl Client {
     /// When awaited will not resolve until connection is completed
     // TODO better error handling
     pub async fn new<S: Into<String>>(url: S) -> RosLibRustResult<Self> {
-        Self::new_with_options(ClientOptions::new(url)).await
+        Self::new_with_options(ClientHandleOptions::new(url)).await
     }
 
     fn check_for_disconnect(&self) -> RosLibRustResult<()> {
@@ -282,7 +282,7 @@ impl Client {
     ///
     /// Roadmap:
     ///   - Provide better error information when a service call fails
-    ///   - Integrate with Client's timeout better
+    ///   - Integrate with ClientHandle's timeout better
     pub async fn call_service<Req: RosMessageType, Res: RosMessageType>(
         &self,
         service: &str,
@@ -434,7 +434,7 @@ impl Client {
 }
 
 /// A client connection to the rosbridge_server that allows for publishing and subscribing to topics
-struct ClientInner {
+struct Client {
     // TODO replace Socket with trait RosBridgeComm to allow mocking
     reader: RwLock<Reader>,
     writer: RwLock<Writer>,
@@ -445,12 +445,12 @@ struct ClientInner {
     // Contains any outstanding service calls we're waiting for a response on
     // Map key will be a uniquely generated id for each call
     service_calls: DashMap<String, tokio::sync::oneshot::Sender<Value>>,
-    opts: ClientOptions,
+    opts: ClientHandleOptions,
 }
 
-impl ClientInner {
+impl Client {
     // internal implementation of new
-    async fn new(opts: ClientOptions) -> RosLibRustResult<Self> {
+    async fn new(opts: ClientHandleOptions) -> RosLibRustResult<Self> {
         let (writer, reader) = stubborn_connect(&opts.url).await;
         let client = Self {
             reader: RwLock::new(reader),
@@ -626,7 +626,7 @@ impl ClientInner {
 
 /// Wraps spin in retry logic to handle reconnections automagically
 async fn stubborn_spin(
-    client: std::sync::Weak<RwLock<ClientInner>>,
+    client: std::sync::Weak<RwLock<Client>>,
     is_disconnected: Arc<AtomicBool>,
 ) -> RosLibRustResult<()> {
     debug!("Starting stubborn_spin");

@@ -5,7 +5,7 @@
 use log::error;
 use std::sync::Arc;
 
-use crate::{rosbridge::MessageQueue, Client, RosMessageType};
+use crate::{rosbridge::MessageQueue, ClientHandle, RosMessageType};
 
 /// Represents a single instance of listening to a topic, and provides the ability to extract messages
 ///
@@ -26,14 +26,14 @@ pub struct Subscriber<T: RosMessageType> {
     // ROS topic name this is subscribed to, currently only used in Drop impl to help client
     topic: String,
     // Holds an internal copy of client to reference back to when being drop'ed
-    client: Client,
+    client: ClientHandle,
     queue: Arc<MessageQueue<T>>,
 }
 
 impl<T: RosMessageType> Subscriber<T> {
-    // External API is accessed through Client::subscribe
+    // External API is accessed through ClientHandle::subscribe
     // This function is just a convenience wrapper for our internal API
-    pub(crate) fn new(client: Client, queue: Arc<MessageQueue<T>>, topic: String) -> Self {
+    pub(crate) fn new(client: ClientHandle, queue: Arc<MessageQueue<T>>, topic: String) -> Self {
         Subscriber {
             id: uuid::Uuid::new_v4(),
             topic,
@@ -67,7 +67,7 @@ impl<T: RosMessageType> Subscriber<T> {
         self.queue.pop().await
     }
 
-    // Used internally to track subscribers within the Client
+    // Used internally to track subscribers within the ClientHandle
     pub(crate) fn get_id(&self) -> &uuid::Uuid {
         &self.id
     }

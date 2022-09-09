@@ -1,5 +1,5 @@
 use log::*;
-use roslibrust::Client;
+use roslibrust::ClientHandle;
 
 roslibrust_codegen_macro::find_and_generate_ros_messages!(
     "example_msgs/local_msgs",
@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .init()
         .unwrap();
 
-    let client = Client::new("ws://localhost:9090").await?;
+    let client = ClientHandle::new("ws://localhost:9090").await?;
 
     let result = client
         .call_service::<(), rosapi::GetTimeResponse>("/rosapi/get_time", ())
