@@ -76,9 +76,10 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
     let mut result = MessageFile {
         fields: vec![],
         constants: vec![],
-        name,
+        name: name.clone(),
         package: package.clone(),
     };
+
     for line in data.lines() {
         let line = strip_comments(line).trim();
         if line.len() == 0 {
@@ -108,13 +109,15 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
         } else {
             // Is regular field
             let mut splitter = line.split_whitespace();
-            let field_type = splitter
-                .next()
-                .expect(&format!("Did not find field_type on line: {}", &line));
+            let field_type = splitter.next().expect(&format!(
+                "Did not find field_type on line: {} while parsing {package}/{name}",
+                &line
+            ));
             let field_type = parse_type(field_type, package);
-            let field_name = splitter
-                .next()
-                .expect(&format!("Did not find field_name on line: {}", &line));
+            let field_name = splitter.next().expect(&format!(
+                "Did not find field_name on line: {} while parsing {package}/{name}",
+                &line
+            ));
             result.fields.push(FieldInfo {
                 field_type,
                 field_name: field_name.to_string(),
@@ -125,12 +128,41 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
 }
 
 pub fn parse_ros_service_file(data: String, name: String, package: &String) -> ServiceFile {
-    let dash_index = data.find("---").expect(&format!(
-        "Failed to find delimiter line '---' in {package}/{name}"
-    ));
-    // TODO Stop copying strings with reckless abandon
-    let request_str = data[..dash_index].to_string();
-    let response_str = data[dash_index + 3..].to_string();
+    let mut dash_line_number = None;
+    for (line_num, line) in data.as_str().lines().enumerate() {
+        match (line.find("---"), line.find("#")) {
+            (Some(dash_idx), Some(cmt_idx)) => {
+                if dash_idx < cmt_idx {
+                    // Comment appears after dash
+                    dash_line_number = Some(line_num);
+                    break;
+                }
+            }
+            (Some(_), None) => {
+                dash_line_number = Some(line_num);
+                break;
+            }
+            _ => continue,
+        }
+    }
+    let str_accumulator = |mut acc: String, line: &str| -> String {
+        acc.push_str(line);
+        acc.push_str("\n");
+        acc
+    };
+
+    let dash_line_number = dash_line_number
+        .expect(format!("Failed to find delimiter line '---' in {package}/{name}").as_str());
+    let request_str = data
+        .as_str()
+        .lines()
+        .take(dash_line_number)
+        .fold(String::new(), str_accumulator);
+    let response_str = data
+        .as_str()
+        .lines()
+        .skip(dash_line_number + 1)
+        .fold(String::new(), str_accumulator);
 
     ServiceFile {
         name: name.clone(),
