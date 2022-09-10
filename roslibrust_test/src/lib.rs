@@ -1926,4 +1926,3 @@ pub mod visualization_msgs {
         pub const r#ROSLAUNCH: u8 = 2;
     }
 }
-
