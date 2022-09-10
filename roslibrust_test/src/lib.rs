@@ -14,8 +14,8 @@ pub mod actionlib_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GoalID {
-        pub stamp: ::roslibrust::integral_types::Time,
-        pub id: std::string::String,
+        pub r#stamp: ::roslibrust::integral_types::Time,
+        pub r#id: std::string::String,
     }
     impl ::roslibrust::RosMessageType for GoalID {
         const ROS_TYPE_NAME: &'static str = "actionlib_msgs/GoalID";
@@ -24,30 +24,30 @@ pub mod actionlib_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GoalStatus {
-        pub goal_id: self::GoalID,
-        pub status: u8,
-        pub text: std::string::String,
+        pub r#goal_id: self::GoalID,
+        pub r#status: u8,
+        pub r#text: std::string::String,
     }
     impl ::roslibrust::RosMessageType for GoalStatus {
         const ROS_TYPE_NAME: &'static str = "actionlib_msgs/GoalStatus";
     }
     impl GoalStatus {
-        pub const PENDING: u8 = 0;
-        pub const ACTIVE: u8 = 1;
-        pub const PREEMPTED: u8 = 2;
-        pub const SUCCEEDED: u8 = 3;
-        pub const ABORTED: u8 = 4;
-        pub const REJECTED: u8 = 5;
-        pub const PREEMPTING: u8 = 6;
-        pub const RECALLING: u8 = 7;
-        pub const RECALLED: u8 = 8;
-        pub const LOST: u8 = 9;
+        pub const r#PENDING: u8 = 0;
+        pub const r#ACTIVE: u8 = 1;
+        pub const r#PREEMPTED: u8 = 2;
+        pub const r#SUCCEEDED: u8 = 3;
+        pub const r#ABORTED: u8 = 4;
+        pub const r#REJECTED: u8 = 5;
+        pub const r#PREEMPTING: u8 = 6;
+        pub const r#RECALLING: u8 = 7;
+        pub const r#RECALLED: u8 = 8;
+        pub const r#LOST: u8 = 9;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GoalStatusArray {
-        pub header: std_msgs::Header,
-        pub status_list: std::vec::Vec<self::GoalStatus>,
+        pub r#header: std_msgs::Header,
+        pub r#status_list: std::vec::Vec<self::GoalStatus>,
     }
     impl ::roslibrust::RosMessageType for GoalStatusArray {
         const ROS_TYPE_NAME: &'static str = "actionlib_msgs/GoalStatusArray";
@@ -70,7 +70,7 @@ pub mod diagnostic_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AddDiagnosticsRequest {
-        pub load_namespace: std::string::String,
+        pub r#load_namespace: std::string::String,
     }
     impl ::roslibrust::RosMessageType for AddDiagnosticsRequest {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/AddDiagnosticsRequest";
@@ -79,8 +79,8 @@ pub mod diagnostic_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AddDiagnosticsResponse {
-        pub success: bool,
-        pub message: std::string::String,
+        pub r#success: bool,
+        pub r#message: std::string::String,
     }
     impl ::roslibrust::RosMessageType for AddDiagnosticsResponse {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/AddDiagnosticsResponse";
@@ -89,8 +89,8 @@ pub mod diagnostic_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct DiagnosticArray {
-        pub header: std_msgs::Header,
-        pub status: std::vec::Vec<self::DiagnosticStatus>,
+        pub r#header: std_msgs::Header,
+        pub r#status: std::vec::Vec<self::DiagnosticStatus>,
     }
     impl ::roslibrust::RosMessageType for DiagnosticArray {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/DiagnosticArray";
@@ -99,26 +99,26 @@ pub mod diagnostic_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct DiagnosticStatus {
-        pub level: u8,
-        pub name: std::string::String,
-        pub message: std::string::String,
-        pub hardware_id: std::string::String,
-        pub values: std::vec::Vec<self::KeyValue>,
+        pub r#level: u8,
+        pub r#name: std::string::String,
+        pub r#message: std::string::String,
+        pub r#hardware_id: std::string::String,
+        pub r#values: std::vec::Vec<self::KeyValue>,
     }
     impl ::roslibrust::RosMessageType for DiagnosticStatus {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/DiagnosticStatus";
     }
     impl DiagnosticStatus {
-        pub const OK: u8 = 0;
-        pub const WARN: u8 = 1;
-        pub const ERROR: u8 = 2;
-        pub const STALE: u8 = 3;
+        pub const r#OK: u8 = 0;
+        pub const r#WARN: u8 = 1;
+        pub const r#ERROR: u8 = 2;
+        pub const r#STALE: u8 = 3;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct KeyValue {
-        pub key: std::string::String,
-        pub value: std::string::String,
+        pub r#key: std::string::String,
+        pub r#value: std::string::String,
     }
     impl ::roslibrust::RosMessageType for KeyValue {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/KeyValue";
@@ -134,9 +134,9 @@ pub mod diagnostic_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SelfTestResponse {
-        pub id: std::string::String,
-        pub passed: u8,
-        pub status: std::vec::Vec<self::DiagnosticStatus>,
+        pub r#id: std::string::String,
+        pub r#passed: u8,
+        pub r#status: std::vec::Vec<self::DiagnosticStatus>,
     }
     impl ::roslibrust::RosMessageType for SelfTestResponse {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/SelfTestResponse";
@@ -171,8 +171,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Accel {
-        pub linear: self::Vector3,
-        pub angular: self::Vector3,
+        pub r#linear: self::Vector3,
+        pub r#angular: self::Vector3,
     }
     impl ::roslibrust::RosMessageType for Accel {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Accel";
@@ -181,8 +181,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AccelStamped {
-        pub header: std_msgs::Header,
-        pub accel: self::Accel,
+        pub r#header: std_msgs::Header,
+        pub r#accel: self::Accel,
     }
     impl ::roslibrust::RosMessageType for AccelStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelStamped";
@@ -191,8 +191,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AccelWithCovariance {
-        pub accel: self::Accel,
-        pub covariance: std::vec::Vec<f64>,
+        pub r#accel: self::Accel,
+        pub r#covariance: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for AccelWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelWithCovariance";
@@ -201,8 +201,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AccelWithCovarianceStamped {
-        pub header: std_msgs::Header,
-        pub accel: self::AccelWithCovariance,
+        pub r#header: std_msgs::Header,
+        pub r#accel: self::AccelWithCovariance,
     }
     impl ::roslibrust::RosMessageType for AccelWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelWithCovarianceStamped";
@@ -211,14 +211,14 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Inertia {
-        pub m: f64,
-        pub com: self::Vector3,
-        pub ixx: f64,
-        pub ixy: f64,
-        pub ixz: f64,
-        pub iyy: f64,
-        pub iyz: f64,
-        pub izz: f64,
+        pub r#m: f64,
+        pub r#com: self::Vector3,
+        pub r#ixx: f64,
+        pub r#ixy: f64,
+        pub r#ixz: f64,
+        pub r#iyy: f64,
+        pub r#iyz: f64,
+        pub r#izz: f64,
     }
     impl ::roslibrust::RosMessageType for Inertia {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Inertia";
@@ -227,8 +227,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InertiaStamped {
-        pub header: std_msgs::Header,
-        pub inertia: self::Inertia,
+        pub r#header: std_msgs::Header,
+        pub r#inertia: self::Inertia,
     }
     impl ::roslibrust::RosMessageType for InertiaStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/InertiaStamped";
@@ -237,9 +237,9 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Point {
-        pub x: f64,
-        pub y: f64,
-        pub z: f64,
+        pub r#x: f64,
+        pub r#y: f64,
+        pub r#z: f64,
     }
     impl ::roslibrust::RosMessageType for Point {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Point";
@@ -248,9 +248,9 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Point32 {
-        pub x: f32,
-        pub y: f32,
-        pub z: f32,
+        pub r#x: f32,
+        pub r#y: f32,
+        pub r#z: f32,
     }
     impl ::roslibrust::RosMessageType for Point32 {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Point32";
@@ -259,8 +259,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PointStamped {
-        pub header: std_msgs::Header,
-        pub point: self::Point,
+        pub r#header: std_msgs::Header,
+        pub r#point: self::Point,
     }
     impl ::roslibrust::RosMessageType for PointStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PointStamped";
@@ -269,7 +269,7 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Polygon {
-        pub points: std::vec::Vec<self::Point32>,
+        pub r#points: std::vec::Vec<self::Point32>,
     }
     impl ::roslibrust::RosMessageType for Polygon {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Polygon";
@@ -278,8 +278,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PolygonStamped {
-        pub header: std_msgs::Header,
-        pub polygon: self::Polygon,
+        pub r#header: std_msgs::Header,
+        pub r#polygon: self::Polygon,
     }
     impl ::roslibrust::RosMessageType for PolygonStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PolygonStamped";
@@ -288,8 +288,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Pose {
-        pub position: self::Point,
-        pub orientation: self::Quaternion,
+        pub r#position: self::Point,
+        pub r#orientation: self::Quaternion,
     }
     impl ::roslibrust::RosMessageType for Pose {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Pose";
@@ -298,9 +298,9 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Pose2D {
-        pub x: f64,
-        pub y: f64,
-        pub theta: f64,
+        pub r#x: f64,
+        pub r#y: f64,
+        pub r#theta: f64,
     }
     impl ::roslibrust::RosMessageType for Pose2D {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Pose2D";
@@ -309,8 +309,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PoseArray {
-        pub header: std_msgs::Header,
-        pub poses: std::vec::Vec<self::Pose>,
+        pub r#header: std_msgs::Header,
+        pub r#poses: std::vec::Vec<self::Pose>,
     }
     impl ::roslibrust::RosMessageType for PoseArray {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseArray";
@@ -319,8 +319,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PoseStamped {
-        pub header: std_msgs::Header,
-        pub pose: self::Pose,
+        pub r#header: std_msgs::Header,
+        pub r#pose: self::Pose,
     }
     impl ::roslibrust::RosMessageType for PoseStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseStamped";
@@ -329,8 +329,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PoseWithCovariance {
-        pub pose: self::Pose,
-        pub covariance: std::vec::Vec<f64>,
+        pub r#pose: self::Pose,
+        pub r#covariance: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for PoseWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseWithCovariance";
@@ -339,8 +339,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PoseWithCovarianceStamped {
-        pub header: std_msgs::Header,
-        pub pose: self::PoseWithCovariance,
+        pub r#header: std_msgs::Header,
+        pub r#pose: self::PoseWithCovariance,
     }
     impl ::roslibrust::RosMessageType for PoseWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseWithCovarianceStamped";
@@ -349,10 +349,10 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Quaternion {
-        pub x: f64,
-        pub y: f64,
-        pub z: f64,
-        pub w: f64,
+        pub r#x: f64,
+        pub r#y: f64,
+        pub r#z: f64,
+        pub r#w: f64,
     }
     impl ::roslibrust::RosMessageType for Quaternion {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Quaternion";
@@ -361,8 +361,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct QuaternionStamped {
-        pub header: std_msgs::Header,
-        pub quaternion: self::Quaternion,
+        pub r#header: std_msgs::Header,
+        pub r#quaternion: self::Quaternion,
     }
     impl ::roslibrust::RosMessageType for QuaternionStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/QuaternionStamped";
@@ -371,8 +371,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Transform {
-        pub translation: self::Vector3,
-        pub rotation: self::Quaternion,
+        pub r#translation: self::Vector3,
+        pub r#rotation: self::Quaternion,
     }
     impl ::roslibrust::RosMessageType for Transform {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Transform";
@@ -381,9 +381,9 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TransformStamped {
-        pub header: std_msgs::Header,
-        pub child_frame_id: std::string::String,
-        pub transform: self::Transform,
+        pub r#header: std_msgs::Header,
+        pub r#child_frame_id: std::string::String,
+        pub r#transform: self::Transform,
     }
     impl ::roslibrust::RosMessageType for TransformStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TransformStamped";
@@ -392,8 +392,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Twist {
-        pub linear: self::Vector3,
-        pub angular: self::Vector3,
+        pub r#linear: self::Vector3,
+        pub r#angular: self::Vector3,
     }
     impl ::roslibrust::RosMessageType for Twist {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Twist";
@@ -402,8 +402,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TwistStamped {
-        pub header: std_msgs::Header,
-        pub twist: self::Twist,
+        pub r#header: std_msgs::Header,
+        pub r#twist: self::Twist,
     }
     impl ::roslibrust::RosMessageType for TwistStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistStamped";
@@ -412,8 +412,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TwistWithCovariance {
-        pub twist: self::Twist,
-        pub covariance: std::vec::Vec<f64>,
+        pub r#twist: self::Twist,
+        pub r#covariance: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for TwistWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistWithCovariance";
@@ -422,8 +422,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TwistWithCovarianceStamped {
-        pub header: std_msgs::Header,
-        pub twist: self::TwistWithCovariance,
+        pub r#header: std_msgs::Header,
+        pub r#twist: self::TwistWithCovariance,
     }
     impl ::roslibrust::RosMessageType for TwistWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistWithCovarianceStamped";
@@ -432,9 +432,9 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Vector3 {
-        pub x: f64,
-        pub y: f64,
-        pub z: f64,
+        pub r#x: f64,
+        pub r#y: f64,
+        pub r#z: f64,
     }
     impl ::roslibrust::RosMessageType for Vector3 {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Vector3";
@@ -443,8 +443,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Vector3Stamped {
-        pub header: std_msgs::Header,
-        pub vector: self::Vector3,
+        pub r#header: std_msgs::Header,
+        pub r#vector: self::Vector3,
     }
     impl ::roslibrust::RosMessageType for Vector3Stamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Vector3Stamped";
@@ -453,8 +453,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Wrench {
-        pub force: self::Vector3,
-        pub torque: self::Vector3,
+        pub r#force: self::Vector3,
+        pub r#torque: self::Vector3,
     }
     impl ::roslibrust::RosMessageType for Wrench {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Wrench";
@@ -463,8 +463,8 @@ pub mod geometry_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct WrenchStamped {
-        pub header: std_msgs::Header,
-        pub wrench: self::Wrench,
+        pub r#header: std_msgs::Header,
+        pub r#wrench: self::Wrench,
     }
     impl ::roslibrust::RosMessageType for WrenchStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/WrenchStamped";
@@ -494,7 +494,7 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetMapResponse {
-        pub map: self::OccupancyGrid,
+        pub r#map: self::OccupancyGrid,
     }
     impl ::roslibrust::RosMessageType for GetMapResponse {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapResponse";
@@ -503,9 +503,9 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetPlanRequest {
-        pub start: geometry_msgs::PoseStamped,
-        pub goal: geometry_msgs::PoseStamped,
-        pub tolerance: f32,
+        pub r#start: geometry_msgs::PoseStamped,
+        pub r#goal: geometry_msgs::PoseStamped,
+        pub r#tolerance: f32,
     }
     impl ::roslibrust::RosMessageType for GetPlanRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetPlanRequest";
@@ -514,7 +514,7 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetPlanResponse {
-        pub plan: self::Path,
+        pub r#plan: self::Path,
     }
     impl ::roslibrust::RosMessageType for GetPlanResponse {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetPlanResponse";
@@ -523,10 +523,10 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GridCells {
-        pub header: std_msgs::Header,
-        pub cell_width: f32,
-        pub cell_height: f32,
-        pub cells: std::vec::Vec<geometry_msgs::Point>,
+        pub r#header: std_msgs::Header,
+        pub r#cell_width: f32,
+        pub r#cell_height: f32,
+        pub r#cells: std::vec::Vec<geometry_msgs::Point>,
     }
     impl ::roslibrust::RosMessageType for GridCells {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GridCells";
@@ -535,7 +535,7 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LoadMapRequest {
-        pub map_url: std::string::String,
+        pub r#map_url: std::string::String,
     }
     impl ::roslibrust::RosMessageType for LoadMapRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/LoadMapRequest";
@@ -544,27 +544,27 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LoadMapResponse {
-        pub map: self::OccupancyGrid,
-        pub result: u8,
+        pub r#map: self::OccupancyGrid,
+        pub r#result: u8,
     }
     impl ::roslibrust::RosMessageType for LoadMapResponse {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/LoadMapResponse";
     }
     impl LoadMapResponse {
-        pub const RESULT_SUCCESS: u8 = 0;
-        pub const RESULT_MAP_DOES_NOT_EXIST: u8 = 1;
-        pub const RESULT_INVALID_MAP_DATA: u8 = 2;
-        pub const RESULT_INVALID_MAP_METADATA: u8 = 3;
-        pub const RESULT_UNDEFINED_FAILURE: u8 = 255;
+        pub const r#RESULT_SUCCESS: u8 = 0;
+        pub const r#RESULT_MAP_DOES_NOT_EXIST: u8 = 1;
+        pub const r#RESULT_INVALID_MAP_DATA: u8 = 2;
+        pub const r#RESULT_INVALID_MAP_METADATA: u8 = 3;
+        pub const r#RESULT_UNDEFINED_FAILURE: u8 = 255;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MapMetaData {
-        pub map_load_time: ::roslibrust::integral_types::Time,
-        pub resolution: f32,
-        pub width: u32,
-        pub height: u32,
-        pub origin: geometry_msgs::Pose,
+        pub r#map_load_time: ::roslibrust::integral_types::Time,
+        pub r#resolution: f32,
+        pub r#width: u32,
+        pub r#height: u32,
+        pub r#origin: geometry_msgs::Pose,
     }
     impl ::roslibrust::RosMessageType for MapMetaData {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/MapMetaData";
@@ -573,9 +573,9 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct OccupancyGrid {
-        pub header: std_msgs::Header,
-        pub info: self::MapMetaData,
-        pub data: std::vec::Vec<i8>,
+        pub r#header: std_msgs::Header,
+        pub r#info: self::MapMetaData,
+        pub r#data: std::vec::Vec<i8>,
     }
     impl ::roslibrust::RosMessageType for OccupancyGrid {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/OccupancyGrid";
@@ -584,10 +584,10 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Odometry {
-        pub header: std_msgs::Header,
-        pub child_frame_id: std::string::String,
-        pub pose: geometry_msgs::PoseWithCovariance,
-        pub twist: geometry_msgs::TwistWithCovariance,
+        pub r#header: std_msgs::Header,
+        pub r#child_frame_id: std::string::String,
+        pub r#pose: geometry_msgs::PoseWithCovariance,
+        pub r#twist: geometry_msgs::TwistWithCovariance,
     }
     impl ::roslibrust::RosMessageType for Odometry {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/Odometry";
@@ -596,8 +596,8 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Path {
-        pub header: std_msgs::Header,
-        pub poses: std::vec::Vec<geometry_msgs::PoseStamped>,
+        pub r#header: std_msgs::Header,
+        pub r#poses: std::vec::Vec<geometry_msgs::PoseStamped>,
     }
     impl ::roslibrust::RosMessageType for Path {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/Path";
@@ -606,8 +606,8 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetMapRequest {
-        pub map: self::OccupancyGrid,
-        pub initial_pose: geometry_msgs::PoseWithCovarianceStamped,
+        pub r#map: self::OccupancyGrid,
+        pub r#initial_pose: geometry_msgs::PoseWithCovarianceStamped,
     }
     impl ::roslibrust::RosMessageType for SetMapRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/SetMapRequest";
@@ -616,7 +616,7 @@ pub mod nav_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetMapResponse {
-        pub success: bool,
+        pub r#success: bool,
     }
     impl ::roslibrust::RosMessageType for SetMapResponse {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/SetMapResponse";
@@ -670,7 +670,7 @@ pub mod rosapi {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetTimeResponse {
-        pub data: ::roslibrust::integral_types::Time,
+        pub r#data: ::roslibrust::integral_types::Time,
     }
     impl ::roslibrust::RosMessageType for GetTimeResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeResponse";
@@ -699,63 +699,63 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct BatteryState {
-        pub header: std_msgs::Header,
-        pub voltage: f32,
-        pub temperature: f32,
-        pub current: f32,
-        pub charge: f32,
-        pub capacity: f32,
-        pub design_capacity: f32,
-        pub percentage: f32,
-        pub power_supply_status: u8,
-        pub power_supply_health: u8,
-        pub power_supply_technology: u8,
-        pub present: bool,
-        pub cell_voltage: std::vec::Vec<f32>,
-        pub cell_temperature: std::vec::Vec<f32>,
-        pub location: std::string::String,
-        pub serial_number: std::string::String,
+        pub r#header: std_msgs::Header,
+        pub r#voltage: f32,
+        pub r#temperature: f32,
+        pub r#current: f32,
+        pub r#charge: f32,
+        pub r#capacity: f32,
+        pub r#design_capacity: f32,
+        pub r#percentage: f32,
+        pub r#power_supply_status: u8,
+        pub r#power_supply_health: u8,
+        pub r#power_supply_technology: u8,
+        pub r#present: bool,
+        pub r#cell_voltage: std::vec::Vec<f32>,
+        pub r#cell_temperature: std::vec::Vec<f32>,
+        pub r#location: std::string::String,
+        pub r#serial_number: std::string::String,
     }
     impl ::roslibrust::RosMessageType for BatteryState {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/BatteryState";
     }
     impl BatteryState {
-        pub const POWER_SUPPLY_STATUS_UNKNOWN: u8 = 0;
-        pub const POWER_SUPPLY_STATUS_CHARGING: u8 = 1;
-        pub const POWER_SUPPLY_STATUS_DISCHARGING: u8 = 2;
-        pub const POWER_SUPPLY_STATUS_NOT_CHARGING: u8 = 3;
-        pub const POWER_SUPPLY_STATUS_FULL: u8 = 4;
-        pub const POWER_SUPPLY_HEALTH_UNKNOWN: u8 = 0;
-        pub const POWER_SUPPLY_HEALTH_GOOD: u8 = 1;
-        pub const POWER_SUPPLY_HEALTH_OVERHEAT: u8 = 2;
-        pub const POWER_SUPPLY_HEALTH_DEAD: u8 = 3;
-        pub const POWER_SUPPLY_HEALTH_OVERVOLTAGE: u8 = 4;
-        pub const POWER_SUPPLY_HEALTH_UNSPEC_FAILURE: u8 = 5;
-        pub const POWER_SUPPLY_HEALTH_COLD: u8 = 6;
-        pub const POWER_SUPPLY_HEALTH_WATCHDOG_TIMER_EXPIRE: u8 = 7;
-        pub const POWER_SUPPLY_HEALTH_SAFETY_TIMER_EXPIRE: u8 = 8;
-        pub const POWER_SUPPLY_TECHNOLOGY_UNKNOWN: u8 = 0;
-        pub const POWER_SUPPLY_TECHNOLOGY_NIMH: u8 = 1;
-        pub const POWER_SUPPLY_TECHNOLOGY_LION: u8 = 2;
-        pub const POWER_SUPPLY_TECHNOLOGY_LIPO: u8 = 3;
-        pub const POWER_SUPPLY_TECHNOLOGY_LIFE: u8 = 4;
-        pub const POWER_SUPPLY_TECHNOLOGY_NICD: u8 = 5;
-        pub const POWER_SUPPLY_TECHNOLOGY_LIMN: u8 = 6;
+        pub const r#POWER_SUPPLY_STATUS_UNKNOWN: u8 = 0;
+        pub const r#POWER_SUPPLY_STATUS_CHARGING: u8 = 1;
+        pub const r#POWER_SUPPLY_STATUS_DISCHARGING: u8 = 2;
+        pub const r#POWER_SUPPLY_STATUS_NOT_CHARGING: u8 = 3;
+        pub const r#POWER_SUPPLY_STATUS_FULL: u8 = 4;
+        pub const r#POWER_SUPPLY_HEALTH_UNKNOWN: u8 = 0;
+        pub const r#POWER_SUPPLY_HEALTH_GOOD: u8 = 1;
+        pub const r#POWER_SUPPLY_HEALTH_OVERHEAT: u8 = 2;
+        pub const r#POWER_SUPPLY_HEALTH_DEAD: u8 = 3;
+        pub const r#POWER_SUPPLY_HEALTH_OVERVOLTAGE: u8 = 4;
+        pub const r#POWER_SUPPLY_HEALTH_UNSPEC_FAILURE: u8 = 5;
+        pub const r#POWER_SUPPLY_HEALTH_COLD: u8 = 6;
+        pub const r#POWER_SUPPLY_HEALTH_WATCHDOG_TIMER_EXPIRE: u8 = 7;
+        pub const r#POWER_SUPPLY_HEALTH_SAFETY_TIMER_EXPIRE: u8 = 8;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_UNKNOWN: u8 = 0;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_NIMH: u8 = 1;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_LION: u8 = 2;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_LIPO: u8 = 3;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_LIFE: u8 = 4;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_NICD: u8 = 5;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_LIMN: u8 = 6;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct CameraInfo {
-        pub header: std_msgs::Header,
-        pub height: u32,
-        pub width: u32,
-        pub distortion_model: std::string::String,
-        pub D: std::vec::Vec<f64>,
-        pub K: std::vec::Vec<f64>,
-        pub R: std::vec::Vec<f64>,
-        pub P: std::vec::Vec<f64>,
-        pub binning_x: u32,
-        pub binning_y: u32,
-        pub roi: self::RegionOfInterest,
+        pub r#header: std_msgs::Header,
+        pub r#height: u32,
+        pub r#width: u32,
+        pub r#distortion_model: std::string::String,
+        pub r#D: std::vec::Vec<f64>,
+        pub r#K: std::vec::Vec<f64>,
+        pub r#R: std::vec::Vec<f64>,
+        pub r#P: std::vec::Vec<f64>,
+        pub r#binning_x: u32,
+        pub r#binning_y: u32,
+        pub r#roi: self::RegionOfInterest,
     }
     impl ::roslibrust::RosMessageType for CameraInfo {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/CameraInfo";
@@ -764,8 +764,8 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ChannelFloat32 {
-        pub name: std::string::String,
-        pub values: std::vec::Vec<f32>,
+        pub r#name: std::string::String,
+        pub r#values: std::vec::Vec<f32>,
     }
     impl ::roslibrust::RosMessageType for ChannelFloat32 {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/ChannelFloat32";
@@ -774,9 +774,9 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct CompressedImage {
-        pub header: std_msgs::Header,
-        pub format: std::string::String,
-        pub data: std::vec::Vec<u8>,
+        pub r#header: std_msgs::Header,
+        pub r#format: std::string::String,
+        pub r#data: std::vec::Vec<u8>,
     }
     impl ::roslibrust::RosMessageType for CompressedImage {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/CompressedImage";
@@ -785,9 +785,9 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct FluidPressure {
-        pub header: std_msgs::Header,
-        pub fluid_pressure: f64,
-        pub variance: f64,
+        pub r#header: std_msgs::Header,
+        pub r#fluid_pressure: f64,
+        pub r#variance: f64,
     }
     impl ::roslibrust::RosMessageType for FluidPressure {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/FluidPressure";
@@ -796,9 +796,9 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Illuminance {
-        pub header: std_msgs::Header,
-        pub illuminance: f64,
-        pub variance: f64,
+        pub r#header: std_msgs::Header,
+        pub r#illuminance: f64,
+        pub r#variance: f64,
     }
     impl ::roslibrust::RosMessageType for Illuminance {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Illuminance";
@@ -807,13 +807,13 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Image {
-        pub header: std_msgs::Header,
-        pub height: u32,
-        pub width: u32,
-        pub encoding: std::string::String,
-        pub is_bigendian: u8,
-        pub step: u32,
-        pub data: std::vec::Vec<u8>,
+        pub r#header: std_msgs::Header,
+        pub r#height: u32,
+        pub r#width: u32,
+        pub r#encoding: std::string::String,
+        pub r#is_bigendian: u8,
+        pub r#step: u32,
+        pub r#data: std::vec::Vec<u8>,
     }
     impl ::roslibrust::RosMessageType for Image {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Image";
@@ -822,13 +822,13 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Imu {
-        pub header: std_msgs::Header,
-        pub orientation: geometry_msgs::Quaternion,
-        pub orientation_covariance: std::vec::Vec<f64>,
-        pub angular_velocity: geometry_msgs::Vector3,
-        pub angular_velocity_covariance: std::vec::Vec<f64>,
-        pub linear_acceleration: geometry_msgs::Vector3,
-        pub linear_acceleration_covariance: std::vec::Vec<f64>,
+        pub r#header: std_msgs::Header,
+        pub r#orientation: geometry_msgs::Quaternion,
+        pub r#orientation_covariance: std::vec::Vec<f64>,
+        pub r#angular_velocity: geometry_msgs::Vector3,
+        pub r#angular_velocity_covariance: std::vec::Vec<f64>,
+        pub r#linear_acceleration: geometry_msgs::Vector3,
+        pub r#linear_acceleration_covariance: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for Imu {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Imu";
@@ -837,11 +837,11 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct JointState {
-        pub header: std_msgs::Header,
-        pub name: std::vec::Vec<std::string::String>,
-        pub position: std::vec::Vec<f64>,
-        pub velocity: std::vec::Vec<f64>,
-        pub effort: std::vec::Vec<f64>,
+        pub r#header: std_msgs::Header,
+        pub r#name: std::vec::Vec<std::string::String>,
+        pub r#position: std::vec::Vec<f64>,
+        pub r#velocity: std::vec::Vec<f64>,
+        pub r#effort: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for JointState {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/JointState";
@@ -850,9 +850,9 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Joy {
-        pub header: std_msgs::Header,
-        pub axes: std::vec::Vec<f32>,
-        pub buttons: std::vec::Vec<i32>,
+        pub r#header: std_msgs::Header,
+        pub r#axes: std::vec::Vec<f32>,
+        pub r#buttons: std::vec::Vec<i32>,
     }
     impl ::roslibrust::RosMessageType for Joy {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Joy";
@@ -862,21 +862,21 @@ pub mod sensor_msgs {
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct JoyFeedback {
         pub r#type: u8,
-        pub id: u8,
-        pub intensity: f32,
+        pub r#id: u8,
+        pub r#intensity: f32,
     }
     impl ::roslibrust::RosMessageType for JoyFeedback {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/JoyFeedback";
     }
     impl JoyFeedback {
-        pub const TYPE_LED: u8 = 0;
-        pub const TYPE_RUMBLE: u8 = 1;
-        pub const TYPE_BUZZER: u8 = 2;
+        pub const r#TYPE_LED: u8 = 0;
+        pub const r#TYPE_RUMBLE: u8 = 1;
+        pub const r#TYPE_BUZZER: u8 = 2;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct JoyFeedbackArray {
-        pub array: std::vec::Vec<self::JoyFeedback>,
+        pub r#array: std::vec::Vec<self::JoyFeedback>,
     }
     impl ::roslibrust::RosMessageType for JoyFeedbackArray {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/JoyFeedbackArray";
@@ -885,7 +885,7 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LaserEcho {
-        pub echoes: std::vec::Vec<f32>,
+        pub r#echoes: std::vec::Vec<f32>,
     }
     impl ::roslibrust::RosMessageType for LaserEcho {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/LaserEcho";
@@ -894,16 +894,16 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LaserScan {
-        pub header: std_msgs::Header,
-        pub angle_min: f32,
-        pub angle_max: f32,
-        pub angle_increment: f32,
-        pub time_increment: f32,
-        pub scan_time: f32,
-        pub range_min: f32,
-        pub range_max: f32,
-        pub ranges: std::vec::Vec<f32>,
-        pub intensities: std::vec::Vec<f32>,
+        pub r#header: std_msgs::Header,
+        pub r#angle_min: f32,
+        pub r#angle_max: f32,
+        pub r#angle_increment: f32,
+        pub r#time_increment: f32,
+        pub r#scan_time: f32,
+        pub r#range_min: f32,
+        pub r#range_max: f32,
+        pub r#ranges: std::vec::Vec<f32>,
+        pub r#intensities: std::vec::Vec<f32>,
     }
     impl ::roslibrust::RosMessageType for LaserScan {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/LaserScan";
@@ -912,9 +912,9 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MagneticField {
-        pub header: std_msgs::Header,
-        pub magnetic_field: geometry_msgs::Vector3,
-        pub magnetic_field_covariance: std::vec::Vec<f64>,
+        pub r#header: std_msgs::Header,
+        pub r#magnetic_field: geometry_msgs::Vector3,
+        pub r#magnetic_field_covariance: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for MagneticField {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/MagneticField";
@@ -923,11 +923,11 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiDOFJointState {
-        pub header: std_msgs::Header,
-        pub joint_names: std::vec::Vec<std::string::String>,
-        pub transforms: std::vec::Vec<geometry_msgs::Transform>,
-        pub twist: std::vec::Vec<geometry_msgs::Twist>,
-        pub wrench: std::vec::Vec<geometry_msgs::Wrench>,
+        pub r#header: std_msgs::Header,
+        pub r#joint_names: std::vec::Vec<std::string::String>,
+        pub r#transforms: std::vec::Vec<geometry_msgs::Transform>,
+        pub r#twist: std::vec::Vec<geometry_msgs::Twist>,
+        pub r#wrench: std::vec::Vec<geometry_msgs::Wrench>,
     }
     impl ::roslibrust::RosMessageType for MultiDOFJointState {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/MultiDOFJointState";
@@ -936,16 +936,16 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiEchoLaserScan {
-        pub header: std_msgs::Header,
-        pub angle_min: f32,
-        pub angle_max: f32,
-        pub angle_increment: f32,
-        pub time_increment: f32,
-        pub scan_time: f32,
-        pub range_min: f32,
-        pub range_max: f32,
-        pub ranges: std::vec::Vec<self::LaserEcho>,
-        pub intensities: std::vec::Vec<self::LaserEcho>,
+        pub r#header: std_msgs::Header,
+        pub r#angle_min: f32,
+        pub r#angle_max: f32,
+        pub r#angle_increment: f32,
+        pub r#time_increment: f32,
+        pub r#scan_time: f32,
+        pub r#range_min: f32,
+        pub r#range_max: f32,
+        pub r#ranges: std::vec::Vec<self::LaserEcho>,
+        pub r#intensities: std::vec::Vec<self::LaserEcho>,
     }
     impl ::roslibrust::RosMessageType for MultiEchoLaserScan {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/MultiEchoLaserScan";
@@ -954,48 +954,48 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct NavSatFix {
-        pub header: std_msgs::Header,
-        pub status: self::NavSatStatus,
-        pub latitude: f64,
-        pub longitude: f64,
-        pub altitude: f64,
-        pub position_covariance: std::vec::Vec<f64>,
-        pub position_covariance_type: u8,
+        pub r#header: std_msgs::Header,
+        pub r#status: self::NavSatStatus,
+        pub r#latitude: f64,
+        pub r#longitude: f64,
+        pub r#altitude: f64,
+        pub r#position_covariance: std::vec::Vec<f64>,
+        pub r#position_covariance_type: u8,
     }
     impl ::roslibrust::RosMessageType for NavSatFix {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/NavSatFix";
     }
     impl NavSatFix {
-        pub const COVARIANCE_TYPE_UNKNOWN: u8 = 0;
-        pub const COVARIANCE_TYPE_APPROXIMATED: u8 = 1;
-        pub const COVARIANCE_TYPE_DIAGONAL_KNOWN: u8 = 2;
-        pub const COVARIANCE_TYPE_KNOWN: u8 = 3;
+        pub const r#COVARIANCE_TYPE_UNKNOWN: u8 = 0;
+        pub const r#COVARIANCE_TYPE_APPROXIMATED: u8 = 1;
+        pub const r#COVARIANCE_TYPE_DIAGONAL_KNOWN: u8 = 2;
+        pub const r#COVARIANCE_TYPE_KNOWN: u8 = 3;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct NavSatStatus {
-        pub status: i8,
-        pub service: u16,
+        pub r#status: i8,
+        pub r#service: u16,
     }
     impl ::roslibrust::RosMessageType for NavSatStatus {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/NavSatStatus";
     }
     impl NavSatStatus {
-        pub const STATUS_NO_FIX: i8 = -1;
-        pub const STATUS_FIX: i8 = 0;
-        pub const STATUS_SBAS_FIX: i8 = 1;
-        pub const STATUS_GBAS_FIX: i8 = 2;
-        pub const SERVICE_GPS: u16 = 1;
-        pub const SERVICE_GLONASS: u16 = 2;
-        pub const SERVICE_COMPASS: u16 = 4;
-        pub const SERVICE_GALILEO: u16 = 8;
+        pub const r#STATUS_NO_FIX: i8 = -1;
+        pub const r#STATUS_FIX: i8 = 0;
+        pub const r#STATUS_SBAS_FIX: i8 = 1;
+        pub const r#STATUS_GBAS_FIX: i8 = 2;
+        pub const r#SERVICE_GPS: u16 = 1;
+        pub const r#SERVICE_GLONASS: u16 = 2;
+        pub const r#SERVICE_COMPASS: u16 = 4;
+        pub const r#SERVICE_GALILEO: u16 = 8;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PointCloud {
-        pub header: std_msgs::Header,
-        pub points: std::vec::Vec<geometry_msgs::Point32>,
-        pub channels: std::vec::Vec<self::ChannelFloat32>,
+        pub r#header: std_msgs::Header,
+        pub r#points: std::vec::Vec<geometry_msgs::Point32>,
+        pub r#channels: std::vec::Vec<self::ChannelFloat32>,
     }
     impl ::roslibrust::RosMessageType for PointCloud {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/PointCloud";
@@ -1004,15 +1004,15 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PointCloud2 {
-        pub header: std_msgs::Header,
-        pub height: u32,
-        pub width: u32,
-        pub fields: std::vec::Vec<self::PointField>,
-        pub is_bigendian: bool,
-        pub point_step: u32,
-        pub row_step: u32,
-        pub data: std::vec::Vec<u8>,
-        pub is_dense: bool,
+        pub r#header: std_msgs::Header,
+        pub r#height: u32,
+        pub r#width: u32,
+        pub r#fields: std::vec::Vec<self::PointField>,
+        pub r#is_bigendian: bool,
+        pub r#point_step: u32,
+        pub r#row_step: u32,
+        pub r#data: std::vec::Vec<u8>,
+        pub r#is_dense: bool,
     }
     impl ::roslibrust::RosMessageType for PointCloud2 {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/PointCloud2";
@@ -1021,49 +1021,49 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PointField {
-        pub name: std::string::String,
-        pub offset: u32,
-        pub datatype: u8,
-        pub count: u32,
+        pub r#name: std::string::String,
+        pub r#offset: u32,
+        pub r#datatype: u8,
+        pub r#count: u32,
     }
     impl ::roslibrust::RosMessageType for PointField {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/PointField";
     }
     impl PointField {
-        pub const INT8: u8 = 1;
-        pub const UINT8: u8 = 2;
-        pub const INT16: u8 = 3;
-        pub const UINT16: u8 = 4;
-        pub const INT32: u8 = 5;
-        pub const UINT32: u8 = 6;
-        pub const FLOAT32: u8 = 7;
-        pub const FLOAT64: u8 = 8;
+        pub const r#INT8: u8 = 1;
+        pub const r#UINT8: u8 = 2;
+        pub const r#INT16: u8 = 3;
+        pub const r#UINT16: u8 = 4;
+        pub const r#INT32: u8 = 5;
+        pub const r#UINT32: u8 = 6;
+        pub const r#FLOAT32: u8 = 7;
+        pub const r#FLOAT64: u8 = 8;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Range {
-        pub header: std_msgs::Header,
-        pub radiation_type: u8,
-        pub field_of_view: f32,
-        pub min_range: f32,
-        pub max_range: f32,
-        pub range: f32,
+        pub r#header: std_msgs::Header,
+        pub r#radiation_type: u8,
+        pub r#field_of_view: f32,
+        pub r#min_range: f32,
+        pub r#max_range: f32,
+        pub r#range: f32,
     }
     impl ::roslibrust::RosMessageType for Range {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Range";
     }
     impl Range {
-        pub const ULTRASOUND: u8 = 0;
-        pub const INFRARED: u8 = 1;
+        pub const r#ULTRASOUND: u8 = 0;
+        pub const r#INFRARED: u8 = 1;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct RegionOfInterest {
-        pub x_offset: u32,
-        pub y_offset: u32,
-        pub height: u32,
-        pub width: u32,
-        pub do_rectify: bool,
+        pub r#x_offset: u32,
+        pub r#y_offset: u32,
+        pub r#height: u32,
+        pub r#width: u32,
+        pub r#do_rectify: bool,
     }
     impl ::roslibrust::RosMessageType for RegionOfInterest {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/RegionOfInterest";
@@ -1072,9 +1072,9 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct RelativeHumidity {
-        pub header: std_msgs::Header,
-        pub relative_humidity: f64,
-        pub variance: f64,
+        pub r#header: std_msgs::Header,
+        pub r#relative_humidity: f64,
+        pub r#variance: f64,
     }
     impl ::roslibrust::RosMessageType for RelativeHumidity {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/RelativeHumidity";
@@ -1083,7 +1083,7 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetCameraInfoRequest {
-        pub camera_info: self::CameraInfo,
+        pub r#camera_info: self::CameraInfo,
     }
     impl ::roslibrust::RosMessageType for SetCameraInfoRequest {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/SetCameraInfoRequest";
@@ -1092,8 +1092,8 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetCameraInfoResponse {
-        pub success: bool,
-        pub status_message: std::string::String,
+        pub r#success: bool,
+        pub r#status_message: std::string::String,
     }
     impl ::roslibrust::RosMessageType for SetCameraInfoResponse {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/SetCameraInfoResponse";
@@ -1102,9 +1102,9 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Temperature {
-        pub header: std_msgs::Header,
-        pub temperature: f64,
-        pub variance: f64,
+        pub r#header: std_msgs::Header,
+        pub r#temperature: f64,
+        pub r#variance: f64,
     }
     impl ::roslibrust::RosMessageType for Temperature {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Temperature";
@@ -1113,9 +1113,9 @@ pub mod sensor_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TimeReference {
-        pub header: std_msgs::Header,
-        pub time_ref: ::roslibrust::integral_types::Time,
-        pub source: std::string::String,
+        pub r#header: std_msgs::Header,
+        pub r#time_ref: ::roslibrust::integral_types::Time,
+        pub r#source: std::string::String,
     }
     impl ::roslibrust::RosMessageType for TimeReference {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/TimeReference";
@@ -1144,8 +1144,8 @@ pub mod shape_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Mesh {
-        pub triangles: std::vec::Vec<self::MeshTriangle>,
-        pub vertices: std::vec::Vec<geometry_msgs::Point>,
+        pub r#triangles: std::vec::Vec<self::MeshTriangle>,
+        pub r#vertices: std::vec::Vec<geometry_msgs::Point>,
     }
     impl ::roslibrust::RosMessageType for Mesh {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/Mesh";
@@ -1154,7 +1154,7 @@ pub mod shape_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MeshTriangle {
-        pub vertex_indices: std::vec::Vec<u32>,
+        pub r#vertex_indices: std::vec::Vec<u32>,
     }
     impl ::roslibrust::RosMessageType for MeshTriangle {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/MeshTriangle";
@@ -1163,7 +1163,7 @@ pub mod shape_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Plane {
-        pub coef: std::vec::Vec<f64>,
+        pub r#coef: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for Plane {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/Plane";
@@ -1173,24 +1173,24 @@ pub mod shape_msgs {
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SolidPrimitive {
         pub r#type: u8,
-        pub dimensions: std::vec::Vec<f64>,
+        pub r#dimensions: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for SolidPrimitive {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/SolidPrimitive";
     }
     impl SolidPrimitive {
-        pub const BOX: u8 = 1;
-        pub const SPHERE: u8 = 2;
-        pub const CYLINDER: u8 = 3;
-        pub const CONE: u8 = 4;
-        pub const BOX_X: u8 = 0;
-        pub const BOX_Y: u8 = 1;
-        pub const BOX_Z: u8 = 2;
-        pub const SPHERE_RADIUS: u8 = 0;
-        pub const CYLINDER_HEIGHT: u8 = 0;
-        pub const CYLINDER_RADIUS: u8 = 1;
-        pub const CONE_HEIGHT: u8 = 0;
-        pub const CONE_RADIUS: u8 = 1;
+        pub const r#BOX: u8 = 1;
+        pub const r#SPHERE: u8 = 2;
+        pub const r#CYLINDER: u8 = 3;
+        pub const r#CONE: u8 = 4;
+        pub const r#BOX_X: u8 = 0;
+        pub const r#BOX_Y: u8 = 1;
+        pub const r#BOX_Z: u8 = 2;
+        pub const r#SPHERE_RADIUS: u8 = 0;
+        pub const r#CYLINDER_HEIGHT: u8 = 0;
+        pub const r#CYLINDER_RADIUS: u8 = 1;
+        pub const r#CONE_HEIGHT: u8 = 0;
+        pub const r#CONE_RADIUS: u8 = 1;
     }
 }
 #[allow(unused_imports)]
@@ -1209,7 +1209,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Bool {
-        pub data: bool,
+        pub r#data: bool,
     }
     impl ::roslibrust::RosMessageType for Bool {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Bool";
@@ -1218,7 +1218,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Byte {
-        pub data: u8,
+        pub r#data: u8,
     }
     impl ::roslibrust::RosMessageType for Byte {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Byte";
@@ -1227,8 +1227,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ByteMultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<u8>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<u8>,
     }
     impl ::roslibrust::RosMessageType for ByteMultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/ByteMultiArray";
@@ -1237,7 +1237,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Char {
-        pub data: char,
+        pub r#data: char,
     }
     impl ::roslibrust::RosMessageType for Char {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Char";
@@ -1246,10 +1246,10 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ColorRGBA {
-        pub r: f32,
-        pub g: f32,
-        pub b: f32,
-        pub a: f32,
+        pub r#r: f32,
+        pub r#g: f32,
+        pub r#b: f32,
+        pub r#a: f32,
     }
     impl ::roslibrust::RosMessageType for ColorRGBA {
         const ROS_TYPE_NAME: &'static str = "std_msgs/ColorRGBA";
@@ -1258,7 +1258,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Duration {
-        pub data: ::roslibrust::integral_types::Duration,
+        pub r#data: ::roslibrust::integral_types::Duration,
     }
     impl ::roslibrust::RosMessageType for Duration {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Duration";
@@ -1274,7 +1274,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float32 {
-        pub data: f32,
+        pub r#data: f32,
     }
     impl ::roslibrust::RosMessageType for Float32 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Float32";
@@ -1283,8 +1283,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float32MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<f32>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<f32>,
     }
     impl ::roslibrust::RosMessageType for Float32MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Float32MultiArray";
@@ -1293,7 +1293,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float64 {
-        pub data: f64,
+        pub r#data: f64,
     }
     impl ::roslibrust::RosMessageType for Float64 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Float64";
@@ -1302,8 +1302,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float64MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<f64>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<f64>,
     }
     impl ::roslibrust::RosMessageType for Float64MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Float64MultiArray";
@@ -1312,9 +1312,9 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Header {
-        pub seq: u32,
-        pub stamp: ::roslibrust::integral_types::Time,
-        pub frame_id: std::string::String,
+        pub r#seq: u32,
+        pub r#stamp: ::roslibrust::integral_types::Time,
+        pub r#frame_id: std::string::String,
     }
     impl ::roslibrust::RosMessageType for Header {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
@@ -1323,7 +1323,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int16 {
-        pub data: i16,
+        pub r#data: i16,
     }
     impl ::roslibrust::RosMessageType for Int16 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int16";
@@ -1332,8 +1332,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int16MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<i16>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<i16>,
     }
     impl ::roslibrust::RosMessageType for Int16MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int16MultiArray";
@@ -1342,7 +1342,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int32 {
-        pub data: i32,
+        pub r#data: i32,
     }
     impl ::roslibrust::RosMessageType for Int32 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int32";
@@ -1351,8 +1351,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int32MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<i32>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<i32>,
     }
     impl ::roslibrust::RosMessageType for Int32MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int32MultiArray";
@@ -1361,7 +1361,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int64 {
-        pub data: i64,
+        pub r#data: i64,
     }
     impl ::roslibrust::RosMessageType for Int64 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int64";
@@ -1370,8 +1370,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int64MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<i64>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<i64>,
     }
     impl ::roslibrust::RosMessageType for Int64MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int64MultiArray";
@@ -1380,7 +1380,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int8 {
-        pub data: i8,
+        pub r#data: i8,
     }
     impl ::roslibrust::RosMessageType for Int8 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int8";
@@ -1389,8 +1389,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int8MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<i8>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<i8>,
     }
     impl ::roslibrust::RosMessageType for Int8MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int8MultiArray";
@@ -1399,9 +1399,9 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiArrayDimension {
-        pub label: std::string::String,
-        pub size: u32,
-        pub stride: u32,
+        pub r#label: std::string::String,
+        pub r#size: u32,
+        pub r#stride: u32,
     }
     impl ::roslibrust::RosMessageType for MultiArrayDimension {
         const ROS_TYPE_NAME: &'static str = "std_msgs/MultiArrayDimension";
@@ -1410,8 +1410,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiArrayLayout {
-        pub dim: std::vec::Vec<self::MultiArrayDimension>,
-        pub data_offset: u32,
+        pub r#dim: std::vec::Vec<self::MultiArrayDimension>,
+        pub r#data_offset: u32,
     }
     impl ::roslibrust::RosMessageType for MultiArrayLayout {
         const ROS_TYPE_NAME: &'static str = "std_msgs/MultiArrayLayout";
@@ -1420,7 +1420,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct String {
-        pub data: std::string::String,
+        pub r#data: std::string::String,
     }
     impl ::roslibrust::RosMessageType for String {
         const ROS_TYPE_NAME: &'static str = "std_msgs/String";
@@ -1429,7 +1429,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Time {
-        pub data: ::roslibrust::integral_types::Time,
+        pub r#data: ::roslibrust::integral_types::Time,
     }
     impl ::roslibrust::RosMessageType for Time {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Time";
@@ -1438,7 +1438,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt16 {
-        pub data: u16,
+        pub r#data: u16,
     }
     impl ::roslibrust::RosMessageType for UInt16 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt16";
@@ -1447,8 +1447,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt16MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<u16>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<u16>,
     }
     impl ::roslibrust::RosMessageType for UInt16MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt16MultiArray";
@@ -1457,7 +1457,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt32 {
-        pub data: u32,
+        pub r#data: u32,
     }
     impl ::roslibrust::RosMessageType for UInt32 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt32";
@@ -1466,8 +1466,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt32MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<u32>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<u32>,
     }
     impl ::roslibrust::RosMessageType for UInt32MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt32MultiArray";
@@ -1476,7 +1476,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt64 {
-        pub data: u64,
+        pub r#data: u64,
     }
     impl ::roslibrust::RosMessageType for UInt64 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt64";
@@ -1485,8 +1485,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt64MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<u64>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<u64>,
     }
     impl ::roslibrust::RosMessageType for UInt64MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt64MultiArray";
@@ -1495,7 +1495,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt8 {
-        pub data: u8,
+        pub r#data: u8,
     }
     impl ::roslibrust::RosMessageType for UInt8 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt8";
@@ -1504,8 +1504,8 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt8MultiArray {
-        pub layout: self::MultiArrayLayout,
-        pub data: std::vec::Vec<u8>,
+        pub r#layout: self::MultiArrayLayout,
+        pub r#data: std::vec::Vec<u8>,
     }
     impl ::roslibrust::RosMessageType for UInt8MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt8MultiArray";
@@ -1528,14 +1528,14 @@ pub mod stereo_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct DisparityImage {
-        pub header: std_msgs::Header,
-        pub image: sensor_msgs::Image,
-        pub f: f32,
-        pub T: f32,
-        pub valid_window: sensor_msgs::RegionOfInterest,
-        pub min_disparity: f32,
-        pub max_disparity: f32,
-        pub delta_d: f32,
+        pub r#header: std_msgs::Header,
+        pub r#image: sensor_msgs::Image,
+        pub r#f: f32,
+        pub r#T: f32,
+        pub r#valid_window: sensor_msgs::RegionOfInterest,
+        pub r#min_disparity: f32,
+        pub r#max_disparity: f32,
+        pub r#delta_d: f32,
     }
     impl ::roslibrust::RosMessageType for DisparityImage {
         const ROS_TYPE_NAME: &'static str = "stereo_msgs/DisparityImage";
@@ -1558,8 +1558,8 @@ pub mod test_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AddTwoIntsRequest {
-        pub a: i64,
-        pub b: i64,
+        pub r#a: i64,
+        pub r#b: i64,
     }
     impl ::roslibrust::RosMessageType for AddTwoIntsRequest {
         const ROS_TYPE_NAME: &'static str = "test_msgs/AddTwoIntsRequest";
@@ -1568,7 +1568,7 @@ pub mod test_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AddTwoIntsResponse {
-        pub sum: i64,
+        pub r#sum: i64,
     }
     impl ::roslibrust::RosMessageType for AddTwoIntsResponse {
         const ROS_TYPE_NAME: &'static str = "test_msgs/AddTwoIntsResponse";
@@ -1581,13 +1581,13 @@ pub mod test_msgs {
         const ROS_TYPE_NAME: &'static str = "test_msgs/Constants";
     }
     impl Constants {
-        pub const TEST_STR: &'static str = "/topic";
+        pub const r#TEST_STR: &'static str = "/topic";
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float64Stamped {
-        pub header: std_msgs::Header,
-        pub value: f64,
+        pub r#header: std_msgs::Header,
+        pub r#value: f64,
     }
     impl ::roslibrust::RosMessageType for Float64Stamped {
         const ROS_TYPE_NAME: &'static str = "test_msgs/Float64Stamped";
@@ -1596,7 +1596,7 @@ pub mod test_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LoggerLevel {
-        pub level: std::string::String,
+        pub r#level: std::string::String,
     }
     impl ::roslibrust::RosMessageType for LoggerLevel {
         const ROS_TYPE_NAME: &'static str = "test_msgs/LoggerLevel";
@@ -1605,9 +1605,9 @@ pub mod test_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Metric {
-        pub name: std::string::String,
-        pub time: f64,
-        pub data: std::vec::Vec<self::MetricPair>,
+        pub r#name: std::string::String,
+        pub r#time: f64,
+        pub r#data: std::vec::Vec<self::MetricPair>,
     }
     impl ::roslibrust::RosMessageType for Metric {
         const ROS_TYPE_NAME: &'static str = "test_msgs/Metric";
@@ -1616,8 +1616,8 @@ pub mod test_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MetricPair {
-        pub key: std::string::String,
-        pub value: f64,
+        pub r#key: std::string::String,
+        pub r#value: f64,
     }
     impl ::roslibrust::RosMessageType for MetricPair {
         const ROS_TYPE_NAME: &'static str = "test_msgs/MetricPair";
@@ -1626,20 +1626,20 @@ pub mod test_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct NodeInfo {
-        pub node_name: std::string::String,
-        pub pid: i64,
-        pub status: u8,
+        pub r#node_name: std::string::String,
+        pub r#pid: i64,
+        pub r#status: u8,
     }
     impl ::roslibrust::RosMessageType for NodeInfo {
         const ROS_TYPE_NAME: &'static str = "test_msgs/NodeInfo";
     }
     impl NodeInfo {
-        pub const STATUS_UNINITIALIZED: u8 = 0;
-        pub const STATUS_DISCONNECTED: u8 = 1;
-        pub const STATUS_RUNNING: u8 = 2;
-        pub const STATUS_RUN_ERROR: u8 = 3;
-        pub const STATUS_SHUTTING_DOWN: u8 = 4;
-        pub const STATUS_SHUTDOWN: u8 = 5;
+        pub const r#STATUS_UNINITIALIZED: u8 = 0;
+        pub const r#STATUS_DISCONNECTED: u8 = 1;
+        pub const r#STATUS_RUNNING: u8 = 2;
+        pub const r#STATUS_RUN_ERROR: u8 = 3;
+        pub const r#STATUS_SHUTTING_DOWN: u8 = 4;
+        pub const r#STATUS_SHUTDOWN: u8 = 5;
     }
     pub struct AddTwoInts {}
     impl ::roslibrust::RosServiceType for AddTwoInts {
@@ -1664,9 +1664,9 @@ pub mod trajectory_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct JointTrajectory {
-        pub header: std_msgs::Header,
-        pub joint_names: std::vec::Vec<std::string::String>,
-        pub points: std::vec::Vec<self::JointTrajectoryPoint>,
+        pub r#header: std_msgs::Header,
+        pub r#joint_names: std::vec::Vec<std::string::String>,
+        pub r#points: std::vec::Vec<self::JointTrajectoryPoint>,
     }
     impl ::roslibrust::RosMessageType for JointTrajectory {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/JointTrajectory";
@@ -1675,11 +1675,11 @@ pub mod trajectory_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct JointTrajectoryPoint {
-        pub positions: std::vec::Vec<f64>,
-        pub velocities: std::vec::Vec<f64>,
-        pub accelerations: std::vec::Vec<f64>,
-        pub effort: std::vec::Vec<f64>,
-        pub time_from_start: ::roslibrust::integral_types::Duration,
+        pub r#positions: std::vec::Vec<f64>,
+        pub r#velocities: std::vec::Vec<f64>,
+        pub r#accelerations: std::vec::Vec<f64>,
+        pub r#effort: std::vec::Vec<f64>,
+        pub r#time_from_start: ::roslibrust::integral_types::Duration,
     }
     impl ::roslibrust::RosMessageType for JointTrajectoryPoint {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/JointTrajectoryPoint";
@@ -1688,9 +1688,9 @@ pub mod trajectory_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiDOFJointTrajectory {
-        pub header: std_msgs::Header,
-        pub joint_names: std::vec::Vec<std::string::String>,
-        pub points: std::vec::Vec<self::MultiDOFJointTrajectoryPoint>,
+        pub r#header: std_msgs::Header,
+        pub r#joint_names: std::vec::Vec<std::string::String>,
+        pub r#points: std::vec::Vec<self::MultiDOFJointTrajectoryPoint>,
     }
     impl ::roslibrust::RosMessageType for MultiDOFJointTrajectory {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/MultiDOFJointTrajectory";
@@ -1699,10 +1699,10 @@ pub mod trajectory_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiDOFJointTrajectoryPoint {
-        pub transforms: std::vec::Vec<geometry_msgs::Transform>,
-        pub velocities: std::vec::Vec<geometry_msgs::Twist>,
-        pub accelerations: std::vec::Vec<geometry_msgs::Twist>,
-        pub time_from_start: ::roslibrust::integral_types::Duration,
+        pub r#transforms: std::vec::Vec<geometry_msgs::Transform>,
+        pub r#velocities: std::vec::Vec<geometry_msgs::Twist>,
+        pub r#accelerations: std::vec::Vec<geometry_msgs::Twist>,
+        pub r#time_from_start: ::roslibrust::integral_types::Duration,
     }
     impl ::roslibrust::RosMessageType for MultiDOFJointTrajectoryPoint {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/MultiDOFJointTrajectoryPoint";
@@ -1725,42 +1725,42 @@ pub mod visualization_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ImageMarker {
-        pub header: std_msgs::Header,
-        pub ns: std::string::String,
-        pub id: i32,
+        pub r#header: std_msgs::Header,
+        pub r#ns: std::string::String,
+        pub r#id: i32,
         pub r#type: i32,
-        pub action: i32,
-        pub position: geometry_msgs::Point,
-        pub scale: f32,
-        pub outline_color: std_msgs::ColorRGBA,
-        pub filled: u8,
-        pub fill_color: std_msgs::ColorRGBA,
-        pub lifetime: ::roslibrust::integral_types::Duration,
-        pub points: std::vec::Vec<geometry_msgs::Point>,
-        pub outline_colors: std::vec::Vec<std_msgs::ColorRGBA>,
+        pub r#action: i32,
+        pub r#position: geometry_msgs::Point,
+        pub r#scale: f32,
+        pub r#outline_color: std_msgs::ColorRGBA,
+        pub r#filled: u8,
+        pub r#fill_color: std_msgs::ColorRGBA,
+        pub r#lifetime: ::roslibrust::integral_types::Duration,
+        pub r#points: std::vec::Vec<geometry_msgs::Point>,
+        pub r#outline_colors: std::vec::Vec<std_msgs::ColorRGBA>,
     }
     impl ::roslibrust::RosMessageType for ImageMarker {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/ImageMarker";
     }
     impl ImageMarker {
-        pub const CIRCLE: u8 = 0;
-        pub const LINE_STRIP: u8 = 1;
-        pub const LINE_LIST: u8 = 2;
-        pub const POLYGON: u8 = 3;
-        pub const POINTS: u8 = 4;
-        pub const ADD: u8 = 0;
-        pub const REMOVE: u8 = 1;
+        pub const r#CIRCLE: u8 = 0;
+        pub const r#LINE_STRIP: u8 = 1;
+        pub const r#LINE_LIST: u8 = 2;
+        pub const r#POLYGON: u8 = 3;
+        pub const r#POINTS: u8 = 4;
+        pub const r#ADD: u8 = 0;
+        pub const r#REMOVE: u8 = 1;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarker {
-        pub header: std_msgs::Header,
-        pub pose: geometry_msgs::Pose,
-        pub name: std::string::String,
-        pub description: std::string::String,
-        pub scale: f32,
-        pub menu_entries: std::vec::Vec<self::MenuEntry>,
-        pub controls: std::vec::Vec<self::InteractiveMarkerControl>,
+        pub r#header: std_msgs::Header,
+        pub r#pose: geometry_msgs::Pose,
+        pub r#name: std::string::String,
+        pub r#description: std::string::String,
+        pub r#scale: f32,
+        pub r#menu_entries: std::vec::Vec<self::MenuEntry>,
+        pub r#controls: std::vec::Vec<self::InteractiveMarkerControl>,
     }
     impl ::roslibrust::RosMessageType for InteractiveMarker {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarker";
@@ -1769,63 +1769,63 @@ pub mod visualization_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarkerControl {
-        pub name: std::string::String,
-        pub orientation: geometry_msgs::Quaternion,
-        pub orientation_mode: u8,
-        pub interaction_mode: u8,
-        pub always_visible: bool,
-        pub markers: std::vec::Vec<self::Marker>,
-        pub independent_marker_orientation: bool,
-        pub description: std::string::String,
+        pub r#name: std::string::String,
+        pub r#orientation: geometry_msgs::Quaternion,
+        pub r#orientation_mode: u8,
+        pub r#interaction_mode: u8,
+        pub r#always_visible: bool,
+        pub r#markers: std::vec::Vec<self::Marker>,
+        pub r#independent_marker_orientation: bool,
+        pub r#description: std::string::String,
     }
     impl ::roslibrust::RosMessageType for InteractiveMarkerControl {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerControl";
     }
     impl InteractiveMarkerControl {
-        pub const INHERIT: u8 = 0;
-        pub const FIXED: u8 = 1;
-        pub const VIEW_FACING: u8 = 2;
-        pub const NONE: u8 = 0;
-        pub const MENU: u8 = 1;
-        pub const BUTTON: u8 = 2;
-        pub const MOVE_AXIS: u8 = 3;
-        pub const MOVE_PLANE: u8 = 4;
-        pub const ROTATE_AXIS: u8 = 5;
-        pub const MOVE_ROTATE: u8 = 6;
-        pub const MOVE_3D: u8 = 7;
-        pub const ROTATE_3D: u8 = 8;
-        pub const MOVE_ROTATE_3D: u8 = 9;
+        pub const r#INHERIT: u8 = 0;
+        pub const r#FIXED: u8 = 1;
+        pub const r#VIEW_FACING: u8 = 2;
+        pub const r#NONE: u8 = 0;
+        pub const r#MENU: u8 = 1;
+        pub const r#BUTTON: u8 = 2;
+        pub const r#MOVE_AXIS: u8 = 3;
+        pub const r#MOVE_PLANE: u8 = 4;
+        pub const r#ROTATE_AXIS: u8 = 5;
+        pub const r#MOVE_ROTATE: u8 = 6;
+        pub const r#MOVE_3D: u8 = 7;
+        pub const r#ROTATE_3D: u8 = 8;
+        pub const r#MOVE_ROTATE_3D: u8 = 9;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarkerFeedback {
-        pub header: std_msgs::Header,
-        pub client_id: std::string::String,
-        pub marker_name: std::string::String,
-        pub control_name: std::string::String,
-        pub event_type: u8,
-        pub pose: geometry_msgs::Pose,
-        pub menu_entry_id: u32,
-        pub mouse_point: geometry_msgs::Point,
-        pub mouse_point_valid: bool,
+        pub r#header: std_msgs::Header,
+        pub r#client_id: std::string::String,
+        pub r#marker_name: std::string::String,
+        pub r#control_name: std::string::String,
+        pub r#event_type: u8,
+        pub r#pose: geometry_msgs::Pose,
+        pub r#menu_entry_id: u32,
+        pub r#mouse_point: geometry_msgs::Point,
+        pub r#mouse_point_valid: bool,
     }
     impl ::roslibrust::RosMessageType for InteractiveMarkerFeedback {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerFeedback";
     }
     impl InteractiveMarkerFeedback {
-        pub const KEEP_ALIVE: u8 = 0;
-        pub const POSE_UPDATE: u8 = 1;
-        pub const MENU_SELECT: u8 = 2;
-        pub const BUTTON_CLICK: u8 = 3;
-        pub const MOUSE_DOWN: u8 = 4;
-        pub const MOUSE_UP: u8 = 5;
+        pub const r#KEEP_ALIVE: u8 = 0;
+        pub const r#POSE_UPDATE: u8 = 1;
+        pub const r#MENU_SELECT: u8 = 2;
+        pub const r#BUTTON_CLICK: u8 = 3;
+        pub const r#MOUSE_DOWN: u8 = 4;
+        pub const r#MOUSE_UP: u8 = 5;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarkerInit {
-        pub server_id: std::string::String,
-        pub seq_num: u64,
-        pub markers: std::vec::Vec<self::InteractiveMarker>,
+        pub r#server_id: std::string::String,
+        pub r#seq_num: u64,
+        pub r#markers: std::vec::Vec<self::InteractiveMarker>,
     }
     impl ::roslibrust::RosMessageType for InteractiveMarkerInit {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerInit";
@@ -1834,9 +1834,9 @@ pub mod visualization_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarkerPose {
-        pub header: std_msgs::Header,
-        pub pose: geometry_msgs::Pose,
-        pub name: std::string::String,
+        pub r#header: std_msgs::Header,
+        pub r#pose: geometry_msgs::Pose,
+        pub r#name: std::string::String,
     }
     impl ::roslibrust::RosMessageType for InteractiveMarkerPose {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerPose";
@@ -1845,64 +1845,64 @@ pub mod visualization_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarkerUpdate {
-        pub server_id: std::string::String,
-        pub seq_num: u64,
+        pub r#server_id: std::string::String,
+        pub r#seq_num: u64,
         pub r#type: u8,
-        pub markers: std::vec::Vec<self::InteractiveMarker>,
-        pub poses: std::vec::Vec<self::InteractiveMarkerPose>,
-        pub erases: std::vec::Vec<std::string::String>,
+        pub r#markers: std::vec::Vec<self::InteractiveMarker>,
+        pub r#poses: std::vec::Vec<self::InteractiveMarkerPose>,
+        pub r#erases: std::vec::Vec<std::string::String>,
     }
     impl ::roslibrust::RosMessageType for InteractiveMarkerUpdate {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerUpdate";
     }
     impl InteractiveMarkerUpdate {
-        pub const KEEP_ALIVE: u8 = 0;
-        pub const UPDATE: u8 = 1;
+        pub const r#KEEP_ALIVE: u8 = 0;
+        pub const r#UPDATE: u8 = 1;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Marker {
-        pub header: std_msgs::Header,
-        pub ns: std::string::String,
-        pub id: i32,
+        pub r#header: std_msgs::Header,
+        pub r#ns: std::string::String,
+        pub r#id: i32,
         pub r#type: i32,
-        pub action: i32,
-        pub pose: geometry_msgs::Pose,
-        pub scale: geometry_msgs::Vector3,
-        pub color: std_msgs::ColorRGBA,
-        pub lifetime: ::roslibrust::integral_types::Duration,
-        pub frame_locked: bool,
-        pub points: std::vec::Vec<geometry_msgs::Point>,
-        pub colors: std::vec::Vec<std_msgs::ColorRGBA>,
-        pub text: std::string::String,
-        pub mesh_resource: std::string::String,
-        pub mesh_use_embedded_materials: bool,
+        pub r#action: i32,
+        pub r#pose: geometry_msgs::Pose,
+        pub r#scale: geometry_msgs::Vector3,
+        pub r#color: std_msgs::ColorRGBA,
+        pub r#lifetime: ::roslibrust::integral_types::Duration,
+        pub r#frame_locked: bool,
+        pub r#points: std::vec::Vec<geometry_msgs::Point>,
+        pub r#colors: std::vec::Vec<std_msgs::ColorRGBA>,
+        pub r#text: std::string::String,
+        pub r#mesh_resource: std::string::String,
+        pub r#mesh_use_embedded_materials: bool,
     }
     impl ::roslibrust::RosMessageType for Marker {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/Marker";
     }
     impl Marker {
-        pub const ARROW: u8 = 0;
-        pub const CUBE: u8 = 1;
-        pub const SPHERE: u8 = 2;
-        pub const CYLINDER: u8 = 3;
-        pub const LINE_STRIP: u8 = 4;
-        pub const LINE_LIST: u8 = 5;
-        pub const CUBE_LIST: u8 = 6;
-        pub const SPHERE_LIST: u8 = 7;
-        pub const POINTS: u8 = 8;
-        pub const TEXT_VIEW_FACING: u8 = 9;
-        pub const MESH_RESOURCE: u8 = 10;
-        pub const TRIANGLE_LIST: u8 = 11;
-        pub const ADD: u8 = 0;
-        pub const MODIFY: u8 = 0;
-        pub const DELETE: u8 = 2;
-        pub const DELETEALL: u8 = 3;
+        pub const r#ARROW: u8 = 0;
+        pub const r#CUBE: u8 = 1;
+        pub const r#SPHERE: u8 = 2;
+        pub const r#CYLINDER: u8 = 3;
+        pub const r#LINE_STRIP: u8 = 4;
+        pub const r#LINE_LIST: u8 = 5;
+        pub const r#CUBE_LIST: u8 = 6;
+        pub const r#SPHERE_LIST: u8 = 7;
+        pub const r#POINTS: u8 = 8;
+        pub const r#TEXT_VIEW_FACING: u8 = 9;
+        pub const r#MESH_RESOURCE: u8 = 10;
+        pub const r#TRIANGLE_LIST: u8 = 11;
+        pub const r#ADD: u8 = 0;
+        pub const r#MODIFY: u8 = 0;
+        pub const r#DELETE: u8 = 2;
+        pub const r#DELETEALL: u8 = 3;
     }
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MarkerArray {
-        pub markers: std::vec::Vec<self::Marker>,
+        pub r#markers: std::vec::Vec<self::Marker>,
     }
     impl ::roslibrust::RosMessageType for MarkerArray {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/MarkerArray";
@@ -1911,18 +1911,19 @@ pub mod visualization_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MenuEntry {
-        pub id: u32,
-        pub parent_id: u32,
-        pub title: std::string::String,
-        pub command: std::string::String,
-        pub command_type: u8,
+        pub r#id: u32,
+        pub r#parent_id: u32,
+        pub r#title: std::string::String,
+        pub r#command: std::string::String,
+        pub r#command_type: u8,
     }
     impl ::roslibrust::RosMessageType for MenuEntry {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/MenuEntry";
     }
     impl MenuEntry {
-        pub const FEEDBACK: u8 = 0;
-        pub const ROSRUN: u8 = 1;
-        pub const ROSLAUNCH: u8 = 2;
+        pub const r#FEEDBACK: u8 = 0;
+        pub const r#ROSRUN: u8 = 1;
+        pub const r#ROSLAUNCH: u8 = 2;
     }
 }
+

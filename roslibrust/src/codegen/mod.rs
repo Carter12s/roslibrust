@@ -274,11 +274,7 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
             };
             let field_type = TokenStream::from_str(field_type.as_str()).unwrap();
 
-            let field_name = if field.field_name.as_str() == "type" {
-                format_ident!("r#{}", field.field_name)
-            } else {
-                format_ident!("{}", field.field_name)
-            };
+            let field_name = format_ident!("r#{}", field.field_name);
             quote! { pub #field_name: #field_type, }
         })
         .collect::<Vec<TokenStream>>();
@@ -287,11 +283,7 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
         .constants
         .into_iter()
         .map(|constant| {
-            let constant_name = if constant.constant_name.as_str() == "type" {
-                format_ident!("r#{}", constant.constant_name)
-            } else {
-                format_ident!("{}", constant.constant_name)
-            };
+            let constant_name = format_ident!("r#{}", constant.constant_name);
             let (constant_type, constant_value) = if constant.constant_type == "std::string::String"
             {
                 let constant_value = constant.constant_value;
