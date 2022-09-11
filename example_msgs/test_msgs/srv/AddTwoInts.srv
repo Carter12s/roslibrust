@@ -3,6 +3,6 @@
 # From this ROS tutorial: http://wiki.ros.org/ROS/Tutorials/CreatingMsgAndSrv#Creating_a_srv
 int64 a
 int64 b
----
+--- # Also comment here is legal? Maybe? ROS is unclear about that?
 # Overflow? What overflow?
 int64 sum
