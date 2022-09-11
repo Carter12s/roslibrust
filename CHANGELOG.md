@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
  - Fixed issue where the spin and reconnect context would never drop even if there were no more `ClientHandle`s
+ - Fixed parsing issue with triple dashes in comments of service files
 
 ## 0.2.0 - September 1, 2022
 
