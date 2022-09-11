@@ -5,7 +5,12 @@
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
-    use crate::{Client, ClientOptions, RosMessageType, RosServiceType, Subscriber};
+    use std::sync::Arc;
+
+    use crate::{
+        ClientHandle, ClientHandleOptions, RosLibRustError, RosMessageType, RosServiceType,
+        Subscriber,
+    };
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
@@ -75,7 +80,7 @@ mod integration_tests {
 
         const TOPIC: &str = "self_publish";
         // 100ms allowance for connecting so tests still fails
-        let mut client = timeout(TIMEOUT, Client::new(LOCAL_WS))
+        let mut client = timeout(TIMEOUT, ClientHandle::new(LOCAL_WS))
             .await
             .expect("Failed to create client in time")
             .unwrap();
@@ -117,7 +122,8 @@ mod integration_tests {
     // We want a failed message parse / type mismatch to come through to the subscriber
     async fn bad_message_recv() -> TestResult {
         let mut client =
-            Client::new_with_options(ClientOptions::new(LOCAL_WS).timeout(TIMEOUT)).await?;
+            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
+                .await?;
 
         let publisher = client.advertise::<TimeI>("/bad_message_recv/topic").await?;
 
@@ -140,25 +146,25 @@ mod integration_tests {
     #[tokio::test]
     async fn timeouts_new() {
         // Intentionally a port where there won't be a server at
-        let opts = ClientOptions::new("ws://localhost:666").timeout(TIMEOUT);
-        assert!(Client::new_with_options(opts).await.is_err());
+        let opts = ClientHandleOptions::new("ws://localhost:666").timeout(TIMEOUT);
+        assert!(ClientHandle::new_with_options(opts).await.is_err());
         // Impossibly short to actually work
-        let opts = ClientOptions::new(LOCAL_WS).timeout(Duration::from_nanos(1));
-        assert!(Client::new_with_options(opts).await.is_err());
+        let opts = ClientHandleOptions::new(LOCAL_WS).timeout(Duration::from_nanos(1));
+        assert!(ClientHandle::new_with_options(opts).await.is_err());
         // Doesn't timeout if given enough time
-        let opts = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
-        assert!(Client::new_with_options(opts).await.is_ok());
+        let opts = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
+        assert!(ClientHandle::new_with_options(opts).await.is_ok());
     }
 
     /// This test doesn't actually do much, but instead confirms the internal structure of the lib is multi-threaded correctly
     /// The whole goal here is to catch send / sync complier errors
     #[tokio::test]
-    async fn parrallel_construction() {
-        let mut client = Client::new(LOCAL_WS)
+    async fn parallel_construction() {
+        let mut client = ClientHandle::new(LOCAL_WS)
             .await
             .expect("Failed to construct client");
 
-        let mut client_1 = client.clone();
+        let client_1 = client.clone();
         tokio::task::spawn(async move {
             let _ = client_1
                 .advertise::<Header>("parrallel_1")
@@ -193,9 +199,9 @@ mod integration_tests {
         const TOPIC: &str = "/unadvertise";
         debug!("Start unadvertise test");
 
-        let opt = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
+        let opt = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
 
-        let mut client = Client::new_with_options(opt).await?;
+        let mut client = ClientHandle::new_with_options(opt).await?;
         let publisher = client.advertise(TOPIC).await?;
         debug!("Got publisher");
 
@@ -238,8 +244,8 @@ mod integration_tests {
             .without_timestamps()
             .init();
 
-        let opt = ClientOptions::new(LOCAL_WS).timeout(TIMEOUT);
-        let mut client = Client::new_with_options(opt).await?;
+        let opt = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
+        let mut client = ClientHandle::new_with_options(opt).await?;
 
         let cb =
             |_req: SetBoolRequest| -> Result<SetBoolResponse, Box<dyn std::error::Error + Send + Sync>> {
@@ -265,6 +271,51 @@ mod integration_tests {
             .expect("Failed to call service");
 
         assert_eq!(response.message, "call_success");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_strong_and_weak_client_counts() -> TestResult {
+        let opt = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
+        let client = ClientHandle::new_with_options(opt).await?;
+        // Can't be certain what state the spin loop is in (it could be upgraded from WeakPtr) so we sum the two
+        assert_eq!(
+            Arc::strong_count(&client.inner) + Arc::weak_count(&client.inner),
+            2
+        );
+
+        {
+            let client_2 = client.clone();
+            assert_eq!(
+                Arc::strong_count(&client.inner) + Arc::weak_count(&client.inner),
+                3
+            );
+            assert_eq!(
+                Arc::strong_count(&client_2.inner) + Arc::weak_count(&client_2.inner),
+                3
+            );
+        }
+
+        assert_eq!(
+            Arc::strong_count(&client.inner) + Arc::weak_count(&client.inner),
+            2
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_disconnect_returns_error() -> TestResult {
+        let client =
+            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
+                .await?;
+        client
+            .is_disconnected
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+
+        let res = client.advertise::<TimeI>("/bad_message_recv/topic").await;
+        assert!(matches!(res, Err(RosLibRustError::Disconnected)));
 
         Ok(())
     }

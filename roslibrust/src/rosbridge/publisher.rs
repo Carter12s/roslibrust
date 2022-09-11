@@ -1,4 +1,4 @@
-use crate::{Client, RosLibRustResult, RosMessageType};
+use crate::{ClientHandle, RosLibRustResult, RosMessageType};
 
 /// A handle given to the caller when they advertise a topic
 ///
@@ -22,7 +22,7 @@ pub struct Publisher<T: RosMessageType> {
     // #[allow(dead_code)]
     // seq: usize,
     // Stores a copy of the client so that we can de-register ourselves
-    client: Client,
+    client: ClientHandle,
     _marker: std::marker::PhantomData<T>,
 }
 
@@ -34,7 +34,7 @@ impl<T: RosMessageType> Drop for Publisher<T> {
 }
 
 impl<T: RosMessageType> Publisher<T> {
-    pub(crate) fn new(topic: String, client: Client) -> Self {
+    pub(crate) fn new(topic: String, client: ClientHandle) -> Self {
         Publisher {
             topic,
             client,

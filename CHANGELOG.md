@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+### Changed
+ - `Client` is now `ClientHandle`.
+
+### Fixed
+ - Fixed issue where the spin and reconnect context would never drop even if there were no more `ClientHandle`s
+
 ## 0.2.0 - September 1, 2022
 
 ### Added
