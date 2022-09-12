@@ -58,7 +58,7 @@ impl Into<&str> for &Ops {
             Ops::CallService => "call_service",
             Ops::ServiceResponse => "service_response",
             Ops::AdvertiseService => "advertise_service",
-            Ops::UnadvertiseService => "unadverise_service",
+            Ops::UnadvertiseService => "unadvertise_service",
         }
     }
 }
