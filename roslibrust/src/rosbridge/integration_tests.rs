@@ -257,7 +257,7 @@ mod integration_tests {
 
         let topic = "/self_service_call";
 
-        client
+        let handle = client
             .advertise_service::<SetBoolSrv>(topic, cb)
             .await
             .expect("Failed to advertise service");
@@ -269,8 +269,16 @@ mod integration_tests {
             .call_service(topic, SetBoolRequest { data: true })
             .await
             .expect("Failed to call service");
-
         assert_eq!(response.message, "call_success");
+
+        // Intentionally drop handle to unadvertise the service
+        std::mem::drop(handle);
+
+        // Should now fail to get a response after the handle is dropped
+        let response = client
+            .call_service::<SetBoolRequest, SetBoolResponse>(topic, SetBoolRequest { data: true })
+            .await;
+        assert!(response.is_err());
 
         Ok(())
     }

@@ -359,30 +359,32 @@ impl ClientHandle {
             -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
     ) -> RosLibRustResult<ServiceHandle> {
         self.check_for_disconnect()?;
-        let client = self.inner.read().await;
-        let mut writer = client.writer.write().await;
-        writer.advertise_service(topic, T::ROS_SERVICE_NAME).await?;
+        {
+            let client = self.inner.read().await;
+            let mut writer = client.writer.write().await;
+            writer.advertise_service(topic, T::ROS_SERVICE_NAME).await?;
 
-        // We need to do type erasure and hide the request by wrapping their closure in a generic closure
-        let erased_closure = move |message: &str| -> Result<
-            serde_json::Value,
-            Box<dyn std::error::Error + Send + Sync>,
-        > {
-            // Type erase the incoming type
-            let parsed_msg = serde_json::from_str(message)?;
-            let response = server(parsed_msg)?;
-            // Type erase the outgoing type
-            let response_string = serde_json::json!(response);
-            Ok(response_string)
-        };
+            // We need to do type erasure and hide the request by wrapping their closure in a generic closure
+            let erased_closure = move |message: &str| -> Result<
+                serde_json::Value,
+                Box<dyn std::error::Error + Send + Sync>,
+            > {
+                // Type erase the incoming type
+                let parsed_msg = serde_json::from_str(message)?;
+                let response = server(parsed_msg)?;
+                // Type erase the outgoing type
+                let response_string = serde_json::json!(response);
+                Ok(response_string)
+            };
 
-        let res = client
-            .services
-            .insert(topic.to_string(), Box::new(erased_closure));
-        if let Some(_previous_server) = res {
-            warn!("Re-registering a server for a pre-existing topic? Are you sure you want to do this");
-            unimplemented!()
-        }
+            let res = client
+                .services
+                .insert(topic.to_string(), Box::new(erased_closure));
+            if let Some(_previous_server) = res {
+                warn!("Re-registering a server for a pre-existing topic? Are you sure you want to do this");
+                unimplemented!()
+            }
+        } // Drop client lock here so we can clone without creating an issue
 
         Ok(ServiceHandle {
             client: self.clone(),
