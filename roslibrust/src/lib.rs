@@ -1,4 +1,51 @@
 //! A crate for interfacing to ROS (the Robot Operating System) via the [rosbridge_suite](http://wiki.ros.org/rosbridge_suite)
+//!
+//! # Introduction
+//! This crate is designed to provide a convenient API for interfacing between Rust and ROS.
+//! This crate prioritizes ergonomics and ease-of-use over performance, while leveraging Rust's
+//! exceptional type system and memory guarantees to ensure correctness.
+//!
+//! ## How Does It Work?
+//! When you create a new client via ClientHandle::new() or ClientHandle::new_with_options() a new connection to rosbridge is created.
+//! This new connection is literally opening a new Websocket. A specific "stubborn spin" tokio task is created which handles reading
+//! from the websocket, and automatically connecting / reconnecting if communication is interrupted.
+//!
+//! This central stubborn_spin task has the only access to the -read- half of the websocket and is constantly .await'ing any new messages
+//! on the websocket connection. When a new message is received from rosbridge it does its best to dispatch it to the relevant entities
+//! that are registered with the Client.
+//!
+//! It is completely valid and recommended to clone() ClientHandle to pass access around your application, in fact many of the types
+//! returned by roslibrust include clones of the client handle within them to enable functionality like automatically de-registering
+//! when dropped. It is not recommended, although completely valid, to create multiple new clients to the same rosbridge server as
+//! the additional websockets created add overhead to both roslibrust and rosbridge.
+//!
+//! ### How Subscribers Work
+//! Each time subscribe is called, a new queue for that subscriber is created. When a `publish` message is received from rosbridge,
+//! the message is duplicated and inserted into the queue for *each* subscriber. This means if you call subscribe multiple times
+//! on the same topic, each of the returned subscribers will receive a copy of every message. Currently, the size of the queue for
+//! every publisher is hardcoded to 1_000 messages control of this will be provided in a future version.
+//!
+//! If the queue for a subscriber is full and a new message arrives the central spin task will not block but simply drop that message
+//! for that subscriber (warnings will be logged).
+//!
+//! Internally roslibrust type-erases the type that `subscribe` is called with an stores a callback where the deserialization
+//! is embedded within the callback. Roslibrust does not check that the type that subscribe is called with matches the type of the topic.
+//! If an incorrect type is used, each time a message is received on the topic it will fail to de-serialize and an error will be emitted
+//! by the subscriber. This can be useful when building client designed to work with multiple different versions of a message definition.
+//!
+//! When the subscriber returned from the subscribe call is dropped it removes is queue from the client. When the last subscriber
+//! on a given topic dropped the client will automatically unsubscribe from the topic with rosbridge.
+//!
+//! ### How Publishers Work
+//! When advertise is called a publisher an advertise message is sent to rosbridge_server and a publisher returned.
+//! Dropping the publisher will automatically unadvertise the topic.
+//! roslibrust currently does not support multiple publishers / multiple advertises for a single topic.
+//!
+//! ### How Service Servers Work
+//! When advertise service is called you must pass into it a callback conforming to the libraries requirements.
+//! Specifically, roslibrust attempts to follow "good" ros error handling convention and be as compatible as possible
+//! with various error types.
+//!
 
 // Contains definition of custom ROS types that codegen emits
 pub mod integral_types;
