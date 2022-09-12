@@ -328,8 +328,9 @@ impl ClientHandle {
         Ok(serde_json::from_value(msg)?)
     }
 
-    /// Advertises a service and returns a handle to the service server
-    /// Service will be active until the handle is dropped!
+    // TODO: reveal this documentation when support for service_unadvertise is actually done
+    // Advertises a service and returns a handle to the service server
+    // Service will be active until the handle is dropped!
     pub async fn advertise_service<T: RosServiceType>(
         &mut self,
         topic: &str,

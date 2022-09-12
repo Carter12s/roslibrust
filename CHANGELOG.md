@@ -9,7 +9,7 @@ Steps:
 - Create new branch for the release
 - Modify Cargo.toml's to point not to workspace path but to named version
 - Commit changes to new branch
-- Release packages in order: rospack -> codegen -> codegen\_macro -> main lib
+- Release packages in order: roslibrust -> codegen_macro
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -17,11 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Current - Unreleased
 
 ### Changed
- - `Client` is now `ClientHandle`.
+ - `Client` is now `ClientHandle`
+ - All identifiers in generated code are now escaped with `r#`
 
 ### Fixed
  - Fixed issue where the spin and reconnect context would never drop even if there were no more `ClientHandle`s
  - Fixed parsing issue with triple dashes in comments of service files
+ - Fixed bug in generation where message properties or constants had names conflicting with Rust reserved keywords
 
 ## 0.2.0 - September 1, 2022
 
