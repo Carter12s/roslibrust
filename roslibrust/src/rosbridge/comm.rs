@@ -29,6 +29,7 @@ pub(crate) enum Ops {
     CallService,
     ServiceResponse,
     AdvertiseService,
+    UnadvertiseService,
 }
 
 impl Display for Ops {
@@ -57,6 +58,7 @@ impl Into<&str> for &Ops {
             Ops::CallService => "call_service",
             Ops::ServiceResponse => "service_response",
             Ops::AdvertiseService => "advertise_service",
+            Ops::UnadvertiseService => "unadverise_service",
         }
     }
 }
@@ -74,6 +76,7 @@ impl FromStr for Ops {
             "call_service" => Ops::CallService,
             "service_response" => Ops::ServiceResponse,
             "advertise_service" => Ops::AdvertiseService,
+            "unadvertise_service" => Ops::UnadvertiseService,
             // Leaving other unimplemented to catch bugs
             // TODO implement these
             _ => bail!("Un-recognized op: {}", s),
@@ -96,6 +99,7 @@ pub(crate) trait RosBridgeComm {
     ) -> RosLibRustResult<()>;
     async fn unadvertise(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn advertise_service(&mut self, topic: &str, srv_type: &str) -> RosLibRustResult<()>;
+    async fn unadvertise_service(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn service_response(
         &mut self,
         topic: &str,
@@ -207,7 +211,19 @@ impl RosBridgeComm for Writer {
             }
         };
         let msg = Message::Text(msg.to_string());
-        debug!("Sending advertise_service: {:?}", &msg);
+        self.send(msg).await?;
+        Ok(())
+    }
+
+    async fn unadvertise_service(&mut self, topic: &str) -> RosLibRustResult<()> {
+        debug!("Sending unadvertise service on {topic}");
+        let msg = json! {
+            {
+                "op": Ops::UnadvertiseService.to_string(),
+                "service": &topic
+            }
+        };
+        let msg = Message::Text(msg.to_string());
         self.send(msg).await?;
         Ok(())
     }
