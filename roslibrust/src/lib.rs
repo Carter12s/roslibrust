@@ -5,6 +5,8 @@
 //! This crate prioritizes ergonomics and ease-of-use over performance, while leveraging Rust's
 //! exceptional type system and memory guarantees to ensure correctness.
 //!
+//! See the README.md to learn about the future of this crate.
+//!
 //! ## Why Use This Crate?
 //! Do you have a fleet of systems distributed around a factory, city, nation, or solar system? Do you want to write a system
 //! for managing that fleet? Problems this crate solves for you:
@@ -29,6 +31,28 @@
 //! Yes! Your mileage may vary. This crate is much more designed for low bandwidth communication with a large fleet of systems than
 //! writing high performance nodes designed to run locally.
 //!
+//! ## Message Generation
+//! Message generation is provided in two APIs. The first, which is visible in `roslibrust/examples`, is a proc-macro which can be invoked to generate ROS message structs in place:
+//! ```rust
+//! use roslibrust_codegen_macro::find_and_generate_ros_messages;
+
+//! find_and_generate_ros_messages!();
+//! ```
+//! If you have ROS installed, this macro will search for message files under paths in the `ROS_PACKAGE_PATH`. If you do not have ROS installed in your environment, you can specify search paths explicitly:
+//! ```rust
+//! use roslibrust_codegen_macro::find_and_generate_ros_messages;
+//! find_and_generate_ros_messages!("/path/to/noetic/packages", "/path/to/my/packages");
+//! ```
+//! It's important to note that these macros have no way to know when the messages in the search paths change and changes to your msg and srv files won't trigger a re-compile. These macros are most useful if they're embedded directly in code that needs to use it (i.e. examples, one-off nodes that need to talk to an external ROS system).
+//! If you want to commit the generated code or create a crate that contains the generated messages, you should use the second mechanism; a library under the optional `codegen` feature of `roslibrust`. The proc-macro is a thin wrapper around this function so the results will be the same.
+//! An example of invoking it can be found in `roslibrust_test/src/main.rs`, but it's very similar to the macro example:
+//! ```rust
+//! use roslibrust::find_and_generate_ros_messages;
+//! let output = find_and_generate_ros_messages(vec![]);
+//! // OR
+//! let output = find_and_generate_ros_messages(vec!["/path/to/noetic/packages".into()]);
+//! ```
+//! An example of the output based on message and service files in this repo can be found under `roslibrust_test/src/lib.rs`.
 //! ## How Does It Work?
 //! When you create a new client via ClientHandle::new() or ClientHandle::new_with_options() a new connection to rosbridge is created.
 //! This new connection is literally opening a new Websocket. A specific "stubborn spin" tokio task is created which handles reading
