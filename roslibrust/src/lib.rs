@@ -5,6 +5,30 @@
 //! This crate prioritizes ergonomics and ease-of-use over performance, while leveraging Rust's
 //! exceptional type system and memory guarantees to ensure correctness.
 //!
+//! ## Why Use This Crate?
+//! Do you have a fleet of systems distributed around a factory, city, nation, or solar system? Do you want to write a system
+//! for managing that fleet? Problems this crate solves for you:
+//!   - Rust is better than C++, Easier to test than Python, and well suited for cloud services
+//!   - Native ROS communication is PITA for firewalls / VPNs, rosbridge is much easier to deal with when remote
+//!   - Don't write your own REST API or leave your comfortable ROS style abstractions. Listen to the same messages, and call the same
+//!     services you would if you were local
+//!   - Deal with multiple versions of a message definition by utilizing Rust enums, optional fields, and other serde directives
+//!   - Run a single process on a single server that can slurp data from 100's of your systems efficiently and without bottlenecks
+//!  
+//! ### Why not use rosrust?
+//! rosrust is a completely valid alternative to this crate! The reasons to use this crate are the same reasons why people use rosbridge
+//! in general:
+//!   - rosbridge is served on a single port meaning it can more easily be exposed through docker or firewalls
+//!   - rosbirdge's JSON encoding makes it possible to work with multiple versions of a ROS message at the same time. A custom written
+//!     message type that utilizes enums / optional fields allows a rust client to deal with version differences amongst a fleet of
+//!     systems
+//!   - async. rosrust was written before async/.await was standardized in rust an is fundamentally a synchronous paradigm. This makes
+//!     it much more difficult to leverage Rust's "fearless concurrency" than with `roslibrust`
+//!
+//! ### Is rosbridge slower?
+//! Yes! Your mileage may vary. This crate is much more designed for low bandwidth communication with a large fleet of systems than
+//! writing high performance nodes designed to run locally.
+//!
 //! ## How Does It Work?
 //! When you create a new client via ClientHandle::new() or ClientHandle::new_with_options() a new connection to rosbridge is created.
 //! This new connection is literally opening a new Websocket. A specific "stubborn spin" tokio task is created which handles reading
@@ -44,7 +68,8 @@
 //! ### How Service Servers Work
 //! When advertise service is called you must pass into it a callback conforming to the libraries requirements.
 //! Specifically, roslibrust attempts to follow "good" ros error handling convention and be as compatible as possible
-//! with various error types.
+//! with various error types; however, due to the async nature of the crate `Box<dyn Error + Send + Sync>` is needed.
+//!
 //!
 
 // Contains definition of custom ROS types that codegen emits
