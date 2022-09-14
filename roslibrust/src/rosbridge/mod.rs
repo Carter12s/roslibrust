@@ -36,16 +36,35 @@ use tungstenite::Message;
 
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
+
 /// Type erasure of callback for a service
 /// Internally this will covert the input string to the Request type
 /// Send that converted type into the user's callback
 /// Get the result of the user's callback and then serialize that so it can be transmitted
-// TODO need to implement drop logic on this
+// TODO reconsider use of serde_json::Value here vs. tungstenite::Message vs. &str
+// Not quite sure what type we want to erase to?
 type ServiceCallback = Box<
     dyn Fn(&str) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>
         + Send
         + Sync,
 >;
+
+/// The handle returned to the caller of advertise_service this struct represents the lifetime
+/// of the service, and dropping this struct automatically unadvertises and removes the service.
+/// No interaction with this struct is expected beyond managing its lifetime.
+pub struct ServiceHandle {
+    /// Reference back to the client this service originated so we can notify it when we are dropped
+    client: ClientHandle,
+    /// Topic that the service is served on, this is used to uniquely identify it, only one service
+    /// may exist for a given topic (per client, we can't control it on the ROS side)
+    topic: String,
+}
+
+impl Drop for ServiceHandle {
+    fn drop(&mut self) {
+        self.client.unadvertise_service(&self.topic);
+    }
+}
 
 /// Our underlying communication type
 //TODO we really want to split this into separate read/write heads that can be locked separately
@@ -338,36 +357,64 @@ impl ClientHandle {
             T::Request,
         )
             -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
-    ) -> RosLibRustResult<()> {
+    ) -> RosLibRustResult<ServiceHandle> {
         self.check_for_disconnect()?;
-        let client = self.inner.read().await;
-        let mut writer = client.writer.write().await;
-        writer.advertise_service(topic, T::ROS_SERVICE_NAME).await?;
+        {
+            let client = self.inner.read().await;
+            let mut writer = client.writer.write().await;
+            writer.advertise_service(topic, T::ROS_SERVICE_NAME).await?;
 
-        // We need to do type erasure and hide the request by wrapping their closure in a generic closure
-        let erased_closure = move |message: &str| -> Result<
-            serde_json::Value,
-            Box<dyn std::error::Error + Send + Sync>,
-        > {
-            // Type erase the incoming type
-            let parsed_msg = serde_json::from_str(message)?;
-            let response = server(parsed_msg)?;
-            // Type erase the outgoing type
-            let response_string = serde_json::json!(response);
-            Ok(response_string)
-        };
+            // We need to do type erasure and hide the request by wrapping their closure in a generic closure
+            let erased_closure = move |message: &str| -> Result<
+                serde_json::Value,
+                Box<dyn std::error::Error + Send + Sync>,
+            > {
+                // Type erase the incoming type
+                let parsed_msg = serde_json::from_str(message)?;
+                let response = server(parsed_msg)?;
+                // Type erase the outgoing type
+                let response_string = serde_json::json!(response);
+                Ok(response_string)
+            };
 
-        let res = client
-            .services
-            .insert(topic.to_string(), Box::new(erased_closure));
-        if let Some(_previous_server) = res {
-            warn!("Re-registering a server for a pre-existing topic? Are you sure you want to do this");
-            unimplemented!()
-        }
+            let res = client
+                .services
+                .insert(topic.to_string(), Box::new(erased_closure));
+            if let Some(_previous_server) = res {
+                warn!("Re-registering a server for a pre-existing topic? Are you sure you want to do this");
+                unimplemented!()
+            }
+        } // Drop client lock here so we can clone without creating an issue
 
-        //TODO need to provide unadvertise and drop callback
+        Ok(ServiceHandle {
+            client: self.clone(),
+            topic: topic.to_string(),
+        })
+    }
 
-        Ok(())
+    /// Internal method for removing a service, this is expected to be automatically called
+    /// by dropping the relevant service handle. Intentionally not async as a result.
+    fn unadvertise_service(&self, topic: &str) {
+        let copy = self.inner.clone();
+        let topic = topic.to_string();
+        tokio::spawn(async move {
+            let client = copy.read().await;
+            let entry = client.services.remove(&topic);
+            // Since this is called by drop we can't really propagate and error and instead simply have to log
+            if entry.is_none() {
+                error!(
+                    "Unadvertise service was called on topic `{topic}` however no service was found.\
+                This likely indicates and error with the roslibrust crate."
+                );
+            }
+
+            // Regardless of whether we found an entry we should still send he unadvertise_service message to rosbridge
+            let mut writer = client.writer.write().await;
+            let res = writer.unadvertise_service(&topic).await;
+            if let Err(e) = res {
+                error!("Failed to send unadvertise_service message when service handle was dropped for `{topic}`: {e}");
+            }
+        });
     }
 
     // This function is not async specifically so it can be called from drop

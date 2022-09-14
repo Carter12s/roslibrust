@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Release Intstructions:
+## Release Instructions:
 TODO Find a better way that this:
 
 Steps:
@@ -16,9 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+### Added
+ - Service server example
+
 ### Changed
  - `Client` is now `ClientHandle`
  - All identifiers in generated code are now escaped with `r#`
+ - `advertise_service` now returns a `ServiceHandle` which controls the lifetime of the service
 
 ### Fixed
  - Fixed issue where the spin and reconnect context would never drop even if there were no more `ClientHandle`s
