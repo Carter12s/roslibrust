@@ -10,24 +10,45 @@ env:
   HOME: /root
 
 jobs:
-  build:
+  noetic:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-    container: carter12s/roslibrust-ci:v0.0.3
+    container: carter12s/roslibrust-ci-noetic:latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Lint
-      run: source /root/.cargo/env; cargo fmt --all -- --check
-    - name: Build Main Lib
-      run: source /root/.cargo/env; cargo build
-      # This step is required to confirm feature combinations work, the main workspace build does all features
-    - name: Build Proc Macro
-      run: source /root/.cargo/env; cargo build -p roslibrust_codegen_macro
-    - name: Unit Tests
-      run: source /root/.cargo/env; cargo test
-    - name: Start rosbridge
-      run: source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
-    - name: Integration Tests
-      run: source /root/.cargo/env; cargo test --features running_bridge -- --test-threads 1
+      - uses: actions/checkout@v3
+      - name: Lint
+        run: source /root/.cargo/env; cargo fmt --all -- --check
+      - name: Build Main Lib
+        run: source /root/.cargo/env; cargo build
+        # This step is required to confirm feature combinations work, the main workspace build does all features
+      - name: Build Proc Macro
+        run: source /root/.cargo/env; cargo build -p roslibrust_codegen_macro
+      - name: Unit Tests
+        run: source /root/.cargo/env; cargo test
+      - name: Start rosbridge
+        run: source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
+      - name: Integration Tests
+        run: source /root/.cargo/env; cargo test --features running_bridge -- --test-threads 1
+  galactic:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    container: carter12s/roslibrust-ci-galactic:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Lint
+        run: source /root/.cargo/env; cargo fmt --all -- --check
+      - name: Build Main Lib
+        run: source /root/.cargo/env; cargo build
+        # This step is required to confirm feature combinations work, the main workspace build does all features
+      - name: Build Proc Macro
+        run: source /root/.cargo/env; cargo build -p roslibrust_codegen_macro
+      - name: Unit Tests
+        run: source /root/.cargo/env; cargo test
+      - name: Start rosbridge
+        run: source /opt/ros/galactic/setup.bash; ros2 launch rosbridge_server rosbridge_websocket_launch.xml & disown & sleep 1
+      - name: Integration Tests
+        run: source /root/.cargo/env; cargo test --features running_bridge -- --test-threads 1
