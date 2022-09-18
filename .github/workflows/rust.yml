@@ -36,8 +36,6 @@ jobs:
       run: source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
     - name: Integration Tests
       run: source /root/.cargo/env; cargo test --features running_bridge -- --test-threads 1
-
-jobs:
   galactic:
     runs-on: ubuntu-latest
     defaults:
