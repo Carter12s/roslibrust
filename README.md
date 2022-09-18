@@ -7,8 +7,7 @@ This package aims to provide a convenient intermediary between ROS1's rosbridge 
 Information about the protocol can be found [here](https://github.com/RobotWebTools/rosbridge_suite).
 
 Note on documentation:
-All information about the crate itself (examples, documentation, tutorials, etc.) lives in the source code and can be viewed on
-docs.rs // TODO insert link
+All information about the crate itself (examples, documentation, tutorials, etc.) lives in the source code and can be viewed on [docs.rs](https://docs.rs/roslibrust).
 This readme is for "Meta" information about developing for the crate.
 
 Current Status: Ready for Beta Testing / Early Access
