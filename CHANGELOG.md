@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
-## 0.3.0 - September 18, 2022
+## 0.5.0 - September 18, 2022
 
 ### Added
  - Service server example
@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Fixed issue where the spin and reconnect context would never drop even if there were no more `ClientHandle`s
  - Fixed parsing issue with triple dashes in comments of service files
  - Fixed bug in generation where message properties or constants had names conflicting with Rust reserved keywords
+
+## 0.4.0 - September 18, 2022
+Yanked version due to failed publish
+
+## 0.3.0 - September 18, 2022
+Yanked version due to failed publish
 
 ## 0.2.0 - September 1, 2022
 
