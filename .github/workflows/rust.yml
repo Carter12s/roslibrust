@@ -15,7 +15,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    container: carter12s/roslibrust-ci-noetic:v0.0.3
+    container: carter12s/roslibrust-ci-noetic:latest
     steps:
       - uses: actions/checkout@v3
       - name: Lint
