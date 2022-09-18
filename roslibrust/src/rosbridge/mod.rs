@@ -15,7 +15,7 @@ mod integration_tests;
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
 
-use crate::{RosLibRustError, RosLibRustResult, RosMessageType, RosServiceType};
+use crate::{RosMessageType, RosServiceType};
 use anyhow::anyhow;
 use comm::RosBridgeComm;
 use dashmap::DashMap;
@@ -33,6 +33,32 @@ use tokio::sync::RwLock;
 use tokio::time::Duration;
 use tokio_tungstenite::*;
 use tungstenite::Message;
+
+/// For now starting with a central error type, may break this up more in future
+#[derive(thiserror::Error, Debug)]
+pub enum RosLibRustError {
+    #[error("Not currently connected to ros master / bridge")]
+    Disconnected,
+    #[error("Websocket communication error: {0}")]
+    CommFailure(tokio_tungstenite::tungstenite::Error),
+    #[error("Operation timed out: {0}")]
+    Timeout(#[from] tokio::time::error::Elapsed),
+    #[error("Failed to parse message from JSON: {0}")]
+    InvalidMessage(#[from] serde_json::Error),
+    // Generic catch-all error type for not-yet-handled errors
+    // TODO ultimately this type will be removed from API of library
+    #[error(transparent)]
+    Unexpected(#[from] anyhow::Error),
+}
+
+impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
+    fn from(e: tokio_tungstenite::tungstenite::Error) -> Self {
+        // TODO we probably want to expand this type and do some matching here
+        RosLibRustError::CommFailure(e)
+    }
+}
+
+type RosLibRustResult<T> = Result<T, RosLibRustError>;
 
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;

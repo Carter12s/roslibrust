@@ -2,7 +2,7 @@
 name = "roslibrust_codegen_macro"
 edition = "2021"
 description = "Provides macro-based message generation for roslibrust"
-version = "0.3.0"
+version = "0.5.0"
 repository = "https://github.com/Carter12s/roslibrust"
 license = "MIT"
 readme = "README.md"
@@ -14,8 +14,8 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
-roslibrust = { version = "0.4.0", default-features = false, features = ["codegen"] }
-#roslibrust = { path = "../roslibrust", default-features = false, features = ["codegen"] }
+roslibrust = { version = "0.5.0", default-features = false, features = ["codegen"] }
+# roslibrust = { path = "../roslibrust", default-features = false, features = ["codegen"] }
 syn = "1.0"
 # TODO this dependency is due to issue in deadqueue's cargo.toml can be removed in future
 tokio = { version = "1", features = ["macros"] }

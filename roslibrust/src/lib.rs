@@ -101,46 +101,21 @@ pub mod integral_types;
 
 #[cfg(feature = "client")]
 mod rosbridge;
+#[cfg(feature = "client")]
 pub use rosbridge::*;
 
 #[cfg(feature = "codegen")]
 mod codegen;
+#[cfg(feature = "codegen")]
 pub use codegen::*;
 
 /// Utilities functions primarily for working with ros env vars and package structures
 #[cfg(feature = "utils")]
 pub mod utils;
 
-use log::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
-
-/// For now starting with a central error type, may break this up more in future
-#[derive(thiserror::Error, Debug)]
-pub enum RosLibRustError {
-    #[error("Not currently connected to ros master / bridge")]
-    Disconnected,
-    #[error("Websocket communication error: {0}")]
-    CommFailure(tokio_tungstenite::tungstenite::Error),
-    #[error("Operation timed out: {0}")]
-    Timeout(#[from] tokio::time::error::Elapsed),
-    #[error("Failed to parse message from JSON: {0}")]
-    InvalidMessage(#[from] serde_json::Error),
-    // Generic catch-all error type for not-yet-handled errors
-    // TODO ultimately this type will be removed from API of library
-    #[error(transparent)]
-    Unexpected(#[from] anyhow::Error),
-}
-
-impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
-    fn from(e: tokio_tungstenite::tungstenite::Error) -> Self {
-        // TODO we probably want to expand this type and do some matching here
-        RosLibRustError::CommFailure(e)
-    }
-}
-
-type RosLibRustResult<T> = Result<T, RosLibRustError>;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
