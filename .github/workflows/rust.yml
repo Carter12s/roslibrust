@@ -9,14 +9,8 @@ on:
 env:
   HOME: /root
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    container: carter12s/roslibrust-ci:v0.0.3
-    steps:
+definitions:
+  steps: &standard-build
     - uses: actions/checkout@v3
     - name: Lint
       run: source /root/.cargo/env; cargo fmt --all -- --check
@@ -27,7 +21,31 @@ jobs:
       run: source /root/.cargo/env; cargo build -p roslibrust_codegen_macro
     - name: Unit Tests
       run: source /root/.cargo/env; cargo test
+
+
+
+jobs:
+  noetic:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    container: carter12s/roslibrust-ci-noetic:v0.0.3
+    steps: *standard-build
     - name: Start rosbridge
       run: source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
+    - name: Integration Tests
+      run: source /root/.cargo/env; cargo test --features running_bridge -- --test-threads 1
+
+jobs:
+  galactic:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    container: carter12s/roslibrust-ci-galactic:latest
+    steps: *standard-build
+    - name: Start rosbridge
+      run: source /opt/ros/galactic/setup.bash; ros2 launch rosbridge_server rosbridge_websocket.launch & disown & sleep 1
     - name: Integration Tests
       run: source /root/.cargo/env; cargo test --features running_bridge -- --test-threads 1
