@@ -527,6 +527,31 @@ dependencies = [
 [[package]]
 name = "roslibrust"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2997cd9b50388fe7d508eaecc981c4faae1e97a40627ffea87533764fe7dea64"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "dashmap",
+ "deadqueue",
+ "futures",
+ "futures-util",
+ "lazy_static",
+ "log",
+ "proc-macro2",
+ "quote",
+ "rand",
+ "serde",
+ "serde_json",
+ "syn",
+ "thiserror",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
+name = "roslibrust"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -552,37 +577,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "roslibrust"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2997cd9b50388fe7d508eaecc981c4faae1e97a40627ffea87533764fe7dea64"
-dependencies = [
- "anyhow",
- "async-trait",
- "dashmap",
- "deadqueue",
- "futures",
- "futures-util",
- "lazy_static",
- "log",
- "proc-macro2",
- "quote",
- "rand",
- "serde",
- "serde_json",
- "syn",
- "thiserror",
- "uuid",
- "walkdir",
-]
-
-[[package]]
 name = "roslibrust_codegen_macro"
 version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
- "roslibrust 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "roslibrust 0.3.0",
  "syn",
  "tokio",
 ]
@@ -592,7 +592,7 @@ name = "roslibrust_test"
 version = "0.1.0"
 dependencies = [
  "diffy",
- "roslibrust 0.3.0",
+ "roslibrust 0.4.0",
  "serde",
 ]
 
