@@ -46,3 +46,6 @@ all = ["client", "codegen", "utils"]
 
 # Intended for use with tests, includes tests that rely on a locally running rosbridge
 running_bridge = ["client"]
+
+[package.metadata.docs.rs]
+features = "all"

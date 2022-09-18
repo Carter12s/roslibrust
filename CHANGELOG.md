@@ -11,6 +11,7 @@ Steps:
 - Commit changes to new branch
 - Release packages in order: roslibrust -> codegen_macro
 
+Note: have to manually modify codegen_macro's Cargo.toml to point at new roslibrust version.
 Note: need to publish with `cargo publish --all-features`
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
