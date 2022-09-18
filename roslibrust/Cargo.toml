@@ -1,6 +1,6 @@
 [package]
 name = "roslibrust"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["carter <carterjschultz@gmail.com>", "ssnover <ssnover95@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -48,4 +48,4 @@ all = ["client", "codegen", "utils"]
 running_bridge = ["client"]
 
 [package.metadata.docs.rs]
-features = "all"
+features = ["all"]
