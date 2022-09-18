@@ -12,23 +12,26 @@ This readme is for "Meta" information about developing for the crate.
 
 Current Status: Ready for Beta Testing / Early Access
 
-Intended Support: Noetic, Galactic, Rolling. Development currently focused on Noetic
+Fully Supported: Noetic
+
+Partial Support: Galactic, Rolling (No message generation, handwritten messages do work)
+
 
 | Feature                      | Status                                                      |
 |------------------------------|-------------------------------------------------------------|
 | tutorials                    | Planned and upcoming                                        |
-| message_gen                  | Working and tested|
-| advertise                    | Working and tested|
+| message_gen                  | Working and tested                                          |
+| advertise                    | Working and tested                                          |
 | unadvertise                  | Working and tested                                          |
-| publish                      | Working and tested|
-| subscribe                    | Working and tested|
-| unsubscribe                  | Working and tested| 
+| publish                      | Working and tested                                          |
+| subscribe                    | Working and tested                                          |
+| unsubscribe                  | Working and tested                                          |
 | services                     | Working and tested                                          |
 | fragment / png / cbor        | No support planned                                          |
 | cbor-raw                     | Planned                                                     |
 | ros1 TCPROS / raw            | Planned                                                     |
 | rosbridge status access      | Planned                                                     |
-| ros2 rosbridge               | Planned                                                     |
+| ros2 rosbridge               | In Progress                                                 |
 | ros2 DDS / raw               | Uncertain if this package will support                      |
 | rosapi                       | Planned                                                     |
 
