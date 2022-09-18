@@ -5,3 +5,6 @@ Produces a docker image including both galactic rosbridge and needed rust.
 - docker build -t carter12s/roslibrust-ci-galactic:latest .
 - Maybe needed: docker login
 - docker push carter12s/roslibrust-ci-galactic:latest
+
+For debug:
+docker run -it carter12s/roslibrust-ci-galactic /bin/bash

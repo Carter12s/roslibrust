@@ -5,3 +5,6 @@ Produces a docker image including both noetic rosbridge and needed rust.
 - docker build -t carter12s/roslibrust-ci-noetic:latest .
 - Maybe needed: docker login
 - docker push carter12s/roslibrust-ci-noetic:latest
+
+For debug:
+docker run -it carter12s/roslibrust-ci-noetic /bin/bash
