@@ -4,3 +4,4 @@ services:
     image: joaquingimenez1/noetic-rosbridge:1.1.2
     ports:
       - "9090:9090"
+    command: bash -c "source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown; rosrun rosapi rosapi_node"
