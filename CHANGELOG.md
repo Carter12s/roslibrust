@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+### Fixed
+ - `advertise_service` no longer panics if multiple advertise attempts made to same topic
+
 ## 0.5.1 - September 18, 2022
 Fix to docs.rs build.
 
