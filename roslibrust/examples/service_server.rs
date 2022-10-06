@@ -2,8 +2,8 @@ use roslibrust::ClientHandle;
 
 // One way to import message definitions
 roslibrust_codegen_macro::find_and_generate_ros_messages!(
-    "example_msgs/test_msgs",
-    "example_msgs/local_msgs/std_msgs"
+    "assets/test_msgs",
+    "assets/ros1_common_interfaces",
 );
 
 fn my_service(

@@ -2,12 +2,15 @@ use std::borrow::Cow;
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-const MAIN_PKG_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../example_msgs");
+const GEN_PATH: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../assets/ros1_common_interfaces"
+);
 
 /// This main function is used to generate the contents of lib.rs
 /// Invoke the following from the workspace root to regen: `cargo run --bin roslibrust_test > ./roslibrust_test/src/lib.rs`
 fn main() {
-    let tokens = roslibrust::find_and_generate_ros_messages(vec![MAIN_PKG_PATH.into()]);
+    let tokens = roslibrust::find_and_generate_ros_messages(vec![GEN_PATH.into()]);
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
     println!("{}", source);
 }
@@ -44,7 +47,7 @@ mod test {
     /// Confirms that codegen has been run and changes committed
     #[test]
     fn lib_is_up_to_date() {
-        let tokens = roslibrust::find_and_generate_ros_messages(vec![MAIN_PKG_PATH.into()]);
+        let tokens = roslibrust::find_and_generate_ros_messages(vec![GEN_PATH.into()]);
         let source = format_rust_source(tokens.to_string().as_str()).to_string();
         let lib_path = env!("CARGO_MANIFEST_DIR").to_string() + "/src/lib.rs";
         let lib_contents =

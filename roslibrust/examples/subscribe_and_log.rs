@@ -1,7 +1,7 @@
 use log::*;
 use roslibrust::ClientHandle;
 
-roslibrust_codegen_macro::find_and_generate_ros_messages!("example_msgs/local_msgs");
+roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
 
 /// A basic example of connecting and subscribing to data.
 /// This example will log received messages if run at the same time as "basic_publisher".
