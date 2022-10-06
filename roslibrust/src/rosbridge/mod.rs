@@ -8,6 +8,11 @@ pub use subscriber::*;
 mod publisher;
 pub use publisher::*;
 
+// Client is a transparent module, we directly expose internal types
+// Module exists only to organize source code
+mod client;
+pub use client::*;
+
 // Tests are fully private module
 #[cfg(test)]
 mod integration_tests;
@@ -39,6 +44,9 @@ use tungstenite::Message;
 pub enum RosLibRustError {
     #[error("Not currently connected to ros master / bridge")]
     Disconnected,
+    // TODO we probably want to eliminate tungstenite from this and hide our
+    // underlying websocket implementation from the API
+    // currently we "technically" break the API when we change tungstenite verisons
     #[error("Websocket communication error: {0}")]
     CommFailure(tokio_tungstenite::tungstenite::Error),
     #[error("Operation timed out: {0}")]
@@ -51,6 +59,7 @@ pub enum RosLibRustError {
     Unexpected(#[from] anyhow::Error),
 }
 
+/// Provides an implementation tranlating the underlying websocket error into our error type
 impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
     fn from(e: tokio_tungstenite::tungstenite::Error) -> Self {
         // TODO we probably want to expand this type and do some matching here
@@ -58,6 +67,9 @@ impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
     }
 }
 
+/// Generic result type used as standard throughout library.
+/// Note: many functions which currently return this will be updated to provide specific error
+/// types in the future instead of the generic error here.
 type RosLibRustResult<T> = Result<T, RosLibRustError>;
 
 /// Used for type erasure of message type so that we can store arbitrary handles
@@ -69,6 +81,8 @@ type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
 /// Get the result of the user's callback and then serialize that so it can be transmitted
 // TODO reconsider use of serde_json::Value here vs. tungstenite::Message vs. &str
 // Not quite sure what type we want to erase to?
+// I can make a good argument for &str because that should be generic even if we switch
+// backends - Carter 2022-10-6
 type ServiceCallback = Box<
     dyn Fn(&str) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>
         + Send
@@ -86,26 +100,36 @@ pub struct ServiceHandle {
     topic: String,
 }
 
+/// Service handles automatically unadvertise their service when dropped.
 impl Drop for ServiceHandle {
     fn drop(&mut self) {
         self.client.unadvertise_service(&self.topic);
     }
 }
 
-/// Our underlying communication type
-//TODO we really want to split this into separate read/write heads that can be locked separately
+/// Our underlying communication socket type (maybe move to comm?)
 type Socket = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<TcpStream>>;
+
+/// We split our underlying socket into two halves with seperate locks on read and write.
+/// This is the read half.
 type Reader = SplitStream<Socket>;
+
+/// We split our underlying socket into two halves with seperate locks on read and write.
+/// This is the write half.
 type Writer = SplitSink<Socket, Message>;
 
+/// Topics have a fundamental queue *per subscriber* this is te queue type used for each subscriber.
 type MessageQueue<T> = deadqueue::limited::Queue<T>;
 
 // TODO queue size should be configurable for subscribers
 const QUEUE_SIZE: usize = 1_000;
 
+/// Internal tracking structure used to maintain information about each subscribtion our client has
+/// with rosbridge.
 struct Subscription {
     /// Map of "subscriber id" -> callback
     /// Subscriber ids are randomly generated
+    /// There will be one callback per subscriber to the topic.
     // Note: don't need dashmap here as the subscription is already inside a dashmap
     pub handles: HashMap<uuid::Uuid, Callback>,
     /// Name of ros type (package_name/message_name), used for re-subscribes
@@ -144,6 +168,44 @@ impl ClientHandleOptions {
     }
 }
 
+/// The ClientHandle is the fundamental object through which users of this library are expected to interact with it.
+///
+/// Creating a new ClientHandle will create an underlying connection to rosbridge and spawn an async connection task,
+/// which is responsible for contiuously managing that connection and attempts to re-establish the connection if it goes down.
+///
+/// ClientHandle is clone and multiple handles can be clone()'d from the origional and passed throughout your application.
+/// ```no_run
+/// # // TODO figure out how to de-duplicate code here with this message definition...
+/// # mod std_msgs {
+/// # #[allow(non_snake_case)]
+/// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+/// # pub struct Header {
+/// #     pub r#seq: u32,
+/// #     pub r#stamp: ::roslibrust::integral_types::Time,
+/// #     pub r#frame_id: std::string::String,
+/// # }
+/// # impl ::roslibrust::RosMessageType for Header {
+/// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
+/// # }
+/// # impl Header {}
+/// # }
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+///   // Create a new client
+///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+///   // Create a copy of the handle (does not create a seperate connection)
+///   let mut handle2 = handle.clone();
+///   tokio::spawn(async move {
+///     let subscription = handle.subscribe::<std_msgs::Header>("/topic").await.unwrap();
+///   });
+///   tokio::spawn(async move{
+///     let subscription = handle2.subscribe::<std_msgs::Header>("/topic").await.unwrap();
+///   });
+///   # Ok(())
+/// # }
+/// // Both tasks subscribe to the same topic, but since the use the same underlying client only one subscription is made to rosbridge
+/// // Both subscribers will recieve a copy of each message recieved on the topic
+/// ```
 #[derive(Clone)]
 pub struct ClientHandle {
     inner: Arc<RwLock<Client>>,
@@ -151,6 +213,12 @@ pub struct ClientHandle {
 }
 
 impl ClientHandle {
+    /// Creates a new client handle with configurable options.
+    ///
+    /// Use this method if you need more control than [ClientHandle::new] provides.
+    /// Like [ClientHandle::new] this function does not resolve until the connection is established for the first time.
+    /// This function respects the [ClientHandleOptions] timeout and will return with an error if a connection is not
+    /// established within the timeout.
     async fn new_with_options(opts: ClientHandleOptions) -> RosLibRustResult<Self> {
         let inner = Arc::new(RwLock::new(timeout(opts.timeout, Client::new(opts)).await?));
         let inner_weak = Arc::downgrade(&inner);
@@ -170,8 +238,7 @@ impl ClientHandle {
 
     /// Connects a rosbridge instance at the given url
     /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
-    /// When awaited will not resolve until connection is completed
-    // TODO better error handling
+    /// When awaited will not resolve until connection is succesfully made.
     pub async fn new<S: Into<String>>(url: S) -> RosLibRustResult<Self> {
         Self::new_with_options(ClientHandleOptions::new(url)).await
     }
@@ -263,7 +330,84 @@ impl ClientHandle {
         Ok(sub)
     }
 
-    /// Subscribe to a given topic expecting msgs of provided type
+    /// Subscribe to a given topic expecting msgs of provided type.
+    /// ```no_run
+    /// # // TODO figure out how to de-duplicate code here with this message definition...
+    /// # mod std_msgs {
+    /// # #[allow(non_snake_case)]
+    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    /// # pub struct Header {
+    /// #     pub r#seq: u32,
+    /// #     pub r#stamp: ::roslibrust::integral_types::Time,
+    /// #     pub r#frame_id: std::string::String,
+    /// # }
+    /// # impl ::roslibrust::RosMessageType for Header {
+    /// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
+    /// # }
+    /// # impl Header {}
+    /// # }
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ///   // Create a new client
+    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   // Subscribe using ::<T> style
+    ///   let subscriber1 = handle.subscribe::<std_msgs::Header>("/topic").await?;
+    ///   // Subscribe using explicit type style
+    ///   let subscriber2: roslibrust::Subscriber<std_msgs::Header> = handle.subscribe::<std_msgs::Header>("/topic").await?;
+    ///   # Ok(())
+    /// # }
+    /// ```
+    /// This function returns after a subscribe message has been sent to rosbridge, it will
+    /// return immediately with an error if call while currently disconnected.
+    ///
+    /// It does not error if subscribed type does not match the topic type or check this in anyway.
+    /// If a type different that what is expected on the topic is published the deserialization of that message will fail,
+    /// and the returned subscriber will simply not recieve that message.
+    /// Roslibrust will log an error which can be used to detect this situtation.
+    /// This can be useful to subscribe to the same topic with multiple different types and whichever
+    /// types succesfully deserialize the message will recieve a message.
+    ///
+    /// ```no_run
+    /// # // TODO figure out how to de-duplicate code here with this message definition...
+    /// # mod ros1 {
+    /// # pub mod std_msgs {
+    /// # #[allow(non_snake_case)]
+    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    /// # pub struct Header {
+    /// #   pub stamp: f64,
+    /// # }
+    /// # impl ::roslibrust::RosMessageType for Header {
+    /// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
+    /// # }
+    /// # }
+    /// # }
+    /// # mod ros2 {
+    /// # pub mod std_msgs {
+    /// # #[allow(non_snake_case)]
+    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    /// # pub struct Header {
+    /// #   pub stamp: f64,
+    /// # }
+    /// # impl ::roslibrust::RosMessageType for Header {
+    /// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
+    /// # }
+    /// # }
+    /// # }
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ///   // Create a new client
+    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   // Subscribe to the same topic with two different types
+    ///   let ros1_subscriber = handle.subscribe::<ros1::std_msgs::Header>("/topic").await?;
+    ///   let ros2_subscriber = handle.subscribe::<ros2::std_msgs::Header>("/topic").await?;
+    ///   // Await both subscribers and get a result back from whichever succeeds at deserializing
+    ///   let time = tokio::select!(
+    ///     r1_msg = ros1_subscriber.next() => r1_msg.stamp,
+    ///     r2_msg = ros2_subscriber.next() => r2_msg.stamp,
+    ///   );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn subscribe<Msg>(&mut self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
     where
         Msg: RosMessageType,
