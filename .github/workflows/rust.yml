@@ -17,9 +17,10 @@ jobs:
         shell: bash
     container: carter12s/roslibrust-ci-noetic:latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
       - name: Checkout submodules
-        run: git submodule update --init --recursive
+        uses: textbook/git-checkout-submodule-action@master
       - name: Lint
         run: source /root/.cargo/env; cargo fmt --all -- --check
       - name: Build Main Lib
@@ -40,9 +41,10 @@ jobs:
         shell: bash
     container: carter12s/roslibrust-ci-galactic:latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
       - name: Checkout submodules
-        run: git submodule update --init --recursive
+        uses: textbook/git-checkout-submodule-action@master
       - name: Lint
         run: source /root/.cargo/env; cargo fmt --all -- --check
       - name: Build Main Lib
