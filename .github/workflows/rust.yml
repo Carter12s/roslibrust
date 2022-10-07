@@ -18,6 +18,8 @@ jobs:
     container: carter12s/roslibrust-ci-noetic:latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Lint
         run: source /root/.cargo/env; cargo fmt --all -- --check
       - name: Build Main Lib
@@ -39,6 +41,8 @@ jobs:
     container: carter12s/roslibrust-ci-galactic:latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Lint
         run: source /root/.cargo/env; cargo fmt --all -- --check
       - name: Build Main Lib
