@@ -20,8 +20,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Checkout submodules
-        run: git submodule update --init --recursive
-        shell: bash
+        uses: srt32/git-actions@v0.0.3
+        with:
+          args: git submodule update --init --recursive
       - name: Lint
         run: source /root/.cargo/env; cargo fmt --all -- --check
       - name: Build Main Lib
@@ -45,7 +46,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Checkout submodules
-        run: git submodule update --init --recursive
+        uses: srt32/git-actions@v0.0.3
+        with:
+          args: git submodule update --init --recursive
       - name: Lint
         run: source /root/.cargo/env; cargo fmt --all -- --check
       - name: Build Main Lib
