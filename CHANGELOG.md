@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+### Changed
+ - No longer generate empty `impl` blocks from message structs that have not associated constants
+
 ### Fixed
  - `advertise_service` no longer panics if multiple advertise attempts made to same topic
 

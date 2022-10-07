@@ -21,7 +21,6 @@ pub mod actionlib_msgs {
     impl ::roslibrust::RosMessageType for GoalID {
         const ROS_TYPE_NAME: &'static str = "actionlib_msgs/GoalID";
     }
-    impl GoalID {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GoalStatus {
@@ -53,7 +52,6 @@ pub mod actionlib_msgs {
     impl ::roslibrust::RosMessageType for GoalStatusArray {
         const ROS_TYPE_NAME: &'static str = "actionlib_msgs/GoalStatusArray";
     }
-    impl GoalStatusArray {}
 }
 #[allow(unused_imports)]
 pub mod diagnostic_msgs {
@@ -77,7 +75,6 @@ pub mod diagnostic_msgs {
     impl ::roslibrust::RosMessageType for AddDiagnosticsRequest {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/AddDiagnosticsRequest";
     }
-    impl AddDiagnosticsRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AddDiagnosticsResponse {
@@ -87,7 +84,6 @@ pub mod diagnostic_msgs {
     impl ::roslibrust::RosMessageType for AddDiagnosticsResponse {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/AddDiagnosticsResponse";
     }
-    impl AddDiagnosticsResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct DiagnosticArray {
@@ -97,7 +93,6 @@ pub mod diagnostic_msgs {
     impl ::roslibrust::RosMessageType for DiagnosticArray {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/DiagnosticArray";
     }
-    impl DiagnosticArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct DiagnosticStatus {
@@ -125,14 +120,12 @@ pub mod diagnostic_msgs {
     impl ::roslibrust::RosMessageType for KeyValue {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/KeyValue";
     }
-    impl KeyValue {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SelfTestRequest {}
     impl ::roslibrust::RosMessageType for SelfTestRequest {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/SelfTestRequest";
     }
-    impl SelfTestRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SelfTestResponse {
@@ -143,7 +136,6 @@ pub mod diagnostic_msgs {
     impl ::roslibrust::RosMessageType for SelfTestResponse {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/SelfTestResponse";
     }
-    impl SelfTestResponse {}
     pub struct AddDiagnostics {}
     impl ::roslibrust::RosServiceType for AddDiagnostics {
         const ROS_SERVICE_NAME: &'static str = "diagnostic_msgs/AddDiagnostics";
@@ -180,7 +172,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Accel {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Accel";
     }
-    impl Accel {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AccelStamped {
@@ -190,7 +181,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for AccelStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelStamped";
     }
-    impl AccelStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AccelWithCovariance {
@@ -200,7 +190,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for AccelWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelWithCovariance";
     }
-    impl AccelWithCovariance {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct AccelWithCovarianceStamped {
@@ -210,7 +199,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for AccelWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelWithCovarianceStamped";
     }
-    impl AccelWithCovarianceStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Inertia {
@@ -226,7 +214,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Inertia {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Inertia";
     }
-    impl Inertia {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InertiaStamped {
@@ -236,7 +223,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for InertiaStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/InertiaStamped";
     }
-    impl InertiaStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Point {
@@ -247,7 +233,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Point {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Point";
     }
-    impl Point {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Point32 {
@@ -258,7 +243,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Point32 {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Point32";
     }
-    impl Point32 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PointStamped {
@@ -268,7 +252,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for PointStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PointStamped";
     }
-    impl PointStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Polygon {
@@ -277,7 +260,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Polygon {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Polygon";
     }
-    impl Polygon {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PolygonStamped {
@@ -287,7 +269,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for PolygonStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PolygonStamped";
     }
-    impl PolygonStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Pose {
@@ -297,7 +278,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Pose {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Pose";
     }
-    impl Pose {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Pose2D {
@@ -308,7 +288,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Pose2D {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Pose2D";
     }
-    impl Pose2D {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PoseArray {
@@ -318,7 +297,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for PoseArray {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseArray";
     }
-    impl PoseArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PoseStamped {
@@ -328,7 +306,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for PoseStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseStamped";
     }
-    impl PoseStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PoseWithCovariance {
@@ -338,7 +315,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for PoseWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseWithCovariance";
     }
-    impl PoseWithCovariance {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PoseWithCovarianceStamped {
@@ -348,7 +324,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for PoseWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseWithCovarianceStamped";
     }
-    impl PoseWithCovarianceStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Quaternion {
@@ -360,7 +335,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Quaternion {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Quaternion";
     }
-    impl Quaternion {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct QuaternionStamped {
@@ -370,7 +344,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for QuaternionStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/QuaternionStamped";
     }
-    impl QuaternionStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Transform {
@@ -380,7 +353,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Transform {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Transform";
     }
-    impl Transform {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TransformStamped {
@@ -391,7 +363,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for TransformStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TransformStamped";
     }
-    impl TransformStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Twist {
@@ -401,7 +372,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Twist {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Twist";
     }
-    impl Twist {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TwistStamped {
@@ -411,7 +381,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for TwistStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistStamped";
     }
-    impl TwistStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TwistWithCovariance {
@@ -421,7 +390,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for TwistWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistWithCovariance";
     }
-    impl TwistWithCovariance {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TwistWithCovarianceStamped {
@@ -431,7 +399,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for TwistWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistWithCovarianceStamped";
     }
-    impl TwistWithCovarianceStamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Vector3 {
@@ -442,7 +409,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Vector3 {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Vector3";
     }
-    impl Vector3 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Vector3Stamped {
@@ -452,7 +418,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Vector3Stamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Vector3Stamped";
     }
-    impl Vector3Stamped {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Wrench {
@@ -462,7 +427,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for Wrench {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/Wrench";
     }
-    impl Wrench {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct WrenchStamped {
@@ -472,7 +436,6 @@ pub mod geometry_msgs {
     impl ::roslibrust::RosMessageType for WrenchStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/WrenchStamped";
     }
-    impl WrenchStamped {}
 }
 #[allow(unused_imports)]
 pub mod nav_msgs {
@@ -494,7 +457,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for GetMapRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapRequest";
     }
-    impl GetMapRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetMapResponse {
@@ -503,7 +465,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for GetMapResponse {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapResponse";
     }
-    impl GetMapResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetPlanRequest {
@@ -514,7 +475,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for GetPlanRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetPlanRequest";
     }
-    impl GetPlanRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetPlanResponse {
@@ -523,7 +483,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for GetPlanResponse {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetPlanResponse";
     }
-    impl GetPlanResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GridCells {
@@ -535,7 +494,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for GridCells {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GridCells";
     }
-    impl GridCells {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LoadMapRequest {
@@ -544,7 +502,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for LoadMapRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/LoadMapRequest";
     }
-    impl LoadMapRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LoadMapResponse {
@@ -573,7 +530,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for MapMetaData {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/MapMetaData";
     }
-    impl MapMetaData {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct OccupancyGrid {
@@ -584,7 +540,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for OccupancyGrid {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/OccupancyGrid";
     }
-    impl OccupancyGrid {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Odometry {
@@ -596,7 +551,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for Odometry {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/Odometry";
     }
-    impl Odometry {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Path {
@@ -606,7 +560,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for Path {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/Path";
     }
-    impl Path {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetMapRequest {
@@ -616,7 +569,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for SetMapRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/SetMapRequest";
     }
-    impl SetMapRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetMapResponse {
@@ -625,7 +577,6 @@ pub mod nav_msgs {
     impl ::roslibrust::RosMessageType for SetMapResponse {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/SetMapResponse";
     }
-    impl SetMapResponse {}
     pub struct GetMap {}
     impl ::roslibrust::RosServiceType for GetMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/GetMap";
@@ -673,21 +624,18 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for DeleteParamRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/DeleteParamRequest";
     }
-    impl DeleteParamRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct DeleteParamResponse {}
     impl ::roslibrust::RosMessageType for DeleteParamResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/DeleteParamResponse";
     }
-    impl DeleteParamResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetActionServersRequest {}
     impl ::roslibrust::RosMessageType for GetActionServersRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetActionServersRequest";
     }
-    impl GetActionServersRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetActionServersResponse {
@@ -696,14 +644,12 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for GetActionServersResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetActionServersResponse";
     }
-    impl GetActionServersResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetParamNamesRequest {}
     impl ::roslibrust::RosMessageType for GetParamNamesRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetParamNamesRequest";
     }
-    impl GetParamNamesRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetParamNamesResponse {
@@ -712,7 +658,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for GetParamNamesResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetParamNamesResponse";
     }
-    impl GetParamNamesResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetParamRequest {
@@ -722,7 +667,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for GetParamRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetParamRequest";
     }
-    impl GetParamRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetParamResponse {
@@ -731,14 +675,12 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for GetParamResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetParamResponse";
     }
-    impl GetParamResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetTimeRequest {}
     impl ::roslibrust::RosMessageType for GetTimeRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeRequest";
     }
-    impl GetTimeRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct GetTimeResponse {
@@ -747,7 +689,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for GetTimeResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeResponse";
     }
-    impl GetTimeResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct HasParamRequest {
@@ -756,7 +697,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for HasParamRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/HasParamRequest";
     }
-    impl HasParamRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct HasParamResponse {
@@ -765,7 +705,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for HasParamResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/HasParamResponse";
     }
-    impl HasParamResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MessageDetailsRequest {
@@ -774,7 +713,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for MessageDetailsRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/MessageDetailsRequest";
     }
-    impl MessageDetailsRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MessageDetailsResponse {
@@ -783,7 +721,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for MessageDetailsResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/MessageDetailsResponse";
     }
-    impl MessageDetailsResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct NodeDetailsRequest {
@@ -792,7 +729,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for NodeDetailsRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/NodeDetailsRequest";
     }
-    impl NodeDetailsRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct NodeDetailsResponse {
@@ -803,14 +739,12 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for NodeDetailsResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/NodeDetailsResponse";
     }
-    impl NodeDetailsResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct NodesRequest {}
     impl ::roslibrust::RosMessageType for NodesRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/NodesRequest";
     }
-    impl NodesRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct NodesResponse {
@@ -819,7 +753,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for NodesResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/NodesResponse";
     }
-    impl NodesResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PublishersRequest {
@@ -828,7 +761,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for PublishersRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/PublishersRequest";
     }
-    impl PublishersRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PublishersResponse {
@@ -837,7 +769,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for PublishersResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/PublishersResponse";
     }
-    impl PublishersResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SearchParamRequest {
@@ -846,7 +777,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for SearchParamRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/SearchParamRequest";
     }
-    impl SearchParamRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SearchParamResponse {
@@ -855,7 +785,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for SearchParamResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/SearchParamResponse";
     }
-    impl SearchParamResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceHostRequest {
@@ -864,7 +793,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceHostRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceHostRequest";
     }
-    impl ServiceHostRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceHostResponse {
@@ -873,7 +801,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceHostResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceHostResponse";
     }
-    impl ServiceHostResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceNodeRequest {
@@ -882,7 +809,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceNodeRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceNodeRequest";
     }
-    impl ServiceNodeRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceNodeResponse {
@@ -891,7 +817,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceNodeResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceNodeResponse";
     }
-    impl ServiceNodeResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceProvidersRequest {
@@ -900,7 +825,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceProvidersRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceProvidersRequest";
     }
-    impl ServiceProvidersRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceProvidersResponse {
@@ -909,7 +833,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceProvidersResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceProvidersResponse";
     }
-    impl ServiceProvidersResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceRequestDetailsRequest {
@@ -918,7 +841,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceRequestDetailsRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceRequestDetailsRequest";
     }
-    impl ServiceRequestDetailsRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceRequestDetailsResponse {
@@ -927,7 +849,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceRequestDetailsResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceRequestDetailsResponse";
     }
-    impl ServiceRequestDetailsResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceResponseDetailsRequest {
@@ -936,7 +857,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceResponseDetailsRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceResponseDetailsRequest";
     }
-    impl ServiceResponseDetailsRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceResponseDetailsResponse {
@@ -945,7 +865,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceResponseDetailsResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceResponseDetailsResponse";
     }
-    impl ServiceResponseDetailsResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceTypeRequest {
@@ -954,7 +873,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceTypeRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceTypeRequest";
     }
-    impl ServiceTypeRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServiceTypeResponse {
@@ -963,7 +881,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServiceTypeResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServiceTypeResponse";
     }
-    impl ServiceTypeResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServicesForTypeRequest {
@@ -972,7 +889,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServicesForTypeRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServicesForTypeRequest";
     }
-    impl ServicesForTypeRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServicesForTypeResponse {
@@ -981,14 +897,12 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServicesForTypeResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServicesForTypeResponse";
     }
-    impl ServicesForTypeResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServicesRequest {}
     impl ::roslibrust::RosMessageType for ServicesRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServicesRequest";
     }
-    impl ServicesRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ServicesResponse {
@@ -997,7 +911,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for ServicesResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServicesResponse";
     }
-    impl ServicesResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetParamRequest {
@@ -1007,14 +920,12 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for SetParamRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/SetParamRequest";
     }
-    impl SetParamRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetParamResponse {}
     impl ::roslibrust::RosMessageType for SetParamResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/SetParamResponse";
     }
-    impl SetParamResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SubscribersRequest {
@@ -1023,7 +934,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for SubscribersRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/SubscribersRequest";
     }
-    impl SubscribersRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SubscribersResponse {
@@ -1032,7 +942,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for SubscribersResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/SubscribersResponse";
     }
-    impl SubscribersResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TopicTypeRequest {
@@ -1041,7 +950,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for TopicTypeRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicTypeRequest";
     }
-    impl TopicTypeRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TopicTypeResponse {
@@ -1050,14 +958,12 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for TopicTypeResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicTypeResponse";
     }
-    impl TopicTypeResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TopicsAndRawTypesRequest {}
     impl ::roslibrust::RosMessageType for TopicsAndRawTypesRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicsAndRawTypesRequest";
     }
-    impl TopicsAndRawTypesRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TopicsAndRawTypesResponse {
@@ -1068,7 +974,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for TopicsAndRawTypesResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicsAndRawTypesResponse";
     }
-    impl TopicsAndRawTypesResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TopicsForTypeRequest {
@@ -1077,7 +982,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for TopicsForTypeRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicsForTypeRequest";
     }
-    impl TopicsForTypeRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TopicsForTypeResponse {
@@ -1086,14 +990,12 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for TopicsForTypeResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicsForTypeResponse";
     }
-    impl TopicsForTypeResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TopicsRequest {}
     impl ::roslibrust::RosMessageType for TopicsRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicsRequest";
     }
-    impl TopicsRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TopicsResponse {
@@ -1103,7 +1005,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for TopicsResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicsResponse";
     }
-    impl TopicsResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TypeDef {
@@ -1118,7 +1019,6 @@ pub mod rosapi {
     impl ::roslibrust::RosMessageType for TypeDef {
         const ROS_TYPE_NAME: &'static str = "rosapi/TypeDef";
     }
-    impl TypeDef {}
     pub struct DeleteParam {}
     impl ::roslibrust::RosServiceType for DeleteParam {
         const ROS_SERVICE_NAME: &'static str = "rosapi/DeleteParam";
@@ -1292,7 +1192,6 @@ pub mod rosgraph_msgs {
     impl ::roslibrust::RosMessageType for Clock {
         const ROS_TYPE_NAME: &'static str = "rosgraph_msgs/Clock";
     }
-    impl Clock {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Log {
@@ -1336,7 +1235,6 @@ pub mod rosgraph_msgs {
     impl ::roslibrust::RosMessageType for TopicStatistics {
         const ROS_TYPE_NAME: &'static str = "rosgraph_msgs/TopicStatistics";
     }
-    impl TopicStatistics {}
 }
 #[allow(unused_imports)]
 pub mod sensor_msgs {
@@ -1416,7 +1314,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for CameraInfo {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/CameraInfo";
     }
-    impl CameraInfo {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ChannelFloat32 {
@@ -1426,7 +1323,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for ChannelFloat32 {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/ChannelFloat32";
     }
-    impl ChannelFloat32 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct CompressedImage {
@@ -1437,7 +1333,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for CompressedImage {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/CompressedImage";
     }
-    impl CompressedImage {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct FluidPressure {
@@ -1448,7 +1343,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for FluidPressure {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/FluidPressure";
     }
-    impl FluidPressure {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Illuminance {
@@ -1459,7 +1353,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for Illuminance {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Illuminance";
     }
-    impl Illuminance {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Image {
@@ -1474,7 +1367,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for Image {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Image";
     }
-    impl Image {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Imu {
@@ -1489,7 +1381,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for Imu {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Imu";
     }
-    impl Imu {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct JointState {
@@ -1502,7 +1393,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for JointState {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/JointState";
     }
-    impl JointState {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Joy {
@@ -1513,7 +1403,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for Joy {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Joy";
     }
-    impl Joy {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct JoyFeedback {
@@ -1537,7 +1426,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for JoyFeedbackArray {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/JoyFeedbackArray";
     }
-    impl JoyFeedbackArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LaserEcho {
@@ -1546,7 +1434,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for LaserEcho {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/LaserEcho";
     }
-    impl LaserEcho {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct LaserScan {
@@ -1564,7 +1451,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for LaserScan {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/LaserScan";
     }
-    impl LaserScan {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MagneticField {
@@ -1575,7 +1461,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for MagneticField {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/MagneticField";
     }
-    impl MagneticField {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiDOFJointState {
@@ -1588,7 +1473,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for MultiDOFJointState {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/MultiDOFJointState";
     }
-    impl MultiDOFJointState {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiEchoLaserScan {
@@ -1606,7 +1490,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for MultiEchoLaserScan {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/MultiEchoLaserScan";
     }
-    impl MultiEchoLaserScan {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct NavSatFix {
@@ -1656,7 +1539,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for PointCloud {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/PointCloud";
     }
-    impl PointCloud {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PointCloud2 {
@@ -1673,7 +1555,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for PointCloud2 {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/PointCloud2";
     }
-    impl PointCloud2 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct PointField {
@@ -1724,7 +1605,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for RegionOfInterest {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/RegionOfInterest";
     }
-    impl RegionOfInterest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct RelativeHumidity {
@@ -1735,7 +1615,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for RelativeHumidity {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/RelativeHumidity";
     }
-    impl RelativeHumidity {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetCameraInfoRequest {
@@ -1744,7 +1623,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for SetCameraInfoRequest {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/SetCameraInfoRequest";
     }
-    impl SetCameraInfoRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetCameraInfoResponse {
@@ -1754,7 +1632,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for SetCameraInfoResponse {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/SetCameraInfoResponse";
     }
-    impl SetCameraInfoResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Temperature {
@@ -1765,7 +1642,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for Temperature {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Temperature";
     }
-    impl Temperature {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TimeReference {
@@ -1776,7 +1652,6 @@ pub mod sensor_msgs {
     impl ::roslibrust::RosMessageType for TimeReference {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/TimeReference";
     }
-    impl TimeReference {}
     pub struct SetCameraInfo {}
     impl ::roslibrust::RosServiceType for SetCameraInfo {
         const ROS_SERVICE_NAME: &'static str = "sensor_msgs/SetCameraInfo";
@@ -1807,7 +1682,6 @@ pub mod shape_msgs {
     impl ::roslibrust::RosMessageType for Mesh {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/Mesh";
     }
-    impl Mesh {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MeshTriangle {
@@ -1816,7 +1690,6 @@ pub mod shape_msgs {
     impl ::roslibrust::RosMessageType for MeshTriangle {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/MeshTriangle";
     }
-    impl MeshTriangle {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Plane {
@@ -1825,7 +1698,6 @@ pub mod shape_msgs {
     impl ::roslibrust::RosMessageType for Plane {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/Plane";
     }
-    impl Plane {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SolidPrimitive {
@@ -1872,7 +1744,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Bool {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Bool";
     }
-    impl Bool {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Byte {
@@ -1881,7 +1752,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Byte {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Byte";
     }
-    impl Byte {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ByteMultiArray {
@@ -1891,7 +1761,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for ByteMultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/ByteMultiArray";
     }
-    impl ByteMultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Char {
@@ -1900,7 +1769,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Char {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Char";
     }
-    impl Char {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct ColorRGBA {
@@ -1912,7 +1780,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for ColorRGBA {
         const ROS_TYPE_NAME: &'static str = "std_msgs/ColorRGBA";
     }
-    impl ColorRGBA {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Duration {
@@ -1921,14 +1788,12 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Duration {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Duration";
     }
-    impl Duration {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Empty {}
     impl ::roslibrust::RosMessageType for Empty {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Empty";
     }
-    impl Empty {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float32 {
@@ -1937,7 +1802,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Float32 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Float32";
     }
-    impl Float32 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float32MultiArray {
@@ -1947,7 +1811,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Float32MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Float32MultiArray";
     }
-    impl Float32MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float64 {
@@ -1956,7 +1819,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Float64 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Float64";
     }
-    impl Float64 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Float64MultiArray {
@@ -1966,7 +1828,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Float64MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Float64MultiArray";
     }
-    impl Float64MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Header {
@@ -1977,7 +1838,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Header {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
     }
-    impl Header {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int16 {
@@ -1986,7 +1846,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Int16 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int16";
     }
-    impl Int16 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int16MultiArray {
@@ -1996,7 +1855,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Int16MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int16MultiArray";
     }
-    impl Int16MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int32 {
@@ -2005,7 +1863,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Int32 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int32";
     }
-    impl Int32 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int32MultiArray {
@@ -2015,7 +1872,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Int32MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int32MultiArray";
     }
-    impl Int32MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int64 {
@@ -2024,7 +1880,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Int64 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int64";
     }
-    impl Int64 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int64MultiArray {
@@ -2034,7 +1889,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Int64MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int64MultiArray";
     }
-    impl Int64MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int8 {
@@ -2043,7 +1897,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Int8 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int8";
     }
-    impl Int8 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Int8MultiArray {
@@ -2053,7 +1906,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Int8MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Int8MultiArray";
     }
-    impl Int8MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiArrayDimension {
@@ -2064,7 +1916,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for MultiArrayDimension {
         const ROS_TYPE_NAME: &'static str = "std_msgs/MultiArrayDimension";
     }
-    impl MultiArrayDimension {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiArrayLayout {
@@ -2074,7 +1925,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for MultiArrayLayout {
         const ROS_TYPE_NAME: &'static str = "std_msgs/MultiArrayLayout";
     }
-    impl MultiArrayLayout {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct String {
@@ -2083,7 +1933,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for String {
         const ROS_TYPE_NAME: &'static str = "std_msgs/String";
     }
-    impl String {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Time {
@@ -2092,7 +1941,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for Time {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Time";
     }
-    impl Time {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt16 {
@@ -2101,7 +1949,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for UInt16 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt16";
     }
-    impl UInt16 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt16MultiArray {
@@ -2111,7 +1958,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for UInt16MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt16MultiArray";
     }
-    impl UInt16MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt32 {
@@ -2120,7 +1966,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for UInt32 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt32";
     }
-    impl UInt32 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt32MultiArray {
@@ -2130,7 +1975,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for UInt32MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt32MultiArray";
     }
-    impl UInt32MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt64 {
@@ -2139,7 +1983,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for UInt64 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt64";
     }
-    impl UInt64 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt64MultiArray {
@@ -2149,7 +1992,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for UInt64MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt64MultiArray";
     }
-    impl UInt64MultiArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt8 {
@@ -2158,7 +2000,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for UInt8 {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt8";
     }
-    impl UInt8 {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct UInt8MultiArray {
@@ -2168,7 +2009,6 @@ pub mod std_msgs {
     impl ::roslibrust::RosMessageType for UInt8MultiArray {
         const ROS_TYPE_NAME: &'static str = "std_msgs/UInt8MultiArray";
     }
-    impl UInt8MultiArray {}
 }
 #[allow(unused_imports)]
 pub mod std_srvs {
@@ -2190,14 +2030,12 @@ pub mod std_srvs {
     impl ::roslibrust::RosMessageType for EmptyRequest {
         const ROS_TYPE_NAME: &'static str = "std_srvs/EmptyRequest";
     }
-    impl EmptyRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct EmptyResponse {}
     impl ::roslibrust::RosMessageType for EmptyResponse {
         const ROS_TYPE_NAME: &'static str = "std_srvs/EmptyResponse";
     }
-    impl EmptyResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetBoolRequest {
@@ -2206,7 +2044,6 @@ pub mod std_srvs {
     impl ::roslibrust::RosMessageType for SetBoolRequest {
         const ROS_TYPE_NAME: &'static str = "std_srvs/SetBoolRequest";
     }
-    impl SetBoolRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct SetBoolResponse {
@@ -2216,14 +2053,12 @@ pub mod std_srvs {
     impl ::roslibrust::RosMessageType for SetBoolResponse {
         const ROS_TYPE_NAME: &'static str = "std_srvs/SetBoolResponse";
     }
-    impl SetBoolResponse {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TriggerRequest {}
     impl ::roslibrust::RosMessageType for TriggerRequest {
         const ROS_TYPE_NAME: &'static str = "std_srvs/TriggerRequest";
     }
-    impl TriggerRequest {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct TriggerResponse {
@@ -2233,7 +2068,6 @@ pub mod std_srvs {
     impl ::roslibrust::RosMessageType for TriggerResponse {
         const ROS_TYPE_NAME: &'static str = "std_srvs/TriggerResponse";
     }
-    impl TriggerResponse {}
     pub struct Empty {}
     impl ::roslibrust::RosServiceType for Empty {
         const ROS_SERVICE_NAME: &'static str = "std_srvs/Empty";
@@ -2282,7 +2116,6 @@ pub mod stereo_msgs {
     impl ::roslibrust::RosMessageType for DisparityImage {
         const ROS_TYPE_NAME: &'static str = "stereo_msgs/DisparityImage";
     }
-    impl DisparityImage {}
 }
 #[allow(unused_imports)]
 pub mod trajectory_msgs {
@@ -2308,7 +2141,6 @@ pub mod trajectory_msgs {
     impl ::roslibrust::RosMessageType for JointTrajectory {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/JointTrajectory";
     }
-    impl JointTrajectory {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct JointTrajectoryPoint {
@@ -2321,7 +2153,6 @@ pub mod trajectory_msgs {
     impl ::roslibrust::RosMessageType for JointTrajectoryPoint {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/JointTrajectoryPoint";
     }
-    impl JointTrajectoryPoint {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiDOFJointTrajectory {
@@ -2332,7 +2163,6 @@ pub mod trajectory_msgs {
     impl ::roslibrust::RosMessageType for MultiDOFJointTrajectory {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/MultiDOFJointTrajectory";
     }
-    impl MultiDOFJointTrajectory {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MultiDOFJointTrajectoryPoint {
@@ -2344,7 +2174,6 @@ pub mod trajectory_msgs {
     impl ::roslibrust::RosMessageType for MultiDOFJointTrajectoryPoint {
         const ROS_TYPE_NAME: &'static str = "trajectory_msgs/MultiDOFJointTrajectoryPoint";
     }
-    impl MultiDOFJointTrajectoryPoint {}
 }
 #[allow(unused_imports)]
 pub mod visualization_msgs {
@@ -2403,7 +2232,6 @@ pub mod visualization_msgs {
     impl ::roslibrust::RosMessageType for InteractiveMarker {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarker";
     }
-    impl InteractiveMarker {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarkerControl {
@@ -2468,7 +2296,6 @@ pub mod visualization_msgs {
     impl ::roslibrust::RosMessageType for InteractiveMarkerInit {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerInit";
     }
-    impl InteractiveMarkerInit {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarkerPose {
@@ -2479,7 +2306,6 @@ pub mod visualization_msgs {
     impl ::roslibrust::RosMessageType for InteractiveMarkerPose {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerPose";
     }
-    impl InteractiveMarkerPose {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct InteractiveMarkerUpdate {
@@ -2545,7 +2371,6 @@ pub mod visualization_msgs {
     impl ::roslibrust::RosMessageType for MarkerArray {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/MarkerArray";
     }
-    impl MarkerArray {}
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct MenuEntry {

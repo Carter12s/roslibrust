@@ -182,7 +182,7 @@ fn resolve_message_dependencies(
                     Message: {package}/{}\n\
                     Message Definition:\n\
                     {unparsed}\n\n\
-                    Parsed: {parsed:#?}", 
+                    Parsed: {parsed:#?}",
                     parsed.name);
         }
 
@@ -302,7 +302,7 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
     let struct_name = format_ident!("{}", msg.name);
     let ros_type_name = format!("{}/{}", msg.package, struct_name);
 
-    quote! {
+    let mut base = quote! {
         #[allow(non_snake_case)]
         #(#attrs )*
         pub struct #struct_name {
@@ -312,12 +312,17 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
         impl ::roslibrust::RosMessageType for #struct_name {
             const ROS_TYPE_NAME: &'static str = #ros_type_name;
         }
+    };
 
-        impl #struct_name {
-            #(#constants )*
-        }
-
+    // Only if we have constants append the impl
+    if !constants.is_empty() {
+        base.extend(quote! {
+            impl #struct_name {
+                #(#constants )*
+            }
+        });
     }
+    base
 }
 
 fn generate_mod(
