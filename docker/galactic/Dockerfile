@@ -2,8 +2,10 @@ FROM ros:galactic-ros-core
 LABEL maintainer="Carter Schultz <carterjschultz@gmail.com>"
 LABEL org.opencontainers.image.source: "https://github.com/Carter12s/roslibrust"
 
+# Required by github CI for submodule support
+RUN apt update && apt install -y git
+
 # Adapted from https://github.com/JoaquinGimenez1/docker-noetic-rosbridge/blob/main/Dockerfile
-WORKDIR /
 RUN apt update && apt install -y ros-galactic-rosbridge-suite
 
 # Curl required to install rust, build-essential required to build quote & proc-macro2

@@ -1,0 +1,12 @@
+[submodule "assets/ros1_common_interfaces/std_msgs"]
+	path = assets/ros1_common_interfaces/std_msgs
+	url = https://github.com/ros/std_msgs.git
+[submodule "assets/ros1_common_interfaces/common_msgs"]
+	path = assets/ros1_common_interfaces/common_msgs
+	url = https://github.com/ros/common_msgs.git
+[submodule "assets/ros2_common_interfaces"]
+	path = assets/ros2_common_interfaces
+	url = https://github.com/ros2/common_interfaces.git
+[submodule "assets/ros1_common_interfaces/ros_comm_msgs"]
+	path = assets/ros1_common_interfaces/ros_comm_msgs
+	url = https://github.com/ros/ros_comm_msgs.git
