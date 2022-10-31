@@ -14,10 +14,9 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
-# Needed for publishing
-roslibrust = { version = "0.5.2", default-features = false, features = ["codegen"] }
-# What we leave commited for development
-# roslibrust = { path = "../roslibrust", default-features = false, features = ["codegen"] }
+# Note: finds path version when building locally, and crates.io version when publishing
+# https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#multiple-locations
+roslibrust = { path = "../roslibrust", version = "0.5.2", default-features = false, features = ["codegen"] }
 syn = "1.0"
 # TODO this dependency is due to issue in deadqueue's cargo.toml can be removed in future
 tokio = { version = "1", features = ["macros"] }
