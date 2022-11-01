@@ -559,7 +559,6 @@ dependencies = [
  "quote",
  "roslibrust",
  "syn",
- "tokio",
 ]
 
 [[package]]
