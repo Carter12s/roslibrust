@@ -17,6 +17,4 @@ quote = "1.0"
 # Note: finds path version when building locally, and crates.io version when publishing
 # https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#multiple-locations
 roslibrust = { path = "../roslibrust", version = "0.5.2", default-features = false, features = ["codegen"] }
-# TODO this dependency is due to issue in deadqueue's cargo.toml can be removed in future
-tokio = { version = "1", features = ["macros"] }
 syn = "1.0"
