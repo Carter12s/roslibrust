@@ -58,7 +58,7 @@ impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
 /// Generic result type used as standard throughout library.
 /// Note: many functions which currently return this will be updated to provide specific error
 /// types in the future instead of the generic error here.
-type RosLibRustResult<T> = Result<T, RosLibRustError>;
+pub type RosLibRustResult<T> = Result<T, RosLibRustError>;
 
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
