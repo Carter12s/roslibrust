@@ -30,8 +30,6 @@ pub struct Duration {
 }
 
 /// Note this provides both tokio::time::Duration and std::time::Duration
-/// Note: client is the flag which tokio is behind
-#[cfg(feature = "client")]
 impl Into<Duration> for tokio::time::Duration {
     fn into(self) -> Duration {
         let downcast_sec = i32::try_from(self.as_secs())

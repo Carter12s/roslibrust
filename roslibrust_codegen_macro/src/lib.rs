@@ -22,9 +22,11 @@ impl Parse for RosLibRustMessagePaths {
     }
 }
 
+/// Given a list of paths, generates struct definitions and trait impls for any
+/// ros messages found within those paths.
 #[proc_macro]
 pub fn find_and_generate_ros_messages(input_stream: TokenStream) -> TokenStream {
     let RosLibRustMessagePaths { paths } =
         parse_macro_input!(input_stream as RosLibRustMessagePaths);
-    roslibrust::find_and_generate_ros_messages(paths).into()
+    roslibrust_codegen::find_and_generate_ros_messages(paths).into()
 }

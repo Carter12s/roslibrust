@@ -6,8 +6,10 @@
 use crate::{ClientHandle, RosLibRustResult};
 use async_trait::async_trait;
 
-pub mod types;
-use types::*;
+// TODO Fix this... this sucks
+roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    "/home/carter/roslibrust/assets/ros1_common_interfaces/rosapi"
+);
 
 /// Represents the ability to interact with the interfaces provided by the rosapi node.
 /// This trait is implemented for ClientHandle when the `rosapi` feature is enabled.

@@ -1,0 +1,25 @@
+[package]
+name = "roslibrust_codegen"
+version = "0.6.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4"
+walkdir = "2.3"
+quote = "1.0"
+lazy_static = "1.4"
+syn = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["time"], optional = true}
+proc-macro2 = "1.0"
+
+[features]
+default = ["tokio"]
+all = ["tokio"]
+# Enables support for tokio time conversions
+tokio = [ "dep:tokio" ]
+# TODO do this!
+# # Enables support for chrono time conversions
+# chrono = []
