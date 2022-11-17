@@ -318,7 +318,8 @@ mod test {
 
     async fn fixture_client() -> RosApi {
         let opts = ClientHandleOptions::new("ws://localhost:9090")
-            .timeout(std::time::Duration::from_millis(200));
+        // 200 ms failed CI
+            .timeout(std::time::Duration::from_millis(500));
         let client = ClientHandle::new_with_options(opts).await.unwrap();
         RosApi::new(client)
     }
