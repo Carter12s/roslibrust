@@ -113,6 +113,9 @@ pub use codegen::*;
 #[cfg(feature = "utils")]
 pub mod utils;
 
+#[cfg(feature = "rosapi")]
+pub mod rosapi;
+
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;

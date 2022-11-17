@@ -38,11 +38,12 @@ simple_logger = "2.1.0"
 roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
 
 [features]
-default = ["client", "utils"]
+default = ["client", "utils", "rosapi"]
 client = ["dep:tokio", "dep:tokio-tungstenite"]
 codegen = ["utils"]
 utils = []
-all = ["client", "codegen", "utils"]
+rosapi = []
+all = ["client", "codegen", "utils", "rosapi"]
 
 # Intended for use with tests, includes tests that rely on a locally running rosbridge
 running_bridge = ["client"]
