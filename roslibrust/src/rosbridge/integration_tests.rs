@@ -15,7 +15,10 @@ mod integration_tests {
     const TIMEOUT: Duration = Duration::from_millis(200);
     const LOCAL_WS: &str = "ws://localhost:9090";
 
-    roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces/ros_comm_msgs", "assets/ros1_common_interfaces/std_msgs");
+    roslibrust_codegen_macro::find_and_generate_ros_messages!(
+        "assets/ros1_common_interfaces/ros_comm_msgs",
+        "assets/ros1_common_interfaces/std_msgs"
+    );
 
     use std_msgs::*;
     use std_srvs::*;
@@ -86,7 +89,11 @@ mod integration_tests {
 
         let sub: Subscriber<Header> = client.subscribe("/bad_message_recv/topic").await?;
 
-        publisher.publish(Time { data: roslibrust_codegen::Time { secs: 0, nsecs: 0 } }).await?;
+        publisher
+            .publish(Time {
+                data: roslibrust_codegen::Time { secs: 0, nsecs: 0 },
+            })
+            .await?;
 
         match timeout(TIMEOUT, sub.next()).await {
             Err(_elapsed) => {
