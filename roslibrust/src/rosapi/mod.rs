@@ -4,277 +4,337 @@
 //! Ensure rosapi is running on your target system before attempting to utilize these features!
 
 use crate::{ClientHandle, RosLibRustResult};
+use async_trait::async_trait;
 
 pub mod types;
 use types::*;
 
-pub struct RosApi {
-    handle: ClientHandle,
+/// Represents the ability to interact with the interfaces provided by the rosapi node.
+/// This trait is implemented for ClientHandle when the `rosapi` feature is enabled.
+#[async_trait]
+trait RosApi {
+    async fn get_time(&self) -> RosLibRustResult<rosapi::GetTimeResponse>;
+    async fn topics(&self) -> RosLibRustResult<rosapi::TopicsResponse>;
+    async fn get_topic_type(
+        &self,
+        topic: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::TopicTypeResponse>;
+    async fn get_topics_for_type(
+        &self,
+        topic_type: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::TopicsForTypeResponse>;
+    async fn get_nodes(&self) -> RosLibRustResult<rosapi::NodesResponse>;
+
+    async fn get_node_details(
+        &self,
+        node: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::NodeDetailsResponse>;
+
+    async fn get_node_for_service(
+        &self,
+        service: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::ServiceNodeResponse>;
+
+    async fn set_param(
+        &self,
+        param_name: impl Into<String> + Send,
+        param_value: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::SetParamResponse>;
+
+    async fn get_param(
+        &self,
+        param_name: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::GetParamResponse>;
+
+    async fn get_param_names(&self) -> RosLibRustResult<rosapi::GetParamNamesResponse>;
+
+    async fn has_param(
+        &self,
+        param: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::HasParamResponse>;
+
+    async fn delete_param(
+        &self,
+        name: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::DeleteParamResponse>;
+
+    async fn message_details(
+        &self,
+        message_name: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::MessageDetailsResponse>;
+
+    async fn publishers(
+        &self,
+        topic: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::PublishersResponse>;
+
+    async fn service_host(
+        &self,
+        service: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::ServiceHostResponse>;
+
+    async fn service_providers(
+        &self,
+        service_type: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::ServiceProvidersResponse>;
+
+    async fn get_service_request_details(
+        &self,
+        service_type: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::ServiceRequestDetailsResponse>;
+
+    async fn get_service_response_details(
+        &self,
+        service_type: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::ServiceRequestDetailsResponse>;
+
+    async fn get_service_type(
+        &self,
+        service_name: impl Into<String> + Send,
+    ) -> RosLibRustResult<rosapi::ServiceTypeResponse>;
+
+    async fn get_services(&self) -> RosLibRustResult<rosapi::ServicesResponse>;
 }
 
-impl RosApi {
-    // TODO replace this by impl Trait on ClientHandle
-    pub fn new(handle: ClientHandle) -> Self {
-        RosApi { handle }
-    }
-
+#[async_trait]
+impl RosApi for ClientHandle {
     /// Get the current time
-    pub async fn get_time(&self) -> RosLibRustResult<rosapi::GetTimeResponse> {
-        self.handle
-            .call_service("/rosapi/get_time", rosapi::GetTimeRequest {})
+    async fn get_time(&self) -> RosLibRustResult<rosapi::GetTimeResponse> {
+        self.call_service("/rosapi/get_time", rosapi::GetTimeRequest {})
             .await
     }
 
     /// Get the list of topics active
-    pub async fn topics(&self) -> RosLibRustResult<rosapi::TopicsResponse> {
-        self.handle
-            .call_service("/rosapi/topics", rosapi::TopicsRequest {})
+    async fn topics(&self) -> RosLibRustResult<rosapi::TopicsResponse> {
+        self.call_service("/rosapi/topics", rosapi::TopicsRequest {})
             .await
     }
 
     /// Get the type of a given topic
-    pub async fn get_topic_type(
+    async fn get_topic_type(
         &self,
-        topic: impl Into<String>,
+        topic: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::TopicTypeResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/topic_type",
-                rosapi::TopicTypeRequest {
-                    topic: topic.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/topic_type",
+            rosapi::TopicTypeRequest {
+                topic: topic.into(),
+            },
+        )
+        .await
     }
 
     /// Returns a list of the topics active in the system that are of the type provided
-    pub async fn get_topics_for_type(
+    async fn get_topics_for_type(
         &self,
-        topic_type: impl Into<String>,
+        topic_type: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::TopicsForTypeResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/topics_for_type",
-                rosapi::TopicsForTypeRequest {
-                    r#type: topic_type.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/topics_for_type",
+            rosapi::TopicsForTypeRequest {
+                r#type: topic_type.into(),
+            },
+        )
+        .await
     }
 
     /// Returns list of nodes active in a system
-    pub async fn get_nodes(&self) -> RosLibRustResult<rosapi::NodesResponse> {
-        self.handle
-            .call_service("/rosapi/nodes", rosapi::NodesRequest {})
+    async fn get_nodes(&self) -> RosLibRustResult<rosapi::NodesResponse> {
+        self.call_service("/rosapi/nodes", rosapi::NodesRequest {})
             .await
     }
 
     /// Returns the subscriptions, publishers, and service servers for a given node
     /// @param node Fully resolved ros node name e.g. "/rosapi", should match the names given by `rosnode list`
-    pub async fn get_node_details(
+    async fn get_node_details(
         &self,
-        node: impl Into<String>,
+        node: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::NodeDetailsResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/node_details",
-                rosapi::NodeDetailsRequest { node: node.into() },
-            )
-            .await
+        self.call_service(
+            "/rosapi/node_details",
+            rosapi::NodeDetailsRequest { node: node.into() },
+        )
+        .await
     }
 
     /// Given the name of service, get the name of the node that is providing that service
-    pub async fn get_node_for_service(
+    async fn get_node_for_service(
         &self,
-        service: impl Into<String>,
+        service: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::ServiceNodeResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/service_node",
-                rosapi::ServiceNodeRequest {
-                    service: service.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/service_node",
+            rosapi::ServiceNodeRequest {
+                service: service.into(),
+            },
+        )
+        .await
     }
 
     /// Sets a parameter. Unclear exactly how 'types' of parameters will be handled here.
     /// For now we're simply converting into a string.
-    pub async fn set_param(
+    async fn set_param(
         &self,
-        param_name: impl Into<String>,
-        param_value: impl Into<String>,
+        param_name: impl Into<String> + Send,
+        param_value: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::SetParamResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/set_param",
-                rosapi::SetParamRequest {
-                    name: param_name.into(),
-                    value: param_value.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/set_param",
+            rosapi::SetParamRequest {
+                name: param_name.into(),
+                value: param_value.into(),
+            },
+        )
+        .await
     }
 
     /// Gets the current value for a parameter.
     /// Not handling any type safety or conversion.
-    pub async fn get_param(
+    async fn get_param(
         &self,
-        param_name: impl Into<String>,
+        param_name: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::GetParamResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/get_param",
-                rosapi::GetParamRequest {
-                    name: param_name.into(),
-                    default: "".to_string(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/get_param",
+            rosapi::GetParamRequest {
+                name: param_name.into(),
+                default: "".to_string(),
+            },
+        )
+        .await
     }
 
     /// Gets the list of currently known parameters.
-    pub async fn get_param_names(&self) -> RosLibRustResult<rosapi::GetParamNamesResponse> {
-        self.handle
-            .call_service("/rosapi/get_param_names", rosapi::GetParamNamesRequest {})
+    async fn get_param_names(&self) -> RosLibRustResult<rosapi::GetParamNamesResponse> {
+        self.call_service("/rosapi/get_param_names", rosapi::GetParamNamesRequest {})
             .await
     }
 
     /// Checks whether the given parameter is defined.
-    pub async fn has_param(
+    async fn has_param(
         &self,
-        param: impl Into<String>,
+        param: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::HasParamResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/has_param",
-                rosapi::HasParamRequest { name: param.into() },
-            )
-            .await
+        self.call_service(
+            "/rosapi/has_param",
+            rosapi::HasParamRequest { name: param.into() },
+        )
+        .await
     }
 
     /// Deletes a parameter by name.
-    pub async fn delete_param(
+    async fn delete_param(
         &self,
-        name: impl Into<String>,
+        name: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::DeleteParamResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/delete_param",
-                rosapi::DeleteParamRequest { name: name.into() },
-            )
-            .await
+        self.call_service(
+            "/rosapi/delete_param",
+            rosapi::DeleteParamRequest { name: name.into() },
+        )
+        .await
     }
 
     /// Returns detailed information about a given message type e.g. 'std_msgs/Header'
-    pub async fn message_details(
+    async fn message_details(
         &self,
-        message_name: impl Into<String>,
+        message_name: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::MessageDetailsResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/message_details",
-                rosapi::MessageDetailsRequest {
-                    r#type: message_name.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/message_details",
+            rosapi::MessageDetailsRequest {
+                r#type: message_name.into(),
+            },
+        )
+        .await
     }
 
     /// Gets a list of all nodes that are publishing to a given topic.
-    pub async fn publishers(
+    async fn publishers(
         &self,
-        topic: impl Into<String>,
+        topic: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::PublishersResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/publishers",
-                rosapi::PublishersRequest {
-                    topic: topic.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/publishers",
+            rosapi::PublishersRequest {
+                topic: topic.into(),
+            },
+        )
+        .await
     }
 
     /// Give the name of a service, returns the name of the machine on which that service is being hosted
-    pub async fn service_host(
+    async fn service_host(
         &self,
-        service: impl Into<String>,
+        service: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::ServiceHostResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/service_host",
-                rosapi::ServiceHostRequest {
-                    service: service.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/service_host",
+            rosapi::ServiceHostRequest {
+                service: service.into(),
+            },
+        )
+        .await
     }
 
     /// Given the type of a service, returns a list of nodes which are providing services with that type
-    pub async fn service_providers(
+    async fn service_providers(
         &self,
-        service_type: impl Into<String>,
+        service_type: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::ServiceProvidersResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/service_providers",
-                rosapi::ServiceProvidersRequest {
-                    service: service_type.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/service_providers",
+            rosapi::ServiceProvidersRequest {
+                service: service_type.into(),
+            },
+        )
+        .await
     }
 
     /// Given the type of a service (e.g. 'rosapi/SetParam'), returns details about the message format of the request
-    pub async fn get_service_request_details(
+    async fn get_service_request_details(
         &self,
-        service_type: impl Into<String>,
+        service_type: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::ServiceRequestDetailsResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/service_request_details",
-                rosapi::ServiceRequestDetailsRequest {
-                    r#type: service_type.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/service_request_details",
+            rosapi::ServiceRequestDetailsRequest {
+                r#type: service_type.into(),
+            },
+        )
+        .await
     }
 
     /// Given the type of a service (e.g. 'rosapi/SetParam'), returns details about the message format of the response
-    pub async fn get_service_response_details(
+    async fn get_service_response_details(
         &self,
-        service_type: impl Into<String>,
+        service_type: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::ServiceRequestDetailsResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/service_response_details",
-                rosapi::ServiceRequestDetailsRequest {
-                    r#type: service_type.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/service_response_details",
+            rosapi::ServiceRequestDetailsRequest {
+                r#type: service_type.into(),
+            },
+        )
+        .await
     }
 
     /// Given the name of a service (e.g. '/rosapi/publishers'), returns the type of the service ('rosapi/Publishers')
-    pub async fn get_service_type(
+    async fn get_service_type(
         &self,
-        service_name: impl Into<String>,
+        service_name: impl Into<String> + Send,
     ) -> RosLibRustResult<rosapi::ServiceTypeResponse> {
-        self.handle
-            .call_service(
-                "/rosapi/service_type",
-                rosapi::ServiceTypeRequest {
-                    service: service_name.into(),
-                },
-            )
-            .await
+        self.call_service(
+            "/rosapi/service_type",
+            rosapi::ServiceTypeRequest {
+                service: service_name.into(),
+            },
+        )
+        .await
     }
 
     /// Get the list of services active on the system
-    pub async fn get_services(&self) -> RosLibRustResult<rosapi::ServicesResponse> {
-        self.handle
-            .call_service("/rosapi/services", rosapi::ServicesRequest {})
+    async fn get_services(&self) -> RosLibRustResult<rosapi::ServicesResponse> {
+        self.call_service("/rosapi/services", rosapi::ServicesRequest {})
             .await
     }
 
@@ -316,12 +376,11 @@ mod test {
     use super::RosApi;
     use crate::{ClientHandle, ClientHandleOptions};
 
-    async fn fixture_client() -> RosApi {
+    async fn fixture_client() -> ClientHandle {
         let opts = ClientHandleOptions::new("ws://localhost:9090")
-        // 200 ms failed CI
+            // 200 ms failed CI
             .timeout(std::time::Duration::from_millis(500));
-        let client = ClientHandle::new_with_options(opts).await.unwrap();
-        RosApi::new(client)
+        ClientHandle::new_with_options(opts).await.unwrap()
     }
 
     #[tokio::test]
