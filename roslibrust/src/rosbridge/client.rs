@@ -1,5 +1,5 @@
 use crate::rosbridge::comm;
-use crate::{rosbridge::comm::RosBridgeComm, RosLibRustError, RosMessageType, RosServiceType};
+use crate::{rosbridge::comm::RosBridgeComm, RosLibRustError};
 use crate::{Publisher, ServiceHandle, Subscriber};
 use anyhow::anyhow;
 use dashmap::DashMap;
@@ -7,6 +7,7 @@ use futures::StreamExt;
 use log::*;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
+use roslibrust_codegen::{RosMessageType, RosServiceType};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -53,20 +54,9 @@ impl ClientHandleOptions {
 ///
 /// ClientHandle is clone and multiple handles can be clone()'d from the original and passed throughout your application.
 /// ```no_run
-/// # // TODO figure out how to de-duplicate code here with this message definition...
-/// # mod std_msgs {
-/// # #[allow(non_snake_case)]
-/// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-/// # pub struct Header {
-/// #     pub r#seq: u32,
-/// #     pub r#stamp: ::roslibrust::integral_types::Time,
-/// #     pub r#frame_id: std::string::String,
-/// # }
-/// # impl ::roslibrust::RosMessageType for Header {
-/// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
-/// # }
-/// # impl Header {}
-/// # }
+/// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
+/// #    "../assets/ros1_common_interfaces/std_msgs"
+/// # );
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 ///   // Create a new client
@@ -210,20 +200,9 @@ impl ClientHandle {
 
     /// Subscribe to a given topic expecting msgs of provided type.
     /// ```no_run
-    /// # // TODO figure out how to de-duplicate code here with this message definition...
-    /// # mod std_msgs {
-    /// # #[allow(non_snake_case)]
-    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    /// # pub struct Header {
-    /// #     pub r#seq: u32,
-    /// #     pub r#stamp: ::roslibrust::integral_types::Time,
-    /// #     pub r#frame_id: std::string::String,
-    /// # }
-    /// # impl ::roslibrust::RosMessageType for Header {
-    /// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
-    /// # }
-    /// # impl Header {}
-    /// # }
+    /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    /// #    "../assets/ros1_common_interfaces/std_msgs"
+    /// # );
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
@@ -248,28 +227,14 @@ impl ClientHandle {
     /// ```no_run
     /// # // TODO figure out how to de-duplicate code here with this message definition...
     /// # mod ros1 {
-    /// # pub mod std_msgs {
-    /// # #[allow(non_snake_case)]
-    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    /// # pub struct Header {
-    /// #   pub stamp: f64,
-    /// # }
-    /// # impl ::roslibrust::RosMessageType for Header {
-    /// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
-    /// # }
-    /// # }
+    /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    /// #   "../assets/ros1_common_interfaces/std_msgs"
+    /// # );
     /// # }
     /// # mod ros2 {
-    /// # pub mod std_msgs {
-    /// # #[allow(non_snake_case)]
-    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    /// # pub struct Header {
-    /// #   pub stamp: f64,
-    /// # }
-    /// # impl ::roslibrust::RosMessageType for Header {
-    /// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
-    /// # }
-    /// # }
+    /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    /// #   "../assets/ros1_common_interfaces/std_msgs"
+    /// # );
     /// # }
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -326,20 +291,9 @@ impl ClientHandle {
     /// available in rosbridge's logs.
     ///
     /// ```no_run
-    /// # // TODO figure out how to de-duplicate code here with this message definition...
-    /// # mod std_msgs {
-    /// # #[allow(non_snake_case)]
-    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    /// # pub struct Header {
-    /// #     pub r#seq: u32,
-    /// #     pub r#stamp: ::roslibrust::integral_types::Time,
-    /// #     pub r#frame_id: std::string::String,
-    /// # }
-    /// # impl ::roslibrust::RosMessageType for Header {
-    /// #     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
-    /// # }
-    /// # impl Header {}
-    /// # }
+    /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    /// #    "../assets/ros1_common_interfaces/std_msgs"
+    /// # );
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
@@ -390,31 +344,9 @@ impl ClientHandle {
     ///   - Integrate with ClientHandle's timeout better
     ///
     /// ```no_run
-    /// # // TODO figure out how to de-duplicate code here with this message definition...
-    /// # mod rosapi {
-    /// # #[allow(non_snake_case)]
-    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    /// # pub struct GetTimeRequest {}
-    /// # impl ::roslibrust::RosMessageType for GetTimeRequest {
-    /// #     const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeRequest";
-    /// # }
-    /// # impl GetTimeRequest {}
-    /// # #[allow(non_snake_case)]
-    /// # #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    /// # pub struct GetTimeResponse {
-    /// #     pub r#data: ::roslibrust::integral_types::Time,
-    /// # }
-    /// # impl ::roslibrust::RosMessageType for GetTimeResponse {
-    /// #     const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeResponse";
-    /// # }
-    /// # impl GetTimeResponse {}
-    /// # pub struct GetTime {}
-    /// # impl ::roslibrust::RosServiceType for GetTime {
-    /// #     const ROS_SERVICE_NAME: &'static str = "rosapi/GetTime";
-    /// #     type Request = GetTimeRequest;
-    /// #     type Response = GetTimeResponse;
-    /// # }
-    /// # }
+    /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    /// #    "../assets/ros1_common_interfaces/rosapi"
+    /// # );
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client

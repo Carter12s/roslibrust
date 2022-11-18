@@ -6,10 +6,43 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use syn::parse_quote;
 
-use crate::utils;
-
 mod parse;
 use parse::*;
+
+pub mod utils;
+
+pub mod integral_types;
+pub use integral_types::*;
+
+use serde::de::DeserializeOwned;
+use serde::Serialize;
+use std::fmt::Debug;
+
+/// Fundamental traits for message types this crate works with
+/// This trait will be satisfied for any types generated with this crate's message_gen functionality
+pub trait RosMessageType:
+    'static + DeserializeOwned + Default + Send + Serialize + Sync + Clone + Debug
+{
+    /// Expected to be the combination pkg_name/type_name string describing the type to ros
+    /// Example: std_msgs/Header
+    const ROS_TYPE_NAME: &'static str;
+}
+
+// This special impl allows for services with no args / returns
+impl RosMessageType for () {
+    const ROS_TYPE_NAME: &'static str = "";
+}
+
+/// Fundamental traits for service types this crate works with
+/// This trait will be satisfied for any services definitions generated with this crate's message_gen functionality
+pub trait RosServiceType {
+    /// Name of the ros service e.g. `rospy_tutorials/AddTwoInts`
+    const ROS_SERVICE_NAME: &'static str;
+    /// The type of data being sent in the request
+    type Request: RosMessageType;
+    /// The type of the data
+    type Response: RosMessageType;
+}
 
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
@@ -24,8 +57,16 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
         "Codegen is looking in following paths for files: {:?}",
         &search_paths
     );
-    let mut packages = utils::crawl(search_paths);
+    let mut packages = utils::crawl(search_paths.clone());
     packages.dedup_by(|a, b| a.name == b.name);
+
+    if packages.len() == 0 {
+        eprintln!(
+            "Warning: No packages found while searching in: {search_paths:?}, relative to {:?}",
+            std::env::current_dir()
+        );
+    }
+
     let mut message_files = packages
         .iter()
         .map(|pkg| {
@@ -243,7 +284,7 @@ fn generate_service(service: ServiceFile) -> TokenStream {
         pub struct #struct_name {
 
         }
-        impl ::roslibrust::RosServiceType for #struct_name {
+        impl ::roslibrust_codegen::RosServiceType for #struct_name {
             const ROS_SERVICE_NAME: &'static str = #service_type_name;
             type Request = #request_name;
             type Response = #response_name;
@@ -268,7 +309,7 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
                 None => field.field_type.field_type,
             };
             let field_type = if field.field_type.is_vec {
-                format!("std::vec::Vec<{}>", field.field_type.field_type)
+                format!("::std::vec::Vec<{}>", field.field_type.field_type)
             } else {
                 field.field_type.field_type
             };
@@ -284,16 +325,16 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
         .into_iter()
         .map(|constant| {
             let constant_name = format_ident!("r#{}", constant.constant_name);
-            let (constant_type, constant_value) = if constant.constant_type == "std::string::String"
-            {
-                let constant_value = constant.constant_value;
-                (String::from("&'static str"), quote! { #constant_value })
-            } else {
-                (
-                    constant.constant_type,
-                    TokenStream::from_str(constant.constant_value.as_str()).unwrap(),
-                )
-            };
+            let (constant_type, constant_value) =
+                if constant.constant_type == "::std::string::String" {
+                    let constant_value = constant.constant_value;
+                    (String::from("&'static str"), quote! { #constant_value })
+                } else {
+                    (
+                        constant.constant_type,
+                        TokenStream::from_str(constant.constant_value.as_str()).unwrap(),
+                    )
+                };
             let constant_type = TokenStream::from_str(constant_type.as_str()).unwrap();
             quote! { pub const #constant_name: #constant_type = #constant_value; }
         })
@@ -309,7 +350,7 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
             #(#fields )*
         }
 
-        impl ::roslibrust::RosMessageType for #struct_name {
+        impl ::roslibrust_codegen::RosMessageType for #struct_name {
             const ROS_TYPE_NAME: &'static str = #ros_type_name;
         }
     };

@@ -15,9 +15,9 @@ lazy_static::lazy_static! {
         ("uint64", "u64"),
         ("float32", "f32"),
         ("float64", "f64"),
-        ("string", "std::string::String"),
-        ("time", "::roslibrust::integral_types::Time"),
-        ("duration", "::roslibrust::integral_types::Duration"),
+        ("string", "::std::string::String"),
+        ("time", "::roslibrust_codegen::integral_types::Time"),
+        ("duration", "::roslibrust_codegen::integral_types::Duration"),
         ("Header", "Header"),
     ].into_iter().collect();
 }

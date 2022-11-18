@@ -47,7 +47,7 @@
 //! If you want to commit the generated code or create a crate that contains the generated messages, you should use the second mechanism; a library under the optional `codegen` feature of `roslibrust`. The proc-macro is a thin wrapper around this function so the results will be the same.
 //! An example of invoking it can be found in `roslibrust_test/src/main.rs`, but it's very similar to the macro example:
 //! ```rust
-//! use roslibrust::find_and_generate_ros_messages;
+//! use roslibrust_codegen::find_and_generate_ros_messages;
 //! let output = find_and_generate_ros_messages(vec![]);
 //! // OR
 //! let output = find_and_generate_ros_messages(vec!["/path/to/noetic/packages".into()]);
@@ -93,55 +93,9 @@
 //! When advertise service is called you must pass into it a callback conforming to the libraries requirements.
 //! Specifically, roslibrust attempts to follow "good" ros error handling convention and be as compatible as possible
 //! with various error types; however, due to the async nature of the crate `Box<dyn Error + Send + Sync>` is needed.
-//!
-//!
 
-// Contains definition of custom ROS types that codegen emits
-pub mod integral_types;
-
-#[cfg(feature = "client")]
 mod rosbridge;
-#[cfg(feature = "client")]
 pub use rosbridge::*;
-
-#[cfg(feature = "codegen")]
-mod codegen;
-#[cfg(feature = "codegen")]
-pub use codegen::*;
-
-/// Utilities functions primarily for working with ros env vars and package structures
-#[cfg(feature = "utils")]
-pub mod utils;
 
 #[cfg(feature = "rosapi")]
 pub mod rosapi;
-
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::fmt::Debug;
-
-/// Fundamental traits for message types this crate works with
-/// This trait will be satisfied for any types generated with this crate's message_gen functionality
-pub trait RosMessageType:
-    'static + DeserializeOwned + Default + Send + Serialize + Sync + Clone + Debug
-{
-    /// Expected to be the combination pkg_name/type_name string describing the type to ros
-    /// Example: std_msgs/Header
-    const ROS_TYPE_NAME: &'static str;
-}
-
-// This special impl allows for services with no args / returns
-impl RosMessageType for () {
-    const ROS_TYPE_NAME: &'static str = "";
-}
-
-/// Fundamental traits for service types this crate works with
-/// This trait will be satisfied for any services definitions generated with this crate's message_gen functionality
-pub trait RosServiceType {
-    /// Name of the ros service e.g. `rospy_tutorials/AddTwoInts`
-    const ROS_SERVICE_NAME: &'static str;
-    /// The type of data being sent in the request
-    type Request: RosMessageType;
-    /// The type of the data
-    type Response: RosMessageType;
-}

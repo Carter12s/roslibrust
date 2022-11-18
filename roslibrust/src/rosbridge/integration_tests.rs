@@ -7,10 +7,7 @@
 mod integration_tests {
     use std::sync::Arc;
 
-    use crate::{
-        ClientHandle, ClientHandleOptions, RosLibRustError, RosMessageType, RosServiceType,
-        Subscriber,
-    };
+    use crate::{ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber};
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
@@ -18,52 +15,15 @@ mod integration_tests {
     const TIMEOUT: Duration = Duration::from_millis(200);
     const LOCAL_WS: &str = "ws://localhost:9090";
 
-    // Just defining these types manually here as this crate is not responsible for code generation
-    #[derive(serde::Deserialize, serde::Serialize, Debug, Default, Clone, PartialEq)]
-    pub struct Header {
-        pub seq: u32,
-        pub stamp: TimeI,
-        pub frame_id: std::string::String,
-    }
-    impl RosMessageType for Header {
-        const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
-    }
+    roslibrust_codegen_macro::find_and_generate_ros_messages!(
+        "assets/ros1_common_interfaces/ros_comm_msgs",
+        "assets/ros1_common_interfaces/std_msgs"
+    );
 
-    #[derive(serde::Deserialize, serde::Serialize, Debug, Default, Clone, PartialEq)]
-    pub struct TimeI {
-        pub secs: u32,
-        pub nsecs: u32,
-    }
-    impl RosMessageType for TimeI {
-        const ROS_TYPE_NAME: &'static str = "std_msgs/TimeI";
-    }
+    use std_msgs::*;
+    use std_srvs::*;
 
     type TestResult = Result<(), anyhow::Error>;
-
-    // Note: have to use a real .srv which exists in our docker image
-    pub struct SetBoolSrv {}
-    impl RosServiceType for SetBoolSrv {
-        const ROS_SERVICE_NAME: &'static str = "std_srvs/SetBool";
-        type Request = SetBoolRequest;
-        type Response = SetBoolResponse;
-    }
-
-    #[derive(serde::Deserialize, serde::Serialize, Debug, Default, Clone, PartialEq)]
-    pub struct SetBoolRequest {
-        data: bool,
-    }
-    impl RosMessageType for SetBoolRequest {
-        const ROS_TYPE_NAME: &'static str = "std_srvs/SetBool";
-    }
-
-    #[derive(serde::Deserialize, serde::Serialize, Debug, Default, Clone, PartialEq)]
-    pub struct SetBoolResponse {
-        success: bool,
-        message: String,
-    }
-    impl RosMessageType for SetBoolResponse {
-        const ROS_TYPE_NAME: &'static str = "std_srvs/SetBool";
-    }
 
     /**
     This test does a round trip publish subscribe for real
@@ -125,11 +85,15 @@ mod integration_tests {
             ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
                 .await?;
 
-        let publisher = client.advertise::<TimeI>("/bad_message_recv/topic").await?;
+        let publisher = client.advertise::<Time>("/bad_message_recv/topic").await?;
 
         let sub: Subscriber<Header> = client.subscribe("/bad_message_recv/topic").await?;
 
-        publisher.publish(TimeI { secs: 0, nsecs: 0 }).await?;
+        publisher
+            .publish(Time {
+                data: roslibrust_codegen::Time { secs: 0, nsecs: 0 },
+            })
+            .await?;
 
         match timeout(TIMEOUT, sub.next()).await {
             Err(_elapsed) => {
@@ -258,7 +222,7 @@ mod integration_tests {
         let topic = "/self_service_call";
 
         let handle = client
-            .advertise_service::<SetBoolSrv>(topic, cb)
+            .advertise_service::<SetBool>(topic, cb)
             .await
             .expect("Failed to advertise service");
 
@@ -322,7 +286,7 @@ mod integration_tests {
             .is_disconnected
             .store(true, std::sync::atomic::Ordering::Relaxed);
 
-        let res = client.advertise::<TimeI>("/bad_message_recv/topic").await;
+        let res = client.advertise::<Time>("/bad_message_recv/topic").await;
         assert!(matches!(res, Err(RosLibRustError::Disconnected)));
 
         Ok(())
