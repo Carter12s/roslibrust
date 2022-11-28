@@ -1773,7 +1773,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Char {
-        pub r#data: char,
+        pub r#data: u8,
     }
     impl ::roslibrust_codegen::RosMessageType for Char {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Char";
@@ -2222,6 +2222,14 @@ pub mod test_msgs {
         pub const r#STATUS_RUN_ERROR: u8 = 3;
         pub const r#STATUS_SHUTTING_DOWN: u8 = 4;
         pub const r#STATUS_SHUTDOWN: u8 = 5;
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct UsesChar {
+        pub r#x: u8,
+    }
+    impl ::roslibrust_codegen::RosMessageType for UsesChar {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/UsesChar";
     }
     pub struct AddTwoInts {}
     impl ::roslibrust_codegen::RosServiceType for AddTwoInts {
