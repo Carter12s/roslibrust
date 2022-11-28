@@ -2223,14 +2223,6 @@ pub mod test_msgs {
         pub const r#STATUS_SHUTTING_DOWN: u8 = 4;
         pub const r#STATUS_SHUTDOWN: u8 = 5;
     }
-    #[allow(non_snake_case)]
-    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-    pub struct UsesChar {
-        pub r#x: u8,
-    }
-    impl ::roslibrust_codegen::RosMessageType for UsesChar {
-        const ROS_TYPE_NAME: &'static str = "test_msgs/UsesChar";
-    }
     pub struct AddTwoInts {}
     impl ::roslibrust_codegen::RosServiceType for AddTwoInts {
         const ROS_SERVICE_NAME: &'static str = "test_msgs/AddTwoInts";
