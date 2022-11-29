@@ -6,7 +6,7 @@ lazy_static::lazy_static! {
         ("int8", "i8"),
         ("uint8", "u8"),
         ("byte", "u8"),
-        ("char", "char"),
+        ("char", "u8"), // NOTE: a rust char != C++ char
         ("int16", "i16"),
         ("uint16", "u16"),
         ("int32", "i32"),
