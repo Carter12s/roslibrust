@@ -20,6 +20,30 @@ lazy_static::lazy_static! {
         ("duration", "::roslibrust_codegen::integral_types::Duration"),
         ("Header", "Header"),
     ].into_iter().collect();
+
+    pub static ref ROS_2_TYPE_TO_RUST_TYPE_MAP: HashMap<&'static str, &'static str> = vec![
+        ("bool", "bool"),
+        ("int8", "i8"),
+        ("uint8", "u8"),
+        ("byte", "u8"),
+        ("char", "char"),
+        ("int16", "i16"),
+        ("uint16", "u16"),
+        ("int32", "i32"),
+        ("uint32", "u32"),
+        ("int64", "i64"),
+        ("uint64", "u64"),
+        ("float32", "f32"),
+        ("float64", "f64"),
+        ("string", "::std::string::String"),
+        // ("wstring", TODO)
+        // It is referred to by this name inside std_msgs/Time.msg, but it seems invalid to
+        // ("time", TODO)
+        // ("builtin_interfaces/Time", TODO)
+        // ("builtin_interfaces/Duration", TODO)
+        //
+        
+    ].into_iter().collect();
 }
 
 /// Describes the type for an individual field in a message
