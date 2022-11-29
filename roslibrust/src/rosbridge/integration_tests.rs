@@ -17,7 +17,8 @@ mod integration_tests {
 
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
         "assets/ros1_common_interfaces/ros_comm_msgs",
-        "assets/ros1_common_interfaces/std_msgs"
+        "assets/ros1_common_interfaces/std_msgs",
+        // "assets/test_msgs" // Note: we can't use these message in integration tests since they aren't installed inside our docker image (yet!)
     );
 
     use std_msgs::*;
@@ -288,6 +289,32 @@ mod integration_tests {
 
         let res = client.advertise::<Time>("/bad_message_recv/topic").await;
         assert!(matches!(res, Err(RosLibRustError::Disconnected)));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn working_with_char() -> TestResult {
+        let mut client =
+            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
+                .await?;
+
+        let subscriber = client.subscribe::<std_msgs::Char>("/char_topic").await?;
+        let publisher = client.advertise("/char_topic").await?;
+
+        // Note because C++ char != rust char some care has to be taken when converting
+        let x = std_msgs::Char {
+            data: 'x'.try_into().unwrap(),
+        };
+        publisher.publish(x.clone()).await?;
+
+        let y = timeout(TIMEOUT, subscriber.next())
+            .await
+            .expect("Failed to receive char message");
+
+        assert_eq!(&x, &y);
+
+        assert_eq!(y.data as char, 'x');
 
         Ok(())
     }

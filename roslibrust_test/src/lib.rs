@@ -1773,7 +1773,7 @@ pub mod std_msgs {
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
     pub struct Char {
-        pub r#data: char,
+        pub r#data: u8,
     }
     impl ::roslibrust_codegen::RosMessageType for Char {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Char";
