@@ -42,7 +42,6 @@ lazy_static::lazy_static! {
         // ("builtin_interfaces/Time", TODO)
         // ("builtin_interfaces/Duration", TODO)
         //
-        
     ].into_iter().collect();
 }
 
@@ -96,7 +95,11 @@ pub struct ServiceFile {
 }
 
 /// Converts a ros message file into a struct representation
-pub fn parse_ros_message_file(data: String, name: String, package: &String) -> MessageFile {
+/// * `data` -- Raw contents of the file as loaded from disk
+/// * `name` -- Name of the object being parsed excluding the file extension, e.g. `Header`
+/// * `package` -- Name of the package the message is found in, required for relative type paths
+/// * `ros2` -- True iff the package is a ros2 package and should be parsed with ros2 logic
+pub fn parse_ros_message_file(data: String, name: String, package: &String, ros2: &bool) -> MessageFile {
     let mut result = MessageFile {
         fields: vec![],
         constants: vec![],
@@ -151,7 +154,13 @@ pub fn parse_ros_message_file(data: String, name: String, package: &String) -> M
     result
 }
 
-pub fn parse_ros_service_file(data: String, name: String, package: &String) -> ServiceFile {
+
+/// Parses the contents of a service file and returns and struct representing the found content.
+/// * `data` -- Actual contents of the file
+/// * `name` -- Name of the file excluding the extension, e.g. 'Header'
+/// * `package` -- Name of the package the file was found within, required for understanding relative type paths
+/// * `ros2` -- True iff this file is part of a ros2 package and should be parsed with ros2 logic
+pub fn parse_ros_service_file(data: String, name: String, package: &String, ros2: &bool) -> ServiceFile {
     let mut dash_line_number = None;
     for (line_num, line) in data.as_str().lines().enumerate() {
         match (line.find("---"), line.find("#")) {
@@ -195,12 +204,14 @@ pub fn parse_ros_service_file(data: String, name: String, package: &String) -> S
             request_str.clone(),
             format!("{name}Request"),
             package,
+            ros2
         ),
         request_type_raw: request_str,
         response_type: parse_ros_message_file(
             response_str.clone(),
             format!("{name}Response"),
             package,
+            ros2
         ),
         response_type_raw: response_str,
     }

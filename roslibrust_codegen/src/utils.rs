@@ -5,6 +5,13 @@ use std::path::{Path, PathBuf};
 pub struct Package {
     pub name: String,
     pub path: PathBuf,
+    pub version: RosVersion,
+}
+
+#[derive(Clone, Debug)]
+pub enum RosVersion {
+    ROS1,
+    ROS2,
 }
 
 const CATKIN_IGNORE: &'static str = "CATKIN_IGNORE";
@@ -69,6 +76,9 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
             if path.as_path().is_file() {
                 // And there's a package.xml here!
                 assert!(path.pop());
+
+                // Determine ros version from package
+
                 found_packages.push(Package {
                     name: String::from(path.file_name().unwrap().to_string_lossy()),
                     path: path,
@@ -128,4 +138,28 @@ fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
     }
 
     Ok(msg_files)
+}
+
+fn determine_ros_version(path: impl AsRef<Path>) -> Result<RosVersion, std::io::Error> {
+    let manifest = std::fs::read_to_string(path)?;
+    let open = manifest.find("<buildtool_depend>");
+    let close = manifest.find("</buildtool_depend>");
+    let build_tool = match (open, close) {
+        (Some(open), Some(close)) => &manifest[open..close],
+        _ => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "build_tool_depend xml tags not found in package.xml",
+            ));
+        }
+    };
+    let build_tool = build_tool.trim();
+    match build_tool {
+        "ament_cmake" => Ok(RosVersion::ROS1),
+        "catkin" => Ok(RosVersion::ROS2),
+        _ => Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("Unrecognized build tool: {build_tool}"),
+        )),
+    }
 }

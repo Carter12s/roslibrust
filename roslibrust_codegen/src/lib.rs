@@ -47,9 +47,8 @@ pub trait RosServiceType {
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
 ///
-/// * `additional_search_paths` - A list of additional paths to search beyond those
+/// * `additional_search_paths` -- A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
-///
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
     let mut search_paths = utils::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
