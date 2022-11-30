@@ -9,7 +9,7 @@ pub struct Package {
     pub version: Option<RosVersion>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub enum RosVersion {
     ROS1,
     ROS2,

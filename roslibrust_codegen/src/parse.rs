@@ -38,12 +38,9 @@ lazy_static::lazy_static! {
         ("float32", "f32"),
         ("float64", "f64"),
         ("string", "::std::string::String"),
-        // ("wstring", TODO)
-        // It is referred to by this name inside std_msgs/Time.msg, but it seems invalid to
-        // ("time", TODO)
-        // ("builtin_interfaces/Time", TODO)
-        // ("builtin_interfaces/Duration", TODO)
-        //
+        ("builtin_interfaces/Time", "::roslibrust_codegen::integral_types::Time"),
+        ("builtin_interfaces/Duration", "::roslibrust_codegen::integral_types::Duration"),
+        // ("wstring", TODO),
     ].into_iter().collect();
 }
 
@@ -83,6 +80,7 @@ pub struct MessageFile {
     pub package: String,
     pub fields: Vec<FieldInfo>,
     pub constants: Vec<ConstantInfo>,
+    pub version: Option<RosVersion>,
 }
 
 /// Describes all information for a single service file
@@ -107,6 +105,7 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
         constants: vec![],
         name: name.clone(),
         package: package.name.clone(),
+        version: package.version,
     };
 
     for line in data.lines() {
@@ -124,14 +123,13 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
             // Since we found an equal sign after a space, this must be a constant
             let mut constant_type = parse_type(line[..sep].trim(), &package).field_type;
             let constant_name = line[sep + 1..(equal_i + sep)].trim().to_string();
-            // Handling dumb case here, TODO find better spot
-            // TODO: Moved where we resolve the ROS types to Rust types, this needs to be revisited
+
+            // Handle the fact that string type should be different for constants than fields
             if constant_type == "String" {
                 constant_type = "&'static str".to_string();
             }
 
-            let constant_value = line[equal_i + 1..].trim().to_string();
-            // Is a constant
+            let constant_value = line[sep + equal_i + 1..].trim().to_string();
             result.constants.push(ConstantInfo {
                 // NOTE: Bug here, no idea how to support constant vectors etc...
                 constant_type,
@@ -226,12 +224,23 @@ pub fn parse_ros_service_file(data: String, name: String, package: &Package) -> 
 
 pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
     const INTERNAL_STD_MSGS: [&str; 1] = ["Header"];
+
+    // Select which type conversion map to use depending on ros version
+    let prop_map: &HashMap<&'static str, &'static str> = match msg.version {
+        Some(RosVersion::ROS1) => &ROS_TYPE_TO_RUST_TYPE_MAP,
+        Some(RosVersion::ROS2) => &ROS_2_TYPE_TO_RUST_TYPE_MAP,
+        None => {
+            // If we couldn't determine the package type, assume ROS1 for now
+            &ROS_TYPE_TO_RUST_TYPE_MAP
+        }
+    };
+
     msg.constants = msg
         .constants
         .into_iter()
         .map(|mut constant| {
-            if ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(constant.constant_type.as_str()) {
-                constant.constant_type = ROS_TYPE_TO_RUST_TYPE_MAP
+            if prop_map.contains_key(constant.constant_type.as_str()) {
+                constant.constant_type = prop_map
                     .get(constant.constant_type.as_str())
                     .unwrap()
                     .to_string();
@@ -246,7 +255,7 @@ pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
         .fields
         .into_iter()
         .map(|mut field| {
-            field.field_type.field_type = ROS_TYPE_TO_RUST_TYPE_MAP
+            field.field_type.field_type = prop_map
                 .get(field.field_type.field_type.as_str())
                 .unwrap_or(&field.field_type.field_type.as_str())
                 .to_string();
@@ -271,21 +280,46 @@ fn strip_comments(line: &str) -> &str {
 
 fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
     let items = type_str.split('/').collect::<Vec<&str>>();
+
+    // Select which type converison map to use depending on package version
+    let prop_map: &HashMap<&'static str, &'static str> = match pkg.version {
+        Some(RosVersion::ROS1) => &ROS_TYPE_TO_RUST_TYPE_MAP,
+        Some(RosVersion::ROS2) => &ROS_2_TYPE_TO_RUST_TYPE_MAP,
+        None => {
+            // If we couldn't determine the package type, assume ROS1 for now
+            &ROS_TYPE_TO_RUST_TYPE_MAP
+        }
+    };
+
     if items.len() == 1 {
+        // If there is only one item (no package redirect)
         FieldType {
-            package_name: if ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(type_str) {
+            package_name: if prop_map.contains_key(type_str) {
+                // If it is a fundamental type, no package
                 None
             } else {
+                // Otherwise it is referencing another message in the same package
                 Some(pkg.name.clone())
             },
             field_type: items[0].to_string(),
             is_vec,
         }
     } else {
-        FieldType {
-            package_name: Some(items[0].to_string()),
-            field_type: items[1].to_string(),
-            is_vec,
+        // If there is more than one item there is a package redirect
+
+        // Special workaround for builtin_interfaces package
+        if items[0] == "builtin_interfaces" {
+            FieldType {
+                package_name: None,
+                field_type: type_str.to_string(),
+                is_vec,
+            }
+        } else {
+            FieldType {
+                package_name: Some(items[0].to_string()),
+                field_type: items[1].to_string(),
+                is_vec,
+            }
         }
     }
 }
@@ -298,7 +332,7 @@ fn parse_type(type_str: &str, pkg: &Package) -> FieldType {
     let open_bracket_idx = type_str.find("[");
     let close_bracket_idx = type_str.find("]");
     match (open_bracket_idx, close_bracket_idx) {
-        (Some(o), Some(c)) => {
+        (Some(o), Some(_c)) => {
             // After having stripped array information, parse the remainder of the type
             parse_field_type(&type_str[..o], true, pkg)
         }

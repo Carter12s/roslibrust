@@ -231,6 +231,7 @@ fn resolve_message_dependencies(
         // Check if each dependency of the message is a primitive or has been resolved
         let fully_resolved = parsed.fields.iter().all(|field| {
             ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str())
+                || ROS_2_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str())
                 || message_map.contains_key(
                     format!(
                         "{}/{}",
