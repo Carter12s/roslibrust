@@ -396,7 +396,10 @@ mod test {
     /// Confirms we don't panic on ros1 parsing
     #[test]
     fn generate_ok_on_ros1() {
-        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_common_interfaces");
+        let assets_path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../assets/ros1_common_interfaces"
+        );
 
         find_and_generate_ros_messages(vec![assets_path.into()]);
     }
@@ -404,7 +407,10 @@ mod test {
     /// Confirms we don't panic on ros2 parsing
     #[test]
     fn generate_ok_on_ros2() {
-        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_common_interfaces");
+        let assets_path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../assets/ros2_common_interfaces"
+        );
 
         find_and_generate_ros_messages(vec![assets_path.into()]);
     }
@@ -416,5 +422,4 @@ mod test {
 
         find_and_generate_ros_messages(vec![assets_path.into()]);
     }
-
 }

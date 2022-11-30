@@ -123,7 +123,7 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
         if let Some(equal_i) = equal_after_sep {
             // Since we found an equal sign after a space, this must be a constant
             let mut constant_type = parse_type(line[..sep].trim(), &package).field_type;
-            let constant_name = line[sep + 1..(equal_i+sep)].trim().to_string();
+            let constant_name = line[sep + 1..(equal_i + sep)].trim().to_string();
             // Handling dumb case here, TODO find better spot
             // TODO: Moved where we resolve the ROS types to Rust types, this needs to be revisited
             if constant_type == "String" {
