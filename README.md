@@ -14,7 +14,7 @@ Current Status: Reliable in production, API still changing
 
 Fully Supported: Noetic
 
-Partial Support: Galactic, Rolling (Partial message generation, handwritten messages do work)
+Partial Support: Galactic, Rolling
 
 
 | Feature                      | Status                                                      |
@@ -27,11 +27,11 @@ Partial Support: Galactic, Rolling (Partial message generation, handwritten mess
 | subscribe                    | ✅ |
 | unsubscribe                  | ✅ |
 | services                     | ✅ |
-| fragment / png / cbor        | ✅ |
 | rosapi                       | ✅ |
 | ros2 rosbridge               | In Progress |
-| cbor-raw                     | Planned |
-| ros1 TCPROS / raw            | Planned |
 | rosbridge status access      | Planned |
+| ros1 TCPROS / raw            | Uncertain if this package will support |
+| cbor-raw                     | Uncertain if this package will support |
+| fragment / png / cbor        | Uncertain if this package will support |
 | ros2 DDS / raw               | Uncertain if this package will support |
 
