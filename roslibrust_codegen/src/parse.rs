@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::utils::Package;
+use crate::utils::{Package, RosVersion};
 
 lazy_static::lazy_static! {
     pub static ref ROS_TYPE_TO_RUST_TYPE_MAP: HashMap<&'static str, &'static str> = vec![
@@ -115,12 +115,15 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
             // Comment only line skip
             continue;
         }
-
-        let equal_i = line.find('=');
-        if let Some(equal_i) = equal_i {
-            let sep = line.find(' ').unwrap();
-            let mut constant_type = parse_type(line[..sep].trim(), &package.name).field_type;
-            let constant_name = line[sep + 1..equal_i].trim().to_string();
+        // Determine if we're looking at a constant or a field
+        let sep = line.find(' ').expect(&format!(
+            "Found an invalid ros field line, no space delinting type from name: {line}"
+        ));
+        let equal_after_sep = line[sep..].find("=");
+        if let Some(equal_i) = equal_after_sep {
+            // Since we found an equal sign after a space, this must be a constant
+            let mut constant_type = parse_type(line[..sep].trim(), &package).field_type;
+            let constant_name = line[sep + 1..(equal_i+sep)].trim().to_string();
             // Handling dumb case here, TODO find better spot
             // TODO: Moved where we resolve the ROS types to Rust types, this needs to be revisited
             if constant_type == "String" {
@@ -142,7 +145,7 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
                 "Did not find field_type on line: {line} while parsing {}/{name}",
                 &package.name
             ));
-            let field_type = parse_type(field_type, &package.name);
+            let field_type = parse_type(field_type, &package);
             let field_name = splitter.next().expect(&format!(
                 "Did not find field_name on line: {line} while parsing {}/{name}",
                 &package.name
@@ -266,14 +269,14 @@ fn strip_comments(line: &str) -> &str {
     line
 }
 
-fn parse_field_type(type_str: &str, is_vec: bool, current_pkg: &String) -> FieldType {
+fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
     let items = type_str.split('/').collect::<Vec<&str>>();
     if items.len() == 1 {
         FieldType {
             package_name: if ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(type_str) {
                 None
             } else {
-                Some(current_pkg.clone())
+                Some(pkg.name.clone())
             },
             field_type: items[0].to_string(),
             is_vec,
@@ -287,13 +290,24 @@ fn parse_field_type(type_str: &str, is_vec: bool, current_pkg: &String) -> Field
     }
 }
 
-fn parse_type(type_str: &str, current_pkg: &String) -> FieldType {
+/// Determines the type of a field
+/// `type_str` -- Expects the part of the line containing all type information (up to the first space), e.g. "int32[3>=]"
+/// `pkg` -- Reference to package this type is within, used for version information and determining relative types
+fn parse_type(type_str: &str, pkg: &Package) -> FieldType {
+    // Handle array logic
     let open_bracket_idx = type_str.find("[");
-    let is_array_type = open_bracket_idx.is_some();
-    let type_str = match is_array_type {
-        true => &type_str[..open_bracket_idx.unwrap()],
-        false => &type_str[..],
-    };
-
-    parse_field_type(type_str, is_array_type, current_pkg)
+    let close_bracket_idx = type_str.find("]");
+    match (open_bracket_idx, close_bracket_idx) {
+        (Some(o), Some(c)) => {
+            // After having stripped array information, parse the remainder of the type
+            parse_field_type(&type_str[..o], true, pkg)
+        }
+        (None, None) => {
+            // Not an array parse normally
+            parse_field_type(type_str, false, pkg)
+        }
+        _ => {
+            panic!("Found malformed type: {type_str}");
+        }
+    }
 }
