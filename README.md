@@ -10,28 +10,28 @@ Note on documentation:
 All information about the crate itself (examples, documentation, tutorials, etc.) lives in the source code and can be viewed on [docs.rs](https://docs.rs/roslibrust).
 This readme is for "Meta" information about developing for the crate.
 
-Current Status: Ready for Beta Testing / Early Access
+Current Status: Reliable in production, API still changing
 
 Fully Supported: Noetic
 
-Partial Support: Galactic, Rolling (No message generation, handwritten messages do work)
+Partial Support: Galactic, Rolling (Partial message generation, handwritten messages do work)
 
 
 | Feature                      | Status                                                      |
 |------------------------------|-------------------------------------------------------------|
-| tutorials                    | Planned and upcoming                                        |
-| message_gen                  | Working and tested                                          |
-| advertise                    | Working and tested                                          |
-| unadvertise                  | Working and tested                                          |
-| publish                      | Working and tested                                          |
-| subscribe                    | Working and tested                                          |
-| unsubscribe                  | Working and tested                                          |
-| services                     | Working and tested                                          |
-| fragment / png / cbor        | No support planned                                          |
-| cbor-raw                     | Planned                                                     |
-| ros1 TCPROS / raw            | Planned                                                     |
-| rosbridge status access      | Planned                                                     |
-| ros2 rosbridge               | In Progress                                                 |
-| ros2 DDS / raw               | Uncertain if this package will support                      |
-| rosapi                       | Planned                                                     |
+| tutorials                    | In Progress |
+| message_gen                  | ✅ |
+| advertise                    | ✅ |
+| unadvertise                  | ✅ |
+| publish                      | ✅ |
+| subscribe                    | ✅ |
+| unsubscribe                  | ✅ |
+| services                     | ✅ |
+| fragment / png / cbor        | ✅ |
+| rosapi                       | ✅ |
+| ros2 rosbridge               | In Progress |
+| cbor-raw                     | Planned |
+| ros1 TCPROS / raw            | Planned |
+| rosbridge status access      | Planned |
+| ros2 DDS / raw               | Uncertain if this package will support |
 
