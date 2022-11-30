@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::path::PathBuf;
 use std::str::FromStr;
 use syn::parse_quote;
+use utils::Package;
 
 mod parse;
 use parse::*;
@@ -47,9 +48,8 @@ pub trait RosServiceType {
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
 ///
-/// * `additional_search_paths` - A list of additional paths to search beyond those
+/// * `additional_search_paths` -- A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
-///
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
     let mut search_paths = utils::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
@@ -80,7 +80,7 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
                     vec![]
                 })
                 .into_iter()
-                .map(|path| (pkg.name.clone(), path))
+                .map(|path| (pkg.clone(), path))
         })
         .flatten()
         .collect::<Vec<_>>();
@@ -97,7 +97,7 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
                     vec![]
                 })
                 .into_iter()
-                .map(|path| (pkg.name.clone(), path))
+                .map(|path| (pkg.clone(), path))
         })
         .flatten()
         .collect::<Vec<_>>();
@@ -154,8 +154,9 @@ struct MessageMetadata {
 /// Currently supports service files and message files, no planned support for actions
 /// The returned BTree will contain all messages files including those buried within the service definitions
 /// and will have fully expanded and resolved referenced types in other packages.
+/// * `msg_paths` -- List of tuple (Package, Path to File) for each file to parse
 fn parse_ros_files(
-    msg_paths: Vec<(String, PathBuf)>,
+    msg_paths: Vec<(Package, PathBuf)>,
 ) -> std::io::Result<(BTreeMap<String, MessageFile>, Vec<ServiceFile>)> {
     let mut parsed_messages = VecDeque::new();
     let mut parsed_services = Vec::new();
@@ -167,14 +168,14 @@ fn parse_ros_files(
                 let srv_file = parse_ros_service_file(contents, name.to_string(), &pkg);
                 // TODO stop cloning with reckless abandon
                 parsed_messages.push_back(MessageMetadata {
-                    package: pkg.clone(),
+                    package: pkg.name.clone(),
                     path: path.clone(),
                     seen_count: 0,
                     parsed: srv_file.request_type.clone(),
                     unparsed: srv_file.request_type_raw.clone(),
                 });
                 parsed_messages.push_back(MessageMetadata {
-                    package: pkg.clone(),
+                    package: pkg.name.clone(),
                     path: path.clone(),
                     seen_count: 0,
                     parsed: srv_file.response_type.clone(),
@@ -185,7 +186,7 @@ fn parse_ros_files(
             "msg" => {
                 let msg = parse_ros_message_file(contents.clone(), name.to_string(), &pkg);
                 parsed_messages.push_back(MessageMetadata {
-                    package: pkg.clone(),
+                    package: pkg.name,
                     path: path.clone(),
                     seen_count: 0,
                     parsed: msg,
@@ -230,6 +231,7 @@ fn resolve_message_dependencies(
         // Check if each dependency of the message is a primitive or has been resolved
         let fully_resolved = parsed.fields.iter().all(|field| {
             ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str())
+                || ROS_2_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str())
                 || message_map.contains_key(
                     format!(
                         "{}/{}",
@@ -385,5 +387,40 @@ fn generate_mod(
 
             #(#struct_definitions )*
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::find_and_generate_ros_messages;
+
+    /// Confirms we don't panic on ros1 parsing
+    #[test]
+    fn generate_ok_on_ros1() {
+        let assets_path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../assets/ros1_common_interfaces"
+        );
+
+        find_and_generate_ros_messages(vec![assets_path.into()]);
+    }
+
+    /// Confirms we don't panic on ros2 parsing
+    #[test]
+    fn generate_ok_on_ros2() {
+        let assets_path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../assets/ros2_common_interfaces"
+        );
+
+        find_and_generate_ros_messages(vec![assets_path.into()]);
+    }
+
+    /// Confirms we don't panic on test_msgs parsing
+    #[test]
+    fn generate_ok_on_test_msgs() {
+        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/test_msgs");
+
+        find_and_generate_ros_messages(vec![assets_path.into()]);
     }
 }

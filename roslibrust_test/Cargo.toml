@@ -7,6 +7,7 @@ edition = "2021"
 roslibrust = { path = "../roslibrust" }
 roslibrust_codegen = { path = "../roslibrust_codegen" }
 serde = { version = "1.0", features = ["derive"] }
+lazy_static = "1.4"
 
 [dev-dependencies]
 diffy = "0.3.0"

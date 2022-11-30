@@ -5,6 +5,14 @@ use std::path::{Path, PathBuf};
 pub struct Package {
     pub name: String,
     pub path: PathBuf,
+    /// For now RosVersion is being left as an option, because our ability to detect the correct version is in question
+    pub version: Option<RosVersion>,
+}
+
+#[derive(Clone, Debug, PartialEq, Copy)]
+pub enum RosVersion {
+    ROS1,
+    ROS2,
 }
 
 const CATKIN_IGNORE: &'static str = "CATKIN_IGNORE";
@@ -67,11 +75,23 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
 
             path.push(PACKAGE_FILE_NAME);
             if path.as_path().is_file() {
+                let version = determine_ros_version(&path);
+                let version = match version {
+                    Ok(val) => Some(val),
+                    Err(e) => {
+                        eprintln!("Warning: Failed to determine ros version for package @ {path:?}: {e:?}");
+                        None
+                    }
+                };
                 // And there's a package.xml here!
                 assert!(path.pop());
+
+                // Determine ros version from package
+
                 found_packages.push(Package {
                     name: String::from(path.file_name().unwrap().to_string_lossy()),
                     path: path,
+                    version,
                 });
             } else {
                 // No file here, we'll have to go deeper
@@ -128,4 +148,59 @@ fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
     }
 
     Ok(msg_files)
+}
+
+fn determine_ros_version(
+    path: impl AsRef<Path> + std::fmt::Debug,
+) -> Result<RosVersion, std::io::Error> {
+    use std::fs::File;
+    use std::io::BufReader;
+    use xml::reader::{EventReader, ParserConfig, XmlEvent};
+    const TAG: &'static str = "buildtool_depend";
+
+    let file = File::open(&path)?;
+    let reader = BufReader::new(file);
+    let parser = EventReader::new_with_config(
+        reader,
+        ParserConfig {
+            trim_whitespace: true,
+            ignore_comments: true,
+            ..Default::default()
+        },
+    );
+
+    let mut in_tag = false;
+    for e in parser {
+        match e {
+            Ok(XmlEvent::StartElement { name, .. }) => {
+                if name.local_name == TAG {
+                    in_tag = true;
+                }
+            }
+            Ok(XmlEvent::Characters(data)) => {
+                if in_tag {
+                    log::debug!("Got data inside of {TAG}: {data}");
+                    match data.as_str() {
+                        "catkin" => {
+                            return Ok(RosVersion::ROS1);
+                        }
+                        "ament_cmake" => {
+                            return Ok(RosVersion::ROS2);
+                        }
+                        _ => {}
+                    };
+                }
+            }
+            Ok(XmlEvent::EndElement { name, .. }) => {
+                if name.local_name == TAG {
+                    in_tag = false;
+                }
+            }
+            _ => {}
+        }
+    }
+    Err(std::io::Error::new(
+        std::io::ErrorKind::InvalidData,
+        format!("Could not determine ros version in {:?}", &path),
+    ))
 }
