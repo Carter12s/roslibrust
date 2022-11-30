@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
  - The generated `char` type within rust is now u8.
+ - Package names are now determined by the `name` tag within package.xml instead of by directory name
 
 ## 0.5.2 - October 31, 2022
 
