@@ -374,6 +374,8 @@ impl RosApi for ClientHandle {
 
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
+// TODO currently rosapi only supports ros1, we should try to figure out a way to fix that
+// ros1api and ros2api may make sense as their own crates?
 #[cfg(feature = "ros1_test")]
 mod test {
     use super::RosApi;

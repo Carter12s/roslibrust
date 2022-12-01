@@ -16,7 +16,7 @@ mod integration_tests {
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
     // Had 1 spurious github failure at 100
-    const TIMEOUT: Duration = Duration::from_millis(2000);
+    const TIMEOUT: Duration = Duration::from_millis(200);
     const LOCAL_WS: &str = "ws://localhost:9090";
 
     #[cfg(feature = "ros1_test")]
@@ -36,6 +36,9 @@ mod integration_tests {
     use roslibrust_codegen::integral_types::Time;
 
     use std_msgs::*;
+    // Warning is here because a test is being skipped in ros2_test
+    // this can be removed when we get self_service_call working
+    #[allow(unused_imports)]
     use std_srvs::*;
 
     type TestResult = Result<(), anyhow::Error>;
@@ -332,7 +335,9 @@ mod integration_tests {
                 .await?;
 
         let subscriber = client.subscribe::<std_msgs::Char>("/char_topic").await?;
+        tokio::time::sleep(TIMEOUT).await;
         let publisher = client.advertise("/char_topic").await?;
+        tokio::time::sleep(TIMEOUT).await;
 
         // Note because C++ char != rust char some care has to be taken when converting
         let x = std_msgs::Char {
