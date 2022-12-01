@@ -374,6 +374,7 @@ impl RosApi for ClientHandle {
 
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
+#[cfg(feature = "ros1_test")]
 mod test {
     use super::RosApi;
     use crate::{ClientHandle, ClientHandleOptions};

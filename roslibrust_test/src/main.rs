@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::io::Write;
-use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 const ROS_1_PATH: &str = concat!(

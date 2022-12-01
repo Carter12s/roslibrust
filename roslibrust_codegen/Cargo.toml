@@ -12,7 +12,7 @@ quote = "1.0"
 lazy_static = "1.4"
 syn = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tokio = { version = "1.0", features = ["time"], optional = true}
+tokio = { version = "1.0", features = ["time", "signal"], optional = true}
 proc-macro2 = "1.0"
 xml-rs = "0.8"
 
