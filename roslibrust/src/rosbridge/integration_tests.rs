@@ -139,7 +139,7 @@ mod integration_tests {
     #[tokio::test]
     async fn timeouts_new() {
         // Intentionally a port where there won't be a server at
-        let opts = ClientHandleOptions::new("ws://localhost:666").timeout(TIMEOUT);
+        let opts = ClientHandleOptions::new("ws://localhost:9091").timeout(TIMEOUT);
         assert!(ClientHandle::new_with_options(opts).await.is_err());
         // Impossibly short to actually work
         let opts = ClientHandleOptions::new(LOCAL_WS).timeout(Duration::from_nanos(1));
