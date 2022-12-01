@@ -75,22 +75,14 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
 
             path.push(PACKAGE_FILE_NAME);
             if path.as_path().is_file() {
-                let version = determine_ros_version(&path);
-                let version = match version {
-                    Ok(val) => Some(val),
-                    Err(e) => {
-                        eprintln!("Warning: Failed to determine ros version for package @ {path:?}: {e:?}");
-                        None
-                    }
-                };
                 // And there's a package.xml here!
+                let (version, name) = parse_ros_package_info(&path);
+                // Remove package.xml from our path
                 assert!(path.pop());
 
-                // Determine ros version from package
-
                 found_packages.push(Package {
-                    name: String::from(path.file_name().unwrap().to_string_lossy()),
-                    path: path,
+                    name,
+                    path,
                     version,
                 });
             } else {
@@ -150,15 +142,25 @@ fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
     Ok(msg_files)
 }
 
-fn determine_ros_version(
+/// Parses a ROS package.xml file, which may be in any of the 3 supported formats,
+/// and returns a tuple of (RosVersion, Package Name)
+/// Note: the name of the folder the package resides in is NOT the name of the package,
+/// although that is the convention.
+/// Finding the name is considered infallible and panics if name cannot be determined
+/// ROS version determination is heuristic only, and returns None if failed.
+/// See: https://answers.ros.org/question/410017/how-to-determine-if-a-package-is-ros1-or-ros2/
+fn parse_ros_package_info(
     path: impl AsRef<Path> + std::fmt::Debug,
-) -> Result<RosVersion, std::io::Error> {
+) -> (Option<RosVersion>, String) {
     use std::fs::File;
     use std::io::BufReader;
     use xml::reader::{EventReader, ParserConfig, XmlEvent};
-    const TAG: &'static str = "buildtool_depend";
+    const BUILD_TOOL_TAG: &'static str = "buildtool_depend";
+    const NAME_TAG: &'static str = "name";
 
-    let file = File::open(&path)?;
+    let file = File::open(&path).expect(&format!(
+        "Failed to open package.xml @ {path:?} during codegen."
+    ));
     let reader = BufReader::new(file);
     let parser = EventReader::new_with_config(
         reader,
@@ -169,38 +171,50 @@ fn determine_ros_version(
         },
     );
 
-    let mut in_tag = false;
+    let mut in_build = false;
+    let mut in_name = false;
+    let mut version = None;
+    let mut name = None;
     for e in parser {
         match e {
             Ok(XmlEvent::StartElement { name, .. }) => {
-                if name.local_name == TAG {
-                    in_tag = true;
-                }
-            }
-            Ok(XmlEvent::Characters(data)) => {
-                if in_tag {
-                    log::debug!("Got data inside of {TAG}: {data}");
-                    match data.as_str() {
-                        "catkin" => {
-                            return Ok(RosVersion::ROS1);
-                        }
-                        "ament_cmake" => {
-                            return Ok(RosVersion::ROS2);
-                        }
-                        _ => {}
-                    };
+                if name.local_name == BUILD_TOOL_TAG {
+                    in_build = true;
+                } else if name.local_name == NAME_TAG {
+                    in_name = true;
                 }
             }
             Ok(XmlEvent::EndElement { name, .. }) => {
-                if name.local_name == TAG {
-                    in_tag = false;
+                if name.local_name == BUILD_TOOL_TAG {
+                    in_build = false;
+                } else if name.local_name == NAME_TAG {
+                    in_name = false;
+                }
+            }
+            Ok(XmlEvent::Characters(data)) => {
+                if in_build {
+                    log::debug!("Got data inside of {BUILD_TOOL_TAG}: {data}");
+                    match data.as_str() {
+                        "catkin" => {
+                            version = Some(RosVersion::ROS1);
+                        }
+                        "ament_cmake" => {
+                            version = Some(RosVersion::ROS2);
+                        }
+                        _ => {}
+                    };
+                } else if in_name {
+                    log::debug!("Got data inside of {NAME_TAG}: {data}");
+                    name = Some(data);
                 }
             }
             _ => {}
         }
     }
-    Err(std::io::Error::new(
-        std::io::ErrorKind::InvalidData,
-        format!("Could not determine ros version in {:?}", &path),
-    ))
+    (
+        version,
+        name.expect(&format!(
+            "Failed to find the <name> tag within package.xml, which is a required tag: {path:?}"
+        )),
+    )
 }
