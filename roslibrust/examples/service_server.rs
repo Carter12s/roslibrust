@@ -1,23 +1,16 @@
 use roslibrust::ClientHandle;
 
 // One way to import message definitions
-roslibrust_codegen_macro::find_and_generate_ros_messages!(
-    "assets/test_msgs",
-    "assets/ros1_common_interfaces",
-);
+roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces",);
 
 fn my_service(
-    request: test_msgs::AddTwoIntsRequest,
-) -> Result<test_msgs::AddTwoIntsResponse, Box<dyn std::error::Error + Send + Sync>> {
-    let result = request.a.checked_add(request.b);
-    match result {
-        Some(sum) => Ok(test_msgs::AddTwoIntsResponse { sum }),
-        // TODO get the correct error type for overflow here
-        None => Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::AddrInUse,
-            format!("Overflow!"),
-        ))),
-    }
+    request: std_srvs::SetBoolRequest,
+) -> Result<std_srvs::SetBoolResponse, Box<dyn std::error::Error + Send + Sync>> {
+    log::info!("Got request to set bool: {request:?}");
+    Ok(std_srvs::SetBoolResponse {
+        success: true,
+        message: "You set my bool!".to_string(),
+    })
 }
 
 /// This examples shows hosting a service server and calling it to confirm it is working
@@ -46,20 +39,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Actually advertise our service
     // The handle returned here establishes the lifetime of our service and dropping it will unadvertise the service
     let _handle = client
-        .advertise_service::<test_msgs::AddTwoInts>("/add_two_ints", my_service)
+        .advertise_service::<std_srvs::SetBool>("/my_set_bool", my_service)
         .await?;
 
-    // Sleep for a small amount to ensure our service is advertised before we try to call it
-    // Otherwise the call_service request can arrive at rosbridge before rosbridge has finished processing the
-    // advertise_service request.
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+    // Now try manually calling the service with the command line!
 
-    // Actually call our service with valid inputs and get the result
-    let result: test_msgs::AddTwoIntsResponse = client
-        .call_service("/add_two_ints", test_msgs::AddTwoIntsRequest { a: 1, b: 2 })
-        .await?;
-
-    assert_eq!(result.sum, 3);
-
+    tokio::signal::ctrl_c().await?;
     Ok(())
 }

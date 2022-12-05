@@ -5,6 +5,10 @@
 #[cfg(test)]
 #[cfg(feature = "running_bridge")]
 mod integration_tests {
+    // Note sure exactly where this check should live, but here works
+    #[cfg(all(feature = "ros1_test", feature = "ros2_test"))]
+    compile_error!("Cannot build with both ros1_test and ros2_test enabled at the same time");
+
     use std::sync::Arc;
 
     use crate::{ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber};
@@ -15,13 +19,26 @@ mod integration_tests {
     const TIMEOUT: Duration = Duration::from_millis(200);
     const LOCAL_WS: &str = "ws://localhost:9090";
 
+    #[cfg(feature = "ros1_test")]
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
         "assets/ros1_common_interfaces/ros_comm_msgs",
         "assets/ros1_common_interfaces/std_msgs",
         // "assets/test_msgs" // Note: we can't use these message in integration tests since they aren't installed inside our docker image (yet!)
     );
 
+    #[cfg(feature = "ros2_test")]
+    roslibrust_codegen_macro::find_and_generate_ros_messages!(
+        "assets/ros2_common_interfaces/std_msgs",
+        "assets/ros2_common_interfaces/std_srvs"
+    );
+    // This replaces the fact that Time.msg is no longer in std_msgs in ROS2
+    #[cfg(feature = "ros2_test")]
+    use roslibrust_codegen::integral_types::Time;
+
     use std_msgs::*;
+    // Warning is here because a test is being skipped in ros2_test
+    // this can be removed when we get self_service_call working
+    #[allow(unused_imports)]
     use std_srvs::*;
 
     type TestResult = Result<(), anyhow::Error>;
@@ -59,8 +76,15 @@ mod integration_tests {
         // Test is flaky without it
         tokio::time::sleep(TIMEOUT).await;
 
+        #[cfg(feature = "ros1_test")]
         let msg_out = Header {
             seq: 666,
+            stamp: Default::default(),
+            frame_id: "self_publish".to_string(),
+        };
+
+        #[cfg(feature = "ros2_test")]
+        let msg_out = Header {
             stamp: Default::default(),
             frame_id: "self_publish".to_string(),
         };
@@ -90,11 +114,15 @@ mod integration_tests {
 
         let sub: Subscriber<Header> = client.subscribe("/bad_message_recv/topic").await?;
 
+        #[cfg(feature = "ros1_test")]
         publisher
             .publish(Time {
                 data: roslibrust_codegen::Time { secs: 0, nsecs: 0 },
             })
             .await?;
+
+        #[cfg(feature = "ros2_test")]
+        publisher.publish(Time { secs: 0, nsecs: 0 }).await?;
 
         match timeout(TIMEOUT, sub.next()).await {
             Err(_elapsed) => {
@@ -102,7 +130,7 @@ mod integration_tests {
                 // Not actually behavior we want, error of some kind should come through subscription
             }
             _ => {
-                assert!(false, "Bad message made it throught");
+                assert!(false, "Bad message made it through");
             }
         }
         Ok(())
@@ -111,7 +139,7 @@ mod integration_tests {
     #[tokio::test]
     async fn timeouts_new() {
         // Intentionally a port where there won't be a server at
-        let opts = ClientHandleOptions::new("ws://localhost:666").timeout(TIMEOUT);
+        let opts = ClientHandleOptions::new("ws://localhost:9091").timeout(TIMEOUT);
         assert!(ClientHandle::new_with_options(opts).await.is_err());
         // Impossibly short to actually work
         let opts = ClientHandleOptions::new(LOCAL_WS).timeout(Duration::from_nanos(1));
@@ -202,10 +230,14 @@ mod integration_tests {
         Ok(())
     }
 
+    // This test currently doesn't work for ROS2, however all other service functionalities appear fine
+    // It may be that ros2 prevents a "service_loop" where a node calls a service on itself?
+    // unclear...
+    #[cfg(feature = "ros1_test")]
     #[tokio::test]
     async fn self_service_call() -> TestResult {
         let _ = simple_logger::SimpleLogger::new()
-            .with_level(log::LevelFilter::Trace)
+            .with_level(log::LevelFilter::Debug)
             .without_timestamps()
             .init();
 
@@ -235,6 +267,9 @@ mod integration_tests {
             .await
             .expect("Failed to call service");
         assert_eq!(response.message, "call_success");
+
+        // ros2 freaks out if we unadvertise the service while still in flight so pause here
+        tokio::time::sleep(TIMEOUT).await;
 
         // Intentionally drop handle to unadvertise the service
         std::mem::drop(handle);
@@ -300,7 +335,9 @@ mod integration_tests {
                 .await?;
 
         let subscriber = client.subscribe::<std_msgs::Char>("/char_topic").await?;
+        tokio::time::sleep(TIMEOUT).await;
         let publisher = client.advertise("/char_topic").await?;
+        tokio::time::sleep(TIMEOUT).await;
 
         // Note because C++ char != rust char some care has to be taken when converting
         let x = std_msgs::Char {

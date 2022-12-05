@@ -1,8 +1,18 @@
+use crate::RosMessageType;
+
 /// Matches the integral ros1 type time, with extensions for ease of use
-/// NOTE: Is not a message in and of itself use std_msgs/Time for that
+/// NOTE: in ROS1 "Time" is not a message in and of itself and std_msgs/Time should be used.
+/// However, in ROS2 "Time" is a message and part of builtin_interfaces/Time.
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Time {
+    // Note: rosbridge appears to accept secs and nsecs in for time without issue?
+    // Not sure we should actually rely on this behavior, but ok for now...
+
+    // This alias is required for ros2 where field has been renamed
+    #[serde(alias = "sec")]
     pub secs: u32,
+    // This alias is required for ros2 where field has been renamed
+    #[serde(alias = "nanosec")]
     pub nsecs: u32,
 }
 
@@ -17,6 +27,10 @@ impl Into<Time> for std::time::SystemTime {
             nsecs: delta.subsec_nanos(),
         }
     }
+}
+
+impl RosMessageType for Time {
+    const ROS_TYPE_NAME: &'static str = "builtin_interfaces/Time";
 }
 
 // TODO provide chrono conversions here behind a cfg flag

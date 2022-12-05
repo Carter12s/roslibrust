@@ -41,6 +41,11 @@ rosapi = []
 all = ["rosapi"]
 # Intended for use with tests, includes tests that rely on a locally running rosbridge
 running_bridge = []
+# For use with integration tests, indicating we are testing integration with a ros1 bridge
+ros1_test = ["running_bridge"]
+# For use with integration tests, indicates we are testing integration with a ros2 bridge
+ros2_test = ["running_bridge"]
+
 
 [package.metadata.docs.rs]
 features = ["all"]
