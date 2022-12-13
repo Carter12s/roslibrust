@@ -24,31 +24,31 @@ mod ros2 {
 ///
 /// This is not a recommended use of `roslibrust`, but is just a nice way to show-off the
 /// inter-operability.
-/// 
+///
 /// To run this example, two instances of rosbridge must be running,
 /// a ROS1 instance on port 9090
 /// and a ROS2 instance on port 9091
 /// With both ros1 and ros2 installed on your system and correctly sourced this can be achieved with:
 /// `roslaunch rosbridge_server rosbridge_websocket.launch`
 /// `ros2 run rosbridge_server rosbridge_websocket -- --port 9091`
-/// 
+///
 /// If you don't have ros1 or ros2 installed, but still want to run this example, the docker images
 /// in the docker/ directory may be useful. With docker installed on your system:
-/// 
+///
 /// For ros1:
 /// ```bash
 /// docker run -it -p 9090:9090 carter12s/roslibrust-ci-noetic:latest bash # Runs a docker image with ros1 and rosbridge installed and drops you into a shell
 /// source /opt/ros/noetic/setup.bash # Setup the ros environment within the docker image
 /// roslaunch rosbridge_server rosbridge_websocket.launch # Starts a ros1 rosbridge inside the docker image
 /// ```
-/// 
+///
 /// For ros2:
 /// ```bash
 /// docker run -it -p 9091:9091 carter12s/roslibrust-ci-galactic:latest bash
 /// source /opt/ros/noetic/setup.bash # Setup the ros environment within the docker image
 /// ros2 run rosbridge_server rosbridge_websocket -- --port 9091 # Starts a ros2 rosbridge inside the docker image
 /// ```
-/// 
+///
 /// After both bridges are up and running, run this example.
 /// With this example running you should then be able to use the ros1 command line tools to publish a message,
 /// and see them appear in ros2 with its command line tools
@@ -91,7 +91,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     stamp: msg.stamp,
                     frame_id: msg.frame_id,
                 };
-                
+
                 // and re-publish it!
                 publisher.publish(converted_msg).await?;
                 info!("Message successfully sent to ros2!");
