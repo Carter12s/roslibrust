@@ -10,7 +10,7 @@ env:
   HOME: /root
 
 jobs:
-  galactic:
+  humble:
     runs-on: ubuntu-latest
     defaults:
       run:
