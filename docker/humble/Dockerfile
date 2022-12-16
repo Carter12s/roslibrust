@@ -1,11 +1,11 @@
-FROM ros:galactic-ros-core
+FROM ros:humble-ros-core
 LABEL maintainer="Carter Schultz <carterjschultz@gmail.com>"
 
 # Required by github CI for submodule support
 RUN apt update && apt install -y git
 
 # Adapted from https://github.com/JoaquinGimenez1/docker-noetic-rosbridge/blob/main/Dockerfile
-RUN apt update && apt install -y ros-galactic-rosbridge-suite
+RUN apt update && apt install -y ros-humble-rosbridge-suite
 
 # Curl required to install rust, build-essential required to build quote & proc-macro2
 RUN apt update && apt install -y --fix-missing curl build-essential

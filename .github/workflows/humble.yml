@@ -1,0 +1,36 @@
+name: Humble
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  HOME: /root
+
+jobs:
+  humble:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    container: carter12s/roslibrust-ci-humble:latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - name: Lint
+        run: source /root/.cargo/env; cargo fmt --all -- --check
+      - name: Build Main Lib
+        run: source /root/.cargo/env; cargo build
+        # This step is required to confirm feature combinations work, the main workspace build does all features
+      - name: Build Proc Macro
+        run: source /root/.cargo/env; cargo build -p roslibrust_codegen_macro
+      - name: Unit Tests
+        run: source /root/.cargo/env; cargo test
+      - name: Start rosbridge
+        run: source /opt/ros/humble/setup.bash; ros2 launch rosbridge_server rosbridge_websocket_launch.xml & disown; ros2 run rosapi rosapi_node & sleep 1
+      - name: Integration Tests
+        run: source /root/.cargo/env; cargo test --features ros2_test -- --test-threads 1

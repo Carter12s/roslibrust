@@ -1,5 +1,7 @@
 # RosLibRust
-[![Rust](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/rust.yml)
+[![Noetic](https://github.com/Carter12s/roslibrust/actions/workflows/noetic.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/noetic.yml)
+[![Galactic](https://github.com/Carter12s/roslibrust/actions/workflows/galactic.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/galactic.yml)
+[![Humble](https://github.com/Carter12s/roslibrust/actions/workflows/humble.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/humble.yml)
 [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This package aims to provide a convenient intermediary between ROS1's rosbridge and Rust similar to roslibpy and roslibjs.
@@ -10,16 +12,13 @@ Note on documentation:
 All information about the crate itself (examples, documentation, tutorials, etc.) lives in the source code and can be viewed on [docs.rs](https://docs.rs/roslibrust).
 This readme is for "Meta" information about developing for the crate.
 
-Current Status: Reliable in production, API still changing
+Fully Supported: Noetic, Galactic, Humble.
 
-Fully Supported: Noetic
-
-Partial Support: Galactic, Rolling
-
+## Roadmap
 
 | Feature                      | Status                                                      |
 |------------------------------|-------------------------------------------------------------|
-| tutorials                    | In Progress |
+| examples                     | ✅ |
 | message_gen                  | ✅ |
 | advertise                    | ✅ |
 | unadvertise                  | ✅ |
@@ -27,11 +26,14 @@ Partial Support: Galactic, Rolling
 | subscribe                    | ✅ |
 | unsubscribe                  | ✅ |
 | services                     | ✅ |
-| rosapi                       | ✅ |
-| ros2 rosbridge               | In Progress |
+| rosapi                       | ✅ (ROS1 only for now) |
+| TLS / wss://                 | Should be working, untested |
+| cbor                         | Planned |
 | rosbridge status access      | Planned |
-| ros1 TCPROS / raw            | Uncertain if this package will support |
+| rosout logger                | Planned |
+| auth                         | Planned |
+| fragment / png               | Uncertain if this package will support |
 | cbor-raw                     | Uncertain if this package will support |
-| fragment / png / cbor        | Uncertain if this package will support |
+| ros1 TCPROS / raw            | Uncertain if this package will support |
 | ros2 DDS / raw               | Uncertain if this package will support |
 
