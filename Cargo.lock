@@ -526,7 +526,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -566,7 +566,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust_codegen_macro"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "proc-macro2",
  "quote",

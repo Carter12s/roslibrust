@@ -2,7 +2,7 @@
 name = "roslibrust_codegen_macro"
 edition = "2021"
 description = "Provides macro-based message generation for roslibrust"
-version = "0.5.2"
+version = "0.6.0"
 repository = "https://github.com/Carter12s/roslibrust"
 license = "MIT"
 readme = "README.md"

@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+## 0.6.0 - December 12, 2022
+
 ### Added
  - Initial support for ROS2 message generation
  - Initial integration testing for ROS2 all basic functionality covered
