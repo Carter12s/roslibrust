@@ -8,6 +8,7 @@ pub mod actionlib_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -61,6 +62,7 @@ pub mod diagnostic_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -155,6 +157,7 @@ pub mod geometry_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -441,6 +444,7 @@ pub mod nav_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -604,6 +608,7 @@ pub mod sensor_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1025,6 +1030,7 @@ pub mod shape_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1089,6 +1095,7 @@ pub mod std_msgs {
     use super::shape_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1358,6 +1365,7 @@ pub mod std_srvs {
     use super::shape_msgs;
     use super::std_msgs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1433,6 +1441,7 @@ pub mod stereo_msgs {
     use super::shape_msgs;
     use super::std_msgs;
     use super::std_srvs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1452,6 +1461,31 @@ pub mod stereo_msgs {
     }
 }
 #[allow(unused_imports)]
+pub mod test_msgs {
+    use super::actionlib_msgs;
+    use super::diagnostic_msgs;
+    use super::geometry_msgs;
+    use super::nav_msgs;
+    use super::sensor_msgs;
+    use super::shape_msgs;
+    use super::std_msgs;
+    use super::std_srvs;
+    use super::stereo_msgs;
+    use super::trajectory_msgs;
+    use super::visualization_msgs;
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct Deafults {
+        pub r#x: u8,
+        pub r#y: i16,
+        pub r#full_name: ::std::string::String,
+        pub r#samples: ::std::vec::Vec<i32>,
+    }
+    impl ::roslibrust_codegen::RosMessageType for Deafults {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/Deafults";
+    }
+}
+#[allow(unused_imports)]
 pub mod trajectory_msgs {
     use super::actionlib_msgs;
     use super::diagnostic_msgs;
@@ -1462,6 +1496,7 @@ pub mod trajectory_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
@@ -1518,6 +1553,7 @@ pub mod visualization_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]

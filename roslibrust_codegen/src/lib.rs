@@ -402,7 +402,9 @@ mod test {
             "/../assets/ros1_common_interfaces"
         );
 
-        find_and_generate_ros_messages(vec![assets_path.into()]);
+        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        // Make sure something actually got generated
+        assert!(!gen.is_empty())
     }
 
     /// Confirms we don't panic on ros2 parsing
@@ -413,14 +415,26 @@ mod test {
             "/../assets/ros2_common_interfaces"
         );
 
-        find_and_generate_ros_messages(vec![assets_path.into()]);
+        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        // Make sure something actually got generated
+        assert!(!gen.is_empty())
     }
 
-    /// Confirms we don't panic on test_msgs parsing
+    /// Confirms we don't panic on ros1_test_msgs parsing
     #[test]
-    fn generate_ok_on_test_msgs() {
-        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/test_msgs");
+    fn generate_ok_on_ros1_test_msgs() {
+        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_test_msgs");
 
-        find_and_generate_ros_messages(vec![assets_path.into()]);
+        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        assert!(!gen.is_empty());
+    }
+
+    /// Confirms we don't panic on ros2_test_msgs parsing
+    #[test]
+    fn generate_ok_on_ros2_test_msgs() {
+        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
+
+        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        assert!(!gen.is_empty());
     }
 }

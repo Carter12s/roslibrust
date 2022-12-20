@@ -11,6 +11,3 @@ lazy_static = "1.4"
 
 [dev-dependencies]
 diffy = "0.3.0"
-
-[[test]]
-name = "codegen_tests"

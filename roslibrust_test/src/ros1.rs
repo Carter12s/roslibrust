@@ -10,6 +10,7 @@ pub mod actionlib_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -65,6 +66,7 @@ pub mod diagnostic_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -161,6 +163,7 @@ pub mod geometry_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -449,6 +452,7 @@ pub mod nav_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -614,6 +618,7 @@ pub mod rosapi {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1182,6 +1187,7 @@ pub mod rosgraph_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1248,6 +1254,7 @@ pub mod sensor_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1671,6 +1678,7 @@ pub mod shape_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -1734,6 +1742,7 @@ pub mod std_msgs {
     use super::shape_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -2022,6 +2031,7 @@ pub mod std_srvs {
     use super::shape_msgs;
     use super::std_msgs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -2099,6 +2109,7 @@ pub mod stereo_msgs {
     use super::shape_msgs;
     use super::std_msgs;
     use super::std_srvs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
@@ -2118,6 +2129,108 @@ pub mod stereo_msgs {
     }
 }
 #[allow(unused_imports)]
+pub mod test_msgs {
+    use super::actionlib_msgs;
+    use super::diagnostic_msgs;
+    use super::geometry_msgs;
+    use super::nav_msgs;
+    use super::rosapi;
+    use super::rosgraph_msgs;
+    use super::sensor_msgs;
+    use super::shape_msgs;
+    use super::std_msgs;
+    use super::std_srvs;
+    use super::stereo_msgs;
+    use super::trajectory_msgs;
+    use super::visualization_msgs;
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct AddTwoIntsRequest {
+        pub r#a: i64,
+        pub r#b: i64,
+    }
+    impl ::roslibrust_codegen::RosMessageType for AddTwoIntsRequest {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/AddTwoIntsRequest";
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct AddTwoIntsResponse {
+        pub r#sum: i64,
+    }
+    impl ::roslibrust_codegen::RosMessageType for AddTwoIntsResponse {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/AddTwoIntsResponse";
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct Constants {}
+    impl ::roslibrust_codegen::RosMessageType for Constants {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/Constants";
+    }
+    impl Constants {
+        pub const r#TEST_STR: &'static str = "/topic";
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct Float64Stamped {
+        pub r#header: std_msgs::Header,
+        pub r#value: f64,
+    }
+    impl ::roslibrust_codegen::RosMessageType for Float64Stamped {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/Float64Stamped";
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct LoggerLevel {
+        pub r#level: ::std::string::String,
+    }
+    impl ::roslibrust_codegen::RosMessageType for LoggerLevel {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/LoggerLevel";
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct Metric {
+        pub r#name: ::std::string::String,
+        pub r#time: f64,
+        pub r#data: ::std::vec::Vec<self::MetricPair>,
+    }
+    impl ::roslibrust_codegen::RosMessageType for Metric {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/Metric";
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct MetricPair {
+        pub r#key: ::std::string::String,
+        pub r#value: f64,
+    }
+    impl ::roslibrust_codegen::RosMessageType for MetricPair {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/MetricPair";
+    }
+    #[allow(non_snake_case)]
+    #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+    pub struct NodeInfo {
+        pub r#node_name: ::std::string::String,
+        pub r#pid: i64,
+        pub r#status: u8,
+    }
+    impl ::roslibrust_codegen::RosMessageType for NodeInfo {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/NodeInfo";
+    }
+    impl NodeInfo {
+        pub const r#STATUS_UNINITIALIZED: u8 = 0;
+        pub const r#STATUS_DISCONNECTED: u8 = 1;
+        pub const r#STATUS_RUNNING: u8 = 2;
+        pub const r#STATUS_RUN_ERROR: u8 = 3;
+        pub const r#STATUS_SHUTTING_DOWN: u8 = 4;
+        pub const r#STATUS_SHUTDOWN: u8 = 5;
+    }
+    pub struct AddTwoInts {}
+    impl ::roslibrust_codegen::RosServiceType for AddTwoInts {
+        const ROS_SERVICE_NAME: &'static str = "test_msgs/AddTwoInts";
+        type Request = AddTwoIntsRequest;
+        type Response = AddTwoIntsResponse;
+    }
+}
+#[allow(unused_imports)]
 pub mod trajectory_msgs {
     use super::actionlib_msgs;
     use super::diagnostic_msgs;
@@ -2130,6 +2243,7 @@ pub mod trajectory_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
@@ -2188,6 +2302,7 @@ pub mod visualization_msgs {
     use super::std_msgs;
     use super::std_srvs;
     use super::stereo_msgs;
+    use super::test_msgs;
     use super::trajectory_msgs;
     #[allow(non_snake_case)]
     #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
