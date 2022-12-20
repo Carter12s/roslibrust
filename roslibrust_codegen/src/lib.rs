@@ -2,6 +2,7 @@ use log::*;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use std::collections::{BTreeMap, VecDeque};
+use std::fmt::Debug;
 use std::path::PathBuf;
 use std::str::FromStr;
 use syn::parse_quote;
@@ -15,14 +16,15 @@ pub mod utils;
 pub mod integral_types;
 pub use integral_types::*;
 
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::fmt::Debug;
+// These three need to be pub so generated code will pick-up dependency
+pub use serde::de::DeserializeOwned;
+pub use serde::Serialize;
+pub use smart_default::SmartDefault;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
 pub trait RosMessageType:
-    'static + DeserializeOwned + Default + Send + Serialize + Sync + Clone + Debug
+    'static + DeserializeOwned + Send + Serialize + Sync + Clone + Debug
 {
     /// Expected to be the combination pkg_name/type_name string describing the type to ros
     /// Example: std_msgs/Header
@@ -264,11 +266,15 @@ fn resolve_message_dependencies(
 }
 
 fn derive_attrs() -> Vec<syn::Attribute> {
+    // TODO we should look into using $crate here...
+    // The way we're currently doing it leaks a dependency on these crates to users...
+    // However using $crate breaks the generated code in non-macro usage
+    // Pass a flag in "if_macro"?
     vec![
         parse_quote! { #[derive(::serde::Deserialize)] },
         parse_quote! { #[derive(::serde::Serialize)] },
+        parse_quote! { #[derive(::smart_default::SmartDefault)] },
         parse_quote! { #[derive(Debug)] },
-        parse_quote! { #[derive(Default)] },
         parse_quote! { #[derive(Clone)] },
         parse_quote! { #[derive(PartialEq)] },
     ]
@@ -318,7 +324,28 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
             let field_type = TokenStream::from_str(field_type.as_str()).unwrap();
 
             let field_name = format_ident!("r#{}", field.field_name);
-            quote! { pub #field_name: #field_type, }
+            if let Some(default_val) = field.default {
+                // If a default value for filed was detected (ros2 feature), use smart default to set it
+                // TODO likely bugs here from various syntaxes... need lotta tests...
+
+                // Attempt #1 - Abusing .into()
+                // Abusing the _code function of smart_default and into() to fix a bunch of weird ROS <-> Rust issues
+                // 0 is an allowable default for a float, which rust won't accepts so has to be converted to 0.0
+                // [0, 1] is an allowable default for Vec<f64>, which rust won't accept so abusing .into()
+                // this 100% doesn't cover all the evil, but gets us pretty far for a first pass
+                // let default_val = format!("{default_val}.into()");
+
+                // Attempt #2 - Abusing serde_json
+                // escape quotes in string because we're embedding in another string #Haxor
+                let default_val = default_val.replace("\"","\\\"");
+                let default_val = format!("serde_json::from_str(\"{default_val}\").unwrap()");
+                quote! {
+                  #[default(_code=#default_val)]
+                  pub #field_name: #field_type,
+                }
+            } else {
+                quote! { pub #field_name: #field_type, }
+            }
         })
         .collect::<Vec<TokenStream>>();
 

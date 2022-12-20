@@ -62,6 +62,8 @@ pub struct FieldType {
 pub struct FieldInfo {
     pub field_type: FieldType,
     pub field_name: String,
+    // Exists if this is a ros2 message field with a default value
+    pub default: Option<String>,
 }
 
 /// Describes all information for a constant within a message
@@ -148,9 +150,33 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
                 "Did not find field_name on line: {line} while parsing {}/{name}",
                 &package.name
             ));
+
+            // Determine if there is a default value for this field
+            let default = if matches!(package.version, Some(RosVersion::ROS2)) {
+                // For ros2 packages only, check if there is a default value
+                let line_after_sep = line[sep+1..].trim();
+                match line_after_sep.find(' ') {
+                    Some(def_start) => {
+                        let remainder = line_after_sep[def_start..].trim();
+                        if remainder.is_empty() {
+                            None
+                        }else{
+                            Some(remainder.to_string())
+                        }
+                    },
+                    None => {
+                        // No extra space separator found, not default was provided
+                        None
+                    }
+                }
+            }else{
+                None
+            };
+
             result.fields.push(FieldInfo {
                 field_type,
                 field_name: field_name.to_string(),
+                default
             });
         }
     }
@@ -281,7 +307,7 @@ fn strip_comments(line: &str) -> &str {
 fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
     let items = type_str.split('/').collect::<Vec<&str>>();
 
-    // Select which type converison map to use depending on package version
+    // Select which type conversion map to use depending on package version
     let prop_map: &HashMap<&'static str, &'static str> = match pkg.version {
         Some(RosVersion::ROS1) => &ROS_TYPE_TO_RUST_TYPE_MAP,
         Some(RosVersion::ROS2) => &ROS_2_TYPE_TO_RUST_TYPE_MAP,

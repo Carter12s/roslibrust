@@ -6,8 +6,11 @@ edition = "2021"
 [dependencies]
 roslibrust = { path = "../roslibrust" }
 roslibrust_codegen = { path = "../roslibrust_codegen" }
-serde = { version = "1.0", features = ["derive"] }
 lazy_static = "1.4"
+# None of these three dependencies should have to be in here, they are leaking from generated code...
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+smart-default = "0.6"
 
 [dev-dependencies]
 diffy = "0.3.0"
