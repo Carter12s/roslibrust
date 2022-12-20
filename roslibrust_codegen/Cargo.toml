@@ -18,8 +18,7 @@ log = "0.4"
 proc-macro2 = "1.0"
 quote = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-# Smart deafult is used in the generated code, not 100% this the correct place for it?
-smart-default = "0.6"
+serde_json = "1.0"
 syn = "1.0"
 tokio = { version = "1.0", features = ["time", "signal"], optional = true}
 walkdir = "2.3"

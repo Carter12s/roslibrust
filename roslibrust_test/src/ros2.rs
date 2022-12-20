@@ -520,13 +520,13 @@ pub mod geometry_msgs {
         PartialEq,
     )]
     pub struct Quaternion {
-        #[default(_code = "serde_json::from_str(\"0\").unwrap()")]
+        #[default(0f64)]
         pub r#x: f64,
-        #[default(_code = "serde_json::from_str(\"0\").unwrap()")]
+        #[default(0f64)]
         pub r#y: f64,
-        #[default(_code = "serde_json::from_str(\"0\").unwrap()")]
+        #[default(0f64)]
         pub r#z: f64,
-        #[default(_code = "serde_json::from_str(\"1\").unwrap()")]
+        #[default(1f64)]
         pub r#w: f64,
     }
     impl ::roslibrust_codegen::RosMessageType for Quaternion {
@@ -2341,14 +2341,18 @@ pub mod test_msgs {
         PartialEq,
     )]
     pub struct Deafults {
-        #[default(_code = "serde_json::from_str(\"42\").unwrap()")]
+        #[default(42u8)]
         pub r#x: u8,
-        #[default(_code = "serde_json::from_str(\"-2000\").unwrap()")]
+        # [default (- 2000i16)]
         pub r#y: i16,
-        #[default(_code = "serde_json::from_str(\"\\\"John Doe\\\"\").unwrap()")]
+        #[default("John Doe")]
         pub r#full_name: ::std::string::String,
-        #[default(_code = "serde_json::from_str(\"[-200, -100, 0, 100, 200]\").unwrap()")]
+        #[default(_code = "vec![-200, -100, 0, 100, 200]")]
         pub r#samples: ::std::vec::Vec<i32>,
+        #[default(_code = "vec![-200.0, -1.0, 0.0]")]
+        pub r#f_samples: ::std::vec::Vec<f32>,
+        #[default(_code = "[\"hello\", \"world\"].iter().map(|x| x.to_string()).collect()")]
+        pub r#s_vec: ::std::vec::Vec<::std::string::String>,
     }
     impl ::roslibrust_codegen::RosMessageType for Deafults {
         const ROS_TYPE_NAME: &'static str = "test_msgs/Deafults";

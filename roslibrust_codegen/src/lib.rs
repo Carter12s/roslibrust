@@ -1,6 +1,8 @@
 use log::*;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Debug;
 use std::path::PathBuf;
@@ -15,11 +17,6 @@ pub mod utils;
 
 pub mod integral_types;
 pub use integral_types::*;
-
-// These three need to be pub so generated code will pick-up dependency
-pub use serde::de::DeserializeOwned;
-pub use serde::Serialize;
-pub use smart_default::SmartDefault;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
@@ -307,25 +304,26 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
         .into_iter()
         .map(|mut field| {
             field.field_type.field_type = match field.field_type.package_name {
-                Some(pkg) => {
+                Some(ref pkg) => {
                     if pkg.as_str() == msg.package.as_str() {
                         format!("self::{}", field.field_type.field_type)
                     } else {
                         format!("{}::{}", pkg, field.field_type.field_type)
                     }
                 }
-                None => field.field_type.field_type,
+                None => field.field_type.field_type.clone(),
             };
             let field_type = if field.field_type.is_vec {
                 format!("::std::vec::Vec<{}>", field.field_type.field_type)
             } else {
-                field.field_type.field_type
+                field.field_type.field_type.clone()
             };
             let field_type = TokenStream::from_str(field_type.as_str()).unwrap();
 
             let field_name = format_ident!("r#{}", field.field_name);
-            if let Some(default_val) = field.default {
+            if let Some(ref default_val) = field.default {
                 // If a default value for filed was detected (ros2 feature), use smart default to set it
+                // TODO this 'sanitization' code should be moved to parse function
                 // TODO likely bugs here from various syntaxes... need lotta tests...
 
                 // Attempt #1 - Abusing .into()
@@ -334,14 +332,202 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
                 // [0, 1] is an allowable default for Vec<f64>, which rust won't accept so abusing .into()
                 // this 100% doesn't cover all the evil, but gets us pretty far for a first pass
                 // let default_val = format!("{default_val}.into()");
+                // This version is failing to work because .into() gets made about conversions into the same type?
+                // I think that is why it wasn't working, but really hard to determine error message source
 
                 // Attempt #2 - Abusing serde_json
                 // escape quotes in string because we're embedding in another string #Haxor
-                let default_val = default_val.replace("\"","\\\"");
-                let default_val = format!("serde_json::from_str(\"{default_val}\").unwrap()");
-                quote! {
-                  #[default(_code=#default_val)]
-                  pub #field_name: #field_type,
+                // let default_val = default_val.replace("\"", "\\\"");
+                // let default_val = format!("serde_json::from_str(\"{default_val}\").unwrap()");
+                // quote! {
+                //   #[default(_code=#default_val)]
+                //   pub #field_name: #field_type,
+                // }
+                // Okay so this version is working, but seems sinful
+                // One really shitty aspect is that it punts the problem to a runtime bug instead of a message gen bug
+                // We should really be able to validate the parsing of default at generation time...
+
+                // Attempt #3 - Matching 😭
+                // Okay so the only way I can figure out to do a better version of this is with a giant match statement
+                // Match on the string type of the field
+                // Within each match branch attempt to parse the default to given type by invoking serde_json (or some equivalent)
+                // then serialize the resulting parse back to a valid rust type and stick that string in the gen code...
+                let default_val = match field.field_type.field_type.as_str() {
+                    "f64" => {
+                        if !field.field_type.is_vec {
+                            let parsed: f64 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<f64> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            // TODO potential lose of precision here?
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "f32" => {
+                        if !field.field_type.is_vec {
+                            let parsed: f32 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<f32> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            // TODO potential lose of precision here?
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "u8" => {
+                        if !field.field_type.is_vec {
+                            let parsed: u8 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<u8> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "i8" => {
+                        if !field.field_type.is_vec {
+                            let parsed: i8 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<i8> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "u16" => {
+                        if !field.field_type.is_vec {
+                            let parsed: u16 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<u16> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "i16" => {
+                        if !field.field_type.is_vec {
+                            let parsed: i16 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<i16> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "u32" => {
+                        if !field.field_type.is_vec {
+                            let parsed: u32 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<u32> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "i32" => {
+                        if !field.field_type.is_vec {
+                            let parsed: i32 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<i32> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "u64" => {
+                        if !field.field_type.is_vec {
+                            let parsed: u64 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<u64> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "i64" => {
+                        if !field.field_type.is_vec {
+                            let parsed: i64 = serde_json::from_str(&default_val).expect(&format!(
+                                "Failed to parse default value for field {field:?}"
+                            ));
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<i64> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("vec!{parsed:?}");
+                            quote! { #vec_str }
+                        }
+                    }
+                    "::std::string::String" => {
+                        if !field.field_type.is_vec {
+                            let parsed: String = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            quote! { #parsed }
+                        } else {
+                            let parsed: Vec<String> = serde_json::from_str(&default_val).expect(
+                                &format!("Failed to parse default value for field {field:?}"),
+                            );
+                            let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
+                            quote! { #vec_str }
+                        }
+                    }
+                    _ => {
+                        panic!(
+                            "Found default for type which does not support default: {}",
+                            &field.field_type.field_type
+                        );
+                    }
+                };
+                if !field.field_type.is_vec {
+                    // For non vectors use smart_default's constant style
+                    quote! {
+                      #[default(#default_val)]
+                      pub #field_name: #field_type,
+                    }
+                } else {
+                    // For vectors use smart_defaults "dynamic" style
+                    quote! {
+                        #[default(_code = #default_val)]
+                        pub #field_name: #field_type,
+                    }
                 }
             } else {
                 quote! { pub #field_name: #field_type, }

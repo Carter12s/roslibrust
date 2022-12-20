@@ -559,7 +559,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "smart-default",
+ "serde_json",
  "syn",
  "tokio",
  "walkdir",
