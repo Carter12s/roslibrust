@@ -505,7 +505,8 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
                             let parsed: Vec<String> = serde_json::from_str(&default_val).expect(
                                 &format!("Failed to parse default value for field {field:?}"),
                             );
-                            let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
+                            let vec_str =
+                                format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
                             quote! { #vec_str }
                         }
                     }

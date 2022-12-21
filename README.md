@@ -16,6 +16,8 @@ Fully Supported: Noetic, Galactic, Humble.
 
 ## Roadmap
 
+Rough overview of the features planned to built for this crate in what order:
+
 | Feature                      | Status                                                      |
 |------------------------------|-------------------------------------------------------------|
 | examples                     | ✅ |
@@ -28,6 +30,7 @@ Fully Supported: Noetic, Galactic, Humble.
 | services                     | ✅ |
 | rosapi                       | ✅ (ROS1 only for now) |
 | TLS / wss://                 | Should be working, untested |
+| ROS2 msgs length limits      | Planned |
 | cbor                         | Planned |
 | rosbridge status access      | Planned |
 | rosout logger                | Planned |

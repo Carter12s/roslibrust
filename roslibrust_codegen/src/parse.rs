@@ -154,29 +154,29 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
             // Determine if there is a default value for this field
             let default = if matches!(package.version, Some(RosVersion::ROS2)) {
                 // For ros2 packages only, check if there is a default value
-                let line_after_sep = line[sep+1..].trim();
+                let line_after_sep = line[sep + 1..].trim();
                 match line_after_sep.find(' ') {
                     Some(def_start) => {
                         let remainder = line_after_sep[def_start..].trim();
                         if remainder.is_empty() {
                             None
-                        }else{
+                        } else {
                             Some(remainder.to_string())
                         }
-                    },
+                    }
                     None => {
                         // No extra space separator found, not default was provided
                         None
                     }
                 }
-            }else{
+            } else {
                 None
             };
 
             result.fields.push(FieldInfo {
                 field_type,
                 field_name: field_name.to_string(),
-                default
+                default,
             });
         }
     }
