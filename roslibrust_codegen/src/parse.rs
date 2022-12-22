@@ -1,3 +1,6 @@
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 
 use crate::utils::{Package, RosVersion};
@@ -58,12 +61,21 @@ pub struct FieldType {
 }
 
 /// Describes all information for an individual field
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug)]
 pub struct FieldInfo {
     pub field_type: FieldType,
     pub field_name: String,
     // Exists if this is a ros2 message field with a default value
-    pub default: Option<String>,
+    // Contains a literal token representing the value, and bool indicating if the value is static.
+    pub default: Option<TokenStream>,
+}
+
+// Because TokenStream doesn't impl PartialEq we have to do it manually for FieldInfo
+impl PartialEq for FieldInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.field_type == other.field_type && self.field_name == other.field_name
+        // && self.default == other.default
+    }
 }
 
 /// Describes all information for a constant within a message
@@ -161,7 +173,11 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
                         if remainder.is_empty() {
                             None
                         } else {
-                            Some(remainder.to_string())
+                            Some(parse_ros_value(
+                                &field_type.field_type,
+                                remainder,
+                                field_type.is_vec,
+                            ))
                         }
                     }
                     None => {
@@ -368,6 +384,72 @@ fn parse_type(type_str: &str, pkg: &Package) -> FieldType {
         }
         _ => {
             panic!("Found malformed type: {type_str}");
+        }
+    }
+}
+
+// Converts a ROS string to a literal value
+// Not intended to be called directly, but only via parse_ros_value.
+// Wraps a serde_json deserialize call with our style of error handling.
+fn generic_parse_value<T: DeserializeOwned + ToTokens + std::fmt::Debug>(
+    value: &str,
+    is_vec: bool,
+) -> TokenStream {
+    if is_vec {
+        let parsed: Vec<T> = serde_json::from_str(value).expect(
+            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
+        );
+        let vec_str = format!("vec!{parsed:?}");
+        quote! { #vec_str }
+    } else {
+        let parsed: T = serde_json::from_str(value).expect(
+            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
+        );
+        quote! { #parsed }
+    }
+}
+
+/// For a given, which is either a ROS constant or default, parse the constant and convert it into a rust TokenStream
+/// which represents the same literal value. This handles frustrating edge cases that are not well documented features
+/// in either ROS1 or ROS2 such as:
+/// - `f32[] MY_CONST_ARRAY=[0, 1]` we have to convert the value of the constant to `vec![0.0, 1.0]`
+/// - `string[] names_field ['first', "second"]` we have to convert the default value to `vec!["first".to_string(), "second".to_string()]
+/// Note: I could find NO documentation from ROS about what was actually legal or expected for these value expressions
+/// Note: ROS says "strings are not escaped". No idea how the eff I'm actually supposed to handle that so likely bugs...
+/// Note: No idea of "constant arrays" are intended to be supported in ROS...
+/// `ros_type` -- Expects the string key of the determined rust type to hold the value. Should come from one of the type map constants.
+/// `value` -- Expects the trimmed string containing only the value expression
+/// `is_vec` -- True iff the type is an array type
+/// TODO I'd like this to take FieldType, but want it to also work with constants...
+fn parse_ros_value(ros_type: &str, value: &str, is_vec: bool) -> TokenStream {
+    match ros_type {
+        "bool" => generic_parse_value::<bool>(value, is_vec),
+        "float64" => generic_parse_value::<f64>(value, is_vec),
+        "float32" => generic_parse_value::<f32>(value, is_vec),
+        "uint8" | "char" | "byte" => generic_parse_value::<u8>(value, is_vec),
+        "int8" => generic_parse_value::<i8>(value, is_vec),
+        "uint16" => generic_parse_value::<u16>(value, is_vec),
+        "int16" => generic_parse_value::<i16>(value, is_vec),
+        "uint32" => generic_parse_value::<u32>(value, is_vec),
+        "int32" => generic_parse_value::<i32>(value, is_vec),
+        "uint64" => generic_parse_value::<u64>(value, is_vec),
+        "int64" => generic_parse_value::<i64>(value, is_vec),
+        "string" => {
+            // TODO there is a bug here, no idea how I should be attempting to convert / escape single quotes here...
+
+            // String is a special case because of quotes and to_string()
+            if is_vec {
+                let parsed: Vec<String> = serde_json::from_str(value).expect(
+            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to Vec<String>"));
+                let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
+                quote! { #vec_str }
+            } else {
+                let parsed: String = serde_json::from_str(value).expect(&format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
+                quote! { #parsed }
+            }
+        }
+        _ => {
+            panic!("Found default for type which does not support default: {ros_type}");
         }
     }
 }
