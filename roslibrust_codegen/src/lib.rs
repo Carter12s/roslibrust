@@ -346,17 +346,13 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
         .into_iter()
         .map(|constant| {
             let constant_name = format_ident!("r#{}", constant.constant_name);
-            let (constant_type, constant_value) =
-                if constant.constant_type == "::std::string::String" {
-                    let constant_value = constant.constant_value;
-                    (String::from("&'static str"), quote! { #constant_value })
-                } else {
-                    (
-                        constant.constant_type,
-                        TokenStream::from_str(constant.constant_value.as_str()).unwrap(),
-                    )
-                };
+            let constant_type = if constant.constant_type == "::std::string::String" {
+                String::from("&'static str")
+            } else {
+                constant.constant_type
+            };
             let constant_type = TokenStream::from_str(constant_type.as_str()).unwrap();
+            let constant_value = constant.constant_value;
             quote! { pub const #constant_name: #constant_type = #constant_value; }
         })
         .collect::<Vec<TokenStream>>();

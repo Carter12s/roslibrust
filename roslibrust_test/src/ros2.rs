@@ -45,16 +45,16 @@ pub mod actionlib_msgs {
         const ROS_TYPE_NAME: &'static str = "actionlib_msgs/GoalStatus";
     }
     impl GoalStatus {
-        pub const r#PENDING: u8 = 0;
-        pub const r#ACTIVE: u8 = 1;
-        pub const r#PREEMPTED: u8 = 2;
-        pub const r#SUCCEEDED: u8 = 3;
-        pub const r#ABORTED: u8 = 4;
-        pub const r#REJECTED: u8 = 5;
-        pub const r#PREEMPTING: u8 = 6;
-        pub const r#RECALLING: u8 = 7;
-        pub const r#RECALLED: u8 = 8;
-        pub const r#LOST: u8 = 9;
+        pub const r#PENDING: u8 = 0u8;
+        pub const r#ACTIVE: u8 = 1u8;
+        pub const r#PREEMPTED: u8 = 2u8;
+        pub const r#SUCCEEDED: u8 = 3u8;
+        pub const r#ABORTED: u8 = 4u8;
+        pub const r#REJECTED: u8 = 5u8;
+        pub const r#PREEMPTING: u8 = 6u8;
+        pub const r#RECALLING: u8 = 7u8;
+        pub const r#RECALLED: u8 = 8u8;
+        pub const r#LOST: u8 = 9u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -153,10 +153,10 @@ pub mod diagnostic_msgs {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/DiagnosticStatus";
     }
     impl DiagnosticStatus {
-        pub const r#OK: u8 = 0;
-        pub const r#WARN: u8 = 1;
-        pub const r#ERROR: u8 = 2;
-        pub const r#STALE: u8 = 3;
+        pub const r#OK: u8 = 0u8;
+        pub const r#WARN: u8 = 1u8;
+        pub const r#ERROR: u8 = 2u8;
+        pub const r#STALE: u8 = 3u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -834,11 +834,11 @@ pub mod nav_msgs {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/LoadMapResponse";
     }
     impl LoadMapResponse {
-        pub const r#RESULT_SUCCESS: u8 = 0;
-        pub const r#RESULT_MAP_DOES_NOT_EXIST: u8 = 1;
-        pub const r#RESULT_INVALID_MAP_DATA: u8 = 2;
-        pub const r#RESULT_INVALID_MAP_METADATA: u8 = 3;
-        pub const r#RESULT_UNDEFINED_FAILURE: u8 = 255;
+        pub const r#RESULT_SUCCESS: u8 = 0u8;
+        pub const r#RESULT_MAP_DOES_NOT_EXIST: u8 = 1u8;
+        pub const r#RESULT_INVALID_MAP_DATA: u8 = 2u8;
+        pub const r#RESULT_INVALID_MAP_METADATA: u8 = 3u8;
+        pub const r#RESULT_UNDEFINED_FAILURE: u8 = 255u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1010,27 +1010,27 @@ pub mod sensor_msgs {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/BatteryState";
     }
     impl BatteryState {
-        pub const r#POWER_SUPPLY_STATUS_UNKNOWN: u8 = 0;
-        pub const r#POWER_SUPPLY_STATUS_CHARGING: u8 = 1;
-        pub const r#POWER_SUPPLY_STATUS_DISCHARGING: u8 = 2;
-        pub const r#POWER_SUPPLY_STATUS_NOT_CHARGING: u8 = 3;
-        pub const r#POWER_SUPPLY_STATUS_FULL: u8 = 4;
-        pub const r#POWER_SUPPLY_HEALTH_UNKNOWN: u8 = 0;
-        pub const r#POWER_SUPPLY_HEALTH_GOOD: u8 = 1;
-        pub const r#POWER_SUPPLY_HEALTH_OVERHEAT: u8 = 2;
-        pub const r#POWER_SUPPLY_HEALTH_DEAD: u8 = 3;
-        pub const r#POWER_SUPPLY_HEALTH_OVERVOLTAGE: u8 = 4;
-        pub const r#POWER_SUPPLY_HEALTH_UNSPEC_FAILURE: u8 = 5;
-        pub const r#POWER_SUPPLY_HEALTH_COLD: u8 = 6;
-        pub const r#POWER_SUPPLY_HEALTH_WATCHDOG_TIMER_EXPIRE: u8 = 7;
-        pub const r#POWER_SUPPLY_HEALTH_SAFETY_TIMER_EXPIRE: u8 = 8;
-        pub const r#POWER_SUPPLY_TECHNOLOGY_UNKNOWN: u8 = 0;
-        pub const r#POWER_SUPPLY_TECHNOLOGY_NIMH: u8 = 1;
-        pub const r#POWER_SUPPLY_TECHNOLOGY_LION: u8 = 2;
-        pub const r#POWER_SUPPLY_TECHNOLOGY_LIPO: u8 = 3;
-        pub const r#POWER_SUPPLY_TECHNOLOGY_LIFE: u8 = 4;
-        pub const r#POWER_SUPPLY_TECHNOLOGY_NICD: u8 = 5;
-        pub const r#POWER_SUPPLY_TECHNOLOGY_LIMN: u8 = 6;
+        pub const r#POWER_SUPPLY_STATUS_UNKNOWN: u8 = 0u8;
+        pub const r#POWER_SUPPLY_STATUS_CHARGING: u8 = 1u8;
+        pub const r#POWER_SUPPLY_STATUS_DISCHARGING: u8 = 2u8;
+        pub const r#POWER_SUPPLY_STATUS_NOT_CHARGING: u8 = 3u8;
+        pub const r#POWER_SUPPLY_STATUS_FULL: u8 = 4u8;
+        pub const r#POWER_SUPPLY_HEALTH_UNKNOWN: u8 = 0u8;
+        pub const r#POWER_SUPPLY_HEALTH_GOOD: u8 = 1u8;
+        pub const r#POWER_SUPPLY_HEALTH_OVERHEAT: u8 = 2u8;
+        pub const r#POWER_SUPPLY_HEALTH_DEAD: u8 = 3u8;
+        pub const r#POWER_SUPPLY_HEALTH_OVERVOLTAGE: u8 = 4u8;
+        pub const r#POWER_SUPPLY_HEALTH_UNSPEC_FAILURE: u8 = 5u8;
+        pub const r#POWER_SUPPLY_HEALTH_COLD: u8 = 6u8;
+        pub const r#POWER_SUPPLY_HEALTH_WATCHDOG_TIMER_EXPIRE: u8 = 7u8;
+        pub const r#POWER_SUPPLY_HEALTH_SAFETY_TIMER_EXPIRE: u8 = 8u8;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_UNKNOWN: u8 = 0u8;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_NIMH: u8 = 1u8;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_LION: u8 = 2u8;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_LIPO: u8 = 3u8;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_LIFE: u8 = 4u8;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_NICD: u8 = 5u8;
+        pub const r#POWER_SUPPLY_TECHNOLOGY_LIMN: u8 = 6u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1220,9 +1220,9 @@ pub mod sensor_msgs {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/JoyFeedback";
     }
     impl JoyFeedback {
-        pub const r#TYPE_LED: u8 = 0;
-        pub const r#TYPE_RUMBLE: u8 = 1;
-        pub const r#TYPE_BUZZER: u8 = 2;
+        pub const r#TYPE_LED: u8 = 0u8;
+        pub const r#TYPE_RUMBLE: u8 = 1u8;
+        pub const r#TYPE_BUZZER: u8 = 2u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1360,10 +1360,10 @@ pub mod sensor_msgs {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/NavSatFix";
     }
     impl NavSatFix {
-        pub const r#COVARIANCE_TYPE_UNKNOWN: u8 = 0;
-        pub const r#COVARIANCE_TYPE_APPROXIMATED: u8 = 1;
-        pub const r#COVARIANCE_TYPE_DIAGONAL_KNOWN: u8 = 2;
-        pub const r#COVARIANCE_TYPE_KNOWN: u8 = 3;
+        pub const r#COVARIANCE_TYPE_UNKNOWN: u8 = 0u8;
+        pub const r#COVARIANCE_TYPE_APPROXIMATED: u8 = 1u8;
+        pub const r#COVARIANCE_TYPE_DIAGONAL_KNOWN: u8 = 2u8;
+        pub const r#COVARIANCE_TYPE_KNOWN: u8 = 3u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1382,14 +1382,14 @@ pub mod sensor_msgs {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/NavSatStatus";
     }
     impl NavSatStatus {
-        pub const r#STATUS_NO_FIX: i8 = -1;
-        pub const r#STATUS_FIX: i8 = 0;
-        pub const r#STATUS_SBAS_FIX: i8 = 1;
-        pub const r#STATUS_GBAS_FIX: i8 = 2;
-        pub const r#SERVICE_GPS: u16 = 1;
-        pub const r#SERVICE_GLONASS: u16 = 2;
-        pub const r#SERVICE_COMPASS: u16 = 4;
-        pub const r#SERVICE_GALILEO: u16 = 8;
+        pub const r#STATUS_NO_FIX: i8 = -1i8;
+        pub const r#STATUS_FIX: i8 = 0i8;
+        pub const r#STATUS_SBAS_FIX: i8 = 1i8;
+        pub const r#STATUS_GBAS_FIX: i8 = 2i8;
+        pub const r#SERVICE_GPS: u16 = 1u16;
+        pub const r#SERVICE_GLONASS: u16 = 2u16;
+        pub const r#SERVICE_COMPASS: u16 = 4u16;
+        pub const r#SERVICE_GALILEO: u16 = 8u16;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1450,14 +1450,14 @@ pub mod sensor_msgs {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/PointField";
     }
     impl PointField {
-        pub const r#INT8: u8 = 1;
-        pub const r#UINT8: u8 = 2;
-        pub const r#INT16: u8 = 3;
-        pub const r#UINT16: u8 = 4;
-        pub const r#INT32: u8 = 5;
-        pub const r#UINT32: u8 = 6;
-        pub const r#FLOAT32: u8 = 7;
-        pub const r#FLOAT64: u8 = 8;
+        pub const r#INT8: u8 = 1u8;
+        pub const r#UINT8: u8 = 2u8;
+        pub const r#INT16: u8 = 3u8;
+        pub const r#UINT16: u8 = 4u8;
+        pub const r#INT32: u8 = 5u8;
+        pub const r#UINT32: u8 = 6u8;
+        pub const r#FLOAT32: u8 = 7u8;
+        pub const r#FLOAT64: u8 = 8u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1480,8 +1480,8 @@ pub mod sensor_msgs {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Range";
     }
     impl Range {
-        pub const r#ULTRASOUND: u8 = 0;
-        pub const r#INFRARED: u8 = 1;
+        pub const r#ULTRASOUND: u8 = 0u8;
+        pub const r#INFRARED: u8 = 1u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1668,20 +1668,20 @@ pub mod shape_msgs {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/SolidPrimitive";
     }
     impl SolidPrimitive {
-        pub const r#BOX: u8 = 1;
-        pub const r#SPHERE: u8 = 2;
-        pub const r#CYLINDER: u8 = 3;
-        pub const r#CONE: u8 = 4;
-        pub const r#PRISM: u8 = 5;
-        pub const r#BOX_X: u8 = 0;
-        pub const r#BOX_Y: u8 = 1;
-        pub const r#BOX_Z: u8 = 2;
-        pub const r#SPHERE_RADIUS: u8 = 0;
-        pub const r#CYLINDER_HEIGHT: u8 = 0;
-        pub const r#CYLINDER_RADIUS: u8 = 1;
-        pub const r#CONE_HEIGHT: u8 = 0;
-        pub const r#CONE_RADIUS: u8 = 1;
-        pub const r#PRISM_HEIGHT: u8 = 0;
+        pub const r#BOX: u8 = 1u8;
+        pub const r#SPHERE: u8 = 2u8;
+        pub const r#CYLINDER: u8 = 3u8;
+        pub const r#CONE: u8 = 4u8;
+        pub const r#PRISM: u8 = 5u8;
+        pub const r#BOX_X: u8 = 0u8;
+        pub const r#BOX_Y: u8 = 1u8;
+        pub const r#BOX_Z: u8 = 2u8;
+        pub const r#SPHERE_RADIUS: u8 = 0u8;
+        pub const r#CYLINDER_HEIGHT: u8 = 0u8;
+        pub const r#CYLINDER_RADIUS: u8 = 1u8;
+        pub const r#CONE_HEIGHT: u8 = 0u8;
+        pub const r#CONE_RADIUS: u8 = 1u8;
+        pub const r#PRISM_HEIGHT: u8 = 0u8;
     }
 }
 #[allow(unused_imports)]
@@ -2513,13 +2513,13 @@ pub mod visualization_msgs {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/ImageMarker";
     }
     impl ImageMarker {
-        pub const r#CIRCLE: i32 = 0;
-        pub const r#LINE_STRIP: i32 = 1;
-        pub const r#LINE_LIST: i32 = 2;
-        pub const r#POLYGON: i32 = 3;
-        pub const r#POINTS: i32 = 4;
-        pub const r#ADD: i32 = 0;
-        pub const r#REMOVE: i32 = 1;
+        pub const r#CIRCLE: i32 = 0i32;
+        pub const r#LINE_STRIP: i32 = 1i32;
+        pub const r#LINE_LIST: i32 = 2i32;
+        pub const r#POLYGON: i32 = 3i32;
+        pub const r#POINTS: i32 = 4i32;
+        pub const r#ADD: i32 = 0i32;
+        pub const r#REMOVE: i32 = 1i32;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2565,19 +2565,19 @@ pub mod visualization_msgs {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerControl";
     }
     impl InteractiveMarkerControl {
-        pub const r#INHERIT: u8 = 0;
-        pub const r#FIXED: u8 = 1;
-        pub const r#VIEW_FACING: u8 = 2;
-        pub const r#NONE: u8 = 0;
-        pub const r#MENU: u8 = 1;
-        pub const r#BUTTON: u8 = 2;
-        pub const r#MOVE_AXIS: u8 = 3;
-        pub const r#MOVE_PLANE: u8 = 4;
-        pub const r#ROTATE_AXIS: u8 = 5;
-        pub const r#MOVE_ROTATE: u8 = 6;
-        pub const r#MOVE_3D: u8 = 7;
-        pub const r#ROTATE_3D: u8 = 8;
-        pub const r#MOVE_ROTATE_3D: u8 = 9;
+        pub const r#INHERIT: u8 = 0u8;
+        pub const r#FIXED: u8 = 1u8;
+        pub const r#VIEW_FACING: u8 = 2u8;
+        pub const r#NONE: u8 = 0u8;
+        pub const r#MENU: u8 = 1u8;
+        pub const r#BUTTON: u8 = 2u8;
+        pub const r#MOVE_AXIS: u8 = 3u8;
+        pub const r#MOVE_PLANE: u8 = 4u8;
+        pub const r#ROTATE_AXIS: u8 = 5u8;
+        pub const r#MOVE_ROTATE: u8 = 6u8;
+        pub const r#MOVE_3D: u8 = 7u8;
+        pub const r#ROTATE_3D: u8 = 8u8;
+        pub const r#MOVE_ROTATE_3D: u8 = 9u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2603,12 +2603,12 @@ pub mod visualization_msgs {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerFeedback";
     }
     impl InteractiveMarkerFeedback {
-        pub const r#KEEP_ALIVE: u8 = 0;
-        pub const r#POSE_UPDATE: u8 = 1;
-        pub const r#MENU_SELECT: u8 = 2;
-        pub const r#BUTTON_CLICK: u8 = 3;
-        pub const r#MOUSE_DOWN: u8 = 4;
-        pub const r#MOUSE_UP: u8 = 5;
+        pub const r#KEEP_ALIVE: u8 = 0u8;
+        pub const r#POSE_UPDATE: u8 = 1u8;
+        pub const r#MENU_SELECT: u8 = 2u8;
+        pub const r#BUTTON_CLICK: u8 = 3u8;
+        pub const r#MOUSE_DOWN: u8 = 4u8;
+        pub const r#MOUSE_UP: u8 = 5u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2665,8 +2665,8 @@ pub mod visualization_msgs {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/InteractiveMarkerUpdate";
     }
     impl InteractiveMarkerUpdate {
-        pub const r#KEEP_ALIVE: u8 = 0;
-        pub const r#UPDATE: u8 = 1;
+        pub const r#KEEP_ALIVE: u8 = 0u8;
+        pub const r#UPDATE: u8 = 1u8;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2702,22 +2702,22 @@ pub mod visualization_msgs {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/Marker";
     }
     impl Marker {
-        pub const r#ARROW: i32 = 0;
-        pub const r#CUBE: i32 = 1;
-        pub const r#SPHERE: i32 = 2;
-        pub const r#CYLINDER: i32 = 3;
-        pub const r#LINE_STRIP: i32 = 4;
-        pub const r#LINE_LIST: i32 = 5;
-        pub const r#CUBE_LIST: i32 = 6;
-        pub const r#SPHERE_LIST: i32 = 7;
-        pub const r#POINTS: i32 = 8;
-        pub const r#TEXT_VIEW_FACING: i32 = 9;
-        pub const r#MESH_RESOURCE: i32 = 10;
-        pub const r#TRIANGLE_LIST: i32 = 11;
-        pub const r#ADD: i32 = 0;
-        pub const r#MODIFY: i32 = 0;
-        pub const r#DELETE: i32 = 2;
-        pub const r#DELETEALL: i32 = 3;
+        pub const r#ARROW: i32 = 0i32;
+        pub const r#CUBE: i32 = 1i32;
+        pub const r#SPHERE: i32 = 2i32;
+        pub const r#CYLINDER: i32 = 3i32;
+        pub const r#LINE_STRIP: i32 = 4i32;
+        pub const r#LINE_LIST: i32 = 5i32;
+        pub const r#CUBE_LIST: i32 = 6i32;
+        pub const r#SPHERE_LIST: i32 = 7i32;
+        pub const r#POINTS: i32 = 8i32;
+        pub const r#TEXT_VIEW_FACING: i32 = 9i32;
+        pub const r#MESH_RESOURCE: i32 = 10i32;
+        pub const r#TRIANGLE_LIST: i32 = 11i32;
+        pub const r#ADD: i32 = 0i32;
+        pub const r#MODIFY: i32 = 0i32;
+        pub const r#DELETE: i32 = 2i32;
+        pub const r#DELETEALL: i32 = 3i32;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2754,9 +2754,9 @@ pub mod visualization_msgs {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/MenuEntry";
     }
     impl MenuEntry {
-        pub const r#FEEDBACK: u8 = 0;
-        pub const r#ROSRUN: u8 = 1;
-        pub const r#ROSLAUNCH: u8 = 2;
+        pub const r#FEEDBACK: u8 = 0u8;
+        pub const r#ROSRUN: u8 = 1u8;
+        pub const r#ROSLAUNCH: u8 = 2u8;
     }
     #[allow(non_snake_case)]
     #[derive(

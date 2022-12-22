@@ -80,11 +80,19 @@ impl PartialEq for FieldInfo {
 
 /// Describes all information for a constant within a message
 /// Note: Constants are not fully supported yet (waiting on codegen support)
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug)]
 pub struct ConstantInfo {
     pub constant_type: String,
     pub constant_name: String,
-    pub constant_value: String,
+    pub constant_value: TokenStream,
+}
+
+// Because TokenStream doesn't impl PartialEq we have to do it manually for ConstantInfo
+impl PartialEq for ConstantInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.constant_type == other.constant_type && self.constant_name == other.constant_name
+        // && self.constant_value == other.constant_value
+    }
 }
 
 /// Describes all information for a single message file
@@ -144,8 +152,9 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
             }
 
             let constant_value = line[sep + equal_i + 1..].trim().to_string();
+            // TODO bug here, explicitly not handling constant vec until we can manage static array generation
+            let constant_value = parse_ros_value(&constant_type, &constant_value, false);
             result.constants.push(ConstantInfo {
-                // NOTE: Bug here, no idea how to support constant vectors etc...
                 constant_type,
                 constant_name,
                 constant_value,
@@ -435,15 +444,16 @@ fn parse_ros_value(ros_type: &str, value: &str, is_vec: bool) -> TokenStream {
         "uint64" => generic_parse_value::<u64>(value, is_vec),
         "int64" => generic_parse_value::<i64>(value, is_vec),
         "string" => {
-            // TODO there is a bug here, no idea how I should be attempting to convert / escape single quotes here...
-
             // String is a special case because of quotes and to_string()
             if is_vec {
+                // TODO there is a bug here, no idea how I should be attempting to convert / escape single quotes here...
                 let parsed: Vec<String> = serde_json::from_str(value).expect(
             &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to Vec<String>"));
                 let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
                 quote! { #vec_str }
             } else {
+                // Halfass attempt to deal with ROS's string escaping / quote bullshit
+                let value = &value.replace("\'", "\"");
                 let parsed: String = serde_json::from_str(value).expect(&format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
                 quote! { #parsed }
             }
