@@ -39,4 +39,3 @@ Rough overview of the features planned to built for this crate in what order:
 | cbor-raw                     | Uncertain if this package will support |
 | ros1 TCPROS / raw            | Uncertain if this package will support |
 | ros2 DDS / raw               | Uncertain if this package will support |
-
