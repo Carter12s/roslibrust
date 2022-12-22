@@ -1,3 +1,3 @@
-// These are kept in seperate namespaces to prevent name colissions
+// These are kept in separate namespaces to prevent name collisions
 pub mod ros1;
 pub mod ros2;

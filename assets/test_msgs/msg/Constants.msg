@@ -1,1 +1,0 @@
-string TEST_STR=/topic

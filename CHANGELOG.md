@@ -2,22 +2,28 @@
 All notable changes to this project will be documented in this file.
 
 ## Release Instructions:
-TODO Find a better way that this:
-
 Steps:
-- Make sure change log is up to date or master
-- Create new branch for the release
-- Modify Cargo.toml's to point not to workspace path but to named version
-- Commit changes to new branch
-- Release packages in order: roslibrust -> codegen_macro
+- Starting on master
+- Edit change log
+- Revise the version numbers in Cargo.toml files
+- Commit the changes
+- Release packages in order: roslibrust_codegen -> roslibrust_codegen_macro -> roslibrust
+- Push to master
+- Tag and push tag
 
-Note: have to manually modify codegen_macro's Cargo.toml to point at new roslibrust version.
 Note: need to publish with `cargo publish --all-features`
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Current - Unreleased
+
+### Added
+ - Support for default field values in ROS2 messages
+
+### Fixed
+ - Bug causing single quoted string constants in message files to not be parsed correctly
+ - Bug causing float constants in message files to cause compiler errors because `f32 = 0;` is not allowed in rust
 
 ## 0.6.0 - December 12, 2022
 

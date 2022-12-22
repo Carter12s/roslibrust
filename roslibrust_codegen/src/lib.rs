@@ -1,7 +1,10 @@
 use log::*;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use std::collections::{BTreeMap, VecDeque};
+use std::fmt::Debug;
 use std::path::PathBuf;
 use std::str::FromStr;
 use syn::parse_quote;
@@ -15,14 +18,10 @@ pub mod utils;
 pub mod integral_types;
 pub use integral_types::*;
 
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::fmt::Debug;
-
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
 pub trait RosMessageType:
-    'static + DeserializeOwned + Default + Send + Serialize + Sync + Clone + Debug
+    'static + DeserializeOwned + Send + Serialize + Sync + Clone + Debug
 {
     /// Expected to be the combination pkg_name/type_name string describing the type to ros
     /// Example: std_msgs/Header
@@ -264,11 +263,15 @@ fn resolve_message_dependencies(
 }
 
 fn derive_attrs() -> Vec<syn::Attribute> {
+    // TODO we should look into using $crate here...
+    // The way we're currently doing it leaks a dependency on these crates to users...
+    // However using $crate breaks the generated code in non-macro usage
+    // Pass a flag in "if_macro"?
     vec![
         parse_quote! { #[derive(::serde::Deserialize)] },
         parse_quote! { #[derive(::serde::Serialize)] },
+        parse_quote! { #[derive(::smart_default::SmartDefault)] },
         parse_quote! { #[derive(Debug)] },
-        parse_quote! { #[derive(Default)] },
         parse_quote! { #[derive(Clone)] },
         parse_quote! { #[derive(PartialEq)] },
     ]
@@ -301,24 +304,40 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
         .into_iter()
         .map(|mut field| {
             field.field_type.field_type = match field.field_type.package_name {
-                Some(pkg) => {
+                Some(ref pkg) => {
                     if pkg.as_str() == msg.package.as_str() {
                         format!("self::{}", field.field_type.field_type)
                     } else {
                         format!("{}::{}", pkg, field.field_type.field_type)
                     }
                 }
-                None => field.field_type.field_type,
+                None => field.field_type.field_type.clone(),
             };
             let field_type = if field.field_type.is_vec {
                 format!("::std::vec::Vec<{}>", field.field_type.field_type)
             } else {
-                field.field_type.field_type
+                field.field_type.field_type.clone()
             };
             let field_type = TokenStream::from_str(field_type.as_str()).unwrap();
 
             let field_name = format_ident!("r#{}", field.field_name);
-            quote! { pub #field_name: #field_type, }
+            if let Some(ref default_val) = field.default {
+                if field.field_type.is_vec {
+                    // For vectors use smart_defaults "dynamic" style
+                    quote! {
+                        #[default(_code = #default_val)]
+                        pub #field_name: #field_type,
+                    }
+                } else {
+                    // For non vectors use smart_default's constant style
+                    quote! {
+                      #[default(#default_val)]
+                      pub #field_name: #field_type,
+                    }
+                }
+            } else {
+                quote! { pub #field_name: #field_type, }
+            }
         })
         .collect::<Vec<TokenStream>>();
 
@@ -327,17 +346,13 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
         .into_iter()
         .map(|constant| {
             let constant_name = format_ident!("r#{}", constant.constant_name);
-            let (constant_type, constant_value) =
-                if constant.constant_type == "::std::string::String" {
-                    let constant_value = constant.constant_value;
-                    (String::from("&'static str"), quote! { #constant_value })
-                } else {
-                    (
-                        constant.constant_type,
-                        TokenStream::from_str(constant.constant_value.as_str()).unwrap(),
-                    )
-                };
+            let constant_type = if constant.constant_type == "::std::string::String" {
+                String::from("&'static str")
+            } else {
+                constant.constant_type
+            };
             let constant_type = TokenStream::from_str(constant_type.as_str()).unwrap();
+            let constant_value = constant.constant_value;
             quote! { pub const #constant_name: #constant_type = #constant_value; }
         })
         .collect::<Vec<TokenStream>>();
@@ -402,7 +417,9 @@ mod test {
             "/../assets/ros1_common_interfaces"
         );
 
-        find_and_generate_ros_messages(vec![assets_path.into()]);
+        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        // Make sure something actually got generated
+        assert!(!gen.is_empty())
     }
 
     /// Confirms we don't panic on ros2 parsing
@@ -413,14 +430,26 @@ mod test {
             "/../assets/ros2_common_interfaces"
         );
 
-        find_and_generate_ros_messages(vec![assets_path.into()]);
+        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        // Make sure something actually got generated
+        assert!(!gen.is_empty())
     }
 
-    /// Confirms we don't panic on test_msgs parsing
+    /// Confirms we don't panic on ros1_test_msgs parsing
     #[test]
-    fn generate_ok_on_test_msgs() {
-        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/test_msgs");
+    fn generate_ok_on_ros1_test_msgs() {
+        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_test_msgs");
 
-        find_and_generate_ros_messages(vec![assets_path.into()]);
+        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        assert!(!gen.is_empty());
+    }
+
+    /// Confirms we don't panic on ros2_test_msgs parsing
+    #[test]
+    fn generate_ok_on_ros2_test_msgs() {
+        let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
+
+        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        assert!(!gen.is_empty());
     }
 }

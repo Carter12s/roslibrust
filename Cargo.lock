@@ -543,6 +543,7 @@ dependencies = [
  "serde",
  "serde_json",
  "simple_logger",
+ "smart-default",
  "thiserror",
  "tokio",
  "tokio-tungstenite",
@@ -558,6 +559,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
+ "serde_json",
  "syn",
  "tokio",
  "walkdir",
@@ -583,6 +585,8 @@ dependencies = [
  "roslibrust",
  "roslibrust_codegen",
  "serde",
+ "serde_json",
+ "smart-default",
 ]
 
 [[package]]
@@ -684,6 +688,17 @@ name = "smallvec"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
+
+[[package]]
+name = "smart-default"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "133659a15339456eeeb07572eb02a91c91e9815e9cbc89566944d2c8d3efdbf6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "socket2"

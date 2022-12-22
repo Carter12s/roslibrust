@@ -1,3 +1,6 @@
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 
 use crate::utils::{Package, RosVersion};
@@ -58,19 +61,38 @@ pub struct FieldType {
 }
 
 /// Describes all information for an individual field
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug)]
 pub struct FieldInfo {
     pub field_type: FieldType,
     pub field_name: String,
+    // Exists if this is a ros2 message field with a default value
+    // Contains a literal token representing the value, and bool indicating if the value is static.
+    pub default: Option<TokenStream>,
+}
+
+// Because TokenStream doesn't impl PartialEq we have to do it manually for FieldInfo
+impl PartialEq for FieldInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.field_type == other.field_type && self.field_name == other.field_name
+        // && self.default == other.default
+    }
 }
 
 /// Describes all information for a constant within a message
 /// Note: Constants are not fully supported yet (waiting on codegen support)
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug)]
 pub struct ConstantInfo {
     pub constant_type: String,
     pub constant_name: String,
-    pub constant_value: String,
+    pub constant_value: TokenStream,
+}
+
+// Because TokenStream doesn't impl PartialEq we have to do it manually for ConstantInfo
+impl PartialEq for ConstantInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.constant_type == other.constant_type && self.constant_name == other.constant_name
+        // && self.constant_value == other.constant_value
+    }
 }
 
 /// Describes all information for a single message file
@@ -130,8 +152,9 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
             }
 
             let constant_value = line[sep + equal_i + 1..].trim().to_string();
+            // TODO bug here, explicitly not handling constant vec until we can manage static array generation
+            let constant_value = parse_ros_value(&constant_type, &constant_value, false);
             result.constants.push(ConstantInfo {
-                // NOTE: Bug here, no idea how to support constant vectors etc...
                 constant_type,
                 constant_name,
                 constant_value,
@@ -148,9 +171,37 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
                 "Did not find field_name on line: {line} while parsing {}/{name}",
                 &package.name
             ));
+
+            // Determine if there is a default value for this field
+            let default = if matches!(package.version, Some(RosVersion::ROS2)) {
+                // For ros2 packages only, check if there is a default value
+                let line_after_sep = line[sep + 1..].trim();
+                match line_after_sep.find(' ') {
+                    Some(def_start) => {
+                        let remainder = line_after_sep[def_start..].trim();
+                        if remainder.is_empty() {
+                            None
+                        } else {
+                            Some(parse_ros_value(
+                                &field_type.field_type,
+                                remainder,
+                                field_type.is_vec,
+                            ))
+                        }
+                    }
+                    None => {
+                        // No extra space separator found, not default was provided
+                        None
+                    }
+                }
+            } else {
+                None
+            };
+
             result.fields.push(FieldInfo {
                 field_type,
                 field_name: field_name.to_string(),
+                default,
             });
         }
     }
@@ -281,7 +332,7 @@ fn strip_comments(line: &str) -> &str {
 fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
     let items = type_str.split('/').collect::<Vec<&str>>();
 
-    // Select which type converison map to use depending on package version
+    // Select which type conversion map to use depending on package version
     let prop_map: &HashMap<&'static str, &'static str> = match pkg.version {
         Some(RosVersion::ROS1) => &ROS_TYPE_TO_RUST_TYPE_MAP,
         Some(RosVersion::ROS2) => &ROS_2_TYPE_TO_RUST_TYPE_MAP,
@@ -342,6 +393,73 @@ fn parse_type(type_str: &str, pkg: &Package) -> FieldType {
         }
         _ => {
             panic!("Found malformed type: {type_str}");
+        }
+    }
+}
+
+// Converts a ROS string to a literal value
+// Not intended to be called directly, but only via parse_ros_value.
+// Wraps a serde_json deserialize call with our style of error handling.
+fn generic_parse_value<T: DeserializeOwned + ToTokens + std::fmt::Debug>(
+    value: &str,
+    is_vec: bool,
+) -> TokenStream {
+    if is_vec {
+        let parsed: Vec<T> = serde_json::from_str(value).expect(
+            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
+        );
+        let vec_str = format!("vec!{parsed:?}");
+        quote! { #vec_str }
+    } else {
+        let parsed: T = serde_json::from_str(value).expect(
+            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
+        );
+        quote! { #parsed }
+    }
+}
+
+/// For a given, which is either a ROS constant or default, parse the constant and convert it into a rust TokenStream
+/// which represents the same literal value. This handles frustrating edge cases that are not well documented features
+/// in either ROS1 or ROS2 such as:
+/// - `f32[] MY_CONST_ARRAY=[0, 1]` we have to convert the value of the constant to `vec![0.0, 1.0]`
+/// - `string[] names_field ['first', "second"]` we have to convert the default value to `vec!["first".to_string(), "second".to_string()]
+/// Note: I could find NO documentation from ROS about what was actually legal or expected for these value expressions
+/// Note: ROS says "strings are not escaped". No idea how the eff I'm actually supposed to handle that so likely bugs...
+/// Note: No idea of "constant arrays" are intended to be supported in ROS...
+/// `ros_type` -- Expects the string key of the determined rust type to hold the value. Should come from one of the type map constants.
+/// `value` -- Expects the trimmed string containing only the value expression
+/// `is_vec` -- True iff the type is an array type
+/// TODO I'd like this to take FieldType, but want it to also work with constants...
+fn parse_ros_value(ros_type: &str, value: &str, is_vec: bool) -> TokenStream {
+    match ros_type {
+        "bool" => generic_parse_value::<bool>(value, is_vec),
+        "float64" => generic_parse_value::<f64>(value, is_vec),
+        "float32" => generic_parse_value::<f32>(value, is_vec),
+        "uint8" | "char" | "byte" => generic_parse_value::<u8>(value, is_vec),
+        "int8" => generic_parse_value::<i8>(value, is_vec),
+        "uint16" => generic_parse_value::<u16>(value, is_vec),
+        "int16" => generic_parse_value::<i16>(value, is_vec),
+        "uint32" => generic_parse_value::<u32>(value, is_vec),
+        "int32" => generic_parse_value::<i32>(value, is_vec),
+        "uint64" => generic_parse_value::<u64>(value, is_vec),
+        "int64" => generic_parse_value::<i64>(value, is_vec),
+        "string" => {
+            // String is a special case because of quotes and to_string()
+            if is_vec {
+                // TODO there is a bug here, no idea how I should be attempting to convert / escape single quotes here...
+                let parsed: Vec<String> = serde_json::from_str(value).expect(
+            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to Vec<String>"));
+                let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
+                quote! { #vec_str }
+            } else {
+                // Halfass attempt to deal with ROS's string escaping / quote bullshit
+                let value = &value.replace("\'", "\"");
+                let parsed: String = serde_json::from_str(value).expect(&format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
+                quote! { #parsed }
+            }
+        }
+        _ => {
+            panic!("Found default for type which does not support default: {ros_type}");
         }
     }
 }

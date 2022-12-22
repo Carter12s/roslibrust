@@ -1,24 +1,37 @@
+use lazy_static::lazy_static;
 use std::borrow::Cow;
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 const ROS_1_PATH: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../assets/ros1_common_interfaces"
 );
+const ROS_1_TEST_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_test_msgs");
+lazy_static! {
+    static ref ROS_1_PATHS: Vec<PathBuf> = vec![ROS_1_PATH.into(), ROS_1_TEST_PATH.into()];
+}
 
 const ROS_2_PATH: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../assets/ros2_common_interfaces"
 );
+const ROS_2_TEST_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
+lazy_static! {
+    static ref ROS_2_PATHS: Vec<PathBuf> = vec![ROS_2_PATH.into(), ROS_2_TEST_PATH.into()];
+}
 
 /// This main function is used to generate the contents of ros1.rs, ros2.rs
 fn main() {
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![ROS_1_PATH.into()]);
+    let tokens = roslibrust_codegen::find_and_generate_ros_messages((*ROS_1_PATHS).clone());
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
     let _ = std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/src/ros1.rs"), source);
 
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![ROS_2_PATH.into()]);
+    let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![
+        ROS_2_PATH.into(),
+        ROS_2_TEST_PATH.into(),
+    ]);
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
     let _ = std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/src/ros2.rs"), source);
 }
@@ -55,7 +68,7 @@ mod test {
     /// Confirms that codegen has been run and changes committed
     #[test]
     fn ros1_lib_is_up_to_date() {
-        let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![ROS_1_PATH.into()]);
+        let tokens = roslibrust_codegen::find_and_generate_ros_messages((*ROS_1_PATHS).clone());
         let source = format_rust_source(tokens.to_string().as_str()).to_string();
         let lib_path = env!("CARGO_MANIFEST_DIR").to_string() + "/src/ros1.rs";
         let lib_contents =
@@ -73,7 +86,7 @@ mod test {
     /// Confirms that codegen has been run and changes committed
     #[test]
     fn ros2_lib_is_up_to_date() {
-        let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![ROS_2_PATH.into()]);
+        let tokens = roslibrust_codegen::find_and_generate_ros_messages((*ROS_2_PATHS).clone());
         let source = format_rust_source(tokens.to_string().as_str()).to_string();
         let lib_path = env!("CARGO_MANIFEST_DIR").to_string() + "/src/ros2.rs";
         let lib_contents =
