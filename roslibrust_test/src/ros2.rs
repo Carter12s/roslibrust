@@ -29,8 +29,8 @@ pub mod actionlib_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -58,8 +58,8 @@ pub mod actionlib_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -88,8 +88,8 @@ pub mod diagnostic_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -103,8 +103,8 @@ pub mod diagnostic_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -119,8 +119,8 @@ pub mod diagnostic_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -135,8 +135,8 @@ pub mod diagnostic_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -160,8 +160,8 @@ pub mod diagnostic_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -176,8 +176,8 @@ pub mod diagnostic_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -189,8 +189,8 @@ pub mod diagnostic_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -232,8 +232,8 @@ pub mod geometry_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -248,8 +248,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -264,8 +264,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -280,8 +280,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -296,8 +296,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -318,8 +318,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -334,8 +334,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -351,8 +351,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -368,8 +368,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -384,8 +384,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -399,8 +399,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -415,8 +415,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -431,8 +431,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -448,8 +448,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -464,8 +464,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -480,8 +480,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -496,8 +496,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -512,8 +512,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -534,8 +534,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -550,8 +550,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -566,8 +566,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -583,8 +583,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -599,8 +599,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -615,8 +615,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -631,8 +631,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -647,8 +647,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -664,8 +664,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -680,8 +680,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -696,8 +696,8 @@ pub mod geometry_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -726,8 +726,8 @@ pub mod nav_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -739,8 +739,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -754,8 +754,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -771,8 +771,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -786,8 +786,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -804,8 +804,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -819,8 +819,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -842,8 +842,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -861,8 +861,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -878,8 +878,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -896,8 +896,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -912,8 +912,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -928,8 +928,8 @@ pub mod nav_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -981,8 +981,8 @@ pub mod sensor_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1034,8 +1034,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1059,8 +1059,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1075,8 +1075,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1092,8 +1092,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1109,8 +1109,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1126,8 +1126,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1147,8 +1147,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1168,8 +1168,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1187,8 +1187,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1204,8 +1204,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1226,8 +1226,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1241,8 +1241,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1256,8 +1256,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1280,8 +1280,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1297,8 +1297,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1316,8 +1316,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1340,8 +1340,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1367,8 +1367,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1393,8 +1393,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1410,8 +1410,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1433,8 +1433,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1461,8 +1461,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1485,8 +1485,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1504,8 +1504,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1521,8 +1521,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1536,8 +1536,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1552,8 +1552,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1569,8 +1569,8 @@ pub mod sensor_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1606,8 +1606,8 @@ pub mod shape_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1622,8 +1622,8 @@ pub mod shape_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1637,8 +1637,8 @@ pub mod shape_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1652,8 +1652,8 @@ pub mod shape_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1699,8 +1699,8 @@ pub mod std_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1714,8 +1714,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1729,8 +1729,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1745,8 +1745,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1760,8 +1760,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1778,8 +1778,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1791,8 +1791,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1806,8 +1806,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1822,8 +1822,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1837,8 +1837,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1853,8 +1853,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1869,8 +1869,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1884,8 +1884,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1900,8 +1900,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1915,8 +1915,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1931,8 +1931,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1946,8 +1946,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1962,8 +1962,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1977,8 +1977,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -1993,8 +1993,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2010,8 +2010,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2026,8 +2026,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2041,8 +2041,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2056,8 +2056,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2072,8 +2072,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2087,8 +2087,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2103,8 +2103,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2118,8 +2118,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2134,8 +2134,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2149,8 +2149,8 @@ pub mod std_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2179,8 +2179,8 @@ pub mod std_srvs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2192,8 +2192,8 @@ pub mod std_srvs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2205,8 +2205,8 @@ pub mod std_srvs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2220,8 +2220,8 @@ pub mod std_srvs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2236,8 +2236,8 @@ pub mod std_srvs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2249,8 +2249,8 @@ pub mod std_srvs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2297,8 +2297,8 @@ pub mod stereo_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2333,8 +2333,8 @@ pub mod test_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2373,8 +2373,8 @@ pub mod trajectory_msgs {
     use super::visualization_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2390,8 +2390,8 @@ pub mod trajectory_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2409,8 +2409,8 @@ pub mod trajectory_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2426,8 +2426,8 @@ pub mod trajectory_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2458,8 +2458,8 @@ pub mod visualization_msgs {
     use super::trajectory_msgs;
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2471,8 +2471,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2487,8 +2487,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2523,8 +2523,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2544,8 +2544,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2581,8 +2581,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2612,8 +2612,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2629,8 +2629,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2646,8 +2646,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2670,8 +2670,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2721,8 +2721,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2736,8 +2736,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2760,8 +2760,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,
@@ -2776,8 +2776,8 @@ pub mod visualization_msgs {
     }
     #[allow(non_snake_case)]
     #[derive(
-        :: roslibrust_codegen :: serde :: Deserialize,
-        :: roslibrust_codegen :: serde :: Serialize,
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
         :: roslibrust_codegen :: smart_default :: SmartDefault,
         Debug,
         Clone,

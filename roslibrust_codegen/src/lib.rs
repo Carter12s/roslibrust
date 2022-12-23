@@ -270,8 +270,8 @@ fn resolve_message_dependencies(
 /// Creates the derives needed for a message struct
 fn derive_attrs() -> Vec<syn::Attribute> {
     vec![
-        parse_quote! { #[derive(::roslibrust_codegen::serde::Deserialize)] },
-        parse_quote! { #[derive(::roslibrust_codegen::serde::Serialize)] },
+        parse_quote! { #[derive(::roslibrust_codegen::Deserialize)] },
+        parse_quote! { #[derive(::roslibrust_codegen::Serialize)] },
         parse_quote! { #[derive(::roslibrust_codegen::smart_default::SmartDefault)] },
         parse_quote! { #[derive(Debug)] },
         parse_quote! { #[derive(Clone)] },
