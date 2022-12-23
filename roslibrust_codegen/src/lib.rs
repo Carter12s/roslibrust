@@ -1,8 +1,6 @@
 use log::*;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Debug;
 use std::path::PathBuf;
@@ -17,6 +15,13 @@ pub mod utils;
 
 pub mod integral_types;
 pub use integral_types::*;
+
+// These two pub use statements are here to be able to export the dependencies of the generated code
+// so that crates using this crate don't need to add these dependencies themselves.
+// Our generated code should find these exports.
+// Modeled from: https://users.rust-lang.org/t/proc-macros-using-third-party-crate/42465/4
+pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
+pub use smart_default;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
@@ -262,15 +267,12 @@ fn resolve_message_dependencies(
     message_map
 }
 
+/// Creates the derives needed for a message struct
 fn derive_attrs() -> Vec<syn::Attribute> {
-    // TODO we should look into using $crate here...
-    // The way we're currently doing it leaks a dependency on these crates to users...
-    // However using $crate breaks the generated code in non-macro usage
-    // Pass a flag in "if_macro"?
     vec![
-        parse_quote! { #[derive(::serde::Deserialize)] },
-        parse_quote! { #[derive(::serde::Serialize)] },
-        parse_quote! { #[derive(::smart_default::SmartDefault)] },
+        parse_quote! { #[derive(::roslibrust_codegen::serde::Deserialize)] },
+        parse_quote! { #[derive(::roslibrust_codegen::serde::Serialize)] },
+        parse_quote! { #[derive(::roslibrust_codegen::smart_default::SmartDefault)] },
         parse_quote! { #[derive(Debug)] },
         parse_quote! { #[derive(Clone)] },
         parse_quote! { #[derive(PartialEq)] },

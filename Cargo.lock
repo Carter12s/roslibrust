@@ -540,10 +540,8 @@ dependencies = [
  "rand",
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
- "serde",
  "serde_json",
  "simple_logger",
- "smart-default",
  "thiserror",
  "tokio",
  "tokio-tungstenite",
@@ -560,6 +558,7 @@ dependencies = [
  "quote",
  "serde",
  "serde_json",
+ "smart-default",
  "syn",
  "tokio",
  "walkdir",
@@ -584,9 +583,6 @@ dependencies = [
  "lazy_static",
  "roslibrust",
  "roslibrust_codegen",
- "serde",
- "serde_json",
- "smart-default",
 ]
 
 [[package]]
