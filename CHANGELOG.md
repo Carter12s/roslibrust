@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
  - Support for default field values in ROS2 messages
+ - Added public APIs for getting message data from search and for generating Rust code given message data in roslibrust_codegen
 
 ### Fixed
  - Bug causing single quoted string constants in message files to not be parsed correctly

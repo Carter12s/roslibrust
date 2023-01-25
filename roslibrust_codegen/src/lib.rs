@@ -47,9 +47,24 @@ pub trait RosServiceType {
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
 ///
-/// * `additional_search_paths` -- A list of additional paths to search beyond those
+/// * `additional_search_paths` - A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
+    let (messages, services) = find_and_parse_ros_messages(additional_search_paths).unwrap();
+    generate_rust_ros_message_definitions(messages, services)
+}
+
+/// Searches a list of paths for ROS packages to find their associated message
+/// and service files, parsing and performing dependency resolution on those
+/// it finds. Returns a map of PACKAGE_NAME/MESSAGE_NAME strings to message file
+/// data and vector of service file data.
+///
+/// * `additional_search_paths` - A list of additional paths to search beyond those
+/// found in ROS_PACKAGE_PATH environment variable.
+///
+pub fn find_and_parse_ros_messages(
+    additional_search_paths: Vec<PathBuf>,
+) -> std::io::Result<(Vec<MessageFile>, Vec<ServiceFile>)> {
     let mut search_paths = utils::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
     debug!(
@@ -101,11 +116,25 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
         .flatten()
         .collect::<Vec<_>>();
     message_files.extend_from_slice(&service_files[..]);
-    let (messages, services) = parse_ros_files(message_files).unwrap();
+    parse_ros_files(message_files)
+}
+
+/// Takes in collections of ROS message and ROS service data and generates Rust
+/// source code corresponding to the definitions.
+///
+/// This function assumes that the provided messages make up a completely resolved
+/// tree of dependent messages.
+///
+/// * `messages` - Collection of ROS message definition data.
+/// * `services` - Collection of ROS service definition data.
+pub fn generate_rust_ros_message_definitions(
+    messages: Vec<MessageFile>,
+    services: Vec<ServiceFile>,
+) -> TokenStream {
     let mut modules_to_struct_definitions: BTreeMap<String, Vec<TokenStream>> = BTreeMap::new();
 
     // Convert messages files into rust token streams and insert them into BTree organized by package
-    messages.into_iter().for_each(|(_, message)| {
+    messages.into_iter().for_each(|message| {
         let pkg_name = message.package.clone();
         let definition = generate_struct(message);
         if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
@@ -151,12 +180,12 @@ struct MessageMetadata {
 
 /// Parses all ROS file types and returns a final expanded set
 /// Currently supports service files and message files, no planned support for actions
-/// The returned BTree will contain all messages files including those buried within the service definitions
+/// The returned collection will contain all messages files including those buried within the service definitions
 /// and will have fully expanded and resolved referenced types in other packages.
 /// * `msg_paths` -- List of tuple (Package, Path to File) for each file to parse
 fn parse_ros_files(
     msg_paths: Vec<(Package, PathBuf)>,
-) -> std::io::Result<(BTreeMap<String, MessageFile>, Vec<ServiceFile>)> {
+) -> std::io::Result<(Vec<MessageFile>, Vec<ServiceFile>)> {
     let mut parsed_messages = VecDeque::new();
     let mut parsed_services = Vec::new();
     for (pkg, path) in msg_paths {
@@ -204,9 +233,7 @@ fn parse_ros_files(
     ))
 }
 
-fn resolve_message_dependencies(
-    mut parsed_msgs: VecDeque<MessageMetadata>,
-) -> BTreeMap<String, MessageFile> {
+fn resolve_message_dependencies(mut parsed_msgs: VecDeque<MessageMetadata>) -> Vec<MessageFile> {
     const MAX_PARSE_ITER_LIMIT: i32 = 2048;
     let mut message_map = BTreeMap::new();
 
@@ -259,7 +286,7 @@ fn resolve_message_dependencies(
         }
     }
 
-    message_map
+    message_map.into_values().collect()
 }
 
 fn derive_attrs() -> Vec<syn::Attribute> {
