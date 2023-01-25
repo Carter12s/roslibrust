@@ -58,11 +58,13 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
 /// and service files, parsing and performing dependency resolution on those
 /// it finds. Returns a map of PACKAGE_NAME/MESSAGE_NAME strings to message file
 /// data and vector of service file data.
-/// 
+///
 /// * `additional_search_paths` - A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
-/// 
-pub fn find_and_parse_ros_messages(additional_search_paths: Vec<PathBuf>) -> std::io::Result<(Vec<MessageFile>, Vec<ServiceFile>)> {
+///
+pub fn find_and_parse_ros_messages(
+    additional_search_paths: Vec<PathBuf>,
+) -> std::io::Result<(Vec<MessageFile>, Vec<ServiceFile>)> {
     let mut search_paths = utils::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
     debug!(
@@ -119,13 +121,16 @@ pub fn find_and_parse_ros_messages(additional_search_paths: Vec<PathBuf>) -> std
 
 /// Takes in collections of ROS message and ROS service data and generates Rust
 /// source code corresponding to the definitions.
-/// 
+///
 /// This function assumes that the provided messages make up a completely resolved
 /// tree of dependent messages.
-/// 
+///
 /// * `messages` - Collection of ROS message definition data.
 /// * `services` - Collection of ROS service definition data.
-pub fn generate_rust_ros_message_definitions(messages: Vec<MessageFile>, services: Vec<ServiceFile>) -> TokenStream {
+pub fn generate_rust_ros_message_definitions(
+    messages: Vec<MessageFile>,
+    services: Vec<ServiceFile>,
+) -> TokenStream {
     let mut modules_to_struct_definitions: BTreeMap<String, Vec<TokenStream>> = BTreeMap::new();
 
     // Convert messages files into rust token streams and insert them into BTree organized by package
@@ -228,9 +233,7 @@ fn parse_ros_files(
     ))
 }
 
-fn resolve_message_dependencies(
-    mut parsed_msgs: VecDeque<MessageMetadata>,
-) -> Vec<MessageFile> {
+fn resolve_message_dependencies(mut parsed_msgs: VecDeque<MessageMetadata>) -> Vec<MessageFile> {
     const MAX_PARSE_ITER_LIMIT: i32 = 2048;
     let mut message_map = BTreeMap::new();
 
