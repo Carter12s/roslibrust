@@ -75,9 +75,9 @@ pub fn find_and_parse_ros_messages(
     packages.dedup_by(|a, b| a.name == b.name);
 
     if packages.len() == 0 {
-        eprintln!(
-            "Warning: No packages found while searching in: {search_paths:?}, relative to {:?}",
-            std::env::current_dir()
+        log::warn!(
+            "No packages found while searching in: {search_paths:?}, relative to {:?}",
+            std::env::current_dir().unwrap()
         );
     }
 
@@ -86,9 +86,10 @@ pub fn find_and_parse_ros_messages(
         .map(|pkg| {
             utils::get_message_files(pkg)
                 .unwrap_or_else(|err| {
-                    eprintln!(
+                    log::error!(
                         "Unable to get paths to message files for {}: {}",
-                        pkg.name, err
+                        pkg.name,
+                        err
                     );
                     // Return an empty vec so that one package doesn't necessarily fail the process
                     vec![]
@@ -103,9 +104,10 @@ pub fn find_and_parse_ros_messages(
         .map(|pkg| {
             utils::get_service_files(pkg)
                 .unwrap_or_else(|err| {
-                    eprintln!(
+                    log::error!(
                         "Unable to get paths to service files for {}: {}",
-                        pkg.name, err
+                        pkg.name,
+                        err
                     );
                     // Return an empty vec so that one package doesn't necessarily fail the process
                     vec![]

@@ -31,7 +31,7 @@ pub fn get_search_paths() -> Vec<PathBuf> {
             .map(|path| PathBuf::from(path))
             .collect::<Vec<PathBuf>>()
     } else {
-        eprintln!("No ROS_PACKAGE_PATH defined.");
+        log::warn!("No ROS_PACKAGE_PATH defined.");
         vec![]
     }
 }
@@ -58,8 +58,8 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
     let mut found_packages = vec![];
 
     if depth == 0 {
-        eprintln!(
-            "Reached depth limit in: {}",
+        log::error!(
+            "Reached depth limit in: {}. Possible symlink loop detected.",
             path.as_os_str().to_string_lossy()
         );
         return Err(io::ErrorKind::Other.into());
@@ -76,15 +76,16 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
             path.push(PACKAGE_FILE_NAME);
             if path.as_path().is_file() {
                 // And there's a package.xml here!
-                let (version, name) = parse_ros_package_info(&path);
-                // Remove package.xml from our path
-                assert!(path.pop());
+                if let Ok((version, name)) = parse_ros_package_info(&path) {
+                    // Remove package.xml from our path
+                    assert!(path.pop());
 
-                found_packages.push(Package {
-                    name,
-                    path,
-                    version,
-                });
+                    found_packages.push(Package {
+                        name,
+                        path,
+                        version,
+                    });
+                }
             } else {
                 // No file here, we'll have to go deeper
                 assert!(path.pop());
@@ -105,7 +106,7 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
             }
         }
     } else {
-        eprintln!("{} is not a directory", path.to_string_lossy())
+        log::error!("{} is not a directory", path.to_string_lossy())
     }
 
     Ok(found_packages)
@@ -151,16 +152,14 @@ fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
 /// See: https://answers.ros.org/question/410017/how-to-determine-if-a-package-is-ros1-or-ros2/
 fn parse_ros_package_info(
     path: impl AsRef<Path> + std::fmt::Debug,
-) -> (Option<RosVersion>, String) {
+) -> io::Result<(Option<RosVersion>, String)> {
     use std::fs::File;
     use std::io::BufReader;
     use xml::reader::{EventReader, ParserConfig, XmlEvent};
     const BUILD_TOOL_TAG: &'static str = "buildtool_depend";
     const NAME_TAG: &'static str = "name";
 
-    let file = File::open(&path).expect(&format!(
-        "Failed to open package.xml @ {path:?} during codegen."
-    ));
+    let file = File::open(&path)?;
     let reader = BufReader::new(file);
     let parser = EventReader::new_with_config(
         reader,
@@ -211,10 +210,13 @@ fn parse_ros_package_info(
             _ => {}
         }
     }
-    (
-        version,
-        name.expect(&format!(
+
+    if let Some(name) = name {
+        Ok((version, name))
+    } else {
+        log::error!(
             "Failed to find the <name> tag within package.xml, which is a required tag: {path:?}"
-        )),
-    )
+        );
+        Err(io::ErrorKind::Other.into())
+    }
 }
