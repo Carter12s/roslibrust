@@ -22,6 +22,7 @@ pub use integral_types::*;
 // Modeled from: https://users.rust-lang.org/t/proc-macros-using-third-party-crate/42465/4
 pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
 pub use smart_default;
+pub use ::serde;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
@@ -365,6 +366,7 @@ fn generate_struct(msg: MessageFile) -> TokenStream {
     let mut base = quote! {
         #[allow(non_snake_case)]
         #(#attrs )*
+        #[serde(crate = "::roslibrust_codegen::serde")]
         pub struct #struct_name {
             #(#fields )*
         }

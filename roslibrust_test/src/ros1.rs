@@ -22,6 +22,7 @@ pub mod actionlib_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GoalID {
         pub r#stamp: ::roslibrust_codegen::integral_types::Time,
         pub r#id: ::std::string::String,
@@ -38,6 +39,7 @@ pub mod actionlib_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GoalStatus {
         pub r#goal_id: self::GoalID,
         pub r#status: u8,
@@ -67,6 +69,7 @@ pub mod actionlib_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GoalStatusArray {
         pub r#header: std_msgs::Header,
         pub r#status_list: ::std::vec::Vec<self::GoalStatus>,
@@ -99,6 +102,7 @@ pub mod diagnostic_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct AddDiagnosticsRequest {
         pub r#load_namespace: ::std::string::String,
     }
@@ -114,6 +118,7 @@ pub mod diagnostic_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct AddDiagnosticsResponse {
         pub r#success: bool,
         pub r#message: ::std::string::String,
@@ -130,6 +135,7 @@ pub mod diagnostic_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct DiagnosticArray {
         pub r#header: std_msgs::Header,
         pub r#status: ::std::vec::Vec<self::DiagnosticStatus>,
@@ -146,6 +152,7 @@ pub mod diagnostic_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct DiagnosticStatus {
         pub r#level: u8,
         pub r#name: ::std::string::String,
@@ -171,6 +178,7 @@ pub mod diagnostic_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct KeyValue {
         pub r#key: ::std::string::String,
         pub r#value: ::std::string::String,
@@ -187,6 +195,7 @@ pub mod diagnostic_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SelfTestRequest {}
     impl ::roslibrust_codegen::RosMessageType for SelfTestRequest {
         const ROS_TYPE_NAME: &'static str = "diagnostic_msgs/SelfTestRequest";
@@ -200,6 +209,7 @@ pub mod diagnostic_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SelfTestResponse {
         pub r#id: ::std::string::String,
         pub r#passed: u8,
@@ -245,6 +255,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Accel {
         pub r#linear: self::Vector3,
         pub r#angular: self::Vector3,
@@ -261,6 +272,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct AccelStamped {
         pub r#header: std_msgs::Header,
         pub r#accel: self::Accel,
@@ -277,6 +289,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct AccelWithCovariance {
         pub r#accel: self::Accel,
         pub r#covariance: ::std::vec::Vec<f64>,
@@ -293,6 +306,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct AccelWithCovarianceStamped {
         pub r#header: std_msgs::Header,
         pub r#accel: self::AccelWithCovariance,
@@ -309,6 +323,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Inertia {
         pub r#m: f64,
         pub r#com: self::Vector3,
@@ -331,6 +346,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct InertiaStamped {
         pub r#header: std_msgs::Header,
         pub r#inertia: self::Inertia,
@@ -347,6 +363,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Point {
         pub r#x: f64,
         pub r#y: f64,
@@ -364,6 +381,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Point32 {
         pub r#x: f32,
         pub r#y: f32,
@@ -381,6 +399,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PointStamped {
         pub r#header: std_msgs::Header,
         pub r#point: self::Point,
@@ -397,6 +416,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Polygon {
         pub r#points: ::std::vec::Vec<self::Point32>,
     }
@@ -412,6 +432,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PolygonStamped {
         pub r#header: std_msgs::Header,
         pub r#polygon: self::Polygon,
@@ -428,6 +449,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Pose {
         pub r#position: self::Point,
         pub r#orientation: self::Quaternion,
@@ -444,6 +466,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Pose2D {
         pub r#x: f64,
         pub r#y: f64,
@@ -461,6 +484,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PoseArray {
         pub r#header: std_msgs::Header,
         pub r#poses: ::std::vec::Vec<self::Pose>,
@@ -477,6 +501,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PoseStamped {
         pub r#header: std_msgs::Header,
         pub r#pose: self::Pose,
@@ -493,6 +518,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PoseWithCovariance {
         pub r#pose: self::Pose,
         pub r#covariance: ::std::vec::Vec<f64>,
@@ -509,6 +535,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PoseWithCovarianceStamped {
         pub r#header: std_msgs::Header,
         pub r#pose: self::PoseWithCovariance,
@@ -525,6 +552,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Quaternion {
         pub r#x: f64,
         pub r#y: f64,
@@ -543,6 +571,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct QuaternionStamped {
         pub r#header: std_msgs::Header,
         pub r#quaternion: self::Quaternion,
@@ -559,6 +588,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Transform {
         pub r#translation: self::Vector3,
         pub r#rotation: self::Quaternion,
@@ -575,6 +605,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TransformStamped {
         pub r#header: std_msgs::Header,
         pub r#child_frame_id: ::std::string::String,
@@ -592,6 +623,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Twist {
         pub r#linear: self::Vector3,
         pub r#angular: self::Vector3,
@@ -608,6 +640,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TwistStamped {
         pub r#header: std_msgs::Header,
         pub r#twist: self::Twist,
@@ -624,6 +657,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TwistWithCovariance {
         pub r#twist: self::Twist,
         pub r#covariance: ::std::vec::Vec<f64>,
@@ -640,6 +674,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TwistWithCovarianceStamped {
         pub r#header: std_msgs::Header,
         pub r#twist: self::TwistWithCovariance,
@@ -656,6 +691,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Vector3 {
         pub r#x: f64,
         pub r#y: f64,
@@ -673,6 +709,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Vector3Stamped {
         pub r#header: std_msgs::Header,
         pub r#vector: self::Vector3,
@@ -689,6 +726,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Wrench {
         pub r#force: self::Vector3,
         pub r#torque: self::Vector3,
@@ -705,6 +743,7 @@ pub mod geometry_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct WrenchStamped {
         pub r#header: std_msgs::Header,
         pub r#wrench: self::Wrench,
@@ -737,6 +776,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetMapRequest {}
     impl ::roslibrust_codegen::RosMessageType for GetMapRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapRequest";
@@ -750,6 +790,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetMapResponse {
         pub r#map: self::OccupancyGrid,
     }
@@ -765,6 +806,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetPlanRequest {
         pub r#start: geometry_msgs::PoseStamped,
         pub r#goal: geometry_msgs::PoseStamped,
@@ -782,6 +824,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetPlanResponse {
         pub r#plan: self::Path,
     }
@@ -797,6 +840,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GridCells {
         pub r#header: std_msgs::Header,
         pub r#cell_width: f32,
@@ -815,6 +859,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct LoadMapRequest {
         pub r#map_url: ::std::string::String,
     }
@@ -830,6 +875,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct LoadMapResponse {
         pub r#map: self::OccupancyGrid,
         pub r#result: u8,
@@ -853,6 +899,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MapMetaData {
         pub r#map_load_time: ::roslibrust_codegen::integral_types::Time,
         pub r#resolution: f32,
@@ -872,6 +919,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct OccupancyGrid {
         pub r#header: std_msgs::Header,
         pub r#info: self::MapMetaData,
@@ -889,6 +937,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Odometry {
         pub r#header: std_msgs::Header,
         pub r#child_frame_id: ::std::string::String,
@@ -907,6 +956,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Path {
         pub r#header: std_msgs::Header,
         pub r#poses: ::std::vec::Vec<geometry_msgs::PoseStamped>,
@@ -923,6 +973,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SetMapRequest {
         pub r#map: self::OccupancyGrid,
         pub r#initial_pose: geometry_msgs::PoseWithCovarianceStamped,
@@ -939,6 +990,7 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SetMapResponse {
         pub r#success: bool,
     }
@@ -994,6 +1046,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct DeleteParamRequest {
         pub r#name: ::std::string::String,
     }
@@ -1009,6 +1062,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct DeleteParamResponse {}
     impl ::roslibrust_codegen::RosMessageType for DeleteParamResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/DeleteParamResponse";
@@ -1022,6 +1076,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetActionServersRequest {}
     impl ::roslibrust_codegen::RosMessageType for GetActionServersRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetActionServersRequest";
@@ -1035,6 +1090,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetActionServersResponse {
         pub r#action_servers: ::std::vec::Vec<::std::string::String>,
     }
@@ -1050,6 +1106,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetParamNamesRequest {}
     impl ::roslibrust_codegen::RosMessageType for GetParamNamesRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetParamNamesRequest";
@@ -1063,6 +1120,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetParamNamesResponse {
         pub r#names: ::std::vec::Vec<::std::string::String>,
     }
@@ -1078,6 +1136,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetParamRequest {
         pub r#name: ::std::string::String,
         pub r#default: ::std::string::String,
@@ -1094,6 +1153,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetParamResponse {
         pub r#value: ::std::string::String,
     }
@@ -1109,6 +1169,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetTimeRequest {}
     impl ::roslibrust_codegen::RosMessageType for GetTimeRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/GetTimeRequest";
@@ -1122,6 +1183,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct GetTimeResponse {
         pub r#time: ::roslibrust_codegen::integral_types::Time,
     }
@@ -1137,6 +1199,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct HasParamRequest {
         pub r#name: ::std::string::String,
     }
@@ -1152,6 +1215,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct HasParamResponse {
         pub r#exists: bool,
     }
@@ -1167,6 +1231,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MessageDetailsRequest {
         pub r#type: ::std::string::String,
     }
@@ -1182,6 +1247,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MessageDetailsResponse {
         pub r#typedefs: ::std::vec::Vec<self::TypeDef>,
     }
@@ -1197,6 +1263,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct NodeDetailsRequest {
         pub r#node: ::std::string::String,
     }
@@ -1212,6 +1279,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct NodeDetailsResponse {
         pub r#subscribing: ::std::vec::Vec<::std::string::String>,
         pub r#publishing: ::std::vec::Vec<::std::string::String>,
@@ -1229,6 +1297,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct NodesRequest {}
     impl ::roslibrust_codegen::RosMessageType for NodesRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/NodesRequest";
@@ -1242,6 +1311,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct NodesResponse {
         pub r#nodes: ::std::vec::Vec<::std::string::String>,
     }
@@ -1257,6 +1327,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PublishersRequest {
         pub r#topic: ::std::string::String,
     }
@@ -1272,6 +1343,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PublishersResponse {
         pub r#publishers: ::std::vec::Vec<::std::string::String>,
     }
@@ -1287,6 +1359,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SearchParamRequest {
         pub r#name: ::std::string::String,
     }
@@ -1302,6 +1375,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SearchParamResponse {
         pub r#global_name: ::std::string::String,
     }
@@ -1317,6 +1391,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceHostRequest {
         pub r#service: ::std::string::String,
     }
@@ -1332,6 +1407,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceHostResponse {
         pub r#host: ::std::string::String,
     }
@@ -1347,6 +1423,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceNodeRequest {
         pub r#service: ::std::string::String,
     }
@@ -1362,6 +1439,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceNodeResponse {
         pub r#node: ::std::string::String,
     }
@@ -1377,6 +1455,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceProvidersRequest {
         pub r#service: ::std::string::String,
     }
@@ -1392,6 +1471,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceProvidersResponse {
         pub r#providers: ::std::vec::Vec<::std::string::String>,
     }
@@ -1407,6 +1487,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceRequestDetailsRequest {
         pub r#type: ::std::string::String,
     }
@@ -1422,6 +1503,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceRequestDetailsResponse {
         pub r#typedefs: ::std::vec::Vec<self::TypeDef>,
     }
@@ -1437,6 +1519,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceResponseDetailsRequest {
         pub r#type: ::std::string::String,
     }
@@ -1452,6 +1535,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceResponseDetailsResponse {
         pub r#typedefs: ::std::vec::Vec<self::TypeDef>,
     }
@@ -1467,6 +1551,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceTypeRequest {
         pub r#service: ::std::string::String,
     }
@@ -1482,6 +1567,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServiceTypeResponse {
         pub r#type: ::std::string::String,
     }
@@ -1497,6 +1583,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServicesForTypeRequest {
         pub r#type: ::std::string::String,
     }
@@ -1512,6 +1599,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServicesForTypeResponse {
         pub r#services: ::std::vec::Vec<::std::string::String>,
     }
@@ -1527,6 +1615,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServicesRequest {}
     impl ::roslibrust_codegen::RosMessageType for ServicesRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/ServicesRequest";
@@ -1540,6 +1629,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ServicesResponse {
         pub r#services: ::std::vec::Vec<::std::string::String>,
     }
@@ -1555,6 +1645,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SetParamRequest {
         pub r#name: ::std::string::String,
         pub r#value: ::std::string::String,
@@ -1571,6 +1662,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SetParamResponse {}
     impl ::roslibrust_codegen::RosMessageType for SetParamResponse {
         const ROS_TYPE_NAME: &'static str = "rosapi/SetParamResponse";
@@ -1584,6 +1676,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SubscribersRequest {
         pub r#topic: ::std::string::String,
     }
@@ -1599,6 +1692,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SubscribersResponse {
         pub r#subscribers: ::std::vec::Vec<::std::string::String>,
     }
@@ -1614,6 +1708,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicTypeRequest {
         pub r#topic: ::std::string::String,
     }
@@ -1629,6 +1724,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicTypeResponse {
         pub r#type: ::std::string::String,
     }
@@ -1644,6 +1740,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicsAndRawTypesRequest {}
     impl ::roslibrust_codegen::RosMessageType for TopicsAndRawTypesRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicsAndRawTypesRequest";
@@ -1657,6 +1754,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicsAndRawTypesResponse {
         pub r#topics: ::std::vec::Vec<::std::string::String>,
         pub r#types: ::std::vec::Vec<::std::string::String>,
@@ -1674,6 +1772,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicsForTypeRequest {
         pub r#type: ::std::string::String,
     }
@@ -1689,6 +1788,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicsForTypeResponse {
         pub r#topics: ::std::vec::Vec<::std::string::String>,
     }
@@ -1704,6 +1804,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicsRequest {}
     impl ::roslibrust_codegen::RosMessageType for TopicsRequest {
         const ROS_TYPE_NAME: &'static str = "rosapi/TopicsRequest";
@@ -1717,6 +1818,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicsResponse {
         pub r#topics: ::std::vec::Vec<::std::string::String>,
         pub r#types: ::std::vec::Vec<::std::string::String>,
@@ -1733,6 +1835,7 @@ pub mod rosapi {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TypeDef {
         pub r#type: ::std::string::String,
         pub r#fieldnames: ::std::vec::Vec<::std::string::String>,
@@ -1920,6 +2023,7 @@ pub mod rosgraph_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Clock {
         pub r#clock: ::roslibrust_codegen::integral_types::Time,
     }
@@ -1935,6 +2039,7 @@ pub mod rosgraph_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Log {
         pub r#header: std_msgs::Header,
         pub r#level: u8,
@@ -1964,6 +2069,7 @@ pub mod rosgraph_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TopicStatistics {
         pub r#topic: ::std::string::String,
         pub r#node_pub: ::std::string::String,
@@ -2008,6 +2114,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct BatteryState {
         pub r#header: std_msgs::Header,
         pub r#voltage: f32,
@@ -2061,6 +2168,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct CameraInfo {
         pub r#header: std_msgs::Header,
         pub r#height: u32,
@@ -2086,6 +2194,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ChannelFloat32 {
         pub r#name: ::std::string::String,
         pub r#values: ::std::vec::Vec<f32>,
@@ -2102,6 +2211,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct CompressedImage {
         pub r#header: std_msgs::Header,
         pub r#format: ::std::string::String,
@@ -2119,6 +2229,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct FluidPressure {
         pub r#header: std_msgs::Header,
         pub r#fluid_pressure: f64,
@@ -2136,6 +2247,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Illuminance {
         pub r#header: std_msgs::Header,
         pub r#illuminance: f64,
@@ -2153,6 +2265,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Image {
         pub r#header: std_msgs::Header,
         pub r#height: u32,
@@ -2174,6 +2287,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Imu {
         pub r#header: std_msgs::Header,
         pub r#orientation: geometry_msgs::Quaternion,
@@ -2195,6 +2309,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct JointState {
         pub r#header: std_msgs::Header,
         pub r#name: ::std::vec::Vec<::std::string::String>,
@@ -2214,6 +2329,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Joy {
         pub r#header: std_msgs::Header,
         pub r#axes: ::std::vec::Vec<f32>,
@@ -2231,6 +2347,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct JoyFeedback {
         pub r#type: u8,
         pub r#id: u8,
@@ -2253,6 +2370,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct JoyFeedbackArray {
         pub r#array: ::std::vec::Vec<self::JoyFeedback>,
     }
@@ -2268,6 +2386,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct LaserEcho {
         pub r#echoes: ::std::vec::Vec<f32>,
     }
@@ -2283,6 +2402,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct LaserScan {
         pub r#header: std_msgs::Header,
         pub r#angle_min: f32,
@@ -2307,6 +2427,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MagneticField {
         pub r#header: std_msgs::Header,
         pub r#magnetic_field: geometry_msgs::Vector3,
@@ -2324,6 +2445,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MultiDOFJointState {
         pub r#header: std_msgs::Header,
         pub r#joint_names: ::std::vec::Vec<::std::string::String>,
@@ -2343,6 +2465,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MultiEchoLaserScan {
         pub r#header: std_msgs::Header,
         pub r#angle_min: f32,
@@ -2367,6 +2490,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct NavSatFix {
         pub r#header: std_msgs::Header,
         pub r#status: self::NavSatStatus,
@@ -2394,6 +2518,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct NavSatStatus {
         pub r#status: i8,
         pub r#service: u16,
@@ -2420,6 +2545,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PointCloud {
         pub r#header: std_msgs::Header,
         pub r#points: ::std::vec::Vec<geometry_msgs::Point32>,
@@ -2437,6 +2563,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PointCloud2 {
         pub r#header: std_msgs::Header,
         pub r#height: u32,
@@ -2460,6 +2587,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct PointField {
         pub r#name: ::std::string::String,
         pub r#offset: u32,
@@ -2488,6 +2616,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Range {
         pub r#header: std_msgs::Header,
         pub r#radiation_type: u8,
@@ -2512,6 +2641,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct RegionOfInterest {
         pub r#x_offset: u32,
         pub r#y_offset: u32,
@@ -2531,6 +2661,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct RelativeHumidity {
         pub r#header: std_msgs::Header,
         pub r#relative_humidity: f64,
@@ -2548,6 +2679,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SetCameraInfoRequest {
         pub r#camera_info: self::CameraInfo,
     }
@@ -2563,6 +2695,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SetCameraInfoResponse {
         pub r#success: bool,
         pub r#status_message: ::std::string::String,
@@ -2579,6 +2712,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Temperature {
         pub r#header: std_msgs::Header,
         pub r#temperature: f64,
@@ -2596,6 +2730,7 @@ pub mod sensor_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TimeReference {
         pub r#header: std_msgs::Header,
         pub r#time_ref: ::roslibrust_codegen::integral_types::Time,
@@ -2635,6 +2770,7 @@ pub mod shape_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Mesh {
         pub r#triangles: ::std::vec::Vec<self::MeshTriangle>,
         pub r#vertices: ::std::vec::Vec<geometry_msgs::Point>,
@@ -2651,6 +2787,7 @@ pub mod shape_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MeshTriangle {
         pub r#vertex_indices: ::std::vec::Vec<u32>,
     }
@@ -2666,6 +2803,7 @@ pub mod shape_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Plane {
         pub r#coef: ::std::vec::Vec<f64>,
     }
@@ -2681,6 +2819,7 @@ pub mod shape_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SolidPrimitive {
         pub r#type: u8,
         pub r#dimensions: ::std::vec::Vec<f64>,
@@ -2727,6 +2866,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Bool {
         pub r#data: bool,
     }
@@ -2742,6 +2882,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Byte {
         pub r#data: u8,
     }
@@ -2757,6 +2898,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ByteMultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<u8>,
@@ -2773,6 +2915,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Char {
         pub r#data: u8,
     }
@@ -2788,6 +2931,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ColorRGBA {
         pub r#r: f32,
         pub r#g: f32,
@@ -2806,6 +2950,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Duration {
         pub r#data: ::roslibrust_codegen::integral_types::Duration,
     }
@@ -2821,6 +2966,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Empty {}
     impl ::roslibrust_codegen::RosMessageType for Empty {
         const ROS_TYPE_NAME: &'static str = "std_msgs/Empty";
@@ -2834,6 +2980,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Float32 {
         pub r#data: f32,
     }
@@ -2849,6 +2996,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Float32MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<f32>,
@@ -2865,6 +3013,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Float64 {
         pub r#data: f64,
     }
@@ -2880,6 +3029,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Float64MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<f64>,
@@ -2896,6 +3046,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Header {
         pub r#seq: u32,
         pub r#stamp: ::roslibrust_codegen::integral_types::Time,
@@ -2913,6 +3064,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Int16 {
         pub r#data: i16,
     }
@@ -2928,6 +3080,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Int16MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<i16>,
@@ -2944,6 +3097,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Int32 {
         pub r#data: i32,
     }
@@ -2959,6 +3113,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Int32MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<i32>,
@@ -2975,6 +3130,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Int64 {
         pub r#data: i64,
     }
@@ -2990,6 +3146,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Int64MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<i64>,
@@ -3006,6 +3163,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Int8 {
         pub r#data: i8,
     }
@@ -3021,6 +3179,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Int8MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<i8>,
@@ -3037,6 +3196,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MultiArrayDimension {
         pub r#label: ::std::string::String,
         pub r#size: u32,
@@ -3054,6 +3214,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MultiArrayLayout {
         pub r#dim: ::std::vec::Vec<self::MultiArrayDimension>,
         pub r#data_offset: u32,
@@ -3070,6 +3231,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct String {
         pub r#data: ::std::string::String,
     }
@@ -3085,6 +3247,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Time {
         pub r#data: ::roslibrust_codegen::integral_types::Time,
     }
@@ -3100,6 +3263,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt16 {
         pub r#data: u16,
     }
@@ -3115,6 +3279,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt16MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<u16>,
@@ -3131,6 +3296,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt32 {
         pub r#data: u32,
     }
@@ -3146,6 +3312,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt32MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<u32>,
@@ -3162,6 +3329,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt64 {
         pub r#data: u64,
     }
@@ -3177,6 +3345,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt64MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<u64>,
@@ -3193,6 +3362,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt8 {
         pub r#data: u8,
     }
@@ -3208,6 +3378,7 @@ pub mod std_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt8MultiArray {
         pub r#layout: self::MultiArrayLayout,
         pub r#data: ::std::vec::Vec<u8>,
@@ -3240,6 +3411,7 @@ pub mod std_srvs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct EmptyRequest {}
     impl ::roslibrust_codegen::RosMessageType for EmptyRequest {
         const ROS_TYPE_NAME: &'static str = "std_srvs/EmptyRequest";
@@ -3253,6 +3425,7 @@ pub mod std_srvs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct EmptyResponse {}
     impl ::roslibrust_codegen::RosMessageType for EmptyResponse {
         const ROS_TYPE_NAME: &'static str = "std_srvs/EmptyResponse";
@@ -3266,6 +3439,7 @@ pub mod std_srvs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SetBoolRequest {
         pub r#data: bool,
     }
@@ -3281,6 +3455,7 @@ pub mod std_srvs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct SetBoolResponse {
         pub r#success: bool,
         pub r#message: ::std::string::String,
@@ -3297,6 +3472,7 @@ pub mod std_srvs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TriggerRequest {}
     impl ::roslibrust_codegen::RosMessageType for TriggerRequest {
         const ROS_TYPE_NAME: &'static str = "std_srvs/TriggerRequest";
@@ -3310,6 +3486,7 @@ pub mod std_srvs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct TriggerResponse {
         pub r#success: bool,
         pub r#message: ::std::string::String,
@@ -3360,6 +3537,7 @@ pub mod stereo_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct DisparityImage {
         pub r#header: std_msgs::Header,
         pub r#image: sensor_msgs::Image,
@@ -3398,6 +3576,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct AddTwoIntsRequest {
         pub r#a: i64,
         pub r#b: i64,
@@ -3414,6 +3593,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct AddTwoIntsResponse {
         pub r#sum: i64,
     }
@@ -3429,6 +3609,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Constants {}
     impl ::roslibrust_codegen::RosMessageType for Constants {
         const ROS_TYPE_NAME: &'static str = "test_msgs/Constants";
@@ -3447,6 +3628,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Float64Stamped {
         pub r#header: std_msgs::Header,
         pub r#value: f64,
@@ -3463,6 +3645,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct LoggerLevel {
         pub r#level: ::std::string::String,
     }
@@ -3478,6 +3661,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Metric {
         pub r#name: ::std::string::String,
         pub r#time: f64,
@@ -3495,6 +3679,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MetricPair {
         pub r#key: ::std::string::String,
         pub r#value: f64,
@@ -3511,6 +3696,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct NodeInfo {
         pub r#node_name: ::std::string::String,
         pub r#pid: i64,
@@ -3558,6 +3744,7 @@ pub mod trajectory_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct JointTrajectory {
         pub r#header: std_msgs::Header,
         pub r#joint_names: ::std::vec::Vec<::std::string::String>,
@@ -3575,6 +3762,7 @@ pub mod trajectory_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct JointTrajectoryPoint {
         pub r#positions: ::std::vec::Vec<f64>,
         pub r#velocities: ::std::vec::Vec<f64>,
@@ -3594,6 +3782,7 @@ pub mod trajectory_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MultiDOFJointTrajectory {
         pub r#header: std_msgs::Header,
         pub r#joint_names: ::std::vec::Vec<::std::string::String>,
@@ -3611,6 +3800,7 @@ pub mod trajectory_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MultiDOFJointTrajectoryPoint {
         pub r#transforms: ::std::vec::Vec<geometry_msgs::Transform>,
         pub r#velocities: ::std::vec::Vec<geometry_msgs::Twist>,
@@ -3645,6 +3835,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct ImageMarker {
         pub r#header: std_msgs::Header,
         pub r#ns: ::std::string::String,
@@ -3681,6 +3872,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct InteractiveMarker {
         pub r#header: std_msgs::Header,
         pub r#pose: geometry_msgs::Pose,
@@ -3702,6 +3894,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct InteractiveMarkerControl {
         pub r#name: ::std::string::String,
         pub r#orientation: geometry_msgs::Quaternion,
@@ -3739,6 +3932,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct InteractiveMarkerFeedback {
         pub r#header: std_msgs::Header,
         pub r#client_id: ::std::string::String,
@@ -3770,6 +3964,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct InteractiveMarkerInit {
         pub r#server_id: ::std::string::String,
         pub r#seq_num: u64,
@@ -3787,6 +3982,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct InteractiveMarkerPose {
         pub r#header: std_msgs::Header,
         pub r#pose: geometry_msgs::Pose,
@@ -3804,6 +4000,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct InteractiveMarkerUpdate {
         pub r#server_id: ::std::string::String,
         pub r#seq_num: u64,
@@ -3828,6 +4025,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct Marker {
         pub r#header: std_msgs::Header,
         pub r#ns: ::std::string::String,
@@ -3875,6 +4073,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MarkerArray {
         pub r#markers: ::std::vec::Vec<self::Marker>,
     }
@@ -3890,6 +4089,7 @@ pub mod visualization_msgs {
         Clone,
         PartialEq,
     )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct MenuEntry {
         pub r#id: u32,
         pub r#parent_id: u32,
