@@ -67,11 +67,38 @@ pub fn find_and_parse_ros_messages(
 ) -> std::io::Result<(Vec<MessageFile>, Vec<ServiceFile>)> {
     let mut search_paths = utils::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
+    let search_paths = search_paths
+        .into_iter()
+        .map(|path| {
+            path.canonicalize()
+                .expect(format!("Unable to canonicalize path: {}", path.display()).as_str())
+        })
+        .collect::<Vec<_>>();
     debug!(
         "Codegen is looking in following paths for files: {:?}",
         &search_paths
     );
     let mut packages = utils::crawl(search_paths.clone());
+    // Check for duplicate package names
+    for (pkg_idx_a, pkg_a) in packages[..packages.len() - 1].iter().enumerate() {
+        for (pkg_idx_b, pkg_b) in packages[pkg_idx_a + 1..].iter().enumerate() {
+            if pkg_idx_a != pkg_idx_b {
+                if pkg_a.name == pkg_b.name {
+                    log::warn!(
+                        "Duplicate package found: {}. Discovered at paths: ({}, {})",
+                        pkg_a.name,
+                        pkg_a.path.display(),
+                        pkg_b.path.display()
+                    );
+                    log::warn!(
+                        "Proceeding with the package found at the first path: {}",
+                        pkg_a.path.display()
+                    );
+                }
+            }
+        }
+    }
+    // Delete all of the duplicates (deletes the latter occurrences in the set)
     packages.dedup_by(|a, b| a.name == b.name);
 
     if packages.len() == 0 {

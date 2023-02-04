@@ -80,6 +80,8 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
                     // Remove package.xml from our path
                     assert!(path.pop());
 
+                    log::debug!("Found package {name} at {}", path.display());
+
                     found_packages.push(Package {
                         name,
                         path,
@@ -192,7 +194,7 @@ fn parse_ros_package_info(
             }
             Ok(XmlEvent::Characters(data)) => {
                 if in_build {
-                    log::debug!("Got data inside of {BUILD_TOOL_TAG}: {data}");
+                    log::trace!("Got data inside of {BUILD_TOOL_TAG}: {data}");
                     match data.as_str() {
                         "catkin" => {
                             version = Some(RosVersion::ROS1);
@@ -203,7 +205,7 @@ fn parse_ros_package_info(
                         _ => {}
                     };
                 } else if in_name {
-                    log::debug!("Got data inside of {NAME_TAG}: {data}");
+                    log::trace!("Got data inside of {NAME_TAG}: {data}");
                     name = Some(data);
                 }
             }
