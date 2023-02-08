@@ -268,7 +268,11 @@ pub fn resolve_dependency_graph(
             if !is_primitive {
                 let is_resolved = resolved_messages.contains_key(&format!(
                     "{}/{}",
-                    field.field_type.package_name.as_ref().expect(&format!("Expected a package for {field:#?}")),
+                    field
+                        .field_type
+                        .package_name
+                        .as_ref()
+                        .expect(&format!("Expected a package for {field:#?}")),
                     &field.field_type.field_type
                 ));
                 is_resolved
@@ -279,10 +283,7 @@ pub fn resolve_dependency_graph(
 
         if fully_resolved {
             let msg_file = MessageFile::resolve(msg, &resolved_messages).unwrap();
-            resolved_messages.insert(
-                msg_file.get_full_name(),
-                msg_file,
-            );
+            resolved_messages.insert(msg_file.get_full_name(), msg_file);
         } else {
             unresolved_messages.push_back(MessageMetadata {
                 seen_count: seen_count + 1,

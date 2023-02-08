@@ -4,7 +4,9 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use syn::parse_quote;
 
-use crate::parse::{ParsedMessageFile, ParsedServiceFile, ROS_TYPE_TO_RUST_TYPE_MAP, ROS_2_TYPE_TO_RUST_TYPE_MAP};
+use crate::parse::{
+    ParsedMessageFile, ParsedServiceFile, ROS_2_TYPE_TO_RUST_TYPE_MAP, ROS_TYPE_TO_RUST_TYPE_MAP,
+};
 use crate::utils::RosVersion;
 
 fn derive_attrs() -> Vec<syn::Attribute> {
