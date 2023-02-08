@@ -1,7 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use serde::de::DeserializeOwned;
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 use crate::utils::{Package, RosVersion};
 
@@ -97,23 +100,108 @@ impl PartialEq for ConstantInfo {
 
 /// Describes all information for a single message file
 #[derive(Clone, PartialEq, Debug)]
-pub struct MessageFile {
+pub struct ParsedMessageFile {
     pub name: String,
     pub package: String,
     pub fields: Vec<FieldInfo>,
     pub constants: Vec<ConstantInfo>,
     pub version: Option<RosVersion>,
+    /// The contents of the message file this instance was parsed from
+    pub source: String,
+    /// The path where the message was found
+    pub path: PathBuf,
+}
+
+impl ParsedMessageFile {
+    pub fn has_header(&self) -> bool {
+        self.fields.iter().any(|field| {
+            field.field_type.field_type.as_str() == "Header"
+                && (field.field_type.package_name.is_none()
+                    || field.field_type.package_name == Some(String::from("std_msgs")))
+        })
+    }
 }
 
 /// Describes all information for a single service file
-pub struct ServiceFile {
+#[derive(Clone, Debug)]
+pub struct ParsedServiceFile {
     pub name: String,
     pub package: String,
     // The names of these types will be auto generated as {name}Request and {name}Response
-    pub request_type: MessageFile,
+    pub request_type: ParsedMessageFile,
     pub request_type_raw: String, // needed elsewhere in generation, but would like to remove
-    pub response_type: MessageFile,
+    pub response_type: ParsedMessageFile,
     pub response_type_raw: String, // needed elsewhere in generation, but would like to remove
+    /// The contents of the service file this instance was parsed from
+    pub source: String,
+    /// The path where the message was found
+    pub path: PathBuf,
+}
+
+fn parse_field(line: &str, pkg: &Package, msg_name: &str) -> FieldInfo {
+    let mut splitter = line.split_whitespace();
+    let pkg_name = pkg.name.as_str();
+    let field_type = splitter.next().expect(&format!(
+        "Did not find field_type on line: {line} while parsing {pkg_name}/{msg_name}"
+    ));
+    let field_type = parse_type(field_type, pkg);
+    let field_name = splitter.next().expect(&format!(
+        "Did not find field_name on line: {line} while parsing {pkg_name}/{msg_name}"
+    ));
+
+    let sep = line.find(' ').unwrap();
+    // Determine if there is a default value for this field
+    let default = if matches!(pkg.version, Some(RosVersion::ROS2)) {
+        // For ros2 packages only, check if there is a default value
+        let line_after_sep = line[sep + 1..].trim();
+        match line_after_sep.find(' ') {
+            Some(def_start) => {
+                let remainder = line_after_sep[def_start..].trim();
+                if remainder.is_empty() {
+                    None
+                } else {
+                    Some(parse_ros_value(
+                        &field_type.field_type,
+                        remainder,
+                        field_type.is_vec,
+                    ))
+                }
+            }
+            None => {
+                // No extra space separator found, not default was provided
+                None
+            }
+        }
+    } else {
+        None
+    };
+
+    FieldInfo {
+        field_type,
+        field_name: field_name.to_string(),
+        default,
+    }
+}
+
+fn parse_constant_field(line: &str, pkg: &Package) -> ConstantInfo {
+    let sep = line.find(' ').unwrap();
+    let equal_after_sep = line[sep..].find("=").unwrap();
+    let mut constant_type = parse_type(line[..sep].trim(), pkg).field_type;
+    let constant_name = line[sep + 1..(equal_after_sep + sep)].trim().to_string();
+
+    // Handle the fact that string type should be different for constants than fields
+    if constant_type == "String" {
+        constant_type = "&'static str".to_string();
+    }
+
+    let constant_value = line[sep + equal_after_sep + 1..].trim().to_string();
+    // TODO bug here, explicitly not handling constant vec until we can manage static array generation
+    let constant_value = parse_ros_value(&constant_type, &constant_value, false);
+    ConstantInfo {
+        constant_type,
+        constant_name,
+        constant_value,
+    }
 }
 
 /// Converts a ros message file into a struct representation
@@ -121,14 +209,14 @@ pub struct ServiceFile {
 /// * `name` -- Name of the object being parsed excluding the file extension, e.g. `Header`
 /// * `package` -- Name of the package the message is found in, required for relative type paths
 /// * `ros2` -- True iff the package is a ros2 package and should be parsed with ros2 logic
-pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> MessageFile {
-    let mut result = MessageFile {
-        fields: vec![],
-        constants: vec![],
-        name: name.clone(),
-        package: package.name.clone(),
-        version: package.version,
-    };
+pub fn parse_ros_message_file(
+    data: &str,
+    name: &str,
+    package: &Package,
+    path: &Path,
+) -> ParsedMessageFile {
+    let mut fields = vec![];
+    let mut constants = vec![];
 
     for line in data.lines() {
         let line = strip_comments(line).trim();
@@ -141,71 +229,23 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
             "Found an invalid ros field line, no space delinting type from name: {line}"
         ));
         let equal_after_sep = line[sep..].find("=");
-        if let Some(equal_i) = equal_after_sep {
+        if let Some(_) = equal_after_sep {
             // Since we found an equal sign after a space, this must be a constant
-            let mut constant_type = parse_type(line[..sep].trim(), &package).field_type;
-            let constant_name = line[sep + 1..(equal_i + sep)].trim().to_string();
-
-            // Handle the fact that string type should be different for constants than fields
-            if constant_type == "String" {
-                constant_type = "&'static str".to_string();
-            }
-
-            let constant_value = line[sep + equal_i + 1..].trim().to_string();
-            // TODO bug here, explicitly not handling constant vec until we can manage static array generation
-            let constant_value = parse_ros_value(&constant_type, &constant_value, false);
-            result.constants.push(ConstantInfo {
-                constant_type,
-                constant_name,
-                constant_value,
-            })
+            constants.push(parse_constant_field(line, package))
         } else {
             // Is regular field
-            let mut splitter = line.split_whitespace();
-            let field_type = splitter.next().expect(&format!(
-                "Did not find field_type on line: {line} while parsing {}/{name}",
-                &package.name
-            ));
-            let field_type = parse_type(field_type, &package);
-            let field_name = splitter.next().expect(&format!(
-                "Did not find field_name on line: {line} while parsing {}/{name}",
-                &package.name
-            ));
-
-            // Determine if there is a default value for this field
-            let default = if matches!(package.version, Some(RosVersion::ROS2)) {
-                // For ros2 packages only, check if there is a default value
-                let line_after_sep = line[sep + 1..].trim();
-                match line_after_sep.find(' ') {
-                    Some(def_start) => {
-                        let remainder = line_after_sep[def_start..].trim();
-                        if remainder.is_empty() {
-                            None
-                        } else {
-                            Some(parse_ros_value(
-                                &field_type.field_type,
-                                remainder,
-                                field_type.is_vec,
-                            ))
-                        }
-                    }
-                    None => {
-                        // No extra space separator found, not default was provided
-                        None
-                    }
-                }
-            } else {
-                None
-            };
-
-            result.fields.push(FieldInfo {
-                field_type,
-                field_name: field_name.to_string(),
-                default,
-            });
+            fields.push(parse_field(line, package, name));
         }
     }
-    result
+    ParsedMessageFile {
+        fields: fields,
+        constants: constants,
+        name: name.to_owned(),
+        package: package.name.clone(),
+        version: package.version,
+        source: data.to_owned(),
+        path: path.to_owned(),
+    }
 }
 
 /// Parses the contents of a service file and returns and struct representing the found content.
@@ -213,9 +253,14 @@ pub fn parse_ros_message_file(data: String, name: String, package: &Package) -> 
 /// * `name` -- Name of the file excluding the extension, e.g. 'Header'
 /// * `package` -- Name of the package the file was found within, required for understanding relative type paths
 /// * `ros2` -- True iff this file is part of a ros2 package and should be parsed with ros2 logic
-pub fn parse_ros_service_file(data: String, name: String, package: &Package) -> ServiceFile {
+pub fn parse_ros_service_file(
+    data: &str,
+    name: &str,
+    package: &Package,
+    path: &Path,
+) -> ParsedServiceFile {
     let mut dash_line_number = None;
-    for (line_num, line) in data.as_str().lines().enumerate() {
+    for (line_num, line) in data.lines().enumerate() {
         match (line.find("---"), line.find("#")) {
             (Some(dash_idx), Some(cmt_idx)) => {
                 if dash_idx < cmt_idx {
@@ -245,80 +290,34 @@ pub fn parse_ros_service_file(data: String, name: String, package: &Package) -> 
         .as_str(),
     );
     let request_str = data
-        .as_str()
         .lines()
         .take(dash_line_number)
         .fold(String::new(), str_accumulator);
     let response_str = data
-        .as_str()
         .lines()
         .skip(dash_line_number + 1)
         .fold(String::new(), str_accumulator);
 
-    ServiceFile {
-        name: name.clone(),
+    ParsedServiceFile {
+        name: name.to_owned(),
         package: package.name.clone(),
         request_type: parse_ros_message_file(
-            request_str.clone(),
-            format!("{name}Request"),
+            request_str.clone().as_str(),
+            format!("{name}Request").as_str(),
             package,
+            path,
         ),
         request_type_raw: request_str,
         response_type: parse_ros_message_file(
-            response_str.clone(),
-            format!("{name}Response"),
+            response_str.clone().as_str(),
+            format!("{name}Response").as_str(),
             package,
+            path,
         ),
         response_type_raw: response_str,
+        source: data.to_owned(),
+        path: path.to_owned(),
     }
-}
-
-pub fn replace_ros_types_with_rust_types(mut msg: MessageFile) -> MessageFile {
-    const INTERNAL_STD_MSGS: [&str; 1] = ["Header"];
-
-    // Select which type conversion map to use depending on ros version
-    let prop_map: &HashMap<&'static str, &'static str> = match msg.version {
-        Some(RosVersion::ROS1) => &ROS_TYPE_TO_RUST_TYPE_MAP,
-        Some(RosVersion::ROS2) => &ROS_2_TYPE_TO_RUST_TYPE_MAP,
-        None => {
-            // If we couldn't determine the package type, assume ROS1 for now
-            &ROS_TYPE_TO_RUST_TYPE_MAP
-        }
-    };
-
-    msg.constants = msg
-        .constants
-        .into_iter()
-        .map(|mut constant| {
-            if prop_map.contains_key(constant.constant_type.as_str()) {
-                constant.constant_type = prop_map
-                    .get(constant.constant_type.as_str())
-                    .unwrap()
-                    .to_string();
-                // We do not need to consider the package for constants as they're required
-                // to be built-in types other than Time and Duration (I think Header is not
-                // technically built-in)
-            }
-            constant
-        })
-        .collect();
-    msg.fields = msg
-        .fields
-        .into_iter()
-        .map(|mut field| {
-            field.field_type.field_type = prop_map
-                .get(field.field_type.field_type.as_str())
-                .unwrap_or(&field.field_type.field_type.as_str())
-                .to_string();
-            for std_msg in INTERNAL_STD_MSGS {
-                if field.field_type.field_type.as_str() == std_msg {
-                    field.field_type.package_name = Some("std_msgs".into());
-                }
-            }
-            field
-        })
-        .collect();
-    msg
 }
 
 /// Looks for # comment character and sub-slices for characters preceding it
@@ -347,7 +346,11 @@ fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
         FieldType {
             package_name: if prop_map.contains_key(type_str) {
                 // If it is a fundamental type, no package
-                None
+                if items[0] == "Header" {
+                    Some("std_msgs".to_owned())
+                } else {
+                    None
+                }
             } else {
                 // Otherwise it is referencing another message in the same package
                 Some(pkg.name.clone())

@@ -1,18 +1,17 @@
 use log::*;
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Debug;
 use std::path::PathBuf;
-use std::str::FromStr;
-use syn::parse_quote;
 use utils::Package;
 
-mod parse;
+pub mod gen;
+use gen::*;
+pub mod parse;
 use parse::*;
-
 pub mod utils;
 
 pub mod integral_types;
@@ -44,6 +43,31 @@ pub trait RosServiceType {
     type Response: RosMessageType;
 }
 
+#[derive(Clone, Debug)]
+pub struct MessageFile {
+    pub(crate) parsed: ParsedMessageFile,
+}
+
+impl MessageFile {
+    pub(crate) fn resolve(
+        parsed: ParsedMessageFile,
+        _graph: &BTreeMap<String, MessageFile>,
+    ) -> Option<Self> {
+        Some(MessageFile { parsed })
+    }
+
+    pub fn get_full_name(&self) -> String {
+        format!("{}/{}", self.parsed.package, self.parsed.name)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ServiceFile {
+    pub(crate) parsed: ParsedServiceFile,
+    pub request: MessageFile,
+    pub response: MessageFile,
+}
+
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
 ///
@@ -51,7 +75,11 @@ pub trait RosServiceType {
 /// found in ROS_PACKAGE_PATH environment variable.
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
     let (messages, services) = find_and_parse_ros_messages(additional_search_paths).unwrap();
-    generate_rust_ros_message_definitions(messages, services)
+    if let Some((messages, services)) = resolve_dependency_graph(messages, services) {
+        generate_rust_ros_message_definitions(messages, services)
+    } else {
+        TokenStream::default()
+    }
 }
 
 /// Searches a list of paths for ROS packages to find their associated message
@@ -64,7 +92,7 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
 ///
 pub fn find_and_parse_ros_messages(
     additional_search_paths: Vec<PathBuf>,
-) -> std::io::Result<(Vec<MessageFile>, Vec<ServiceFile>)> {
+) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
     let mut search_paths = utils::get_search_paths();
     search_paths.extend(additional_search_paths.into_iter());
     let search_paths = search_paths
@@ -171,8 +199,8 @@ pub fn generate_rust_ros_message_definitions(
 
     // Convert messages files into rust token streams and insert them into BTree organized by package
     messages.into_iter().for_each(|message| {
-        let pkg_name = message.package.clone();
-        let definition = generate_struct(message);
+        let pkg_name = message.parsed.package.clone();
+        let definition = generate_struct(message.parsed);
         if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
             entry.push(definition);
         } else {
@@ -181,8 +209,8 @@ pub fn generate_rust_ros_message_definitions(
     });
     // Do the same for services
     services.into_iter().for_each(|service| {
-        let pkg_name = service.package.clone();
-        let definition = generate_service(service);
+        let pkg_name = service.parsed.package.clone();
+        let definition = generate_service(service.parsed);
         if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
             entry.push(definition);
         } else {
@@ -207,11 +235,84 @@ pub fn generate_rust_ros_message_definitions(
 }
 
 struct MessageMetadata {
-    pub package: String,
-    pub path: PathBuf,
-    pub seen_count: i32,
-    pub parsed: MessageFile,
-    pub unparsed: String,
+    msg: ParsedMessageFile,
+    seen_count: u32,
+}
+
+pub fn resolve_dependency_graph(
+    messages: Vec<ParsedMessageFile>,
+    services: Vec<ParsedServiceFile>,
+) -> Option<(Vec<MessageFile>, Vec<ServiceFile>)> {
+    const MAX_PARSE_ITER_LIMIT: u32 = 2048;
+    let mut unresolved_messages = messages
+        .into_iter()
+        .map(|msg| MessageMetadata { msg, seen_count: 0 })
+        .collect::<VecDeque<_>>();
+
+    let mut resolved_messages = BTreeMap::new();
+    // First resolve the message dependencies
+    while let Some(MessageMetadata { msg, seen_count }) = unresolved_messages.pop_front() {
+        if seen_count > MAX_PARSE_ITER_LIMIT {
+            log::error!("Unable to resolve dependencies after reaching iteration limit ({MAX_PARSE_ITER_LIMIT}).\n\
+                    Message: {msg:#?}");
+            return None;
+        }
+
+        // Check our resolved messages for each of the fields
+        let fully_resolved = msg.fields.iter().all(|field| {
+            let is_ros1_primitive =
+                ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str());
+            let is_ros2_primitive =
+                ROS_2_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str());
+            let is_primitive = is_ros1_primitive || is_ros2_primitive;
+            if !is_primitive {
+                let is_resolved = resolved_messages.contains_key(&format!(
+                    "{}/{}",
+                    field
+                        .field_type
+                        .package_name
+                        .as_ref()
+                        .expect(&format!("Expected a package for {field:#?}")),
+                    &field.field_type.field_type
+                ));
+                is_resolved
+            } else {
+                true
+            }
+        });
+
+        if fully_resolved {
+            let msg_file = MessageFile::resolve(msg, &resolved_messages).unwrap();
+            resolved_messages.insert(msg_file.get_full_name(), msg_file);
+        } else {
+            unresolved_messages.push_back(MessageMetadata {
+                seen_count: seen_count + 1,
+                msg,
+            });
+        }
+    }
+
+    // Now that all messages are parsed, we can parse and resolve services
+    let mut resolved_services = vec![];
+    for srv in services {
+        if let (Some(request), Some(response)) = (
+            MessageFile::resolve(srv.request_type.clone(), &resolved_messages),
+            MessageFile::resolve(srv.response_type.clone(), &resolved_messages),
+        ) {
+            resolved_services.push(ServiceFile {
+                parsed: srv,
+                request: request.clone(),
+                response: response.clone(),
+            });
+            resolved_messages.insert(request.get_full_name(), request);
+            resolved_messages.insert(response.get_full_name(), response);
+        } else {
+            log::error!("Unable to resolve dependencies in service: {srv:#?}")
+        }
+    }
+    resolved_services.sort_by(|a, b| a.parsed.name.cmp(&b.parsed.name));
+
+    Some((resolved_messages.into_values().collect(), resolved_services))
 }
 
 /// Parses all ROS file types and returns a final expanded set
@@ -221,251 +322,27 @@ struct MessageMetadata {
 /// * `msg_paths` -- List of tuple (Package, Path to File) for each file to parse
 fn parse_ros_files(
     msg_paths: Vec<(Package, PathBuf)>,
-) -> std::io::Result<(Vec<MessageFile>, Vec<ServiceFile>)> {
-    let mut parsed_messages = VecDeque::new();
+) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
+    let mut parsed_messages = Vec::new();
     let mut parsed_services = Vec::new();
     for (pkg, path) in msg_paths {
         let contents = std::fs::read_to_string(&path)?;
         let name = path.file_stem().unwrap().to_str().unwrap();
         match path.extension().unwrap().to_str().unwrap() {
             "srv" => {
-                let srv_file = parse_ros_service_file(contents, name.to_string(), &pkg);
-                // TODO stop cloning with reckless abandon
-                parsed_messages.push_back(MessageMetadata {
-                    package: pkg.name.clone(),
-                    path: path.clone(),
-                    seen_count: 0,
-                    parsed: srv_file.request_type.clone(),
-                    unparsed: srv_file.request_type_raw.clone(),
-                });
-                parsed_messages.push_back(MessageMetadata {
-                    package: pkg.name.clone(),
-                    path: path.clone(),
-                    seen_count: 0,
-                    parsed: srv_file.response_type.clone(),
-                    unparsed: srv_file.response_type_raw.clone(),
-                });
+                let srv_file = parse_ros_service_file(&contents, name, &pkg, &path);
                 parsed_services.push(srv_file);
             }
             "msg" => {
-                let msg = parse_ros_message_file(contents.clone(), name.to_string(), &pkg);
-                parsed_messages.push_back(MessageMetadata {
-                    package: pkg.name,
-                    path: path.clone(),
-                    seen_count: 0,
-                    parsed: msg,
-                    unparsed: contents,
-                });
+                let msg = parse_ros_message_file(&contents, name, &pkg, &path);
+                parsed_messages.push(msg);
             }
             _ => {
-                panic!("File extension not recognized as a ROS file: {path:?}");
+                log::error!("File extension not recognized as a ROS file: {path:?}");
             }
         }
     }
-    parsed_services.sort_by(|a, b| a.name.cmp(&b.name));
-    Ok((
-        resolve_message_dependencies(parsed_messages),
-        parsed_services,
-    ))
-}
-
-fn resolve_message_dependencies(mut parsed_msgs: VecDeque<MessageMetadata>) -> Vec<MessageFile> {
-    const MAX_PARSE_ITER_LIMIT: i32 = 2048;
-    let mut message_map = BTreeMap::new();
-
-    while let Some(MessageMetadata {
-        package,
-        path,
-        seen_count,
-        parsed,
-        unparsed,
-    }) = parsed_msgs.pop_front()
-    {
-        if seen_count > MAX_PARSE_ITER_LIMIT {
-            panic!("Unable to resolve dependencies after reaching iteration limit ({MAX_PARSE_ITER_LIMIT}).\n\
-                    Message: {package}/{}\n\
-                    Message Definition:\n\
-                    {unparsed}\n\n\
-                    Parsed: {parsed:#?}",
-                    parsed.name);
-        }
-
-        // Check if each dependency of the message is a primitive or has been resolved
-        let fully_resolved = parsed.fields.iter().all(|field| {
-            ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str())
-                || ROS_2_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str())
-                || message_map.contains_key(
-                    format!(
-                        "{}/{}",
-                        field.field_type.package_name.as_ref().unwrap(),
-                        &field.field_type.field_type
-                    )
-                    .as_str(),
-                )
-        });
-
-        if fully_resolved {
-            // We can remove it if the whole tree is understood
-            message_map.insert(
-                format!("{}/{}", package, parsed.name),
-                replace_ros_types_with_rust_types(parsed),
-            );
-        } else {
-            // Otherwise put it back in the queue
-            parsed_msgs.push_back(MessageMetadata {
-                package,
-                path,
-                seen_count: seen_count + 1,
-                parsed,
-                unparsed,
-            });
-        }
-    }
-
-    message_map.into_values().collect()
-}
-
-fn derive_attrs() -> Vec<syn::Attribute> {
-    // TODO we should look into using $crate here...
-    // The way we're currently doing it leaks a dependency on these crates to users...
-    // However using $crate breaks the generated code in non-macro usage
-    // Pass a flag in "if_macro"?
-    vec![
-        parse_quote! { #[derive(::serde::Deserialize)] },
-        parse_quote! { #[derive(::serde::Serialize)] },
-        parse_quote! { #[derive(::smart_default::SmartDefault)] },
-        parse_quote! { #[derive(Debug)] },
-        parse_quote! { #[derive(Clone)] },
-        parse_quote! { #[derive(PartialEq)] },
-    ]
-}
-
-/// Generates the service for a given service file
-/// The service definition defines a struct representing the service an an implementation
-/// of the RosServiceType trait for that struct
-fn generate_service(service: ServiceFile) -> TokenStream {
-    let service_type_name = format!("{}/{}", &service.package, &service.name);
-    let struct_name = format_ident!("{}", service.name);
-    let request_name = format_ident!("{}", service.request_type.name);
-    let response_name = format_ident!("{}", service.response_type.name);
-    quote! {
-        pub struct #struct_name {
-
-        }
-        impl ::roslibrust_codegen::RosServiceType for #struct_name {
-            const ROS_SERVICE_NAME: &'static str = #service_type_name;
-            type Request = #request_name;
-            type Response = #response_name;
-        }
-    }
-}
-
-fn generate_struct(msg: MessageFile) -> TokenStream {
-    let attrs = derive_attrs();
-    let fields = msg
-        .fields
-        .into_iter()
-        .map(|mut field| {
-            field.field_type.field_type = match field.field_type.package_name {
-                Some(ref pkg) => {
-                    if pkg.as_str() == msg.package.as_str() {
-                        format!("self::{}", field.field_type.field_type)
-                    } else {
-                        format!("{}::{}", pkg, field.field_type.field_type)
-                    }
-                }
-                None => field.field_type.field_type.clone(),
-            };
-            let field_type = if field.field_type.is_vec {
-                format!("::std::vec::Vec<{}>", field.field_type.field_type)
-            } else {
-                field.field_type.field_type.clone()
-            };
-            let field_type = TokenStream::from_str(field_type.as_str()).unwrap();
-
-            let field_name = format_ident!("r#{}", field.field_name);
-            if let Some(ref default_val) = field.default {
-                if field.field_type.is_vec {
-                    // For vectors use smart_defaults "dynamic" style
-                    quote! {
-                        #[default(_code = #default_val)]
-                        pub #field_name: #field_type,
-                    }
-                } else {
-                    // For non vectors use smart_default's constant style
-                    quote! {
-                      #[default(#default_val)]
-                      pub #field_name: #field_type,
-                    }
-                }
-            } else {
-                quote! { pub #field_name: #field_type, }
-            }
-        })
-        .collect::<Vec<TokenStream>>();
-
-    let constants = msg
-        .constants
-        .into_iter()
-        .map(|constant| {
-            let constant_name = format_ident!("r#{}", constant.constant_name);
-            let constant_type = if constant.constant_type == "::std::string::String" {
-                String::from("&'static str")
-            } else {
-                constant.constant_type
-            };
-            let constant_type = TokenStream::from_str(constant_type.as_str()).unwrap();
-            let constant_value = constant.constant_value;
-            quote! { pub const #constant_name: #constant_type = #constant_value; }
-        })
-        .collect::<Vec<TokenStream>>();
-
-    let struct_name = format_ident!("{}", msg.name);
-    let ros_type_name = format!("{}/{}", msg.package, struct_name);
-
-    let mut base = quote! {
-        #[allow(non_snake_case)]
-        #(#attrs )*
-        pub struct #struct_name {
-            #(#fields )*
-        }
-
-        impl ::roslibrust_codegen::RosMessageType for #struct_name {
-            const ROS_TYPE_NAME: &'static str = #ros_type_name;
-        }
-    };
-
-    // Only if we have constants append the impl
-    if !constants.is_empty() {
-        base.extend(quote! {
-            impl #struct_name {
-                #(#constants )*
-            }
-        });
-    }
-    base
-}
-
-fn generate_mod(
-    pkg_name: String,
-    struct_definitions: Vec<TokenStream>,
-    all_pkgs: &[String],
-) -> TokenStream {
-    let mod_name = format_ident!("{}", &pkg_name);
-    let all_pkgs = all_pkgs
-        .iter()
-        .filter(|item| item.as_str() != pkg_name.as_str())
-        .map(|pkg| format_ident!("{}", pkg))
-        .collect::<Vec<_>>();
-
-    quote! {
-        #[allow(unused_imports)]
-        pub mod #mod_name {
-            #(use super::#all_pkgs; )*
-
-            #(#struct_definitions )*
-        }
-    }
+    Ok((parsed_messages, parsed_services))
 }
 
 #[cfg(test)]
