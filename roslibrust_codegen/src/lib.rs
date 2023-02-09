@@ -56,10 +56,7 @@ impl MessageFile {
         graph: &BTreeMap<String, MessageFile>,
     ) -> Option<Self> {
         let md5sum = Self::compute_md5sum(&parsed, graph)?;
-        Some(MessageFile {
-            parsed,
-            md5sum,
-        })
+        Some(MessageFile { parsed, md5sum })
     }
 
     pub fn get_full_name(&self) -> String {
@@ -84,10 +81,7 @@ impl MessageFile {
         for field in &parsed.fields {
             let field_type = field.field_type.field_type.as_str();
             if is_intrinsic_type(parsed.version.unwrap_or(RosVersion::ROS1), field_type) {
-                md5sum_content.push_str(&format!(
-                    "{} {}\n",
-                    field.field_type, field.field_name
-                ));
+                md5sum_content.push_str(&format!("{} {}\n", field.field_type, field.field_name));
             } else {
                 let field_full_name = format!(
                     "{}/{}",
@@ -106,7 +100,10 @@ impl MessageFile {
 
         // Subtract the trailing newline
         let md5sum = md5::compute(&md5sum_content.trim_end().as_bytes());
-        log::trace!("Message type: {} calculated with md5sum: {md5sum:x}", parsed.get_full_name());
+        log::trace!(
+            "Message type: {} calculated with md5sum: {md5sum:x}",
+            parsed.get_full_name()
+        );
         Some(format!("{md5sum:x}"))
     }
 }

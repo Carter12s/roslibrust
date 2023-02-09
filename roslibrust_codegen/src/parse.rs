@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
-    path::{Path, PathBuf}, fmt::Display,
+    fmt::Display,
+    path::{Path, PathBuf},
 };
 
 use crate::utils::{Package, RosVersion};
