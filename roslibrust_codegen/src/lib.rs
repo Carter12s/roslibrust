@@ -10,9 +10,10 @@ use utils::Package;
 
 pub mod gen;
 use gen::*;
-pub mod parse;
+mod parse;
 use parse::*;
 pub mod utils;
+use utils::RosVersion;
 
 pub mod integral_types;
 pub use integral_types::*;
@@ -46,18 +47,67 @@ pub trait RosServiceType {
 #[derive(Clone, Debug)]
 pub struct MessageFile {
     pub(crate) parsed: ParsedMessageFile,
+    pub(crate) md5sum: String,
 }
 
 impl MessageFile {
     pub(crate) fn resolve(
         parsed: ParsedMessageFile,
-        _graph: &BTreeMap<String, MessageFile>,
+        graph: &BTreeMap<String, MessageFile>,
     ) -> Option<Self> {
-        Some(MessageFile { parsed })
+        let md5sum = Self::compute_md5sum(&parsed, graph)?;
+        Some(MessageFile {
+            parsed,
+            md5sum,
+        })
     }
 
     pub fn get_full_name(&self) -> String {
         format!("{}/{}", self.parsed.package, self.parsed.name)
+    }
+
+    pub fn get_md5sum(&self) -> &str {
+        self.md5sum.as_str()
+    }
+
+    fn compute_md5sum(
+        parsed: &ParsedMessageFile,
+        graph: &BTreeMap<String, MessageFile>,
+    ) -> Option<String> {
+        let mut md5sum_content = String::new();
+        for constant in &parsed.constants {
+            md5sum_content.push_str(&format!(
+                "{} {}={}\n",
+                constant.constant_type, constant.constant_name, constant.constant_value
+            ));
+        }
+        for field in &parsed.fields {
+            let field_type = field.field_type.field_type.as_str();
+            if is_intrinsic_type(parsed.version.unwrap_or(RosVersion::ROS1), field_type) {
+                md5sum_content.push_str(&format!(
+                    "{} {}\n",
+                    field.field_type, field.field_name
+                ));
+            } else {
+                let field_full_name = format!(
+                    "{}/{}",
+                    field
+                        .field_type
+                        .package_name
+                        .as_ref()
+                        .expect(&format!("Expected package name for field {field:#?}")),
+                    field_type
+                );
+                let sub_message = graph.get(field_full_name.as_str())?;
+                let sub_md5sum = Self::compute_md5sum(&sub_message.parsed, graph)?;
+                md5sum_content.push_str(&format!("{} {}\n", sub_md5sum, field.field_name));
+            }
+        }
+
+        // Subtract the trailing newline
+        let md5sum = md5::compute(&md5sum_content.trim_end().as_bytes());
+        log::trace!("Message type: {} calculated with md5sum: {md5sum:x}", parsed.get_full_name());
+        Some(format!("{md5sum:x}"))
     }
 }
 
