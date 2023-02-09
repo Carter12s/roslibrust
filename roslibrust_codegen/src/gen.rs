@@ -5,8 +5,8 @@ use std::str::FromStr;
 use syn::parse_quote;
 
 use crate::parse::{
-    convert_ros_type_to_rust_type, ConstantInfo, FieldInfo,
-    ParsedMessageFile, ParsedServiceFile, RosLiteral,
+    convert_ros_type_to_rust_type, ConstantInfo, FieldInfo, ParsedMessageFile, ParsedServiceFile,
+    RosLiteral,
 };
 use crate::utils::RosVersion;
 
