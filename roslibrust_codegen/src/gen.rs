@@ -46,7 +46,6 @@ pub fn generate_service(service: ParsedServiceFile) -> TokenStream {
 }
 
 pub fn generate_struct(msg: ParsedMessageFile) -> TokenStream {
-    //let msg = replace_ros_types_with_rust_types(msg);
     let attrs = derive_attrs();
     let fields = msg
         .fields
