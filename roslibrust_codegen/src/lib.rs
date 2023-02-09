@@ -8,7 +8,7 @@ use std::fmt::Debug;
 use std::path::PathBuf;
 use utils::Package;
 
-pub mod gen;
+mod gen;
 use gen::*;
 mod parse;
 use parse::*;
