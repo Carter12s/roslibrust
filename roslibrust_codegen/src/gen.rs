@@ -174,47 +174,6 @@ pub fn generate_mod(
     }
 }
 
-pub fn replace_ros_types_with_rust_types(mut msg: ParsedMessageFile) -> ParsedMessageFile {
-    //const INTERNAL_STD_MSGS: [&str; 1] = ["Header"];
-
-    // If we couldn't determine the package type, assume ROS1 for now
-    let pkg_version = msg.version.unwrap_or(RosVersion::ROS1);
-
-    msg.constants = msg
-        .constants
-        .into_iter()
-        .map(|mut constant| {
-            if let Some(rust_type) =
-                convert_ros_type_to_rust_type(pkg_version, constant.constant_type.as_str())
-            {
-                constant.constant_type = rust_type.to_owned();
-                // We do not need to consider the package for constants as they're required
-                // to be built-in types other than Time and Duration (I think Header is not
-                // technically built-in)
-            }
-            constant
-        })
-        .collect();
-    msg.fields = msg
-        .fields
-        .into_iter()
-        .map(|mut field| {
-            if let Some(rust_type) =
-                convert_ros_type_to_rust_type(pkg_version, field.field_type.field_type.as_str())
-            {
-                field.field_type.field_type = rust_type.to_owned();
-            }
-            // for std_msg in INTERNAL_STD_MSGS {
-            //     if field.field_type.field_type.as_str() == std_msg {
-            //         field.field_type.package_name = Some("std_msgs".into());
-            //     }
-            // }
-            field
-        })
-        .collect();
-    msg
-}
-
 fn ros_literal_to_rust_literal(ros_type: &str, literal: &RosLiteral, is_vec: bool) -> TokenStream {
     // TODO: The naming of all the functions under this tree seems inaccurate
     parse_ros_value(ros_type, &literal.inner, is_vec)
