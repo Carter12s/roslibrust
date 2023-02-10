@@ -158,31 +158,9 @@ pub fn find_and_parse_ros_messages(
         "Codegen is looking in following paths for files: {:?}",
         &search_paths
     );
-    let mut packages = utils::crawl(search_paths.clone());
+    let packages = utils::crawl(search_paths.clone());
     // Check for duplicate package names
-    if packages.len() >= 2 {
-        for (pkg_idx_a, pkg_a) in packages[..packages.len() - 1].iter().enumerate() {
-            for (pkg_idx_b, pkg_b) in packages[pkg_idx_a + 1..].iter().enumerate() {
-                if pkg_idx_a != pkg_idx_b {
-                    if pkg_a.name == pkg_b.name {
-                        log::warn!(
-                            "Duplicate package found: {}. Discovered at paths: ({}, {})",
-                            pkg_a.name,
-                            pkg_a.path.display(),
-                            pkg_b.path.display()
-                        );
-                        log::warn!(
-                            "Proceeding with the package found at the first path: {}",
-                            pkg_a.path.display()
-                        );
-                    }
-                }
-            }
-        }
-        // Delete all of the duplicates (deletes the latter occurrences in the set)
-        packages.dedup_by(|a, b| a.name == b.name);
-    }
-
+    let packages = utils::deduplicate_packages(packages);
     if packages.len() == 0 {
         log::warn!(
             "No packages found while searching in: {search_paths:?}, relative to {:?}",
@@ -226,6 +204,7 @@ pub fn find_and_parse_ros_messages(
         })
         .flatten()
         .collect::<Vec<_>>();
+
     message_files.extend_from_slice(&service_files[..]);
     parse_ros_files(message_files)
 }
