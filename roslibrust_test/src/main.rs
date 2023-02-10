@@ -25,11 +25,13 @@ lazy_static! {
 /// This main function is used to generate the contents of ros1.rs, ros2.rs
 fn main() {
     env_logger::init();
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages((*ROS_1_PATHS).clone());
+    let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(
+        (*ROS_1_PATHS).clone(),
+    );
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
     let _ = std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/src/ros1.rs"), source);
 
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages(vec![
+    let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(vec![
         ROS_2_PATH.into(),
         ROS_2_TEST_PATH.into(),
     ]);
