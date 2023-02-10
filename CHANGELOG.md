@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
  - Bug causing single quoted string constants in message files to not be parsed correctly
  - Bug causing float constants in message files to cause compiler errors because `f32 = 0;` is not allowed in rust
+ - Bug where packages were not properly de-duplicated during discovery.
 
 ## 0.6.0 - December 12, 2022
 

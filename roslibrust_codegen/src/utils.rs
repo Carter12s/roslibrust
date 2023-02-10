@@ -150,12 +150,16 @@ pub fn deduplicate_packages(packages: Vec<Package>) -> Vec<Package> {
     let mut package_map: HashMap<String, Package> = HashMap::new();
     for package in packages {
         if let Some(duplicate) = package_map.get(package.name.as_str()) {
-            log::warn!("Duplicate package found: {}. Discovered at paths: ({}, {})",
+            log::warn!(
+                "Duplicate package found: {}. Discovered at paths: ({}, {})",
                 package.name,
                 duplicate.path.display(),
-                package.path.display());
-            log::warn!("Proceeding with the package found at the first path: {}",
-                duplicate.path.display());
+                package.path.display()
+            );
+            log::warn!(
+                "Proceeding with the package found at the first path: {}",
+                duplicate.path.display()
+            );
         } else {
             package_map.insert(package.name.to_owned(), package);
         }
@@ -250,21 +254,23 @@ mod test {
     fn verify_deduplicate_packages() {
         // Wow I am so upset, I thought I was going insane
         // std::Vec::dedup_by only removes *consecutive* elements that are equal
-        let packages = vec![utils::Package {
-            name: "diagnostic_msgs".into(),
-            path: "/opt/ros/noetic/share/diagnostic_msgs".into(),
-            version: Some(utils::RosVersion::ROS1),
-        },
-        utils::Package {
-            name: "std_msgs".into(),
-            path: "/tmp/std_msgs".into(),
-            version: None,
-        },
-        utils::Package {
-            name: "diagnostic_msgs".into(),
-            path: "/code/assets/ros1_common_interfaces/common_msgs/diagnostic_msgs".into(),
-            version: Some(utils::RosVersion::ROS1),
-        }];
+        let packages = vec![
+            utils::Package {
+                name: "diagnostic_msgs".into(),
+                path: "/opt/ros/noetic/share/diagnostic_msgs".into(),
+                version: Some(utils::RosVersion::ROS1),
+            },
+            utils::Package {
+                name: "std_msgs".into(),
+                path: "/tmp/std_msgs".into(),
+                version: None,
+            },
+            utils::Package {
+                name: "diagnostic_msgs".into(),
+                path: "/code/assets/ros1_common_interfaces/common_msgs/diagnostic_msgs".into(),
+                version: Some(utils::RosVersion::ROS1),
+            },
+        ];
 
         let deduplicated = utils::deduplicate_packages(packages);
         assert_eq!(deduplicated.len(), 2);
