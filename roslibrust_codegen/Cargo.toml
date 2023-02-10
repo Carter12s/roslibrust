@@ -30,6 +30,10 @@ default = ["tokio"]
 all = ["tokio"]
 # Enables support for tokio time conversions
 tokio = [ "dep:tokio" ]
+# For use with CI environment or any environment with ROS1 installed
+ros1_test = []
+# For use with CI environment or any environment with ROS2 installed
+ros2_test = []
 # TODO do this!
 # # Enables support for chrono time conversions
 # chrono = []

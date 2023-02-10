@@ -424,6 +424,7 @@ mod test {
 
     /// Confirms we don't panic on ros1_test_msgs parsing
     #[test]
+    #[cfg_attr(not(feature = "ros1_test"), ignore)]
     fn generate_ok_on_ros1_test_msgs() {
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_test_msgs");
 
@@ -433,6 +434,7 @@ mod test {
 
     /// Confirms we don't panic on ros2_test_msgs parsing
     #[test]
+    #[cfg_attr(not(feature = "ros2_test"), ignore)]
     fn generate_ok_on_ros2_test_msgs() {
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
 
