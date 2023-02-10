@@ -153,6 +153,18 @@ fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
 }
 
 pub fn deduplicate_packages(packages: Vec<Package>) -> Vec<Package> {
+    fn package_name_fmt(pkg: &Package) -> String {
+        format!(
+            "{}_{}",
+            pkg.name,
+            match pkg.version {
+                Some(RosVersion::ROS1) => "1",
+                Some(RosVersion::ROS2) => "2",
+                None => "unknown",
+            }
+        )
+    }
+
     let mut package_map: HashMap<String, Package> = HashMap::new();
     for package in packages {
         if let Some(duplicate) = package_map.get(package.name.as_str()) {
@@ -168,10 +180,10 @@ pub fn deduplicate_packages(packages: Vec<Package>) -> Vec<Package> {
                     duplicate.path.display()
                 );
             } else {
-                package_map.insert(package.name.to_owned(), package);
+                package_map.insert(package_name_fmt(&package), package);
             }
         } else {
-            package_map.insert(package.name.to_owned(), package);
+            package_map.insert(package_name_fmt(&package), package);
         }
     }
 
