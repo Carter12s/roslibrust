@@ -121,7 +121,19 @@ pub struct ServiceFile {
 /// * `additional_search_paths` - A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
-    let (messages, services) = find_and_parse_ros_messages(additional_search_paths).unwrap();
+    let mut ros_package_paths = utils::get_search_paths();
+    ros_package_paths.extend(additional_search_paths);
+    find_and_generate_ros_messages_without_ros_package_path(ros_package_paths)
+}
+
+/// Searches a list of paths for ROS packages and generates struct definitions
+/// and implementations for message files and service files in packages it finds.
+///
+/// * `search_paths` - A list of paths to search for ROS packages.
+pub fn find_and_generate_ros_messages_without_ros_package_path(
+    search_paths: Vec<PathBuf>,
+) -> TokenStream {
+    let (messages, services) = find_and_parse_ros_messages(search_paths).unwrap();
     if let Some((messages, services)) = resolve_dependency_graph(messages, services) {
         generate_rust_ros_message_definitions(messages, services)
     } else {
@@ -134,14 +146,11 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
 /// it finds. Returns a map of PACKAGE_NAME/MESSAGE_NAME strings to message file
 /// data and vector of service file data.
 ///
-/// * `additional_search_paths` - A list of additional paths to search beyond those
-/// found in ROS_PACKAGE_PATH environment variable.
+/// * `search_paths` - A list of paths to search.
 ///
 pub fn find_and_parse_ros_messages(
-    additional_search_paths: Vec<PathBuf>,
+    search_paths: Vec<PathBuf>,
 ) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
-    let mut search_paths = utils::get_search_paths();
-    search_paths.extend(additional_search_paths.into_iter());
     let search_paths = search_paths
         .into_iter()
         .map(|path| {

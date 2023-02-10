@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - More useful logs available when running codegen
  - Refactor some of the public APIs and types in roslibrust_codegen (concept of `ParsedMessageFile` vs `MessageFile`)
  - Added a method `get_md5sum` to `MessageFile`
+ - Additional code generation API and macro which excludes `ROS_PACKAGE_PATH`
 
 ### Fixed
  - Bug causing single quoted string constants in message files to not be parsed correctly

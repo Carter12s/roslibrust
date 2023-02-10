@@ -10,6 +10,12 @@ pub struct Package {
     pub version: Option<RosVersion>,
 }
 
+impl PartialEq for Package {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.version == other.version
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum RosVersion {
     ROS1,
@@ -150,16 +156,20 @@ pub fn deduplicate_packages(packages: Vec<Package>) -> Vec<Package> {
     let mut package_map: HashMap<String, Package> = HashMap::new();
     for package in packages {
         if let Some(duplicate) = package_map.get(package.name.as_str()) {
-            log::warn!(
-                "Duplicate package found: {}. Discovered at paths: ({}, {})",
-                package.name,
-                duplicate.path.display(),
-                package.path.display()
-            );
-            log::warn!(
-                "Proceeding with the package found at the first path: {}",
-                duplicate.path.display()
-            );
+            if &package == duplicate {
+                log::warn!(
+                    "Duplicate package found: {}. Discovered at paths: ({}, {})",
+                    package.name,
+                    duplicate.path.display(),
+                    package.path.display()
+                );
+                log::warn!(
+                    "Proceeding with the package found at the first path: {}",
+                    duplicate.path.display()
+                );
+            } else {
+                package_map.insert(package.name.to_owned(), package);
+            }
         } else {
             package_map.insert(package.name.to_owned(), package);
         }
@@ -263,16 +273,23 @@ mod test {
             utils::Package {
                 name: "std_msgs".into(),
                 path: "/tmp/std_msgs".into(),
-                version: None,
+                version: Some(utils::RosVersion::ROS1),
             },
+            // This duplicate below should be removed
             utils::Package {
                 name: "diagnostic_msgs".into(),
                 path: "/code/assets/ros1_common_interfaces/common_msgs/diagnostic_msgs".into(),
                 version: Some(utils::RosVersion::ROS1),
             },
+            // This will be kept because the ROS Version is different
+            utils::Package {
+                name: "std_msgs".into(),
+                path: "/ros2/std_msgs".into(),
+                version: Some(utils::RosVersion::ROS2),
+            },
         ];
 
         let deduplicated = utils::deduplicate_packages(packages);
-        assert_eq!(deduplicated.len(), 2);
+        assert_eq!(deduplicated.len(), 3);
     }
 }
