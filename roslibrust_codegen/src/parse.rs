@@ -24,7 +24,6 @@ lazy_static::lazy_static! {
         ("string", "::std::string::String"),
         ("time", "::roslibrust_codegen::integral_types::Time"),
         ("duration", "::roslibrust_codegen::integral_types::Duration"),
-        //("Header", "Header"),
     ].into_iter().collect();
 
     pub static ref ROS_2_TYPE_TO_RUST_TYPE_MAP: HashMap<&'static str, &'static str> = vec![
