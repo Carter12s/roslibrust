@@ -12,7 +12,7 @@ impl Parse for RosLibRustMessagePaths {
         let mut paths = vec![];
         while let Ok(path) = input.parse::<syn::LitStr>() {
             paths.push(path.value().into());
-            if let Ok(_) = input.parse::<Token![,]>() {
+            if input.parse::<Token![,]>().is_ok() {
                 continue;
             } else {
                 break;

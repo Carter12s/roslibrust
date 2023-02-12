@@ -22,9 +22,9 @@ pub enum RosVersion {
     ROS2,
 }
 
-const CATKIN_IGNORE: &'static str = "CATKIN_IGNORE";
-const PACKAGE_FILE_NAME: &'static str = "package.xml";
-const ROS_PACKAGE_PATH_ENV_VAR: &'static str = "ROS_PACKAGE_PATH";
+const CATKIN_IGNORE: &str = "CATKIN_IGNORE";
+const PACKAGE_FILE_NAME: &str = "package.xml";
+const ROS_PACKAGE_PATH_ENV_VAR: &str = "ROS_PACKAGE_PATH";
 
 pub fn get_search_paths() -> Vec<PathBuf> {
     if let Ok(paths) = std::env::var(ROS_PACKAGE_PATH_ENV_VAR) {
@@ -35,7 +35,7 @@ pub fn get_search_paths() -> Vec<PathBuf> {
 
         paths
             .split(separator)
-            .map(|path| PathBuf::from(path))
+            .map(PathBuf::from)
             .collect::<Vec<PathBuf>>()
     } else {
         log::warn!("No ROS_PACKAGE_PATH defined.");
@@ -203,8 +203,8 @@ fn parse_ros_package_info(
     use std::fs::File;
     use std::io::BufReader;
     use xml::reader::{EventReader, ParserConfig, XmlEvent};
-    const BUILD_TOOL_TAG: &'static str = "buildtool_depend";
-    const NAME_TAG: &'static str = "name";
+    const BUILD_TOOL_TAG: &str = "buildtool_depend";
+    const NAME_TAG: &str = "name";
 
     let file = File::open(&path)?;
     let reader = BufReader::new(file);

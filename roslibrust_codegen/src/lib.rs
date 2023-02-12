@@ -89,7 +89,7 @@ impl MessageFile {
                         .field_type
                         .package_name
                         .as_ref()
-                        .expect(&format!("Expected package name for field {field:#?}")),
+                        .unwrap_or_else(|| panic!("Expected package name for field {field:#?}")),
                     field_type
                 );
                 let sub_message = graph.get(field_full_name.as_str())?;
@@ -99,7 +99,7 @@ impl MessageFile {
         }
 
         // Subtract the trailing newline
-        let md5sum = md5::compute(&md5sum_content.trim_end().as_bytes());
+        let md5sum = md5::compute(md5sum_content.trim_end().as_bytes());
         log::trace!(
             "Message type: {} calculated with md5sum: {md5sum:x}",
             parsed.get_full_name()
@@ -156,7 +156,7 @@ pub fn find_and_parse_ros_messages(
         .map(|path| {
             if path.exists() {
                 path.canonicalize()
-                    .expect(format!("Unable to canonicalize path: {}", path.display()).as_str())
+                    .unwrap_or_else(|_| panic!("Unable to canonicalize path: {}", path.display()))
             } else {
                 log::error!("{} does not exist", path.display());
                 path
@@ -170,7 +170,7 @@ pub fn find_and_parse_ros_messages(
     let packages = utils::crawl(search_paths.clone());
     // Check for duplicate package names
     let packages = utils::deduplicate_packages(packages);
-    if packages.len() == 0 {
+    if packages.is_empty() {
         log::warn!(
             "No packages found while searching in: {search_paths:?}, relative to {:?}",
             std::env::current_dir().unwrap()
@@ -179,7 +179,7 @@ pub fn find_and_parse_ros_messages(
 
     let mut message_files = packages
         .iter()
-        .map(|pkg| {
+        .flat_map(|pkg| {
             utils::get_message_files(pkg)
                 .unwrap_or_else(|err| {
                     log::error!(
@@ -193,11 +193,10 @@ pub fn find_and_parse_ros_messages(
                 .into_iter()
                 .map(|path| (pkg.clone(), path))
         })
-        .flatten()
         .collect::<Vec<_>>();
     let service_files = packages
         .iter()
-        .map(|pkg| {
+        .flat_map(|pkg| {
             utils::get_service_files(pkg)
                 .unwrap_or_else(|err| {
                     log::error!(
@@ -211,7 +210,6 @@ pub fn find_and_parse_ros_messages(
                 .into_iter()
                 .map(|path| (pkg.clone(), path))
         })
-        .flatten()
         .collect::<Vec<_>>();
 
     message_files.extend_from_slice(&service_files[..]);
@@ -254,8 +252,7 @@ pub fn generate_rust_ros_message_definitions(
     });
     // Now generate modules to wrap all of the TokenStreams in a module for each package
     let all_pkgs = modules_to_struct_definitions
-        .iter()
-        .map(|(k, _)| k)
+        .keys()
         .cloned()
         .collect::<Vec<String>>();
     let module_definitions = modules_to_struct_definitions
@@ -307,7 +304,7 @@ pub fn resolve_dependency_graph(
                         .field_type
                         .package_name
                         .as_ref()
-                        .expect(&format!("Expected a package for {field:#?}")),
+                        .unwrap_or_else(|| panic!("Expected a package for {field:#?}")),
                     &field.field_type.field_type
                 ));
                 is_resolved

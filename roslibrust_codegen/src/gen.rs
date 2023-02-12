@@ -99,7 +99,7 @@ fn generate_field_definition(field: FieldInfo, msg_pkg: &str, version: RosVersio
             }
         }
         None => convert_ros_type_to_rust_type(version, &field.field_type.field_type)
-            .expect(&format!("No Rust type for {}", field.field_type))
+            .unwrap_or_else(|| panic!("No Rust type for {}", field.field_type))
             .to_owned(),
     };
     let rust_field_type = if field.field_type.is_vec {
@@ -186,14 +186,14 @@ fn generic_parse_value<T: DeserializeOwned + ToTokens + std::fmt::Debug>(
     is_vec: bool,
 ) -> TokenStream {
     if is_vec {
-        let parsed: Vec<T> = serde_json::from_str(value).expect(
-            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
+        let parsed: Vec<T> = serde_json::from_str(value).unwrap_or_else(|_|
+            panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
         );
         let vec_str = format!("vec!{parsed:?}");
         quote! { #vec_str }
     } else {
-        let parsed: T = serde_json::from_str(value).expect(
-            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
+        let parsed: T = serde_json::from_str(value).unwrap_or_else(|_|
+            panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
         );
         quote! { #parsed }
     }
@@ -228,14 +228,14 @@ fn parse_ros_value(ros_type: &str, value: &str, is_vec: bool) -> TokenStream {
             // String is a special case because of quotes and to_string()
             if is_vec {
                 // TODO there is a bug here, no idea how I should be attempting to convert / escape single quotes here...
-                let parsed: Vec<String> = serde_json::from_str(value).expect(
-            &format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to Vec<String>"));
+                let parsed: Vec<String> = serde_json::from_str(value).unwrap_or_else(|_|
+            panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to Vec<String>"));
                 let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
                 quote! { #vec_str }
             } else {
                 // Halfass attempt to deal with ROS's string escaping / quote bullshit
-                let value = &value.replace("\'", "\"");
-                let parsed: String = serde_json::from_str(value).expect(&format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
+                let value = &value.replace('\'', "\"");
+                let parsed: String = serde_json::from_str(value).unwrap_or_else(|_| panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
                 quote! { #parsed }
             }
         }

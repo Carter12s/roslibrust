@@ -183,13 +183,13 @@ pub struct ParsedServiceFile {
 fn parse_field(line: &str, pkg: &Package, msg_name: &str) -> FieldInfo {
     let mut splitter = line.split_whitespace();
     let pkg_name = pkg.name.as_str();
-    let field_type = splitter.next().expect(&format!(
-        "Did not find field_type on line: {line} while parsing {pkg_name}/{msg_name}"
-    ));
+    let field_type = splitter.next().unwrap_or_else(|| {
+        panic!("Did not find field_type on line: {line} while parsing {pkg_name}/{msg_name}")
+    });
     let field_type = parse_type(field_type, pkg);
-    let field_name = splitter.next().expect(&format!(
-        "Did not find field_name on line: {line} while parsing {pkg_name}/{msg_name}"
-    ));
+    let field_name = splitter.next().unwrap_or_else(|| {
+        panic!("Did not find field_name on line: {line} while parsing {pkg_name}/{msg_name}")
+    });
 
     let sep = line.find(' ').unwrap();
     // Determine if there is a default value for this field
@@ -223,7 +223,7 @@ fn parse_field(line: &str, pkg: &Package, msg_name: &str) -> FieldInfo {
 
 fn parse_constant_field(line: &str, pkg: &Package) -> ConstantInfo {
     let sep = line.find(' ').unwrap();
-    let equal_after_sep = line[sep..].find("=").unwrap();
+    let equal_after_sep = line[sep..].find('=').unwrap();
     let mut constant_type = parse_type(line[..sep].trim(), pkg).field_type;
     let constant_name = line[sep + 1..(equal_after_sep + sep)].trim().to_string();
 
@@ -256,16 +256,16 @@ pub fn parse_ros_message_file(
 
     for line in data.lines() {
         let line = strip_comments(line).trim();
-        if line.len() == 0 {
+        if line.is_empty() {
             // Comment only line skip
             continue;
         }
         // Determine if we're looking at a constant or a field
-        let sep = line.find(' ').expect(&format!(
-            "Found an invalid ros field line, no space delinting type from name: {line}"
-        ));
-        let equal_after_sep = line[sep..].find("=");
-        if let Some(_) = equal_after_sep {
+        let sep = line.find(' ').unwrap_or_else(|| {
+            panic!("Found an invalid ros field line, no space delinting type from name: {line}")
+        });
+        let equal_after_sep = line[sep..].find('=');
+        if equal_after_sep.is_some() {
             // Since we found an equal sign after a space, this must be a constant
             constants.push(parse_constant_field(line, package))
         } else {
@@ -274,8 +274,8 @@ pub fn parse_ros_message_file(
         }
     }
     ParsedMessageFile {
-        fields: fields,
-        constants: constants,
+        fields,
+        constants,
         name: name.to_owned(),
         package: package.name.clone(),
         version: package.version,
@@ -297,7 +297,7 @@ pub fn parse_ros_service_file(
 ) -> ParsedServiceFile {
     let mut dash_line_number = None;
     for (line_num, line) in data.lines().enumerate() {
-        match (line.find("---"), line.find("#")) {
+        match (line.find("---"), line.find('#')) {
             (Some(dash_idx), Some(cmt_idx)) => {
                 if dash_idx < cmt_idx {
                     // Comment appears after dash
@@ -314,17 +314,16 @@ pub fn parse_ros_service_file(
     }
     let str_accumulator = |mut acc: String, line: &str| -> String {
         acc.push_str(line);
-        acc.push_str("\n");
+        acc.push('\n');
         acc
     };
 
-    let dash_line_number = dash_line_number.expect(
-        format!(
+    let dash_line_number = dash_line_number.unwrap_or_else(|| {
+        panic!(
             "Failed to find delimiter line '---' in {}/{name}",
             &package.name
         )
-        .as_str(),
-    );
+    });
     let request_str = data
         .lines()
         .take(dash_line_number)
@@ -410,8 +409,8 @@ fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
 /// `pkg` -- Reference to package this type is within, used for version information and determining relative types
 fn parse_type(type_str: &str, pkg: &Package) -> FieldType {
     // Handle array logic
-    let open_bracket_idx = type_str.find("[");
-    let close_bracket_idx = type_str.find("]");
+    let open_bracket_idx = type_str.find('[');
+    let close_bracket_idx = type_str.find(']');
     match (open_bracket_idx, close_bracket_idx) {
         (Some(o), Some(_c)) => {
             // After having stripped array information, parse the remainder of the type
