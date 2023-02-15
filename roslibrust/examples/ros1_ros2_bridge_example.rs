@@ -14,7 +14,7 @@ mod ros1 {
 }
 
 mod ros2 {
-    roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    roslibrust_codegen_macro::find_and_generate_ros_messages_without_ros_package_path!(
         "assets/ros2_common_interfaces/std_msgs"
     );
 }

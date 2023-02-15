@@ -12,7 +12,7 @@ impl Parse for RosLibRustMessagePaths {
         let mut paths = vec![];
         while let Ok(path) = input.parse::<syn::LitStr>() {
             paths.push(path.value().into());
-            if let Ok(_) = input.parse::<Token![,]>() {
+            if input.parse::<Token![,]>().is_ok() {
                 continue;
             } else {
                 break;
@@ -25,6 +25,9 @@ impl Parse for RosLibRustMessagePaths {
 /// Given a list of paths, generates struct definitions and trait impls for any
 /// ros messages found within those paths.
 /// Paths are relative to where rustc is being invoked from your mileage may vary.
+///
+/// In addition to provided paths, this will search paths found in the environment
+/// variable ROS_PACKAGE_PATH.
 #[proc_macro]
 pub fn find_and_generate_ros_messages(input_stream: TokenStream) -> TokenStream {
     let RosLibRustMessagePaths { paths } =
@@ -47,4 +50,15 @@ pub fn find_and_generate_ros_messages_relative_to_manifest_dir(
     }
 
     roslibrust_codegen::find_and_generate_ros_messages(paths).into()
+}
+
+/// Similar to `find_and_generate_ros_messages`, but does not search the
+/// `ROS_PACKAGE_PATH` environment variable paths (useful in some situations).
+#[proc_macro]
+pub fn find_and_generate_ros_messages_without_ros_package_path(
+    input_stream: TokenStream,
+) -> TokenStream {
+    let RosLibRustMessagePaths { paths } =
+        parse_macro_input!(input_stream as RosLibRustMessagePaths);
+    roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(paths).into()
 }

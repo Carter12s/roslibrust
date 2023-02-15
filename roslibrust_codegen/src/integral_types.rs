@@ -16,9 +16,9 @@ pub struct Time {
     pub nsecs: u32,
 }
 
-impl Into<Time> for std::time::SystemTime {
-    fn into(self) -> Time {
-        let delta = self
+impl From<std::time::SystemTime> for Time {
+    fn from(val: std::time::SystemTime) -> Self {
+        let delta = val
             .duration_since(std::time::UNIX_EPOCH)
             .expect("Failed to convert system time into unix epoch");
         let downcast_secs = u32::try_from(delta.as_secs()).expect("Failed to convert system time to ROS representation, seconds term overflows u32 likely");
@@ -44,11 +44,11 @@ pub struct Duration {
 }
 
 /// Note this provides both tokio::time::Duration and std::time::Duration
-impl Into<Duration> for tokio::time::Duration {
-    fn into(self) -> Duration {
-        let downcast_sec = i32::try_from(self.as_secs())
+impl From<tokio::time::Duration> for Duration {
+    fn from(val: tokio::time::Duration) -> Self {
+        let downcast_sec = i32::try_from(val.as_secs())
             .expect("Failed to cast tokio duration to ROS duration, secs could not fit in i32");
-        let downcast_nsec = i32::try_from(self.subsec_nanos())
+        let downcast_nsec = i32::try_from(val.subsec_nanos())
             .expect("Failed to cast tokio duration ROS duration, nsecs could not fit in i32");
         Duration {
             sec: downcast_sec,

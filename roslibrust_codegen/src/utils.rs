@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -9,15 +10,21 @@ pub struct Package {
     pub version: Option<RosVersion>,
 }
 
+impl PartialEq for Package {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.version == other.version
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum RosVersion {
     ROS1,
     ROS2,
 }
 
-const CATKIN_IGNORE: &'static str = "CATKIN_IGNORE";
-const PACKAGE_FILE_NAME: &'static str = "package.xml";
-const ROS_PACKAGE_PATH_ENV_VAR: &'static str = "ROS_PACKAGE_PATH";
+const CATKIN_IGNORE: &str = "CATKIN_IGNORE";
+const PACKAGE_FILE_NAME: &str = "package.xml";
+const ROS_PACKAGE_PATH_ENV_VAR: &str = "ROS_PACKAGE_PATH";
 
 pub fn get_search_paths() -> Vec<PathBuf> {
     if let Ok(paths) = std::env::var(ROS_PACKAGE_PATH_ENV_VAR) {
@@ -28,7 +35,7 @@ pub fn get_search_paths() -> Vec<PathBuf> {
 
         paths
             .split(separator)
-            .map(|path| PathBuf::from(path))
+            .map(PathBuf::from)
             .collect::<Vec<PathBuf>>()
     } else {
         log::warn!("No ROS_PACKAGE_PATH defined.");
@@ -145,6 +152,44 @@ fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
     Ok(msg_files)
 }
 
+pub fn deduplicate_packages(packages: Vec<Package>) -> Vec<Package> {
+    fn package_name_fmt(pkg: &Package) -> String {
+        format!(
+            "{}_{}",
+            pkg.name,
+            match pkg.version {
+                Some(RosVersion::ROS1) => "1",
+                Some(RosVersion::ROS2) => "2",
+                None => "unknown",
+            }
+        )
+    }
+
+    let mut package_map: HashMap<String, Package> = HashMap::new();
+    for package in packages {
+        if let Some(duplicate) = package_map.get(package.name.as_str()) {
+            if &package == duplicate {
+                log::warn!(
+                    "Duplicate package found: {}. Discovered at paths: ({}, {})",
+                    package.name,
+                    duplicate.path.display(),
+                    package.path.display()
+                );
+                log::warn!(
+                    "Proceeding with the package found at the first path: {}",
+                    duplicate.path.display()
+                );
+            } else {
+                package_map.insert(package_name_fmt(&package), package);
+            }
+        } else {
+            package_map.insert(package_name_fmt(&package), package);
+        }
+    }
+
+    package_map.into_values().collect()
+}
+
 /// Parses a ROS package.xml file, which may be in any of the 3 supported formats,
 /// and returns a tuple of (RosVersion, Package Name)
 /// Note: the name of the folder the package resides in is NOT the name of the package,
@@ -158,8 +203,8 @@ fn parse_ros_package_info(
     use std::fs::File;
     use std::io::BufReader;
     use xml::reader::{EventReader, ParserConfig, XmlEvent};
-    const BUILD_TOOL_TAG: &'static str = "buildtool_depend";
-    const NAME_TAG: &'static str = "name";
+    const BUILD_TOOL_TAG: &str = "buildtool_depend";
+    const NAME_TAG: &str = "name";
 
     let file = File::open(&path)?;
     let reader = BufReader::new(file);
@@ -220,5 +265,43 @@ fn parse_ros_package_info(
             "Failed to find the <name> tag within package.xml, which is a required tag: {path:?}"
         );
         Err(io::ErrorKind::Other.into())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::utils;
+
+    #[test]
+    fn verify_deduplicate_packages() {
+        // Wow I am so upset, I thought I was going insane
+        // std::Vec::dedup_by only removes *consecutive* elements that are equal
+        let packages = vec![
+            utils::Package {
+                name: "diagnostic_msgs".into(),
+                path: "/opt/ros/noetic/share/diagnostic_msgs".into(),
+                version: Some(utils::RosVersion::ROS1),
+            },
+            utils::Package {
+                name: "std_msgs".into(),
+                path: "/tmp/std_msgs".into(),
+                version: Some(utils::RosVersion::ROS1),
+            },
+            // This duplicate below should be removed
+            utils::Package {
+                name: "diagnostic_msgs".into(),
+                path: "/code/assets/ros1_common_interfaces/common_msgs/diagnostic_msgs".into(),
+                version: Some(utils::RosVersion::ROS1),
+            },
+            // This will be kept because the ROS Version is different
+            utils::Package {
+                name: "std_msgs".into(),
+                path: "/ros2/std_msgs".into(),
+                version: Some(utils::RosVersion::ROS2),
+            },
+        ];
+
+        let deduplicated = utils::deduplicate_packages(packages);
+        assert_eq!(deduplicated.len(), 3);
     }
 }

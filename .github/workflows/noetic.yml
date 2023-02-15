@@ -8,6 +8,7 @@ on:
 
 env:
   HOME: /root
+  ROS_PACKAGE_PATH: /opt/ros/noetic/share
 
 jobs:
   noetic:

@@ -8,11 +8,12 @@ use std::fmt::Debug;
 use std::path::PathBuf;
 use utils::Package;
 
-pub mod gen;
+mod gen;
 use gen::*;
-pub mod parse;
+mod parse;
 use parse::*;
 pub mod utils;
+use utils::RosVersion;
 
 pub mod integral_types;
 pub use integral_types::*;
@@ -46,18 +47,64 @@ pub trait RosServiceType {
 #[derive(Clone, Debug)]
 pub struct MessageFile {
     pub(crate) parsed: ParsedMessageFile,
+    pub(crate) md5sum: String,
 }
 
 impl MessageFile {
     pub(crate) fn resolve(
         parsed: ParsedMessageFile,
-        _graph: &BTreeMap<String, MessageFile>,
+        graph: &BTreeMap<String, MessageFile>,
     ) -> Option<Self> {
-        Some(MessageFile { parsed })
+        let md5sum = Self::compute_md5sum(&parsed, graph)?;
+        Some(MessageFile { parsed, md5sum })
     }
 
     pub fn get_full_name(&self) -> String {
         format!("{}/{}", self.parsed.package, self.parsed.name)
+    }
+
+    pub fn get_md5sum(&self) -> &str {
+        self.md5sum.as_str()
+    }
+
+    fn compute_md5sum(
+        parsed: &ParsedMessageFile,
+        graph: &BTreeMap<String, MessageFile>,
+    ) -> Option<String> {
+        let mut md5sum_content = String::new();
+        for constant in &parsed.constants {
+            md5sum_content.push_str(&format!(
+                "{} {}={}\n",
+                constant.constant_type, constant.constant_name, constant.constant_value
+            ));
+        }
+        for field in &parsed.fields {
+            let field_type = field.field_type.field_type.as_str();
+            if is_intrinsic_type(parsed.version.unwrap_or(RosVersion::ROS1), field_type) {
+                md5sum_content.push_str(&format!("{} {}\n", field.field_type, field.field_name));
+            } else {
+                let field_full_name = format!(
+                    "{}/{}",
+                    field
+                        .field_type
+                        .package_name
+                        .as_ref()
+                        .unwrap_or_else(|| panic!("Expected package name for field {field:#?}")),
+                    field_type
+                );
+                let sub_message = graph.get(field_full_name.as_str())?;
+                let sub_md5sum = Self::compute_md5sum(&sub_message.parsed, graph)?;
+                md5sum_content.push_str(&format!("{} {}\n", sub_md5sum, field.field_name));
+            }
+        }
+
+        // Subtract the trailing newline
+        let md5sum = md5::compute(md5sum_content.trim_end().as_bytes());
+        log::trace!(
+            "Message type: {} calculated with md5sum: {md5sum:x}",
+            parsed.get_full_name()
+        );
+        Some(format!("{md5sum:x}"))
     }
 }
 
@@ -74,7 +121,19 @@ pub struct ServiceFile {
 /// * `additional_search_paths` - A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
 pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
-    let (messages, services) = find_and_parse_ros_messages(additional_search_paths).unwrap();
+    let mut ros_package_paths = utils::get_search_paths();
+    ros_package_paths.extend(additional_search_paths);
+    find_and_generate_ros_messages_without_ros_package_path(ros_package_paths)
+}
+
+/// Searches a list of paths for ROS packages and generates struct definitions
+/// and implementations for message files and service files in packages it finds.
+///
+/// * `search_paths` - A list of paths to search for ROS packages.
+pub fn find_and_generate_ros_messages_without_ros_package_path(
+    search_paths: Vec<PathBuf>,
+) -> TokenStream {
+    let (messages, services) = find_and_parse_ros_messages(search_paths).unwrap();
     if let Some((messages, services)) = resolve_dependency_graph(messages, services) {
         generate_rust_ros_message_definitions(messages, services)
     } else {
@@ -87,20 +146,17 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
 /// it finds. Returns a map of PACKAGE_NAME/MESSAGE_NAME strings to message file
 /// data and vector of service file data.
 ///
-/// * `additional_search_paths` - A list of additional paths to search beyond those
-/// found in ROS_PACKAGE_PATH environment variable.
+/// * `search_paths` - A list of paths to search.
 ///
 pub fn find_and_parse_ros_messages(
-    additional_search_paths: Vec<PathBuf>,
+    search_paths: Vec<PathBuf>,
 ) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
-    let mut search_paths = utils::get_search_paths();
-    search_paths.extend(additional_search_paths.into_iter());
     let search_paths = search_paths
         .into_iter()
         .map(|path| {
             if path.exists() {
                 path.canonicalize()
-                    .expect(format!("Unable to canonicalize path: {}", path.display()).as_str())
+                    .unwrap_or_else(|_| panic!("Unable to canonicalize path: {}", path.display()))
             } else {
                 log::error!("{} does not exist", path.display());
                 path
@@ -111,32 +167,10 @@ pub fn find_and_parse_ros_messages(
         "Codegen is looking in following paths for files: {:?}",
         &search_paths
     );
-    let mut packages = utils::crawl(search_paths.clone());
+    let packages = utils::crawl(search_paths.clone());
     // Check for duplicate package names
-    if packages.len() >= 2 {
-        for (pkg_idx_a, pkg_a) in packages[..packages.len() - 1].iter().enumerate() {
-            for (pkg_idx_b, pkg_b) in packages[pkg_idx_a + 1..].iter().enumerate() {
-                if pkg_idx_a != pkg_idx_b {
-                    if pkg_a.name == pkg_b.name {
-                        log::warn!(
-                            "Duplicate package found: {}. Discovered at paths: ({}, {})",
-                            pkg_a.name,
-                            pkg_a.path.display(),
-                            pkg_b.path.display()
-                        );
-                        log::warn!(
-                            "Proceeding with the package found at the first path: {}",
-                            pkg_a.path.display()
-                        );
-                    }
-                }
-            }
-        }
-        // Delete all of the duplicates (deletes the latter occurrences in the set)
-        packages.dedup_by(|a, b| a.name == b.name);
-    }
-
-    if packages.len() == 0 {
+    let packages = utils::deduplicate_packages(packages);
+    if packages.is_empty() {
         log::warn!(
             "No packages found while searching in: {search_paths:?}, relative to {:?}",
             std::env::current_dir().unwrap()
@@ -145,7 +179,7 @@ pub fn find_and_parse_ros_messages(
 
     let mut message_files = packages
         .iter()
-        .map(|pkg| {
+        .flat_map(|pkg| {
             utils::get_message_files(pkg)
                 .unwrap_or_else(|err| {
                     log::error!(
@@ -159,11 +193,10 @@ pub fn find_and_parse_ros_messages(
                 .into_iter()
                 .map(|path| (pkg.clone(), path))
         })
-        .flatten()
         .collect::<Vec<_>>();
     let service_files = packages
         .iter()
-        .map(|pkg| {
+        .flat_map(|pkg| {
             utils::get_service_files(pkg)
                 .unwrap_or_else(|err| {
                     log::error!(
@@ -177,8 +210,8 @@ pub fn find_and_parse_ros_messages(
                 .into_iter()
                 .map(|path| (pkg.clone(), path))
         })
-        .flatten()
         .collect::<Vec<_>>();
+
     message_files.extend_from_slice(&service_files[..]);
     parse_ros_files(message_files)
 }
@@ -219,8 +252,7 @@ pub fn generate_rust_ros_message_definitions(
     });
     // Now generate modules to wrap all of the TokenStreams in a module for each package
     let all_pkgs = modules_to_struct_definitions
-        .iter()
-        .map(|(k, _)| k)
+        .keys()
         .cloned()
         .collect::<Vec<String>>();
     let module_definitions = modules_to_struct_definitions
@@ -272,7 +304,7 @@ pub fn resolve_dependency_graph(
                         .field_type
                         .package_name
                         .as_ref()
-                        .expect(&format!("Expected a package for {field:#?}")),
+                        .unwrap_or_else(|| panic!("Expected a package for {field:#?}")),
                     &field.field_type.field_type
                 ));
                 is_resolved
@@ -377,6 +409,7 @@ mod test {
 
     /// Confirms we don't panic on ros1_test_msgs parsing
     #[test]
+    #[cfg_attr(not(feature = "ros1_test"), ignore)]
     fn generate_ok_on_ros1_test_msgs() {
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_test_msgs");
 
@@ -386,6 +419,7 @@ mod test {
 
     /// Confirms we don't panic on ros2_test_msgs parsing
     #[test]
+    #[cfg_attr(not(feature = "ros2_test"), ignore)]
     fn generate_ok_on_ros2_test_msgs() {
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
 
