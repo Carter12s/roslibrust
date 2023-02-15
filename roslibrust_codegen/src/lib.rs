@@ -58,7 +58,11 @@ impl MessageFile {
     ) -> Option<Self> {
         let md5sum = Self::compute_md5sum(&parsed, graph)?;
         let is_fixed_length = Self::determine_if_fixed_length(&parsed, graph)?;
-        Some(MessageFile { parsed, md5sum, is_fixed_length })
+        Some(MessageFile {
+            parsed,
+            md5sum,
+            is_fixed_length,
+        })
     }
 
     pub fn get_package_name(&self) -> String {
@@ -139,7 +143,8 @@ impl MessageFile {
                 }
             } else {
                 let field_msg = graph.get(field.get_full_name().as_str())?;
-                let field_is_fixed_length  = Self::determine_if_fixed_length(&field_msg.parsed, graph)?;
+                let field_is_fixed_length =
+                    Self::determine_if_fixed_length(&field_msg.parsed, graph)?;
                 if !field_is_fixed_length {
                     return Some(false);
                 }
@@ -218,8 +223,7 @@ impl FieldInfo {
     pub fn get_full_name(&self) -> String {
         format!(
             "{}/{}",
-            self
-                .field_type
+            self.field_type
                 .package_name
                 .as_ref()
                 .unwrap_or_else(|| panic!("Expected package name for field {self:#?}")),
