@@ -4,11 +4,9 @@ use serde::de::DeserializeOwned;
 use std::str::FromStr;
 use syn::parse_quote;
 
-use crate::parse::{
-    convert_ros_type_to_rust_type, ConstantInfo, FieldInfo, ParsedMessageFile, ParsedServiceFile,
-    RosLiteral,
-};
+use crate::parse::{convert_ros_type_to_rust_type, ConstantInfo, FieldInfo, RosLiteral};
 use crate::utils::RosVersion;
+use crate::{MessageFile, ServiceFile};
 
 fn derive_attrs() -> Vec<syn::Attribute> {
     // TODO we should look into using $crate here...
@@ -28,43 +26,62 @@ fn derive_attrs() -> Vec<syn::Attribute> {
 /// Generates the service for a given service file
 /// The service definition defines a struct representing the service an an implementation
 /// of the RosServiceType trait for that struct
-pub fn generate_service(service: ParsedServiceFile) -> TokenStream {
-    let service_type_name = format!("{}/{}", &service.package, &service.name);
-    let struct_name = format_ident!("{}", service.name);
-    let request_name = format_ident!("{}", service.request_type.name);
-    let response_name = format_ident!("{}", service.response_type.name);
+pub fn generate_service(service: ServiceFile) -> TokenStream {
+    let service_type_name = service.get_full_name();
+    let service_md5sum = service.md5sum;
+    let struct_name = format_ident!("{}", service.parsed.name);
+    let request_name = format_ident!("{}", service.parsed.request_type.name);
+    let response_name = format_ident!("{}", service.parsed.response_type.name);
+
+    let request_msg = generate_struct(service.request);
+    let response_msg = generate_struct(service.response);
     quote! {
+
+        #request_msg
+        #response_msg
+
         pub struct #struct_name {
 
         }
         impl ::roslibrust_codegen::RosServiceType for #struct_name {
             const ROS_SERVICE_NAME: &'static str = #service_type_name;
+            const MD5SUM: &'static str = #service_md5sum;
             type Request = #request_name;
             type Response = #response_name;
         }
     }
 }
 
-pub fn generate_struct(msg: ParsedMessageFile) -> TokenStream {
+pub fn generate_struct(msg: MessageFile) -> TokenStream {
+    let ros_type_name = msg.get_full_name();
     let attrs = derive_attrs();
     let fields = msg
+        .parsed
         .fields
         .into_iter()
         .map(|field| {
-            generate_field_definition(field, &msg.package, msg.version.unwrap_or(RosVersion::ROS1))
+            generate_field_definition(
+                field,
+                &msg.parsed.package,
+                msg.parsed.version.unwrap_or(RosVersion::ROS1),
+            )
         })
         .collect::<Vec<TokenStream>>();
 
     let constants = msg
+        .parsed
         .constants
         .into_iter()
         .map(|constant| {
-            generate_constant_field_definition(constant, msg.version.unwrap_or(RosVersion::ROS1))
+            generate_constant_field_definition(
+                constant,
+                msg.parsed.version.unwrap_or(RosVersion::ROS1),
+            )
         })
         .collect::<Vec<TokenStream>>();
 
-    let struct_name = format_ident!("{}", msg.name);
-    let ros_type_name = format!("{}/{}", msg.package, struct_name);
+    let struct_name = format_ident!("{}", msg.parsed.name);
+    let md5sum = msg.md5sum;
 
     let mut base = quote! {
         #[allow(non_snake_case)]
@@ -75,6 +92,7 @@ pub fn generate_struct(msg: ParsedMessageFile) -> TokenStream {
 
         impl ::roslibrust_codegen::RosMessageType for #struct_name {
             const ROS_TYPE_NAME: &'static str = #ros_type_name;
+            const MD5SUM: &'static str = #md5sum;
         }
     };
 

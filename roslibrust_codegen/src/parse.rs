@@ -111,6 +111,16 @@ pub struct FieldInfo {
     pub default: Option<RosLiteral>,
 }
 
+impl FieldInfo {
+    pub fn get_full_type_name(&self) -> String {
+        if let Some(pkg_name) = self.field_type.package_name.as_ref() {
+            format!("{pkg_name}/{}", self.field_type.field_type)
+        } else {
+            self.field_type.field_type.clone()
+        }
+    }
+}
+
 // Because TokenStream doesn't impl PartialEq we have to do it manually for FieldInfo
 impl PartialEq for FieldInfo {
     fn eq(&self, other: &Self) -> bool {
@@ -178,6 +188,12 @@ pub struct ParsedServiceFile {
     pub source: String,
     /// The path where the message was found
     pub path: PathBuf,
+}
+
+impl ParsedServiceFile {
+    pub fn get_full_name(&self) -> String {
+        format!("{}/{}", self.package, self.name)
+    }
 }
 
 fn parse_field(line: &str, pkg: &Package, msg_name: &str) -> FieldInfo {
