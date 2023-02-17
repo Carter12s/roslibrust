@@ -1,0 +1,207 @@
+#ifndef {{ spec.package|upper }}_MESSAGE_{{ spec.short_name|upper }}
+#define {{ spec.package|upper }}_MESSAGE_{{ spec.short_name|upper }}
+
+#include <string>
+#include <vector>
+#include <memory>
+
+#include <ros/types.h>
+#include <ros/serialization.h>
+#include <ros/builtin_message_traits.h>
+#include <ros/message_operations.h>
+
+{% for field in spec.fields %}
+#include <{{ field.package }}/{{ field.field_type }}.h
+{%- endfor %}
+
+namespace {{ spec.package }} {
+
+template <class ContainerAllocator>
+struct {{ spec.short_name }}_
+{
+  typedef {{ spec.short_name }}_<ContainerAllocator> Type;
+
+  {{ spec.short_name }}_()
+    : {{ spec.fields|map(attribute="name")|join('()\n    , ') }}() {
+  }
+
+  {{ spec.short_name }}_(const ContainerAllocator& _alloc)
+    : {{ spec.fields|map(attribute="name")|join('(_alloc)\n    , ') }}(_alloc) {
+    (void)_alloc;
+  }
+
+  {% for field in spec.fields %}
+  typedef ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator> _{{ field.name }}_type;
+  _{{ field.name }}_type {{ field.name }};
+  {%- endfor %}
+
+  typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>> Ptr;
+  typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator> const> ConstPtr;
+
+}; // struct {{ spec.short_name }}_
+
+typedef ::{{ spec.package }}::{{ spec.short_name }}_<std::allocator<void>> {{ spec.short_name }};
+
+typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }}> {{ spec.short_name }}Ptr;
+typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }} const> {{ spec.short_name }}ConstPtr;
+
+// constants requiring out of line definition
+
+
+template<typename ContainerAllocator>
+std::ostream& operator<<(std::ostream& s, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator> & v)
+{
+ros::message_operations::Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator> >::stream(s, "", v);
+return s;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator==(const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator1> & lhs, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator2> & rhs)
+{
+  return
+    {%- for field in spec.fields %}
+    lhs.{{ field.name }} == rhs.{{ field.name }} &&
+    {%- endfor %}
+    true;
+}
+
+template<typename ContainerAllocator1, typename ContainerAllocator2>
+bool operator!=(const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator1> & lhs, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator2> & rhs)
+{
+  return !(lhs == rhs);
+}
+
+
+} // namespace {{ spec.package }}
+
+namespace ros
+{
+namespace message_traits
+{
+template <class ContainerAllocator>
+struct IsMessage< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator> const>
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
+  : {% if is_fixed_length(spec) -%}
+    TrueType
+    {% else -%}
+    FalseType
+    {% endif -%}
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator> const>
+  : {% if is_fixed_length(spec) -%}
+    TrueType
+    {% else -%}
+    FalseType
+    {% endif -%}
+  { };
+
+template <class ContainerAllocator>
+struct HasHeader< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
+  : {% if has_header(spec) -%}
+    TrueType
+    {% else -%}
+    FalseType
+    {% endif -%}
+  { };
+
+template <class ContainerAllocator>
+struct HasHeader< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator> const>
+  : {% if has_header(spec) -%}
+    TrueType
+    {% else -%}
+    FalseType
+    {% endif -%}
+  { };
+
+template<class ContainerAllocator>
+struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
+{
+  static const char* value()
+  {
+    return "{{ spec.md5sum_first }}{{ spec.md5sum_second }}";
+  }
+
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>&) { return value(); }
+  static const uint64_t static_value1 = 0x{{ spec.md5sum_first }}ULL;
+  static const uint64_t static_value2 = 0x{{ spec.md5sum_second }}ULL;
+};
+
+template<class ContainerAllocator>
+struct DataType< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
+{
+  static const char* value()
+  {
+    return "{{ spec.package }}/{{ spec.short_name }}";
+  }
+
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>&) { return value(); }
+};
+
+template<class ContainerAllocator>
+struct Definition< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
+{
+  static const char* value()
+  {
+    return "{{ spec.definition }}";
+  }
+
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>&) { return value(); }
+};
+
+} // namespace message_traits
+} // namespace ros
+
+namespace ros
+{
+namespace serialization
+{
+
+template<class ContainerAllocator>
+struct Serializer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
+{
+  template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
+  {
+    {%- for field in spec.fields %}
+    stream.next(m.{{ field.name }});
+    {%- endfor %}
+  }
+
+  ROS_DECLARE_ALLINONE_SERIALIZER
+}; // struct {{ spec.short_name }}_
+
+} // namespace serialization
+} // namespace ros
+
+namespace ros
+{
+namespace message_operations
+{
+
+template<class ContainerAllocator>
+struct Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
+{
+  template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>& v)
+  {
+    {%- for field in spec.fields %}
+    s << indent << "{{ field.name }}: ";
+    s << std::endl;
+    Printer< ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>>::stream(s, indent + "  ", v.{{ field.name }});
+    {%- endfor %}
+  }
+};
+
+} // namespace message_operations
+} // namespace ros
+
+#endif // {{ spec.package|upper }}_MESSAGE_{{ spec.short_name|upper }}

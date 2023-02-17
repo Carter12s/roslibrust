@@ -4,7 +4,7 @@ use quote::quote;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::collections::{BTreeMap, VecDeque};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::path::PathBuf;
 use utils::Package;
 
@@ -48,6 +48,7 @@ pub trait RosServiceType {
 pub struct MessageFile {
     pub(crate) parsed: ParsedMessageFile,
     pub(crate) md5sum: String,
+    pub(crate) is_fixed_length: bool,
 }
 
 impl MessageFile {
@@ -56,7 +57,20 @@ impl MessageFile {
         graph: &BTreeMap<String, MessageFile>,
     ) -> Option<Self> {
         let md5sum = Self::compute_md5sum(&parsed, graph)?;
-        Some(MessageFile { parsed, md5sum })
+        let is_fixed_length = Self::determine_if_fixed_length(&parsed, graph)?;
+        Some(MessageFile {
+            parsed,
+            md5sum,
+            is_fixed_length,
+        })
+    }
+
+    pub fn get_package_name(&self) -> String {
+        self.parsed.package.clone()
+    }
+
+    pub fn get_short_name(&self) -> String {
+        self.parsed.name.clone()
     }
 
     pub fn get_full_name(&self) -> String {
@@ -65,6 +79,14 @@ impl MessageFile {
 
     pub fn get_md5sum(&self) -> &str {
         self.md5sum.as_str()
+    }
+
+    pub fn get_fields(&self) -> &[FieldInfo] {
+        &self.parsed.fields
+    }
+
+    pub fn is_fixed_length(&self) -> bool {
+        self.is_fixed_length
     }
 
     fn compute_md5sum(
@@ -106,6 +128,30 @@ impl MessageFile {
         );
         Some(format!("{md5sum:x}"))
     }
+
+    fn determine_if_fixed_length(
+        parsed: &ParsedMessageFile,
+        graph: &BTreeMap<String, MessageFile>,
+    ) -> Option<bool> {
+        for field in &parsed.fields {
+            if field.field_type.is_vec {
+                return Some(false);
+            }
+            if field.field_type.package_name.is_none() {
+                if field.field_type.field_type == "string" {
+                    return Some(false);
+                }
+            } else {
+                let field_msg = graph.get(field.get_full_name().as_str())?;
+                let field_is_fixed_length =
+                    Self::determine_if_fixed_length(&field_msg.parsed, graph)?;
+                if !field_is_fixed_length {
+                    return Some(false);
+                }
+            }
+        }
+        Some(true)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -113,6 +159,94 @@ pub struct ServiceFile {
     pub(crate) parsed: ParsedServiceFile,
     pub request: MessageFile,
     pub response: MessageFile,
+}
+
+/// Stores the ROS string representation of a literal
+#[derive(Clone, Debug)]
+pub struct RosLiteral {
+    pub inner: String,
+}
+
+impl Display for RosLiteral {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.inner, f)
+    }
+}
+
+impl From<String> for RosLiteral {
+    fn from(value: String) -> Self {
+        Self { inner: value }
+    }
+}
+
+/// Describes the type for an individual field in a message
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+pub struct FieldType {
+    // Present when an externally referenced package is used
+    // Note: support for messages within same package is spotty...
+    pub package_name: Option<String>,
+    // Explicit text of type without array specifier
+    pub field_type: String,
+    // true iff "[]" or "[#]" are found
+    // Note: no support for fixed size arrays yet
+    pub is_vec: bool,
+}
+
+impl std::fmt::Display for FieldType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_vec {
+            f.write_fmt(format_args!("{}[]", self.field_type))
+        } else {
+            f.write_fmt(format_args!("{}", self.field_type))
+        }
+    }
+}
+
+/// Describes all information for an individual field
+#[derive(Clone, Debug)]
+pub struct FieldInfo {
+    pub field_type: FieldType,
+    pub field_name: String,
+    // Exists if this is a ros2 message field with a default value
+    pub default: Option<RosLiteral>,
+}
+
+// Because TokenStream doesn't impl PartialEq we have to do it manually for FieldInfo
+impl PartialEq for FieldInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.field_type == other.field_type && self.field_name == other.field_name
+        // && self.default == other.default
+    }
+}
+
+impl FieldInfo {
+    pub fn get_full_name(&self) -> String {
+        format!(
+            "{}/{}",
+            self.field_type
+                .package_name
+                .as_ref()
+                .unwrap_or_else(|| panic!("Expected package name for field {self:#?}")),
+            self.field_type.field_type
+        )
+    }
+}
+
+/// Describes all information for a constant within a message
+/// Note: Constants are not fully supported yet (waiting on codegen support)
+#[derive(Clone, Debug)]
+pub struct ConstantInfo {
+    pub constant_type: String,
+    pub constant_name: String,
+    pub constant_value: RosLiteral,
+}
+
+// Because TokenStream doesn't impl PartialEq we have to do it manually for ConstantInfo
+impl PartialEq for ConstantInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.constant_type == other.constant_type && self.constant_name == other.constant_name
+        // && self.constant_value == other.constant_value
+    }
 }
 
 /// Searches a list of paths for ROS packages and generates struct definitions

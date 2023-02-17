@@ -131,19 +131,17 @@ pub fn get_service_files(pkg: &Package) -> io::Result<Vec<PathBuf>> {
 
 fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
     let mut msg_files = vec![];
-    for entry in std::fs::read_dir(path)? {
-        if let Ok(entry) = entry {
-            if entry.path().as_path().is_dir() {
-                msg_files = [
-                    msg_files,
-                    message_files_from_path(entry.path().as_path(), ext)?,
-                ]
-                .concat()
-            } else if entry.path().as_path().is_file() {
-                if let Some(extension) = entry.path().extension() {
-                    if extension.to_str().unwrap() == ext {
-                        msg_files.push(entry.path())
-                    }
+    for entry in (std::fs::read_dir(path)?).flatten() {
+        if entry.path().as_path().is_dir() {
+            msg_files = [
+                msg_files,
+                message_files_from_path(entry.path().as_path(), ext)?,
+            ]
+            .concat()
+        } else if entry.path().as_path().is_file() {
+            if let Some(extension) = entry.path().extension() {
+                if extension.to_str().unwrap() == ext {
+                    msg_files.push(entry.path())
                 }
             }
         }
