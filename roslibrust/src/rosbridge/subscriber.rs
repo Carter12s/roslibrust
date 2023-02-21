@@ -48,6 +48,11 @@ impl<T: RosMessageType> Subscriber<T> {
         self.queue.len()
     }
 
+    /// Indicates whether the subscriber's message queue is empty.
+    pub fn is_empty(&self) -> bool {
+        self.queue.is_empty()
+    }
+
     /// aka pop(). Returns the oldest message in the internal message queue.
     ///
     /// Blocks if queue is empty

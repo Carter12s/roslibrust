@@ -46,7 +46,20 @@ typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }}> {{ spec.
 typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }} const> {{ spec.short_name }}ConstPtr;
 
 // constants requiring out of line definition
-
+{% for constant in spec.constants %}
+  {% if not is_primitive_integral_type(constant.constant_type) -%}
+    template<typename ContainerAllocator> const {{ constant.constant_type|cpp_type }}
+      {{ spec.short_name }}_<ContainerAllocator>::{{ constant.name }} = 
+        {% if constant.constant_type == 'string' %}
+          R"{{ constant.constant_value }}"
+        {% elif constant.constant_type == 'bool' %}
+          int({{ constant.constant_value|lower }})
+        {% else %}
+          {{ constant.constant_value|cpp_literal }}
+        {% endif -%}
+        ;
+  {% endif -%}
+{%- endfor %}
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator> & v)

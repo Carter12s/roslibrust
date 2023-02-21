@@ -1,0 +1,105 @@
+#ifndef {{ spec.package|upper }}_MESSAGE_{{ spec.short_name|upper }}
+#define {{ spec.package|upper }}_MESSAGE_{{ spec.short_name|upper }}
+
+#include <ros/service_traits.h>
+
+#include <{{ spec.package }}/{{ spec.short_name }}Request.h>
+#include <{{ spec.package }}/{{ spec.short_name }}Response.h>
+
+namespace {{ spec.package }} {
+
+struct {{ spec.short_name }}
+{
+
+  typedef {{ spec.request.short_name }} Request;
+  typedef {{ spec.response.short_name }} Response;
+
+  Request request;
+  Response response;
+
+  typedef Request RequestType;
+  typedef Response ResponseType;
+
+}; // struct {{ spec.short_name }}
+
+} // namespace {{ spec.package }}
+
+namespace ros
+{
+namespace service_traits
+{
+
+template<>
+struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }} > {
+  static const char* value()
+  {
+    return "{{ spec.md5sum_first }}{{ spec.md5sum_second }}";
+  }
+
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }} &) { return value(); }
+};
+
+template<>
+struct DataType< ::{{ spec.package }}::{{ spec.short_name }} > {
+  static const char* value()
+  {
+    return "{{ spec.package }}/{{ spec.short_name }}";
+  }
+
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }} &) { return value(); }
+};
+
+template<>
+struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}Request > {
+  static const char* value()
+  {
+    return MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}>::value();
+  }
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }}Request &)
+  { 
+    return value();
+  }
+};
+
+template<>
+struct DataType< ::{{ spec.package }}::{{ spec.short_name }}Request > {
+  static const char* value()
+  {
+    return DataType< ::{{ spec.package }}::{{ spec.short_name }}>::value();
+  }
+
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }}Request &)
+  { 
+    return value();
+  }
+};
+
+template<>
+struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}Response > {
+  static const char* value()
+  {
+    return MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}>::value();
+  }
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }}Response &)
+  { 
+    return value();
+  }
+};
+
+template<>
+struct DataType< ::{{ spec.package }}::{{ spec.short_name }}Response > {
+  static const char* value()
+  {
+    return DataType< ::{{ spec.package }}::{{ spec.short_name }}>::value();
+  }
+
+  static const char* value(const ::{{ spec.package }}::{{ spec.short_name }}Response &)
+  { 
+    return value();
+  }
+};
+
+} // namespace service_traits
+} // namespace ros
+
+#endif // {{ spec.package|upper }}_MESSAGE_{{ spec.short_name|upper }}_H
