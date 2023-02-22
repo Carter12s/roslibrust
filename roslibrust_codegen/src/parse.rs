@@ -1,10 +1,9 @@
+use crate::utils::{Package, RosVersion};
+use crate::{ConstantInfo, FieldInfo, FieldType};
 use std::{
     collections::HashMap,
-    fmt::Display,
     path::{Path, PathBuf},
 };
-
-use crate::utils::{Package, RosVersion};
 
 lazy_static::lazy_static! {
     pub static ref ROS_TYPE_TO_RUST_TYPE_MAP: HashMap<&'static str, &'static str> = vec![
@@ -58,91 +57,6 @@ pub fn convert_ros_type_to_rust_type(version: RosVersion, ros_type: &str) -> Opt
     match version {
         RosVersion::ROS1 => ROS_TYPE_TO_RUST_TYPE_MAP.get(ros_type).copied(),
         RosVersion::ROS2 => ROS_2_TYPE_TO_RUST_TYPE_MAP.get(ros_type).copied(),
-    }
-}
-
-/// Stores the ROS string representation of a literal
-#[derive(Clone, Debug)]
-pub struct RosLiteral {
-    pub inner: String,
-}
-
-impl std::fmt::Display for RosLiteral {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.inner.fmt(f)
-    }
-}
-
-impl From<String> for RosLiteral {
-    fn from(value: String) -> Self {
-        Self { inner: value }
-    }
-}
-
-/// Describes the type for an individual field in a message
-#[derive(PartialEq, Eq, Hash, Debug, Clone)]
-pub struct FieldType {
-    // Present when an externally referenced package is used
-    // Note: support for messages within same package is spotty...
-    pub package_name: Option<String>,
-    // Explicit text of type without array specifier
-    pub field_type: String,
-    // true iff "[]" or "[#]" are found
-    // Note: no support for fixed size arrays yet
-    pub is_vec: bool,
-}
-
-impl Display for FieldType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.is_vec {
-            f.write_fmt(format_args!("{}[]", self.field_type))
-        } else {
-            f.write_fmt(format_args!("{}", self.field_type))
-        }
-    }
-}
-
-/// Describes all information for an individual field
-#[derive(Clone, Debug)]
-pub struct FieldInfo {
-    pub field_type: FieldType,
-    pub field_name: String,
-    // Exists if this is a ros2 message field with a default value
-    pub default: Option<RosLiteral>,
-}
-
-impl FieldInfo {
-    pub fn get_full_type_name(&self) -> String {
-        if let Some(pkg_name) = self.field_type.package_name.as_ref() {
-            format!("{pkg_name}/{}", self.field_type.field_type)
-        } else {
-            self.field_type.field_type.clone()
-        }
-    }
-}
-
-// Because TokenStream doesn't impl PartialEq we have to do it manually for FieldInfo
-impl PartialEq for FieldInfo {
-    fn eq(&self, other: &Self) -> bool {
-        self.field_type == other.field_type && self.field_name == other.field_name
-        // && self.default == other.default
-    }
-}
-
-/// Describes all information for a constant within a message
-/// Note: Constants are not fully supported yet (waiting on codegen support)
-#[derive(Clone, Debug)]
-pub struct ConstantInfo {
-    pub constant_type: String,
-    pub constant_name: String,
-    pub constant_value: RosLiteral,
-}
-
-// Because TokenStream doesn't impl PartialEq we have to do it manually for ConstantInfo
-impl PartialEq for ConstantInfo {
-    fn eq(&self, other: &Self) -> bool {
-        self.constant_type == other.constant_type && self.constant_name == other.constant_name
-        // && self.constant_value == other.constant_value
     }
 }
 

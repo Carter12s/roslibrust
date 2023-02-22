@@ -4,9 +4,9 @@ use serde::de::DeserializeOwned;
 use std::str::FromStr;
 use syn::parse_quote;
 
-use crate::parse::{convert_ros_type_to_rust_type, ConstantInfo, FieldInfo, RosLiteral};
+use crate::parse::convert_ros_type_to_rust_type;
 use crate::utils::RosVersion;
-use crate::{MessageFile, ServiceFile};
+use crate::{ConstantInfo, FieldInfo, MessageFile, RosLiteral, ServiceFile};
 
 fn derive_attrs() -> Vec<syn::Attribute> {
     // TODO we should look into using $crate here...

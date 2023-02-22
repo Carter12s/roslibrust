@@ -1,0 +1,21 @@
+[package]
+name = "roslibrust_gencpp"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "roslibrust_gencpp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gencpp"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.1", features = ["derive"] }
+env_logger = "0.10"
+log = "0.4"
+minijinja = "0.30"
+roslibrust_codegen = { path = "../roslibrust_codegen" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
