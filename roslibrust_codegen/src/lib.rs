@@ -85,6 +85,10 @@ impl MessageFile {
         &self.parsed.fields
     }
 
+    pub fn get_constants(&self) -> &[ConstantInfo] {
+        &self.parsed.constants
+    }
+
     pub fn is_fixed_length(&self) -> bool {
         self.is_fixed_length
     }

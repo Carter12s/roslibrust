@@ -27,3 +27,15 @@ pub fn is_fixed_length(value: Value) -> bool {
         false
     }
 }
+
+pub fn is_primitive_integral_type(value: Value) -> bool {
+    false
+}
+
+pub fn cpp_type(value: Value) -> Value {
+    todo!()
+}
+
+pub fn cpp_literal(value: Value) -> Value {
+    todo!()
+}

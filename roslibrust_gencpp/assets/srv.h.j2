@@ -11,8 +11,8 @@ namespace {{ spec.package }} {
 struct {{ spec.short_name }}
 {
 
-  typedef {{ spec.request.short_name }} Request;
-  typedef {{ spec.response.short_name }} Response;
+  typedef {{ spec.request_name }} Request;
+  typedef {{ spec.response_name }} Response;
 
   Request request;
   Response response;
@@ -33,7 +33,7 @@ template<>
 struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }} > {
   static const char* value()
   {
-    return "{{ spec.md5sum_first }}{{ spec.md5sum_second }}";
+    return "{{ spec.md5sum }}";
   }
 
   static const char* value(const ::{{ spec.package }}::{{ spec.short_name }} &) { return value(); }
