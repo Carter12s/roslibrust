@@ -128,10 +128,7 @@ pub struct ServiceFile {
 }
 
 impl ServiceFile {
-    pub fn resolve(
-        parsed: ParsedServiceFile,
-        graph: &BTreeMap<String, MessageFile>,
-    ) -> Option<Self> {
+    fn resolve(parsed: ParsedServiceFile, graph: &BTreeMap<String, MessageFile>) -> Option<Self> {
         if let (Some(request), Some(response)) = (
             MessageFile::resolve(parsed.request_type.clone(), &graph),
             MessageFile::resolve(parsed.response_type.clone(), &graph),
