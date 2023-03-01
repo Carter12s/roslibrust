@@ -26,11 +26,15 @@ pub trait RosMessageType:
     /// Expected to be the combination pkg_name/type_name string describing the type to ros
     /// Example: std_msgs/Header
     const ROS_TYPE_NAME: &'static str;
+
+    /// The computed md5sum of the message file and its dependencies
+    const MD5SUM: &'static str;
 }
 
 // This special impl allows for services with no args / returns
 impl RosMessageType for () {
     const ROS_TYPE_NAME: &'static str = "";
+    const MD5SUM: &'static str = "";
 }
 
 /// Fundamental traits for service types this crate works with
@@ -38,6 +42,8 @@ impl RosMessageType for () {
 pub trait RosServiceType {
     /// Name of the ros service e.g. `rospy_tutorials/AddTwoInts`
     const ROS_SERVICE_NAME: &'static str;
+    /// The computed md5sum of the message file and its dependencies
+    const MD5SUM: &'static str;
     /// The type of data being sent in the request
     type Request: RosMessageType;
     /// The type of the data
@@ -52,10 +58,7 @@ pub struct MessageFile {
 }
 
 impl MessageFile {
-    pub(crate) fn resolve(
-        parsed: ParsedMessageFile,
-        graph: &BTreeMap<String, MessageFile>,
-    ) -> Option<Self> {
+    fn resolve(parsed: ParsedMessageFile, graph: &BTreeMap<String, MessageFile>) -> Option<Self> {
         let md5sum = Self::compute_md5sum(&parsed, graph)?;
         let is_fixed_length = Self::determine_if_fixed_length(&parsed, graph)?;
         Some(MessageFile {
@@ -97,6 +100,20 @@ impl MessageFile {
         parsed: &ParsedMessageFile,
         graph: &BTreeMap<String, MessageFile>,
     ) -> Option<String> {
+        let md5sum_content = Self::_compute_md5sum(parsed, graph)?;
+        // Subtract the trailing newline
+        let md5sum = md5::compute(md5sum_content.trim_end().as_bytes());
+        log::trace!(
+            "Message type: {} calculated with md5sum: {md5sum:x}",
+            parsed.get_full_name()
+        );
+        Some(format!("{md5sum:x}"))
+    }
+
+    fn _compute_md5sum(
+        parsed: &ParsedMessageFile,
+        graph: &BTreeMap<String, MessageFile>,
+    ) -> Option<String> {
         let mut md5sum_content = String::new();
         for constant in &parsed.constants {
             md5sum_content.push_str(&format!(
@@ -124,13 +141,7 @@ impl MessageFile {
             }
         }
 
-        // Subtract the trailing newline
-        let md5sum = md5::compute(md5sum_content.trim_end().as_bytes());
-        log::trace!(
-            "Message type: {} calculated with md5sum: {md5sum:x}",
-            parsed.get_full_name()
-        );
-        Some(format!("{md5sum:x}"))
+        Some(md5sum_content)
     }
 
     fn determine_if_fixed_length(
@@ -161,8 +172,51 @@ impl MessageFile {
 #[derive(Clone, Debug)]
 pub struct ServiceFile {
     pub(crate) parsed: ParsedServiceFile,
-    pub request: MessageFile,
-    pub response: MessageFile,
+    pub(crate) request: MessageFile,
+    pub(crate) response: MessageFile,
+    pub(crate) md5sum: String,
+}
+
+impl ServiceFile {
+    fn resolve(parsed: ParsedServiceFile, graph: &BTreeMap<String, MessageFile>) -> Option<Self> {
+        if let (Some(request), Some(response)) = (
+            MessageFile::resolve(parsed.request_type.clone(), &graph),
+            MessageFile::resolve(parsed.response_type.clone(), &graph),
+        ) {
+            let md5sum = Self::compute_md5sum(&parsed, graph)?;
+            Some(ServiceFile {
+                parsed: parsed,
+                request: request.clone(),
+                response: response.clone(),
+                md5sum,
+            })
+        } else {
+            log::error!("Unable to resolve dependencies in service: {parsed:#?}");
+            None
+        }
+    }
+
+    pub fn get_full_name(&self) -> String {
+        format!("{}/{}", self.parsed.package, self.parsed.name)
+    }
+
+    fn compute_md5sum(
+        parsed: &ParsedServiceFile,
+        graph: &BTreeMap<String, MessageFile>,
+    ) -> Option<String> {
+        let request_content = MessageFile::_compute_md5sum(&parsed.request_type, graph)?;
+        let response_content = MessageFile::_compute_md5sum(&parsed.response_type, graph)?;
+        let mut md5sum_context = md5::Context::new();
+        md5sum_context.consume(request_content.trim_end().as_bytes());
+        md5sum_context.consume(response_content.trim_end().as_bytes());
+
+        let md5sum = md5sum_context.compute();
+        log::trace!(
+            "Message type: {} calculated with md5sum: {md5sum:x}",
+            parsed.get_full_name()
+        );
+        Some(format!("{md5sum:x}"))
+    }
 }
 
 /// Stores the ROS string representation of a literal
@@ -371,7 +425,7 @@ pub fn generate_rust_ros_message_definitions(
     // Convert messages files into rust token streams and insert them into BTree organized by package
     messages.into_iter().for_each(|message| {
         let pkg_name = message.parsed.package.clone();
-        let definition = generate_struct(message.parsed);
+        let definition = generate_struct(message);
         if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
             entry.push(definition);
         } else {
@@ -381,7 +435,7 @@ pub fn generate_rust_ros_message_definitions(
     // Do the same for services
     services.into_iter().for_each(|service| {
         let pkg_name = service.parsed.package.clone();
-        let definition = generate_service(service.parsed);
+        let definition = generate_service(service);
         if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
             entry.push(definition);
         } else {
@@ -436,15 +490,7 @@ pub fn resolve_dependency_graph(
                 ROS_2_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str());
             let is_primitive = is_ros1_primitive || is_ros2_primitive;
             if !is_primitive {
-                let is_resolved = resolved_messages.contains_key(&format!(
-                    "{}/{}",
-                    field
-                        .field_type
-                        .package_name
-                        .as_ref()
-                        .unwrap_or_else(|| panic!("Expected a package for {field:#?}")),
-                    &field.field_type.field_type
-                ));
+                let is_resolved = resolved_messages.contains_key(field.get_full_name().as_str());
                 is_resolved
             } else {
                 true
@@ -463,23 +509,11 @@ pub fn resolve_dependency_graph(
     }
 
     // Now that all messages are parsed, we can parse and resolve services
-    let mut resolved_services = vec![];
-    for srv in services {
-        if let (Some(request), Some(response)) = (
-            MessageFile::resolve(srv.request_type.clone(), &resolved_messages),
-            MessageFile::resolve(srv.response_type.clone(), &resolved_messages),
-        ) {
-            resolved_services.push(ServiceFile {
-                parsed: srv,
-                request: request.clone(),
-                response: response.clone(),
-            });
-            resolved_messages.insert(request.get_full_name(), request);
-            resolved_messages.insert(response.get_full_name(), response);
-        } else {
-            log::error!("Unable to resolve dependencies in service: {srv:#?}")
-        }
-    }
+    let mut resolved_services: Vec<_> = services
+        .into_iter()
+        .map(|srv| ServiceFile::resolve(srv, &resolved_messages))
+        .flatten()
+        .collect();
     resolved_services.sort_by(|a, b| a.parsed.name.cmp(&b.parsed.name));
 
     Some((resolved_messages.into_values().collect(), resolved_services))

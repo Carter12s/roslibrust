@@ -104,6 +104,12 @@ pub struct ParsedServiceFile {
     pub path: PathBuf,
 }
 
+impl ParsedServiceFile {
+    pub fn get_full_name(&self) -> String {
+        format!("{}/{}", self.package, self.name)
+    }
+}
+
 fn parse_field(line: &str, pkg: &Package, msg_name: &str) -> FieldInfo {
     let mut splitter = line.split_whitespace();
     let pkg_name = pkg.name.as_str();
