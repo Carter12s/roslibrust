@@ -83,9 +83,9 @@ impl From<&ServiceFile> for ServiceSpecification {
         Self {
             short_name: value.get_short_name(),
             package: value.get_package_name(),
-            request_name: value.request.get_short_name(),
-            response_name: value.response.get_short_name(),
-            md5sum: value.get_md5sum().to_string(),
+            request_name: value.request().get_short_name(),
+            response_name: value.response().get_short_name(),
+            md5sum: value.get_md5sum(),
         }
     }
 }

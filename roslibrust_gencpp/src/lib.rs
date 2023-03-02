@@ -57,7 +57,7 @@ fn fill_message_template(
     msg_data: &MessageFile,
 ) -> Result<String, minijinja::Error> {
     let context = context! {
-        spec => MessageSpecification::from_data(msg_data),
+        spec => MessageSpecification::from(msg_data),
     };
     template.render(&context)
 }

@@ -200,6 +200,26 @@ impl ServiceFile {
         format!("{}/{}", self.parsed.package, self.parsed.name)
     }
 
+    pub fn get_short_name(&self) -> String {
+        self.parsed.name.clone()
+    }
+
+    pub fn get_package_name(&self) -> String {
+        self.parsed.package.clone()
+    }
+
+    pub fn request(&self) -> &MessageFile {
+        &self.request
+    }
+
+    pub fn response(&self) -> &MessageFile {
+        &self.response
+    }
+
+    pub fn get_md5sum(&self) -> String {
+        self.md5sum.clone()
+    }
+
     fn compute_md5sum(
         parsed: &ParsedServiceFile,
         graph: &BTreeMap<String, MessageFile>,
