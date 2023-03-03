@@ -784,6 +784,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "env_logger",
+ "lazy_static",
  "log",
  "minijinja",
  "roslibrust_codegen",

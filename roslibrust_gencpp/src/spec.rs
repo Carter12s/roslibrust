@@ -1,5 +1,27 @@
 use roslibrust_codegen::{ConstantInfo, FieldInfo, MessageFile, ServiceFile};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+lazy_static::lazy_static! {
+    pub static ref ROS_TYPE_TO_CPP_TYPE_MAP: HashMap<&'static str, &'static str> = vec![
+        ("bool", "bool"),
+        ("int8", "int8_t"),
+        ("uint8", "uint8_t"),
+        ("byte", "uint8_t"),
+        ("char", "char"),
+        ("int16", "int16_t"),
+        ("uint16", "uint16_t"),
+        ("int32", "int32_t"),
+        ("uint32", "uint32_t"),
+        ("int64", "int64_t"),
+        ("uint64", "uint64_t"),
+        ("float32", "float"),
+        ("float64", "double"),
+        ("string", "::std::string"),
+        ("time", "::ros::Time"),
+        ("duration", "::ros::Duration"),
+    ].into_iter().collect();
+}
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Field {
@@ -18,6 +40,12 @@ impl From<&FieldInfo> for Field {
     }
 }
 
+impl Field {
+    pub fn is_intrinsic_type(&self) -> bool {
+        ROS_TYPE_TO_CPP_TYPE_MAP.contains_key(self.field_type.as_str())
+    }
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Constant {
     pub name: String,
@@ -28,9 +56,9 @@ pub struct Constant {
 impl From<&ConstantInfo> for Constant {
     fn from(value: &ConstantInfo) -> Self {
         Self {
-            name: todo!(),
-            constant_type: todo!(),
-            constant_value: todo!(),
+            name: value.constant_name.clone(),
+            constant_type: value.constant_type.clone(),
+            constant_value: value.constant_value.to_string(),
         }
     }
 }
@@ -87,11 +115,5 @@ impl From<&ServiceFile> for ServiceSpecification {
             response_name: value.response().get_short_name(),
             md5sum: value.get_md5sum(),
         }
-    }
-}
-
-impl ServiceSpecification {
-    pub fn from_data(data: &ServiceFile) -> Self {
-        todo!()
     }
 }
