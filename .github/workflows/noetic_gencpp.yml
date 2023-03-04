@@ -1,0 +1,29 @@
+name: Noetic gencpp
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  HOME: /root
+
+jobs:
+  noetic_gencpp:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    container: carter12s/roslibrust-ci-noetic-cpp:latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+      - name: Regenerate message headers
+        run: source /root/.cargo/env; roslibrust_gencpp/regnerate-test-msgs.sh
+      - name: Verify no changes
+        run: git diff-index --quiet HEAD --
+      - name: Compile test package
+        run: cd roslibrust_gencpp; mkdir -p cmake_build; cd cmake_build; cmake .. -DCMAKE_BUILD_TYPE=Release; make -j6;
