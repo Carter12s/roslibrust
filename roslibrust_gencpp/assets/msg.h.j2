@@ -23,6 +23,7 @@ struct {{ spec.short_name }}_
 {
   typedef {{ spec.short_name }}_<ContainerAllocator> Type;
 
+  {% if spec.fields|length > 0 %}
   {{ spec.short_name }}_()
     : {{ spec.fields|map(attribute="name")|join('()\n    , ') }}() {
   }
@@ -31,6 +32,16 @@ struct {{ spec.short_name }}_
     : {{ spec.fields|map(attribute="name")|join('(_alloc)\n    , ') }}(_alloc) {
     (void)_alloc;
   }
+  {% else %}
+  {{ spec.short_name }}_()
+  {
+  }
+
+  {{ spec.short_name }}_(const ContainerAllocator& _alloc)
+  {
+    (void)_alloc;
+  }
+  {% endif %}
 
   {% for field in spec.fields %}
   {% if is_intrinsic_type(field) %}

@@ -16,6 +16,7 @@ do
 done
 
 echo "Generating test message headers..."
+
 cargo run --bin gencpp -- \
 --msg assets/ros1_common_interfaces/std_msgs/msg/Header.msg \
 --package std_msgs \
@@ -29,6 +30,13 @@ cargo run --bin gencpp -- \
 -I geometry_msgs:assets/ros1_common_interfaces/common_msgs/geometry_msgs \
 -I sensor_msgs:assets/ros1_common_interfaces/common_msgs/sensor_msgs \
 --output roslibrust_gencpp/test_package/include/sensor_msgs
+
+cargo run --bin gencpp -- \
+--msg assets/ros1_common_interfaces/ros_comm_msgs/std_srvs/srv/Trigger.srv \
+--package std_srvs \
+-I std_srvs:assets/ros1_common_interfaces/ros_comm_msgs/std_srvs \
+--output roslibrust_gencpp/test_package/include/std_srvs
+
 echo "Done"
 
 cd $start_dir
