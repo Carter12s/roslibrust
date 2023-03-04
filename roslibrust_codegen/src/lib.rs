@@ -180,14 +180,14 @@ pub struct ServiceFile {
 impl ServiceFile {
     fn resolve(parsed: ParsedServiceFile, graph: &BTreeMap<String, MessageFile>) -> Option<Self> {
         if let (Some(request), Some(response)) = (
-            MessageFile::resolve(parsed.request_type.clone(), &graph),
-            MessageFile::resolve(parsed.response_type.clone(), &graph),
+            MessageFile::resolve(parsed.request_type.clone(), graph),
+            MessageFile::resolve(parsed.response_type.clone(), graph),
         ) {
             let md5sum = Self::compute_md5sum(&parsed, graph)?;
             Some(ServiceFile {
                 parsed: parsed,
-                request: request.clone(),
-                response: response.clone(),
+                request,
+                response,
                 md5sum,
             })
         } else {
@@ -531,8 +531,7 @@ pub fn resolve_dependency_graph(
     // Now that all messages are parsed, we can parse and resolve services
     let mut resolved_services: Vec<_> = services
         .into_iter()
-        .map(|srv| ServiceFile::resolve(srv, &resolved_messages))
-        .flatten()
+        .filter_map(|srv| ServiceFile::resolve(srv, &resolved_messages))
         .collect();
     resolved_services.sort_by(|a, b| a.parsed.name.cmp(&b.parsed.name));
 

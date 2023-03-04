@@ -1,9 +1,13 @@
 use crate::utils::{Package, RosVersion};
 use crate::{ConstantInfo, FieldInfo, FieldType};
-use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
-};
+use std::collections::HashMap;
+
+mod action;
+pub use action::{parse_ros_action_file, ParsedActionFile};
+mod msg;
+pub use msg::{parse_ros_message_file, ParsedMessageFile};
+mod srv;
+pub use srv::{parse_ros_service_file, ParsedServiceFile};
 
 lazy_static::lazy_static! {
     pub static ref ROS_TYPE_TO_RUST_TYPE_MAP: HashMap<&'static str, &'static str> = vec![
@@ -57,56 +61,6 @@ pub fn convert_ros_type_to_rust_type(version: RosVersion, ros_type: &str) -> Opt
     match version {
         RosVersion::ROS1 => ROS_TYPE_TO_RUST_TYPE_MAP.get(ros_type).copied(),
         RosVersion::ROS2 => ROS_2_TYPE_TO_RUST_TYPE_MAP.get(ros_type).copied(),
-    }
-}
-
-/// Describes all information for a single message file
-#[derive(Clone, PartialEq, Debug)]
-pub struct ParsedMessageFile {
-    pub name: String,
-    pub package: String,
-    pub fields: Vec<FieldInfo>,
-    pub constants: Vec<ConstantInfo>,
-    pub version: Option<RosVersion>,
-    /// The contents of the message file this instance was parsed from
-    pub source: String,
-    /// The path where the message was found
-    pub path: PathBuf,
-}
-
-impl ParsedMessageFile {
-    pub fn has_header(&self) -> bool {
-        self.fields.iter().any(|field| {
-            field.field_type.field_type.as_str() == "Header"
-                && (field.field_type.package_name.is_none()
-                    || field.field_type.package_name == Some(String::from("std_msgs")))
-        })
-    }
-
-    pub fn get_full_name(&self) -> String {
-        format!("{}/{}", self.package, self.name)
-    }
-}
-
-/// Describes all information for a single service file
-#[derive(Clone, Debug)]
-pub struct ParsedServiceFile {
-    pub name: String,
-    pub package: String,
-    // The names of these types will be auto generated as {name}Request and {name}Response
-    pub request_type: ParsedMessageFile,
-    pub request_type_raw: String, // needed elsewhere in generation, but would like to remove
-    pub response_type: ParsedMessageFile,
-    pub response_type_raw: String, // needed elsewhere in generation, but would like to remove
-    /// The contents of the service file this instance was parsed from
-    pub source: String,
-    /// The path where the message was found
-    pub path: PathBuf,
-}
-
-impl ParsedServiceFile {
-    pub fn get_full_name(&self) -> String {
-        format!("{}/{}", self.package, self.name)
     }
 }
 
@@ -167,121 +121,6 @@ fn parse_constant_field(line: &str, pkg: &Package) -> ConstantInfo {
         constant_type,
         constant_name,
         constant_value: constant_value.into(),
-    }
-}
-
-/// Converts a ros message file into a struct representation
-/// * `data` -- Raw contents of the file as loaded from disk
-/// * `name` -- Name of the object being parsed excluding the file extension, e.g. `Header`
-/// * `package` -- Name of the package the message is found in, required for relative type paths
-/// * `ros2` -- True iff the package is a ros2 package and should be parsed with ros2 logic
-pub fn parse_ros_message_file(
-    data: &str,
-    name: &str,
-    package: &Package,
-    path: &Path,
-) -> ParsedMessageFile {
-    let mut fields = vec![];
-    let mut constants = vec![];
-
-    for line in data.lines() {
-        let line = strip_comments(line).trim();
-        if line.is_empty() {
-            // Comment only line skip
-            continue;
-        }
-        // Determine if we're looking at a constant or a field
-        let sep = line.find(' ').unwrap_or_else(|| {
-            panic!("Found an invalid ros field line, no space delinting type from name: {line}")
-        });
-        let equal_after_sep = line[sep..].find('=');
-        if equal_after_sep.is_some() {
-            // Since we found an equal sign after a space, this must be a constant
-            constants.push(parse_constant_field(line, package))
-        } else {
-            // Is regular field
-            fields.push(parse_field(line, package, name));
-        }
-    }
-    ParsedMessageFile {
-        fields,
-        constants,
-        name: name.to_owned(),
-        package: package.name.clone(),
-        version: package.version,
-        source: data.to_owned(),
-        path: path.to_owned(),
-    }
-}
-
-/// Parses the contents of a service file and returns and struct representing the found content.
-/// * `data` -- Actual contents of the file
-/// * `name` -- Name of the file excluding the extension, e.g. 'Header'
-/// * `package` -- Name of the package the file was found within, required for understanding relative type paths
-/// * `ros2` -- True iff this file is part of a ros2 package and should be parsed with ros2 logic
-pub fn parse_ros_service_file(
-    data: &str,
-    name: &str,
-    package: &Package,
-    path: &Path,
-) -> ParsedServiceFile {
-    let mut dash_line_number = None;
-    for (line_num, line) in data.lines().enumerate() {
-        match (line.find("---"), line.find('#')) {
-            (Some(dash_idx), Some(cmt_idx)) => {
-                if dash_idx < cmt_idx {
-                    // Comment appears after dash
-                    dash_line_number = Some(line_num);
-                    break;
-                }
-            }
-            (Some(_), None) => {
-                dash_line_number = Some(line_num);
-                break;
-            }
-            _ => continue,
-        }
-    }
-    let str_accumulator = |mut acc: String, line: &str| -> String {
-        acc.push_str(line);
-        acc.push('\n');
-        acc
-    };
-
-    let dash_line_number = dash_line_number.unwrap_or_else(|| {
-        panic!(
-            "Failed to find delimiter line '---' in {}/{name}",
-            &package.name
-        )
-    });
-    let request_str = data
-        .lines()
-        .take(dash_line_number)
-        .fold(String::new(), str_accumulator);
-    let response_str = data
-        .lines()
-        .skip(dash_line_number + 1)
-        .fold(String::new(), str_accumulator);
-
-    ParsedServiceFile {
-        name: name.to_owned(),
-        package: package.name.clone(),
-        request_type: parse_ros_message_file(
-            request_str.clone().as_str(),
-            format!("{name}Request").as_str(),
-            package,
-            path,
-        ),
-        request_type_raw: request_str,
-        response_type: parse_ros_message_file(
-            response_str.clone().as_str(),
-            format!("{name}Response").as_str(),
-            package,
-            path,
-        ),
-        response_type_raw: response_str,
-        source: data.to_owned(),
-        path: path.to_owned(),
     }
 }
 
