@@ -52,7 +52,10 @@ pub fn parse_ros_message_file(
         }
         // Determine if we're looking at a constant or a field
         let sep = line.find(' ').unwrap_or_else(|| {
-            panic!("Found an invalid ros field line, no space delinting type from name: {line}")
+            panic!(
+                "Found an invalid ros field line, no space delinting type from name: {line} in {}\n{data}",
+                path.display()
+            )
         });
         let equal_after_sep = line[sep..].find('=');
         if equal_after_sep.is_some() {

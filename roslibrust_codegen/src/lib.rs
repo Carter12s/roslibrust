@@ -389,7 +389,7 @@ pub fn find_and_parse_ros_messages(
         );
     }
 
-    let mut message_files = packages
+    let message_files = packages
         .iter()
         .flat_map(|pkg| {
             utils::get_message_files(pkg)
@@ -406,25 +406,7 @@ pub fn find_and_parse_ros_messages(
                 .map(|path| (pkg.clone(), path))
         })
         .collect::<Vec<_>>();
-    let service_files = packages
-        .iter()
-        .flat_map(|pkg| {
-            utils::get_service_files(pkg)
-                .unwrap_or_else(|err| {
-                    log::error!(
-                        "Unable to get paths to service files for {}: {}",
-                        pkg.name,
-                        err
-                    );
-                    // Return an empty vec so that one package doesn't necessarily fail the process
-                    vec![]
-                })
-                .into_iter()
-                .map(|path| (pkg.clone(), path))
-        })
-        .collect::<Vec<_>>();
 
-    message_files.extend_from_slice(&service_files[..]);
     parse_ros_files(message_files)
 }
 
@@ -559,6 +541,16 @@ fn parse_ros_files(
             "msg" => {
                 let msg = parse_ros_message_file(&contents, name, &pkg, &path);
                 parsed_messages.push(msg);
+            }
+            "action" => {
+                let action = parse_ros_action_file(&contents, name, &pkg, &path);
+                parsed_messages.push(action.action_type);
+                parsed_messages.push(action.action_goal_type);
+                parsed_messages.push(action.goal_type);
+                parsed_messages.push(action.action_result_type);
+                parsed_messages.push(action.result_type);
+                parsed_messages.push(action.action_feedback_type);
+                parsed_messages.push(action.feedback_type);
             }
             _ => {
                 log::error!("File extension not recognized as a ROS file: {path:?}");

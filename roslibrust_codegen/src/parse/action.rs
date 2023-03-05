@@ -12,6 +12,9 @@ pub struct ParsedActionFile {
     pub goal_type: ParsedMessageFile,
     pub result_type: ParsedMessageFile,
     pub feedback_type: ParsedMessageFile,
+    pub action_goal_type: ParsedMessageFile,
+    pub action_result_type: ParsedMessageFile,
+    pub action_feedback_type: ParsedMessageFile,
     /// The contents of the action file this instance was parsed from
     pub source: String,
     /// The path where the message was found
@@ -66,7 +69,7 @@ pub fn parse_ros_action_file(
         let result_str = data
             .lines()
             .skip(first_dash_line + 1)
-            .take(second_dash_line - first_dash_line)
+            .take(second_dash_line - first_dash_line - 1)
             .fold(String::new(), str_accumulator);
         let feedback_str = data
             .lines()
@@ -95,6 +98,9 @@ pub fn parse_ros_action_file(
                 package,
                 path,
             ),
+            action_goal_type: generate_action_goal_msg(name, package, path),
+            action_result_type: generate_action_result_msg(name, package, path),
+            action_feedback_type: generate_action_feedback_msg(name, package, path),
             source: data.to_owned(),
             path: path.to_owned(),
         }
@@ -115,7 +121,7 @@ fn generate_action_msg(name: &str, package: &Package, path: &Path) -> ParsedMess
     "#
     );
 
-    parse_ros_message_file(&source, name, package, path)
+    parse_ros_message_file(&source, format!("{name}Action").as_str(), package, path)
 }
 
 fn generate_action_goal_msg(name: &str, package: &Package, path: &Path) -> ParsedMessageFile {
@@ -127,7 +133,7 @@ actionlib_msgs/GoalID goal_id
     "#
     );
 
-    parse_ros_message_file(&source, name, package, path)
+    parse_ros_message_file(&source, format!("{name}ActionGoal").as_str(), package, path)
 }
 
 fn generate_action_result_msg(name: &str, package: &Package, path: &Path) -> ParsedMessageFile {
@@ -139,7 +145,12 @@ actionlib_msgs/GoalStatus status
         "#
     );
 
-    parse_ros_message_file(&source, name, package, path)
+    parse_ros_message_file(
+        &source,
+        format!("{name}ActionResult").as_str(),
+        package,
+        path,
+    )
 }
 
 fn generate_action_feedback_msg(name: &str, package: &Package, path: &Path) -> ParsedMessageFile {
@@ -151,5 +162,10 @@ actionlib_msgs/GoalStatus status
         "#
     );
 
-    parse_ros_message_file(&source, name, package, path)
+    parse_ros_message_file(
+        &source,
+        format!("{name}ActionFeedback").as_str(),
+        package,
+        path,
+    )
 }

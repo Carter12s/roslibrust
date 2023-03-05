@@ -778,6 +778,122 @@ pub mod nav_msgs {
         Clone,
         PartialEq,
     )]
+    pub struct GetMapAction {
+        pub r#action_goal: self::GetMapActionGoal,
+        pub r#action_result: self::GetMapActionResult,
+        pub r#action_feedback: self::GetMapActionFeedback,
+    }
+    impl ::roslibrust_codegen::RosMessageType for GetMapAction {
+        const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapAction";
+        const MD5SUM: &'static str = "e611ad23fbf237c031b7536416dc7cd7";
+    }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        :: smart_default :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
+    pub struct GetMapActionFeedback {
+        pub r#header: std_msgs::Header,
+        pub r#status: actionlib_msgs::GoalStatus,
+        pub r#feedback: self::GetMapFeedback,
+    }
+    impl ::roslibrust_codegen::RosMessageType for GetMapActionFeedback {
+        const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapActionFeedback";
+        const MD5SUM: &'static str = "aae20e09065c3809e8a8e87c4c8953fd";
+    }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        :: smart_default :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
+    pub struct GetMapActionGoal {
+        pub r#header: std_msgs::Header,
+        pub r#goal_id: actionlib_msgs::GoalID,
+        pub r#goal: self::GetMapGoal,
+    }
+    impl ::roslibrust_codegen::RosMessageType for GetMapActionGoal {
+        const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapActionGoal";
+        const MD5SUM: &'static str = "4b30be6cd12b9e72826df56b481f40e0";
+    }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        :: smart_default :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
+    pub struct GetMapActionResult {
+        pub r#header: std_msgs::Header,
+        pub r#status: actionlib_msgs::GoalStatus,
+        pub r#result: self::GetMapResult,
+    }
+    impl ::roslibrust_codegen::RosMessageType for GetMapActionResult {
+        const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapActionResult";
+        const MD5SUM: &'static str = "ac66e5b9a79bb4bbd33dab245236c892";
+    }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        :: smart_default :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
+    pub struct GetMapFeedback {}
+    impl ::roslibrust_codegen::RosMessageType for GetMapFeedback {
+        const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapFeedback";
+        const MD5SUM: &'static str = "d41d8cd98f00b204e9800998ecf8427e";
+    }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        :: smart_default :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
+    pub struct GetMapGoal {}
+    impl ::roslibrust_codegen::RosMessageType for GetMapGoal {
+        const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapGoal";
+        const MD5SUM: &'static str = "d41d8cd98f00b204e9800998ecf8427e";
+    }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        :: smart_default :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
+    pub struct GetMapResult {
+        pub r#map: self::OccupancyGrid,
+    }
+    impl ::roslibrust_codegen::RosMessageType for GetMapResult {
+        const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapResult";
+        const MD5SUM: &'static str = "6cdd0a18e0aff5b0a3ca2326a89b54ff";
+    }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        :: smart_default :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
     pub struct GridCells {
         pub r#header: std_msgs::Header,
         pub r#cell_width: f32,

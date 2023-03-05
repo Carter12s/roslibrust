@@ -122,11 +122,11 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
 }
 
 pub fn get_message_files(pkg: &Package) -> io::Result<Vec<PathBuf>> {
-    message_files_from_path(pkg.path.as_path(), "msg")
-}
-
-pub fn get_service_files(pkg: &Package) -> io::Result<Vec<PathBuf>> {
-    message_files_from_path(pkg.path.as_path(), "srv")
+    Ok(message_files_from_path(pkg.path.as_path(), "msg")?
+        .into_iter()
+        .chain(message_files_from_path(pkg.path.as_path(), "srv")?.into_iter())
+        .chain(message_files_from_path(pkg.path.as_path(), "action")?.into_iter())
+        .collect())
 }
 
 fn message_files_from_path(path: &Path, ext: &str) -> io::Result<Vec<PathBuf>> {
