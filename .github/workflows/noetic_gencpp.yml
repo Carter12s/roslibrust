@@ -21,12 +21,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: 'true'
-      - name: Debug
-        run: |
-          ls -a
-          pwd
       - name: Regenerate message headers
-        run: source /root/.cargo/env; ./roslibrust_gencpp/regnerate-test-msgs.sh
+        run: source /root/.cargo/env; ./roslibrust_gencpp/regenerate-test-msgs.sh
       - name: Verify no changes
         run: git diff-index --quiet HEAD --
       - name: Compile test package
