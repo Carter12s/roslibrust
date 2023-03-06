@@ -23,6 +23,9 @@ jobs:
           submodules: 'true'
       - name: Regenerate message headers
         run: source /root/.cargo/env; ./roslibrust_gencpp/regenerate-test-msgs.sh
+      - name: Fix strange git permissions issue
+        # https://github.com/actions/runner-images/issues/6775
+        run: git config --global --add safe.directory /__w/roslibrust/roslibrust
       - name: Verify no changes
         run: git diff-index --quiet HEAD --
       - name: Compile test package
