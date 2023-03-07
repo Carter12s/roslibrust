@@ -566,7 +566,6 @@ impl TopicProvider for ClientHandle {
         topic: &str,
     ) -> RosLibRustResult<Self::Subscriber<T>> {
         self.subscribe(topic).await
-
     }
 
     async fn call_service<Req: RosMessageType, Res: RosMessageType>(
@@ -580,7 +579,10 @@ impl TopicProvider for ClientHandle {
     async fn advertise_service<T: RosServiceType>(
         &self,
         topic: &str,
-        server: fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+        server: fn(
+            T::Request,
+        )
+            -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
     ) -> RosLibRustResult<Self::ServiceHandle> {
         self.advertise_service::<T>(topic, server).await
     }
