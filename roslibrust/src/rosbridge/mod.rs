@@ -1,6 +1,7 @@
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
 mod subscriber;
+use roslibrust_codegen::{RosMessageType, RosServiceType};
 pub use subscriber::*;
 
 // Publisher is a transparent module, we directly expose internal types
@@ -20,6 +21,7 @@ mod integration_tests;
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
 
+use async_trait::async_trait;
 use futures_util::stream::{SplitSink, SplitStream};
 use log::*;
 use std::collections::HashMap;
@@ -129,4 +131,44 @@ struct PublisherHandle {
     topic: String,
     #[allow(dead_code)]
     msg_type: String,
+}
+
+/// This trait generically describes the capability of something to act as an async interface to a set of topics
+///
+/// This trait is largely based on ROS concepts, but could be extended to other protocols / concepts.
+/// Fundamentally, it assumes that topics are uniquely identified by a string name (likely an ASCII assumption is buried in here...).
+/// It assumes topics only carry one data type, but is not expected to enforce that.
+/// It assumes that all actions can fail due to a variety of causes, and by network interruption specifically.
+#[async_trait]
+trait TopicProvider {
+    // These associated types makeup the other half of the API
+    // They are expected to be "self-deregistering", where dropping them results in unadvertise or unsubscribe operations as appropriate
+    type Publisher<T: RosMessageType>;
+    type Subscriber<T: RosMessageType>;
+    type ServiceHandle;
+
+    async fn advertise<T: RosMessageType>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::Publisher<T>>;
+
+    async fn subscribe<T: RosMessageType>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::Subscriber<T>>;
+
+    async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+        &self,
+        topic: &str,
+        request: Req,
+    ) -> RosLibRustResult<Res>;
+
+    async fn advertise_service<T: RosServiceType>(
+        &self,
+        topic: &str,
+        server: fn(
+            T::Request,
+        )
+            -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
+    ) -> RosLibRustResult<Self::ServiceHandle>;
 }

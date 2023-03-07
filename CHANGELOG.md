@@ -1,8 +1,11 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 ## Release Instructions:
+
 Steps:
+
 - Starting on master
 - Edit change log
 - Revise the version numbers in Cargo.toml files
@@ -19,74 +22,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Current - Unreleased
 
 ### Added
- - Support for default field values in ROS2 messages
- - Added public APIs for getting message data from search and for generating Rust code given message data in roslibrust_codegen
- - More useful logs available when running codegen
- - Refactor some of the public APIs and types in roslibrust_codegen (concept of `ParsedMessageFile` vs `MessageFile`)
- - Added a method `get_md5sum` to `MessageFile`
- - Additional code generation API and macro which excludes `ROS_PACKAGE_PATH`
+
+- Support for default field values in ROS2 messages
+- Added public APIs for getting message data from search and for generating Rust code given message data in roslibrust_codegen
+- More useful logs available when running codegen
+- Refactor some of the public APIs and types in roslibrust_codegen (concept of `ParsedMessageFile` vs `MessageFile`)
+- Added a method `get_md5sum` to `MessageFile`
+- Additional code generation API and macro which excludes `ROS_PACKAGE_PATH`
 
 ### Fixed
- - Bug causing single quoted string constants in message files to not be parsed correctly
- - Bug causing float constants in message files to cause compiler errors because `f32 = 0;` is not allowed in rust
- - Bug where packages were not properly de-duplicated during discovery.
+
+- Bug causing single quoted string constants in message files to not be parsed correctly
+- Bug causing float constants in message files to cause compiler errors because `f32 = 0;` is not allowed in rust
+- Bug where packages were not properly de-duplicated during discovery.
+
+### Changed
+
+- `advertise_service` and `subscribe` methods on ClientHandle were changed from needing `&mut self` to `&self`
 
 ## 0.6.0 - December 12, 2022
 
 ### Added
- - Initial support for ROS2 message generation
- - Initial integration testing for ROS2 all basic functionality covered
- - CI testing for Humble
+
+- Initial support for ROS2 message generation
+- Initial integration testing for ROS2 all basic functionality covered
+- CI testing for Humble
 
 ### Fixed
- - The generated `char` type within rust is now u8.
- - Package names are now determined by the `name` tag within package.xml instead of by directory name
+
+- The generated `char` type within rust is now u8.
+- Package names are now determined by the `name` tag within package.xml instead of by directory name
 
 ## 0.5.2 - October 31, 2022
 
 ### Changed
- - No longer generate empty `impl` blocks from message structs that have not associated constants
- - Significant improvement to documentation with expanded examples
+
+- No longer generate empty `impl` blocks from message structs that have not associated constants
+- Significant improvement to documentation with expanded examples
 
 ### Fixed
- - `advertise_service` no longer panics if multiple advertise attempts made to same topic
+
+- `advertise_service` no longer panics if multiple advertise attempts made to same topic
 
 ## 0.5.1 - September 18, 2022
+
 Fix to docs.rs build.
 
 ## 0.5.0 - September 18, 2022
 
 ### Added
- - Service server example
+
+- Service server example
 
 ### Changed
- - `Client` is now `ClientHandle`
- - All identifiers in generated code are now escaped with `r#`
- - `advertise_service` now returns a `ServiceHandle` which controls the lifetime of the service
+
+- `Client` is now `ClientHandle`
+- All identifiers in generated code are now escaped with `r#`
+- `advertise_service` now returns a `ServiceHandle` which controls the lifetime of the service
 
 ### Fixed
- - Fixed issue where the spin and reconnect context would never drop even if there were no more `ClientHandle`s
- - Fixed parsing issue with triple dashes in comments of service files
- - Fixed bug in generation where message properties or constants had names conflicting with Rust reserved keywords
+
+- Fixed issue where the spin and reconnect context would never drop even if there were no more `ClientHandle`s
+- Fixed parsing issue with triple dashes in comments of service files
+- Fixed bug in generation where message properties or constants had names conflicting with Rust reserved keywords
 
 ## 0.4.0 - September 18, 2022
+
 Yanked version due to failed publish
 
 ## 0.3.0 - September 18, 2022
+
 Yanked version due to failed publish
 
 ## 0.2.0 - September 1, 2022
 
 ### Added
- - Support for service servers
- - Into<> helpers for Time and Duration for tokio and std
+
+- Support for service servers
+- Into<> helpers for Time and Duration for tokio and std
 
 ### Fixed
- - Failure in message generation caused by files without extensions
- - Failure in message generation caused by failing to quote around string constants
- - Failure in message generation caused by bad design of integral types TimeI and DurationI
+
+- Failure in message generation caused by files without extensions
+- Failure in message generation caused by failing to quote around string constants
+- Failure in message generation caused by bad design of integral types TimeI and DurationI
 
 ## 0.1.0 - August 28, 2022
+
 Initial public release
 
 ## 0.0.3 - Unreleased

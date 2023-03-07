@@ -2,6 +2,7 @@ use crate::rosbridge::comm;
 use crate::{rosbridge::comm::RosBridgeComm, RosLibRustError};
 use crate::{Publisher, ServiceHandle, Subscriber};
 use anyhow::anyhow;
+use async_trait::async_trait;
 use dashmap::DashMap;
 use futures::StreamExt;
 use log::*;
@@ -19,7 +20,7 @@ use tokio_tungstenite::tungstenite::Message;
 
 use super::{
     MessageQueue, PublisherHandle, Reader, RosLibRustResult, ServiceCallback, Socket, Subscription,
-    Writer, QUEUE_SIZE,
+    TopicProvider, Writer, QUEUE_SIZE,
 };
 
 /// Builder options for creating a client
@@ -251,7 +252,7 @@ impl ClientHandle {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn subscribe<Msg>(&mut self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
+    pub async fn subscribe<Msg>(&self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
     where
         Msg: RosMessageType,
     {
@@ -412,7 +413,7 @@ impl ClientHandle {
     ///
     /// See examples/service_server.rs for usage.
     pub async fn advertise_service<T: RosServiceType>(
-        &mut self,
+        &self,
         topic: &str,
         server: fn(
             T::Request,
@@ -544,6 +545,44 @@ impl ClientHandle {
             }
         });
         Ok(())
+    }
+}
+
+#[async_trait]
+impl TopicProvider for ClientHandle {
+    type Publisher<T: RosMessageType> = Publisher<T>;
+    type Subscriber<T: RosMessageType> = Subscriber<T>;
+    type ServiceHandle = ServiceHandle;
+
+    async fn advertise<T: RosMessageType>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::Publisher<T>> {
+        self.advertise::<T>(topic.as_ref()).await
+    }
+
+    async fn subscribe<T: RosMessageType>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::Subscriber<T>> {
+        self.subscribe(topic).await
+
+    }
+
+    async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+        &self,
+        topic: &str,
+        request: Req,
+    ) -> RosLibRustResult<Res> {
+        self.call_service(topic, request).await
+    }
+
+    async fn advertise_service<T: RosServiceType>(
+        &self,
+        topic: &str,
+        server: fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+    ) -> RosLibRustResult<Self::ServiceHandle> {
+        self.advertise_service::<T>(topic, server).await
     }
 }
 
