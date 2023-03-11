@@ -22,4 +22,4 @@ jobs:
         with:
           submodules: 'true'  
       - name: Compile test package
-        run: cd roslibrust_gencpp; mkdir -p cmake_build; cd cmake_build; cmake .. -DCMAKE_BUILD_TYPE=Release; make -j6;
+        run: cd roslibrust_gencpp/test_package; mkdir -p cmake_build; cd cmake_build; cmake .. -DCMAKE_BUILD_TYPE=Release; make -j6;
