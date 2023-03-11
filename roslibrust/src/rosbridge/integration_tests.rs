@@ -41,8 +41,6 @@ mod integration_tests {
     #[allow(unused_imports)]
     use std_srvs::*;
 
-    type TestResult = Result<(), anyhow::Error>;
-
     /**
     This test does a round trip publish subscribe for real
     Requires a running local rosbridge
@@ -354,5 +352,26 @@ mod integration_tests {
         assert_eq!(y.data as char, 'x');
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn error_on_non_existent_service() -> TestResult {
+        // This test is designed to catch a specific error raised in issue #88
+        // When roslibrust expereiences a server side error, it returns a string instead of our message
+        // We are trying to force that here, and ensure we correctly report the error
+
+        let client =
+            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
+                .await?;
+
+        match client.call_service::<(), ()>("/not_real", ()).await {
+            Ok(_) => {
+                panic!("Somehow returned a response on a service that didn't exist?");
+            }
+            Err(RosLibRustError::ServerError(_)) => Ok(()),
+            Err(e) => {
+                panic!("Got a different error type than expected in service response: {e}");
+            }
+        }
     }
 }
