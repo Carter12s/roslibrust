@@ -85,8 +85,8 @@ impl TopicProvider for crate::ClientHandle {
 
 #[cfg(test)]
 mod test {
-    use crate::ClientHandle;
     use super::TopicProvider;
+    use crate::ClientHandle;
 
     // This test specifically fails because TopicProvider is not object safe
     // Traits that have methods with generic parameters cannot be object safe in rust (currently)
