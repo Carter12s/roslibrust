@@ -185,7 +185,7 @@ impl ServiceFile {
         ) {
             let md5sum = Self::compute_md5sum(&parsed, graph)?;
             Some(ServiceFile {
-                parsed: parsed,
+                parsed,
                 request,
                 response,
                 md5sum,
