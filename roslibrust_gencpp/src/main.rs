@@ -84,3 +84,108 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod test {
+    use const_format::concatcp;
+    use roslibrust_gencpp::{IncludedNamespace, MessageGenOpts};
+    use std::path::PathBuf;
+
+    const ROS_1_PATH: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../assets/ros1_common_interfaces"
+    );
+    const STD_MSGS_PKG_PATH: &str = concatcp!(ROS_1_PATH, "/std_msgs");
+    const GEOMETRY_MSGS_PKG_PATH: &str = concatcp!(ROS_1_PATH, "/common_msgs/geometry_msgs");
+    const SENSOR_MSGS_PKG_PATH: &str = concatcp!(ROS_1_PATH, "/common_msgs/sensor_msgs");
+    const STD_SRVS_PKG_PATH: &str = concatcp!(ROS_1_PATH, "/ros_comm_msgs/std_srvs");
+
+    const HEADER_MSG_PATH: &str = concatcp!(STD_MSGS_PKG_PATH, "/msg/Header.msg");
+    const BATTERY_STATE_MSG_PATH: &str = concatcp!(SENSOR_MSGS_PKG_PATH, "/msg/BatteryState.msg");
+    const TRIGGER_SRV_PATH: &str = concatcp!(STD_SRVS_PKG_PATH, "/srv/Trigger.srv");
+
+    fn remove_whitespace(s: &str) -> String {
+        s.split_whitespace().collect()
+    }
+
+    #[test]
+    fn std_msgs_header_up_to_date() {
+        let options = MessageGenOpts {
+            package: "std_msgs".into(),
+            includes: vec![IncludedNamespace {
+                package: "std_msgs".into(),
+                path: STD_MSGS_PKG_PATH.into(),
+            }],
+        };
+        let generated_source =
+            roslibrust_gencpp::generate_message(&PathBuf::from(HEADER_MSG_PATH), &options).unwrap();
+
+        let current_source = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/test_package/include/std_msgs/Header.h"
+        ))
+        .unwrap();
+        assert_eq!(
+            remove_whitespace(&generated_source),
+            remove_whitespace(&current_source)
+        );
+    }
+
+    #[test]
+    fn sensor_msgs_battery_state_up_to_date() {
+        let options = MessageGenOpts {
+            package: "sensor_msgs".into(),
+            includes: vec![
+                IncludedNamespace {
+                    package: "std_msgs".into(),
+                    path: STD_MSGS_PKG_PATH.into(),
+                },
+                IncludedNamespace {
+                    package: "geometry_msgs".into(),
+                    path: GEOMETRY_MSGS_PKG_PATH.into(),
+                },
+                IncludedNamespace {
+                    package: "sensor_msgs".into(),
+                    path: SENSOR_MSGS_PKG_PATH.into(),
+                },
+            ],
+        };
+        let generated_source =
+            roslibrust_gencpp::generate_message(&PathBuf::from(BATTERY_STATE_MSG_PATH), &options)
+                .unwrap();
+
+        let current_source = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/test_package/include/sensor_msgs/BatteryState.h"
+        ))
+        .unwrap();
+        assert_eq!(
+            remove_whitespace(&generated_source),
+            remove_whitespace(&current_source)
+        );
+    }
+
+    #[test]
+    fn std_srvs_trigger_up_to_date() {
+        let options = MessageGenOpts {
+            package: "std_srvs".into(),
+            includes: vec![IncludedNamespace {
+                package: "std_srvs".into(),
+                path: STD_SRVS_PKG_PATH.into(),
+            }],
+        };
+        let generated_source =
+            roslibrust_gencpp::generate_service(&PathBuf::from(TRIGGER_SRV_PATH), &options)
+                .unwrap();
+
+        let current_source = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/test_package/include/std_srvs/Trigger.h"
+        ))
+        .unwrap();
+        assert_eq!(
+            remove_whitespace(&generated_source.srv_header),
+            remove_whitespace(&current_source)
+        );
+    }
+}

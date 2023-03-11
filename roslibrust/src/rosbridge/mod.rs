@@ -1,6 +1,7 @@
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
 mod subscriber;
+use roslibrust_codegen::{RosMessageType, RosServiceType};
 pub use subscriber::*;
 
 // Publisher is a transparent module, we directly expose internal types
@@ -16,6 +17,14 @@ pub use client::*;
 // Tests are fully private module
 #[cfg(test)]
 mod integration_tests;
+// Standard return type for all tests to use
+#[cfg(test)]
+type TestResult = Result<(), anyhow::Error>;
+
+// Topic provider is locked behind a feature until it is stabalized
+// additionally because of its use of generic associated types, it requires rust >1.65
+#[cfg(feature = "topic_provider")]
+mod topic_provider;
 
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
