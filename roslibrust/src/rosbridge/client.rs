@@ -251,7 +251,7 @@ impl ClientHandle {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn subscribe<Msg>(&mut self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
+    pub async fn subscribe<Msg>(&self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
     where
         Msg: RosMessageType,
     {
@@ -412,7 +412,7 @@ impl ClientHandle {
     ///
     /// See examples/service_server.rs for usage.
     pub async fn advertise_service<T: RosServiceType>(
-        &mut self,
+        &self,
         topic: &str,
         server: fn(
             T::Request,

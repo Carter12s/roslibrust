@@ -11,7 +11,9 @@ mod integration_tests {
 
     use std::sync::Arc;
 
-    use crate::{ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber};
+    use crate::{
+        rosbridge::TestResult, ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber,
+    };
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
@@ -40,8 +42,6 @@ mod integration_tests {
     // this can be removed when we get self_service_call working
     #[allow(unused_imports)]
     use std_srvs::*;
-
-    type TestResult = Result<(), anyhow::Error>;
 
     /**
     This test does a round trip publish subscribe for real
