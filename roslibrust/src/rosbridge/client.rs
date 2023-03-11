@@ -136,7 +136,7 @@ impl ClientHandle {
         // TODO Possible bug here? We send a subscribe message each time even if already subscribed
         // Send subscribe message to rosbridge to initiate it sending us messages
         let mut stream = client.writer.write().await;
-        stream.subscribe(&topic_name, &Msg::ROS_TYPE_NAME).await?;
+        stream.subscribe(topic_name, Msg::ROS_TYPE_NAME).await?;
 
         // Create a new watch channel for this topic
         let queue = Arc::new(MessageQueue::new(QUEUE_SIZE));
@@ -514,7 +514,7 @@ impl ClientHandle {
         // Copy so we can move into closure
         let client = self.clone();
         let topic_name = topic_name.to_string();
-        let id = id.clone();
+        let id = *id;
         // Actually send the unsubscribe message in a task so subscriber::Drop can call this function
         tokio::spawn(async move {
             // Identify the subscription entry for the subscriber
@@ -704,7 +704,7 @@ impl Client {
             Some(callbacks) => callbacks,
             _ => panic!("Received publish message for unsubscribed topic!"), // TODO probably shouldn't be a panic?
         };
-        for (_id, callback) in &callbacks.handles {
+        for callback in callbacks.handles.values() {
             callback(
                 // TODO possible bug here if "msg" isn't defined remove this unwrap
                 serde_json::to_string(data.get("msg").unwrap())
@@ -781,7 +781,7 @@ where
 // Connects to websocket at specified URL, retries indefinitely
 async fn stubborn_connect(url: &str) -> (Writer, Reader) {
     loop {
-        match connect(&url).await {
+        match connect(url).await {
             Err(e) => {
                 warn!("Failed to reconnect: {:?}", e);
                 // TODO configurable rate?

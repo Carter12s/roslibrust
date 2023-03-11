@@ -88,6 +88,10 @@ impl MessageFile {
         &self.parsed.fields
     }
 
+    pub fn get_constants(&self) -> &[ConstantInfo] {
+        &self.parsed.constants
+    }
+
     pub fn is_fixed_length(&self) -> bool {
         self.is_fixed_length
     }
@@ -194,6 +198,26 @@ impl ServiceFile {
 
     pub fn get_full_name(&self) -> String {
         format!("{}/{}", self.parsed.package, self.parsed.name)
+    }
+
+    pub fn get_short_name(&self) -> String {
+        self.parsed.name.clone()
+    }
+
+    pub fn get_package_name(&self) -> String {
+        self.parsed.package.clone()
+    }
+
+    pub fn request(&self) -> &MessageFile {
+        &self.request
+    }
+
+    pub fn response(&self) -> &MessageFile {
+        &self.response
+    }
+
+    pub fn get_md5sum(&self) -> String {
+        self.md5sum.clone()
     }
 
     fn compute_md5sum(

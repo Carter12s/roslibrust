@@ -70,7 +70,7 @@ impl From<tokio_tungstenite::tungstenite::Error> for RosLibRustError {
 pub type RosLibRustResult<T> = Result<T, RosLibRustError>;
 
 /// Used for type erasure of message type so that we can store arbitrary handles
-type Callback = Box<dyn Fn(&str) -> () + Send + Sync>;
+type Callback = Box<dyn Fn(&str) + Send + Sync>;
 
 /// Type erasure of callback for a service
 /// Internally this will covert the input string to the Request type

@@ -11,7 +11,9 @@
 #include <ros/message_operations.h>
 
 {% for field in spec.fields %}
-#include <{{ field.package }}/{{ field.field_type }}.h
+{%- if not is_intrinsic_type(field) %}
+#include <{{ field.package }}/{{ field.field_type }}.h>
+{%- endif -%}
 {%- endfor %}
 
 namespace {{ spec.package }} {
@@ -21,6 +23,7 @@ struct {{ spec.short_name }}_
 {
   typedef {{ spec.short_name }}_<ContainerAllocator> Type;
 
+  {% if spec.fields|length > 0 %}
   {{ spec.short_name }}_()
     : {{ spec.fields|map(attribute="name")|join('()\n    , ') }}() {
   }
@@ -29,10 +32,42 @@ struct {{ spec.short_name }}_
     : {{ spec.fields|map(attribute="name")|join('(_alloc)\n    , ') }}(_alloc) {
     (void)_alloc;
   }
+  {% else %}
+  {{ spec.short_name }}_()
+  {
+  }
+
+  {{ spec.short_name }}_(const ContainerAllocator& _alloc)
+  {
+    (void)_alloc;
+  }
+  {% endif %}
 
   {% for field in spec.fields %}
+  {% if is_intrinsic_type(field) %}
+  typedef {{ field.field_type|cpp_type }} _{{ field.name }}_type;
+  {%- else %}
   typedef ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator> _{{ field.name }}_type;
+  {%- endif %}
   _{{ field.name }}_type {{ field.name }};
+  {%- endfor %}
+
+  {% if spec.constants|length > 0 %}
+    enum {
+    {% for constant in spec.constants %}
+      {%- if constant.constant_type in ['byte', 'int8', 'int16', 'int32', 'int64', 'char'] %}
+        {{ constant.name }} = {{ constant.constant_value|cpp_literal }},
+      {%- elif constant.constant_type in ['uint8', 'uint16', 'uint32', 'uint64'] %}
+        {{ constant.name }} = {{ constant.constant_value|cpp_literal }}u,
+      {%- endif -%}
+    {%- endfor %}
+    };
+  {% endif %}
+
+  {% for constant in spec.constants %}
+    {%- if constant.constant_type not in ['byte', 'int8', 'int16', 'int32', 'int64', 'char', 'uint8', 'uint16', 'uint32', 'uint64'] %}
+      static const {{ constant.constant_type|cpp_type }} {{ constant.name }};
+    {% endif %}
   {%- endfor %}
 
   typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>> Ptr;
@@ -46,7 +81,20 @@ typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }}> {{ spec.
 typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }} const> {{ spec.short_name }}ConstPtr;
 
 // constants requiring out of line definition
-
+{% for constant in spec.constants %}
+  {%- if constant.constant_type not in ['byte', 'int8', 'int16', 'int32', 'int64', 'char', 'uint8', 'uint16', 'uint32', 'uint64'] -%}
+    template<typename ContainerAllocator> const {{ constant.constant_type|cpp_type }}
+      {{ spec.short_name }}_<ContainerAllocator>::{{ constant.name }} = 
+        {%- if constant.constant_type == 'string' %}
+          R"{{ constant.constant_value }}"
+        {%- elif constant.constant_type == 'bool' %}
+          int({{ constant.constant_value|lower }})
+        {%- else %}
+          {{ constant.constant_value|cpp_literal }}
+        {% endif -%}
+        ;
+  {% endif -%}
+{%- endfor %}
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator> & v)
@@ -196,7 +244,11 @@ struct Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>
     {%- for field in spec.fields %}
     s << indent << "{{ field.name }}: ";
     s << std::endl;
+    {% if is_intrinsic_type(field) %}
+    Printer< {{ field.field_type|cpp_type }}>::stream(s, indent + "  ", v.{{ field.name }});
+    {% else %}
     Printer< ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>>::stream(s, indent + "  ", v.{{ field.name }});
+    {% endif %}
     {%- endfor %}
   }
 };
