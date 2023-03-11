@@ -11,7 +11,9 @@ mod integration_tests {
 
     use std::sync::Arc;
 
-    use crate::{ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber, rosbridge::TestResult};
+    use crate::{
+        rosbridge::TestResult, ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber,
+    };
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
