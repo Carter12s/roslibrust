@@ -398,13 +398,29 @@ impl ClientHandle {
             rx.await
         };
 
+        // Attempt to actually pull data out
         let msg = match recv {
             Ok(msg) => msg,
             Err(e) =>
             // TODO remove panic! here, this could result from dropping communication, need to handle disconnect better
             panic!("The sender end of a service channel was dropped while rx was being awaited, this should not be possible: {}", e),
         };
-        Ok(serde_json::from_value(msg)?)
+
+        // Attempt to convert data to response type
+        match serde_json::from_value(msg.clone()) {
+            Ok(val) => Ok(val),
+            Err(e) => {
+                // We failed to parse the value as an expected type, before just giving up, try to parse as string
+                // if we got a string it indicates a server side error, otherwise we got the wrong datatype back
+                match serde_json::from_value(msg) {
+                    Ok(s) => return Err(RosLibRustError::ServerError(s)),
+                    Err(_) => {
+                        // Return the error from the origional parse
+                        return Err(RosLibRustError::InvalidMessage(e));
+                    }
+                }
+            }
+        }
     }
 
     /// Advertises a service and returns a handle that manages the lifetime of the service.

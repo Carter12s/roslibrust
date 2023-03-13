@@ -355,4 +355,25 @@ mod integration_tests {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn error_on_non_existent_service() -> TestResult {
+        // This test is designed to catch a specific error raised in issue #88
+        // When roslibrust expereiences a server side error, it returns a string instead of our message
+        // We are trying to force that here, and ensure we correctly report the error
+
+        let client =
+            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
+                .await?;
+
+        match client.call_service::<(), ()>("/not_real", ()).await {
+            Ok(_) => {
+                panic!("Somehow returned a response on a service that didn't exist?");
+            }
+            Err(RosLibRustError::ServerError(_)) => Ok(()),
+            Err(e) => {
+                panic!("Got a different error type than expected in service response: {e}");
+            }
+        }
+    }
 }
