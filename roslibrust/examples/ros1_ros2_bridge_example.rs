@@ -62,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .unwrap();
 
     info!("Attempting to connect to ros1...");
-    let mut ros1_client = ClientHandle::new("ws://localhost:9090").await?;
+    let ros1_client = ClientHandle::new("ws://localhost:9090").await?;
     info!("ros1 client successfully connected!");
     info!("Attempting to connect to ros2...");
     let ros2_client = ClientHandle::new("ws://localhost:9091").await?;

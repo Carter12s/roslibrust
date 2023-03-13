@@ -34,7 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .unwrap();
 
     // Create a new client
-    let mut client = ClientHandle::new("ws://localhost:9090").await?;
+    let client = ClientHandle::new("ws://localhost:9090").await?;
 
     // Actually advertise our service
     // The handle returned here establishes the lifetime of our service and dropping it will unadvertise the service

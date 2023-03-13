@@ -18,6 +18,7 @@ pub use client::*;
 mod integration_tests;
 // Standard return type for all tests to use
 #[cfg(test)]
+#[allow(dead_code)]
 type TestResult = Result<(), anyhow::Error>;
 
 // Topic provider is locked behind a feature until it is stabalized

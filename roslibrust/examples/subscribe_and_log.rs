@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .init()
         .unwrap();
 
-    let mut client = ClientHandle::new("ws://localhost:9090").await?;
+    let client = ClientHandle::new("ws://localhost:9090").await?;
     info!("ClientHandle connected");
 
     let rx = client.subscribe::<std_msgs::Header>("talker").await?;
