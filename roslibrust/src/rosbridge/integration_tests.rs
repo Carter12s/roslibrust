@@ -362,15 +362,15 @@ mod integration_tests {
         // When roslibrust expereiences a server side error, it returns a string instead of our message
         // We are trying to force that here, and ensure we correctly report the error
 
-        let client = ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT)).await?;
+        let client =
+            ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
+                .await?;
 
-        match client.call_service::<(),()>("/not_real", ()).await {
+        match client.call_service::<(), ()>("/not_real", ()).await {
             Ok(_) => {
                 panic!("Somehow returned a response on a service that didn't exist?");
-            },
-            Err(RosLibRustError::ServerError(_)) => {
-                Ok(())
             }
+            Err(RosLibRustError::ServerError(_)) => Ok(()),
             Err(e) => {
                 panic!("Got a different error type than expected in service response: {e}");
             }

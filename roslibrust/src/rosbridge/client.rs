@@ -413,16 +413,13 @@ impl ClientHandle {
                 // We failed to parse the value as an expected type, before just giving up, try to parse as string
                 // if we got a string it indicates a server side error, otherwise we got the wrong datatype back
                 match serde_json::from_value(msg) {
-                    Ok(s) => {
-                        return Err(RosLibRustError::ServerError(s))
-                    },
+                    Ok(s) => return Err(RosLibRustError::ServerError(s)),
                     Err(_) => {
                         // Return the error from the origional parse
-                        return Err(RosLibRustError::InvalidMessage(e))
+                        return Err(RosLibRustError::InvalidMessage(e));
                     }
                 }
             }
-
         }
     }
 
