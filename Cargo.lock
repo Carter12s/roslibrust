@@ -784,6 +784,7 @@ dependencies = [
  "serde_json",
  "syn",
  "tokio",
+ "uuid",
  "walkdir",
  "xml-rs",
 ]

@@ -5,6 +5,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::{Debug, Display};
+use std::io::Write;
 use std::path::PathBuf;
 use utils::Package;
 
@@ -465,6 +466,20 @@ struct MessageMetadata {
     seen_count: u32,
 }
 
+fn is_field_resolved(field: &FieldInfo, resolved_messages: &BTreeMap<String, MessageFile>) -> bool {
+    let is_ros1_primitive =
+        ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str());
+    let is_ros2_primitive =
+        ROS_2_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str());
+    let is_primitive = is_ros1_primitive || is_ros2_primitive;
+    if !is_primitive {
+        let is_resolved = resolved_messages.contains_key(field.get_full_name().as_str());
+        is_resolved
+    } else {
+        true
+    }
+}
+
 pub fn resolve_dependency_graph(
     messages: Vec<ParsedMessageFile>,
     services: Vec<ParsedServiceFile>,
@@ -479,25 +494,16 @@ pub fn resolve_dependency_graph(
     // First resolve the message dependencies
     while let Some(MessageMetadata { msg, seen_count }) = unresolved_messages.pop_front() {
         if seen_count > MAX_PARSE_ITER_LIMIT {
-            log::error!("Unable to resolve dependencies after reaching iteration limit ({MAX_PARSE_ITER_LIMIT}).\n\
-                    Message: {msg:#?}");
+            log::error!("Unable to resolve dependencies after reaching iteration limit ({MAX_PARSE_ITER_LIMIT})");
+            log_unresolved_messages(unresolved_messages, &resolved_messages);
             return None;
         }
 
         // Check our resolved messages for each of the fields
-        let fully_resolved = msg.fields.iter().all(|field| {
-            let is_ros1_primitive =
-                ROS_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str());
-            let is_ros2_primitive =
-                ROS_2_TYPE_TO_RUST_TYPE_MAP.contains_key(field.field_type.field_type.as_str());
-            let is_primitive = is_ros1_primitive || is_ros2_primitive;
-            if !is_primitive {
-                let is_resolved = resolved_messages.contains_key(field.get_full_name().as_str());
-                is_resolved
-            } else {
-                true
-            }
-        });
+        let fully_resolved = msg
+            .fields
+            .iter()
+            .all(|field| is_field_resolved(field, &resolved_messages));
 
         if fully_resolved {
             let msg_file = MessageFile::resolve(msg, &resolved_messages).unwrap();
@@ -518,6 +524,64 @@ pub fn resolve_dependency_graph(
     resolved_services.sort_by(|a, b| a.parsed.name.cmp(&b.parsed.name));
 
     Some((resolved_messages.into_values().collect(), resolved_services))
+}
+
+fn log_unresolved_messages(
+    msgs: VecDeque<MessageMetadata>,
+    resolved_msgs: &BTreeMap<String, MessageFile>,
+) {
+    let mut log_path = std::env::temp_dir();
+    log_path.push(format!("roslibrust-codegen-{}.log", uuid::Uuid::new_v4()));
+    let mut log_string = String::new();
+    for msg in &msgs {
+        let mut undiscovered_messages = false;
+        let mut msg_string = String::new();
+        msg_string.push_str(&format!("{}\n", msg.msg.get_full_name()));
+
+        for field in &msg.msg.fields {
+            if !is_field_resolved(field, resolved_msgs) {
+                // This field is not resolved, it may be in the queue though
+                if msgs
+                    .iter()
+                    .any(|msg| msg.msg.get_full_name() == field.get_full_name())
+                {
+                    // Field is in our queue itself
+                    msg_string.push_str(&format!(
+                        "  {} {} - DISCOVERED\n",
+                        field.get_full_name(),
+                        field.field_name
+                    ));
+                } else {
+                    // No idea where it is
+                    msg_string.push_str(&format!(
+                        "! {} {} - NOT FOUND\n",
+                        field.get_full_name(),
+                        field.field_name
+                    ));
+                    undiscovered_messages = true;
+                }
+            } else {
+                msg_string.push_str(&format!(
+                    "  {} {} - RESOLVED\n",
+                    field.get_full_name(),
+                    field.field_name
+                ));
+            }
+        }
+
+        if undiscovered_messages {
+            log_string.push_str(&msg_string);
+        }
+    }
+
+    if let Ok(mut log_file) = std::fs::File::create(&log_path) {
+        if log_file.write_all(log_string.as_bytes()).is_ok() {
+            log::error!(
+                "Details about unresolved messages can be found at {}",
+                log_path.display()
+            );
+        }
+    }
 }
 
 /// Parses all ROS file types and returns a final expanded set
