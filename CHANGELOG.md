@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+## 0.7.0 - March 13, 2022
+
 ### Added
 
  - Support for default field values in ROS2 messages

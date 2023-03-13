@@ -747,7 +747,7 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
 name = "roslibrust"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -773,7 +773,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust_codegen"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "lazy_static",
  "log",
@@ -790,7 +790,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust_codegen_macro"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "proc-macro2",
  "quote",
