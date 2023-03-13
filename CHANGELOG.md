@@ -23,12 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support for default field values in ROS2 messages
-- Added public APIs for getting message data from search and for generating Rust code given message data in roslibrust_codegen
-- More useful logs available when running codegen
-- Refactor some of the public APIs and types in roslibrust_codegen (concept of `ParsedMessageFile` vs `MessageFile`)
-- Added a method `get_md5sum` to `MessageFile`
-- Additional code generation API and macro which excludes `ROS_PACKAGE_PATH`
+ - Support for default field values in ROS2 messages
+ - Added public APIs for getting message data from search and for generating Rust code given message data in roslibrust_codegen
+ - More useful logs available when running codegen
+ - Refactor some of the public APIs and types in roslibrust_codegen (concept of `ParsedMessageFile` vs `MessageFile`)
+ - Added a method `get_md5sum` to `MessageFile`
+ - Additional code generation API and macro which excludes `ROS_PACKAGE_PATH`
+ - Generation of C++ headers for messages and services under `roslibrust_gencpp`.
+ - Generation of Rust source for actions.
 
 ### Fixed
 

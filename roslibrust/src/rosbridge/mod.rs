@@ -1,7 +1,6 @@
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
 mod subscriber;
-use roslibrust_codegen::{RosMessageType, RosServiceType};
 pub use subscriber::*;
 
 // Publisher is a transparent module, we directly expose internal types
