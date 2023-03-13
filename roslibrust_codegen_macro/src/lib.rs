@@ -46,7 +46,9 @@ pub fn find_and_generate_ros_messages_relative_to_manifest_dir(
 
     std::env::set_current_dir(env!("CARGO_MANIFEST_DIR")).expect("Failed to set working dir");
     for path in &mut paths {
-        *path = path.canonicalize().expect(&format!("Failed to canonicalize path: {path:?}"));
+        *path = path
+            .canonicalize()
+            .expect(&format!("Failed to canonicalize path: {path:?}"));
     }
 
     roslibrust_codegen::find_and_generate_ros_messages(paths).into()
