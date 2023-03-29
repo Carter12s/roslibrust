@@ -2,6 +2,7 @@
  * Testing ground for hitting on rosmaster directly
  */
 
+#[cfg(feature = "ros1")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     simple_logger::SimpleLogger::new()
@@ -85,4 +86,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // * Actually make a connection with TCPROS
 
     Ok(())
+}
+
+#[cfg(not(feature = "ros1"))]
+fn main() {
+    // Provide a dummy main for this example when ros1 is disabled
 }
