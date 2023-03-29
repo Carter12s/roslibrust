@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Okay above is working which shows at least in theory something is possible here...
 
     // Work to do:
-    // * Take the ros MasterApi and create valid in/out types for each api call
+    // * [DONE] Take the ros MasterApi and create valid in/out types for each api call
     // * Build out a test suite for the materapi
     // * Build out a host for the slaveapi (maybe skip some features if we can? stats?)
     // * Build out a test against our own slaveapi (maybe skip some features if we can? stats?)

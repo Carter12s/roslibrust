@@ -21,7 +21,7 @@ lazy_static = "1.4"
 log = "0.4"
 proc-macro2 = "1.0"
 rand = "0.8"
-reqwest = { verison = "0.11", optional = true} # Only used with native ros1
+reqwest = { version = "0.11", optional = true } # Only used with native ros1
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_xmlrpc = { version = "0.1.2", optional = true } # Only used with native ros1 # Only used with native ros1 # Only used with native ros1
