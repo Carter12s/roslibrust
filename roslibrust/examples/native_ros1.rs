@@ -10,17 +10,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .without_timestamps() // required for running wsl2
         .init()
         .unwrap();
-
-    // XMLrpc crate looks archived and doesn't support async, but this worked out of the box
-    // let request = xmlrpc::Request::new("getTopicTypes").arg("my_id");
-    // let result = request.call_url("http://localhost:11311");
-    // println!("Result: {result:?}");
-
-    // rosrust uses a crate xml_rpc, but again no async
-    // Skipped testing it out
-
-    // 3rd try is the charm, serde_xmlrpc looks like it'll do the job, but we need to bring our
-    // own http client. Shouldn't be an issue just use hyper (nevermind use reqwest)
     let client = roslibrust::MasterClient::new(
         "http://localhost:11311",
         "http://localhost:11312",
@@ -76,11 +65,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         client.unregister_publisher("/my_topic").await?
     );
 
-    // Okay above is working which shows at least in theory something is possible here...
-
     // Work to do:
     // * [DONE] Take the ros MasterApi and create valid in/out types for each api call
-    // * Build out a test suite for the materapi
+    // * [DONE] Build out a test suite for the materapi
     // * Build out a host for the slaveapi (maybe skip some features if we can? stats?)
     // * Build out a test against our own slaveapi (maybe skip some features if we can? stats?)
     // * Actually make a connection with TCPROS
