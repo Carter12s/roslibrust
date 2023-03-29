@@ -73,16 +73,17 @@ impl MasterClient {
             .text()
             .await?;
         trace!("Got response: {response}");
-        let parsed: (i8, String, T) = serde_xmlrpc::response_from_str(&response)?;
-        match parsed.0 {
+        let (status_code, msg, data) =
+            serde_xmlrpc::response_from_str::<(i8, String, T)>(&response)?;
+        match status_code {
             1 => {
-                trace!("Parsed from rosmaster: {:?}", parsed.2);
+                trace!("Parsed from rosmaster: {msg:?} {data:?}");
             }
             _ => {
-                return Err(RosMasterError::MasterError(parsed.1));
+                return Err(RosMasterError::MasterError(msg));
             }
         };
-        Ok(parsed.2)
+        Ok(data)
     }
 
     /// Hits the master's xmlrpc endpoint "getUri" and provides the response
