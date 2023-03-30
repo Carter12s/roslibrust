@@ -1,6 +1,9 @@
 //! This module is concerned with direct communication over xmlprc between the master
 
+use std::net::TcpListener;
+
 use log::*;
+use tokio::net::ToSocketAddrs;
 
 #[derive(thiserror::Error, Debug)]
 pub enum RosMasterError {
@@ -10,6 +13,8 @@ pub enum RosMasterError {
     ServerCommunicationFailure(#[from] reqwest::Error),
     #[error("Ros Master Reported an Internal Error: {0}")]
     MasterError(String),
+    #[error("Failure creating node xmlrpc server: {0}")]
+    HostIoError(#[from] std::io::Error),
 }
 
 /// A client that exposes the API hosted by the [rosmaster](http://wiki.ros.org/ROS/Master_API)
@@ -17,10 +22,13 @@ pub struct MasterClient {
     client: reqwest::Client,
     // Address at which the rosmaster should be found
     master_uri: String,
+    // TODO this should become auto-generated via ROS_IP / ROS_HOSTNAME and having OS give us a port
     // Address at which this node should be reached
     client_uri: String,
     // An id for this node
     id: String,
+    // Handle for our node server's task
+    server_handle: tokio::task::JoinHandle<Result<(),RosMasterError>>,
 }
 
 // TODO: This is failing to decode system state...
@@ -44,13 +52,20 @@ impl MasterClient {
         client_uri: impl Into<String>,
         id: impl Into<String>,
     ) -> Result<MasterClient, RosMasterError> {
+        let client_uri: String = client_uri.into();
+        let client_uri_copy = client_uri.clone();
+        let server_handle = tokio::spawn(async {
+           NodeServer::run(client_uri).await
+        });
+
         // Create a client, but we want to verify a valid connection before handing control back,
         // so we make an initial request and confirm with works before returning
         let client = MasterClient {
             client: reqwest::Client::new(),
             master_uri: master_uri.into(),
-            client_uri: client_uri.into(),
+            client_uri: client_uri_copy,
             id: id.into(),
+            server_handle,
         };
 
         match client.get_uri().await {
@@ -260,6 +275,26 @@ impl MasterClient {
     //     let body = serde_xmlrpc::request_to_string("getSystemState", vec![self.id.clone().into()])?;
     //     self.post(body).await
     // }
+}
+
+/// Hosts an xmlrpc API that rosmaster will call to notify of new subscribers / publishers etc.
+/// Is also called by other ros nodes to initiate point to point connections.
+/// Note: ROS uses "master/slave" terminology here. We continue to refer to the ROS central server as the ROS master,
+/// but are intentionally using "NodeServer" in place of where ROS says "Slave API"
+struct NodeServer {
+    socket: tokio::net::TcpListener,
+}
+
+impl NodeServer {
+    // Simultaneously creates the server and starts receiving
+    // This task returning indicates the server has stopped running
+    async fn run(host_addr: impl ToSocketAddrs) -> Result<(), RosMasterError> {
+        // TODO massaging around here with env vars and ports..
+        let socket = tokio::net::TcpListener::bind(host_addr).await?;
+        loop {
+            // Do server stuff
+        }
+    }
 }
 
 #[cfg(feature = "ros1_test")]
