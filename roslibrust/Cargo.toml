@@ -21,10 +21,8 @@ lazy_static = "1.4"
 log = "0.4"
 proc-macro2 = "1.0"
 rand = "0.8"
-reqwest = { version = "0.11", optional = true } # Only used with native ros1
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_xmlrpc = { version = "0.1.2", optional = true } # Only used with native ros1 # Only used with native ros1 # Only used with native ros1
 smart-default = "0.6"
 thiserror = "1.0"
 tokio = { version = "1.20", features = ["net", "macros", "time", "rt-multi-thread"] }
@@ -32,6 +30,9 @@ tokio-tungstenite = { version = "0.17" }
 uuid = { version = "1.1", features = ["v4"] }
 roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro", version = "0.7.0" }
 roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.7.0" }
+reqwest = { version = "0.11", optional = true } # Only used with native ros1
+serde_xmlrpc = { version = "0.1.2", optional = true } # Only used with native ros1
+hyper = { version = "0.14", features = ["server"], optional = true } # Only used with native ros1
 
 [dev-dependencies]
 simple_logger = "2.1.0"
@@ -51,7 +52,7 @@ ros2_test = ["running_bridge"]
 # Provides access to experimental abstrac trait topic_provider
 topic_provider = []
 # Provides a ros1 xmlrpc / TCPROS client
-ros1 = ["dep:serde_xmlrpc", "dep:reqwest"]
+ros1 = ["dep:serde_xmlrpc", "dep:reqwest", "dep:hyper"]
 
 
 [package.metadata.docs.rs]

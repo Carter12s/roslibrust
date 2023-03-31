@@ -1069,6 +1069,7 @@ dependencies = [
  "deadqueue",
  "futures",
  "futures-util",
+ "hyper",
  "lazy_static",
  "log",
  "proc-macro2",

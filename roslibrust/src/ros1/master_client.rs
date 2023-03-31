@@ -1,7 +1,8 @@
 //! This module is concerned with direct communication over xmlprc between the master
 
-use std::net::TcpListener;
+use std::{convert::Infallible, net::TcpListener};
 
+use hyper::{Body, Response};
 use log::*;
 use tokio::net::ToSocketAddrs;
 
@@ -13,8 +14,8 @@ pub enum RosMasterError {
     ServerCommunicationFailure(#[from] reqwest::Error),
     #[error("Ros Master Reported an Internal Error: {0}")]
     MasterError(String),
-    #[error("Failure creating node xmlrpc server: {0}")]
-    HostIoError(#[from] std::io::Error),
+    #[error("Failure running xmlrpc server: {0}")]
+    HostIoError(#[from] hyper::Error),
 }
 
 /// A client that exposes the API hosted by the [rosmaster](http://wiki.ros.org/ROS/Master_API)
@@ -28,7 +29,7 @@ pub struct MasterClient {
     // An id for this node
     id: String,
     // Handle for our node server's task
-    server_handle: tokio::task::JoinHandle<Result<(),RosMasterError>>,
+    server_handle: tokio::task::JoinHandle<Result<(), RosMasterError>>,
 }
 
 // TODO: This is failing to decode system state...
@@ -54,9 +55,7 @@ impl MasterClient {
     ) -> Result<MasterClient, RosMasterError> {
         let client_uri: String = client_uri.into();
         let client_uri_copy = client_uri.clone();
-        let server_handle = tokio::spawn(async {
-           NodeServer::run(client_uri).await
-        });
+        let server_handle = tokio::spawn(async { NodeServer::run(client_uri).await });
 
         // Create a client, but we want to verify a valid connection before handing control back,
         // so we make an initial request and confirm with works before returning
@@ -288,12 +287,25 @@ struct NodeServer {
 impl NodeServer {
     // Simultaneously creates the server and starts receiving
     // This task returning indicates the server has stopped running
-    async fn run(host_addr: impl ToSocketAddrs) -> Result<(), RosMasterError> {
+    async fn run(host_addr: impl Into<std::net::SocketAddr> + std::fmt::Debug) -> Result<(), RosMasterError> {
         // TODO massaging around here with env vars and ports..
-        let socket = tokio::net::TcpListener::bind(host_addr).await?;
-        loop {
-            // Do server stuff
-        }
+        // Correct behavior should be:
+        // If ROS_IP is set, use that
+        // If ROS_HOSTNAME is set, use that
+        // else use the hostname reported by OS
+
+        let make_svc = hyper::service::make_service_fn(|connection| {
+            async { Ok::<_, Infallible>(hyper::service::service_fn(NodeServer::respond))}
+        });
+
+        let server = hyper::server::Server::bind(&host_addr.into()).serve(make_svc);
+        debug!("xmlrpc server started");
+        server.await?;
+        Ok(())
+    }
+
+    async fn respond(body: hyper::Request<Body>) -> Result<Response<Body>, Infallible> {
+        Ok(Response::new("Hello World".into()))
     }
 }
 
