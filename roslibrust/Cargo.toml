@@ -33,6 +33,7 @@ roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.7.0" }
 reqwest = { version = "0.11", optional = true } # Only used with native ros1
 serde_xmlrpc = { version = "0.1.2", optional = true } # Only used with native ros1
 hyper = { version = "0.14", features = ["server"], optional = true } # Only used with native ros1
+gethostname = { version = "0.4", optional = true } # Only used with native ros1
 
 [dev-dependencies]
 simple_logger = "2.1.0"
@@ -52,7 +53,7 @@ ros2_test = ["running_bridge"]
 # Provides access to experimental abstrac trait topic_provider
 topic_provider = []
 # Provides a ros1 xmlrpc / TCPROS client
-ros1 = ["dep:serde_xmlrpc", "dep:reqwest", "dep:hyper"]
+ros1 = ["dep:serde_xmlrpc", "dep:reqwest", "dep:hyper", "dep:gethostname"]
 
 
 [package.metadata.docs.rs]

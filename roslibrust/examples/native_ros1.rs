@@ -10,12 +10,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .without_timestamps() // required for running wsl2
         .init()
         .unwrap();
-    let client = roslibrust::MasterClient::new(
-        "http://localhost:11311",
-        "http://localhost:11312",
-        "/native_ros1_test",
-    )
-    .await?;
+    let client =
+        roslibrust::MasterClient::new("http://localhost:11311", "/native_ros1_test").await?;
     println!("Got master uri: {}", client.get_uri().await?);
     println!("Got topic types: {:?}", client.get_topic_types().await?);
     println!(
@@ -64,6 +60,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         "Unregister publisher: {:?}",
         client.unregister_publisher("/my_topic").await?
     );
+
+
+    // Testing our server is up
+    client.register_publisher("/rosout", "rosgraph_msgs/Log").await?;
+
+    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
     // Work to do:
     // * [DONE] Take the ros MasterApi and create valid in/out types for each api call

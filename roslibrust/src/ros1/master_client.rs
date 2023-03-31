@@ -1,10 +1,12 @@
 //! This module is concerned with direct communication over xmlprc between the master
 
-use std::{convert::Infallible, net::TcpListener};
+use std::{
+    convert::Infallible,
+    net::{IpAddr, Ipv4Addr, SocketAddr, ToSocketAddrs},
+};
 
 use hyper::{Body, Response};
 use log::*;
-use tokio::net::ToSocketAddrs;
 
 #[derive(thiserror::Error, Debug)]
 pub enum RosMasterError {
@@ -16,6 +18,8 @@ pub enum RosMasterError {
     MasterError(String),
     #[error("Failure running xmlrpc server: {0}")]
     HostIoError(#[from] hyper::Error),
+    #[error("Failed to determine a valid ip address on which to host the nodes xmlrpc server, check that one of ROS_IP, ROS_HOSTNAME or the computer's hostname resolve to a valid Ipv4 address {0}")]
+    HostIpResolutionFailure(String),
 }
 
 /// A client that exposes the API hosted by the [rosmaster](http://wiki.ros.org/ROS/Master_API)
@@ -29,7 +33,7 @@ pub struct MasterClient {
     // An id for this node
     id: String,
     // Handle for our node server's task
-    server_handle: tokio::task::JoinHandle<Result<(), RosMasterError>>,
+    server: tokio::task::JoinHandle<()>,
 }
 
 // TODO: This is failing to decode system state...
@@ -46,31 +50,82 @@ pub struct MasterClient {
 impl MasterClient {
     /// Constructs a new client for communicating with a ros master
     /// - master_uri: Expects a fully resolved uri for the master e.g. "http://localhost:11311"
-    /// - client_uri: Expects a fully resolved name where this client should host its xmlrpc at
     /// - id: A client_id to use when communicating with the master, expected to be a valid ros name e.g. "/my_node"
     pub async fn new(
         master_uri: impl Into<String>,
-        client_uri: impl Into<String>,
         id: impl Into<String>,
     ) -> Result<MasterClient, RosMasterError> {
-        let client_uri: String = client_uri.into();
-        let client_uri_copy = client_uri.clone();
-        let server_handle = tokio::spawn(async { NodeServer::run(client_uri).await });
+        // Follow ROS rules and determine our IP and hostname
+        let (addr, hostname) = Self::determine_addr()?;
+
+        // Create our server and bind our socket so we know our port and can determine our local URI
+        let (server, port) = NodeServer::new(addr);
+
+        let client_uri = format!("http://{hostname}:{port}");
 
         // Create a client, but we want to verify a valid connection before handing control back,
         // so we make an initial request and confirm with works before returning
         let client = MasterClient {
             client: reqwest::Client::new(),
             master_uri: master_uri.into(),
-            client_uri: client_uri_copy,
+            client_uri,
             id: id.into(),
-            server_handle,
+            server,
         };
 
         match client.get_uri().await {
             Ok(_) => Ok(client),
             Err(e) => Err(e),
         }
+    }
+
+    /// Given a the name of a host use's std::net::ToSocketAddrs to perform a DNS lookup and return the resulting IP address.
+    /// This function is intended to be used to determine the correct IP host the socket for the xmlrpc server on.
+    fn hostname_to_ipv4(name: &str) -> Result<Ipv4Addr, RosMasterError> {
+        let mut i = (name, 0).to_socket_addrs().map_err(|e| {
+            RosMasterError::HostIpResolutionFailure(format!(
+                "Failure while attempting to lookup ROS_HOSTNAME: {e:?}"
+            ))
+        })?;
+        if let Some(addr) = i.next() {
+            match addr.ip() {
+                IpAddr::V4(ip) => Ok(ip),
+                IpAddr::V6(ip) => {
+                    Err(RosMasterError::HostIpResolutionFailure(format!("ROS_HOSTNAME resolved to an IPv6 address which is not support by ROS/roslibrust: {ip:?}")))
+                }
+            }
+        } else {
+            Err(RosMasterError::HostIpResolutionFailure(format!(
+                "ROS_HOSTNAME did not resolve any address: {name:?}"
+            )))
+        }
+    }
+
+    /// Following ROS's idiomatic address rules uses ROS_HOSTNAME and ROS_IP to determine the address that server should be hosted at.
+    /// Returns both the resolved IpAddress of the host (used for actually opening the socket), and the String "hostname" which should
+    /// be used in the URI.
+    fn determine_addr() -> Result<(Ipv4Addr, String), RosMasterError> {
+        // If ROS_IP is set that trumps anything else
+        if let Ok(ip_str) = std::env::var("ROS_IP") {
+            let ip = ip_str.parse().map_err(|e| {
+                RosMasterError::HostIpResolutionFailure(format!(
+                    "ROS_IP environment variable did not parse to a valid IpAddr::V4: {e:?}"
+                ))
+            })?;
+            return Ok((ip, ip_str));
+        }
+        // If ROS_HOSTNAME is set that is next highest precedent
+        if let Ok(name) = std::env::var("ROS_HOSTNAME") {
+            let ip = Self::hostname_to_ipv4(&name)?;
+            return Ok((ip, name));
+        }
+        // If neither env var is set, use the computers "hostname"
+        let name = gethostname::gethostname();
+        let name = name.into_string().map_err(|e| {
+            RosMasterError::HostIpResolutionFailure(format!("This host's hostname is a string that cannot be validly converted into a Rust type, and therefore we cannot convert it into an IpAddrv4: {e:?}"))
+        })?;
+        let ip = Self::hostname_to_ipv4(&name)?;
+        return Ok((ip, name));
     }
 
     async fn post<T: serde::de::DeserializeOwned + std::fmt::Debug>(
@@ -280,31 +335,42 @@ impl MasterClient {
 /// Is also called by other ros nodes to initiate point to point connections.
 /// Note: ROS uses "master/slave" terminology here. We continue to refer to the ROS central server as the ROS master,
 /// but are intentionally using "NodeServer" in place of where ROS says "Slave API"
-struct NodeServer {
-    socket: tokio::net::TcpListener,
-}
+struct NodeServer {}
 
 impl NodeServer {
-    // Simultaneously creates the server and starts receiving
-    // This task returning indicates the server has stopped running
-    async fn run(host_addr: impl Into<std::net::SocketAddr> + std::fmt::Debug) -> Result<(), RosMasterError> {
-        // TODO massaging around here with env vars and ports..
-        // Correct behavior should be:
-        // If ROS_IP is set, use that
-        // If ROS_HOSTNAME is set, use that
-        // else use the hostname reported by OS
+    // Creates a new node server and starts it running
+    // Returns a join handle used to indicate if the server stops running, and the port the server bound to
+    // TODO this will need to take in some kind of async handle back to nodes data
+    fn new(host_addr: Ipv4Addr) -> (tokio::task::JoinHandle<()>, u16) {
+        let host_addr = SocketAddr::from((host_addr, 0));
 
         let make_svc = hyper::service::make_service_fn(|connection| {
-            async { Ok::<_, Infallible>(hyper::service::service_fn(NodeServer::respond))}
+            warn!("New node xmlrpc connection {connection:?}");
+            async { Ok::<_, Infallible>(hyper::service::service_fn(NodeServer::respond)) }
         });
 
         let server = hyper::server::Server::bind(&host_addr.into()).serve(make_svc);
-        debug!("xmlrpc server started");
-        server.await?;
-        Ok(())
+        let addr = server.local_addr();
+
+        let handle = tokio::spawn(async move {
+            let x = server.await;
+            error!("Node's xmlrpc server was stopped unexpectedly: {x:?}");
+        });
+        (handle, addr.port())
     }
 
     async fn respond(body: hyper::Request<Body>) -> Result<Response<Body>, Infallible> {
+        let body = match hyper::body::to_bytes(body).await {
+            Ok(bytes) => bytes,
+            Err(e) => {
+                warn!("Failed to get bytes from http request on xmlrpc server, ignoring: {e:?}");
+                return Ok(Response::new("".into()));
+            }
+        };
+
+        // TODO need to parse request and actually do the things...
+
+        info!("GOT REQUEST: {body:?}");
         Ok(Response::new("Hello World".into()))
     }
 }
@@ -317,12 +383,7 @@ mod test {
 
     // TODO may be a bug here in testing due to overlapping clients...
     async fn test_client() -> Result<MasterClient, RosMasterError> {
-        MasterClient::new(
-            "http://localhost:11311",
-            "http://localhost:11312",
-            "/native_ros1_test",
-        )
-        .await
+        MasterClient::new("http://localhost:11311", "/native_ros1_test").await
     }
 
     // Testing MasterClient's get_uri function returns a non-empty string
