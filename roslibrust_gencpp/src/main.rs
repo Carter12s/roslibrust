@@ -51,7 +51,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let extension = args.msg_path.extension().unwrap().to_str().unwrap();
     match extension {
         "msg" => {
-            let generated_source = roslibrust_gencpp::generate_message(&args.msg_path, &opts)?;
+            let generated_source = roslibrust_gencpp::generate_messages(&[&args.msg_path], &opts)?;
+            let generated_source = generated_source.get(0).unwrap();
             let mut out_file_path = args.output;
             out_file_path.push(format!("{short_name}.h"));
 
@@ -59,7 +60,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             out_file.write_all(generated_source.as_bytes())?;
         }
         "srv" => {
-            let generated_source = roslibrust_gencpp::generate_service(&args.msg_path, &opts)?;
+            let generated_source = roslibrust_gencpp::generate_services(&[&args.msg_path], &opts)?;
+            let generated_source = generated_source.get(0).unwrap();
             let mut srv_out_path = args.output.clone();
             srv_out_path.push(format!("{short_name}.h"));
             let mut srv_request_out_path = args.output.clone();
@@ -118,7 +120,8 @@ mod test {
             }],
         };
         let generated_source =
-            roslibrust_gencpp::generate_message(&PathBuf::from(HEADER_MSG_PATH), &options).unwrap();
+            roslibrust_gencpp::generate_messages(&[&PathBuf::from(HEADER_MSG_PATH)], &options)
+                .unwrap();
 
         let current_source = std::fs::read_to_string(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -126,7 +129,7 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source),
+            remove_whitespace(&generated_source[0]),
             remove_whitespace(&current_source)
         );
     }
@@ -150,9 +153,11 @@ mod test {
                 },
             ],
         };
-        let generated_source =
-            roslibrust_gencpp::generate_message(&PathBuf::from(BATTERY_STATE_MSG_PATH), &options)
-                .unwrap();
+        let generated_source = roslibrust_gencpp::generate_messages(
+            &[&PathBuf::from(BATTERY_STATE_MSG_PATH)],
+            &options,
+        )
+        .unwrap();
 
         let current_source = std::fs::read_to_string(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -160,7 +165,7 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source),
+            remove_whitespace(&generated_source[0]),
             remove_whitespace(&current_source)
         );
     }
@@ -175,7 +180,7 @@ mod test {
             }],
         };
         let generated_source =
-            roslibrust_gencpp::generate_service(&PathBuf::from(TRIGGER_SRV_PATH), &options)
+            roslibrust_gencpp::generate_services(&[&PathBuf::from(TRIGGER_SRV_PATH)], &options)
                 .unwrap();
 
         let current_source = std::fs::read_to_string(concat!(
@@ -184,7 +189,7 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source.srv_header),
+            remove_whitespace(&generated_source[0].srv_header),
             remove_whitespace(&current_source)
         );
     }

@@ -41,61 +41,75 @@ pub struct ServiceGenOutput {
     pub srv_header: String,
 }
 
-pub fn generate_message(
-    msg_path: &Path,
+pub fn generate_messages(
+    msg_paths: &[&Path],
     opts: &MessageGenOpts,
-) -> Result<String, minijinja::Error> {
+) -> Result<Vec<String>, minijinja::Error> {
     let (messages, services) =
         roslibrust_codegen::find_and_parse_ros_messages(opts.get_search_paths())
             .unwrap_or_else(|_| panic!("Unable to find ROS messages"));
     let (messages, _) = roslibrust_codegen::resolve_dependency_graph(messages, services).unwrap();
 
     let env = prepare_environment();
-    let message_name = msg_path.file_stem().unwrap().to_str().unwrap().to_owned();
-    match messages
+    let message_names: Vec<_> = msg_paths
         .iter()
-        .find(|msg| msg.get_short_name() == message_name && msg.get_package_name() == opts.package)
-    {
-        Some(msg) => fill_message_template(&env.get_template("msg.h").unwrap(), msg),
-        None => Err(minijinja::Error::new(
-            minijinja::ErrorKind::UndefinedError,
-            "Message not found in search paths",
-        )),
-    }
+        .map(|path| path.file_stem().unwrap().to_str().unwrap().to_owned())
+        .collect();
+
+    message_names
+        .iter()
+        .map(|message_name| {
+            match messages.iter().find(|msg| {
+                msg.get_short_name() == *message_name && msg.get_package_name() == opts.package
+            }) {
+                Some(msg) => fill_message_template(&env.get_template("msg.h").unwrap(), msg),
+                None => Err(minijinja::Error::new(
+                    minijinja::ErrorKind::UndefinedError,
+                    "Message not found in search paths",
+                )),
+            }
+        })
+        .collect()
 }
 
-pub fn generate_service(
-    msg_path: &Path,
+pub fn generate_services(
+    msg_paths: &[&Path],
     opts: &MessageGenOpts,
-) -> Result<ServiceGenOutput, minijinja::Error> {
+) -> Result<Vec<ServiceGenOutput>, minijinja::Error> {
     let (messages, services) =
         roslibrust_codegen::find_and_parse_ros_messages(opts.get_search_paths())
             .expect("Unable to find ROS messages");
     let (_, services) = roslibrust_codegen::resolve_dependency_graph(messages, services).unwrap();
 
     let env = prepare_environment();
-    let service_name = msg_path.file_stem().unwrap().to_str().unwrap().to_owned();
-    match services
+
+    msg_paths
         .iter()
-        .find(|srv| srv.get_short_name() == service_name && srv.get_package_name() == opts.package)
-    {
-        Some(srv) => {
-            let request_msg_header =
-                fill_message_template(&env.get_template("msg.h").unwrap(), srv.request())?;
-            let response_msg_header =
-                fill_message_template(&env.get_template("msg.h").unwrap(), srv.response())?;
-            let srv_header = fill_service_template(&env.get_template("srv.h").unwrap(), srv)?;
-            Ok(ServiceGenOutput {
-                request_msg_header,
-                response_msg_header,
-                srv_header,
-            })
-        }
-        None => Err(minijinja::Error::new(
-            minijinja::ErrorKind::UndefinedError,
-            "Service not found in search paths",
-        )),
-    }
+        .map(|path| {
+            let service_name = path.file_stem().unwrap().to_str().unwrap().to_owned();
+            match services.iter().find(|srv| {
+                srv.get_short_name() == service_name && srv.get_package_name() == opts.package
+            }) {
+                Some(srv) => {
+                    let request_msg_header =
+                        fill_message_template(&env.get_template("msg.h").unwrap(), srv.request())?;
+                    let response_msg_header =
+                        fill_message_template(&env.get_template("msg.h").unwrap(), srv.response())?;
+                    let srv_header =
+                        fill_service_template(&env.get_template("srv.h").unwrap(), srv)?;
+                    Ok(ServiceGenOutput {
+                        request_msg_header,
+                        response_msg_header,
+                        srv_header,
+                    })
+                }
+                None => Err(minijinja::Error::new(
+                    minijinja::ErrorKind::UndefinedError,
+                    "Service not found in search paths",
+                )),
+            }
+        })
+        .collect()
 }
 
 fn fill_message_template(
