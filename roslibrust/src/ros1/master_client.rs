@@ -311,11 +311,6 @@ impl NodeServer {
         addr.port()
     }
 
-    /// Actually starts the server running
-    pub(crate) fn run(self, handle: NodeHandle) {
-
-    }
-
     async fn respond(
         handle: NodeHandle,
         body: hyper::Request<Body>,
@@ -401,7 +396,7 @@ mod test {
 
     // TODO may be a bug here in testing due to overlapping clients...
     async fn test_client() -> Result<MasterClient, RosMasterError> {
-        MasterClient::new("http://localhost:11311", "/native_ros1_test").await
+        MasterClient::new("http://localhost:11311", "http://localhost:11312", "/native_ros1_test").await
     }
 
     // Testing MasterClient's get_uri function returns a non-empty string
