@@ -82,7 +82,8 @@ type Callback = Box<dyn Fn(&str) + Send + Sync>;
 // Not quite sure what type we want to erase to?
 // I can make a good argument for &str because that should be generic even if we switch
 // backends - Carter 2022-10-6
-type ServiceCallback = Box<
+// TODO move out of rosbridge and into "common"
+pub(crate) type ServiceCallback = Box<
     dyn Fn(&str) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>
         + Send
         + Sync,
@@ -123,9 +124,11 @@ type MessageQueue<T> = deadqueue::limited::Queue<T>;
 // TODO queue size should be configurable for subscribers
 const QUEUE_SIZE: usize = 1_000;
 
+
+// TODO move out of rosbridge and into common
 /// Internal tracking structure used to maintain information about each subscription our client has
 /// with rosbridge.
-struct Subscription {
+pub(crate) struct Subscription {
     /// Map of "subscriber id" -> callback
     /// Subscriber ids are randomly generated
     /// There will be one callback per subscriber to the topic.
@@ -135,7 +138,8 @@ struct Subscription {
     pub topic_type: String,
 }
 
-struct PublisherHandle {
+// TODO move out of rosbridge and into common
+pub(crate) struct PublisherHandle {
     #[allow(dead_code)]
     topic: String,
     #[allow(dead_code)]
