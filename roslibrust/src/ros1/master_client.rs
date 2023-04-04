@@ -300,7 +300,8 @@ impl NodeServer {
             }
         });
 
-        let server = hyper::server::Server::bind(&host_addr.into()).serve(make_svc);
+        let server = hyper::server::Server::bind(&host_addr.into());
+        let server = server.serve(make_svc);
         let addr = server.local_addr();
 
         tokio::spawn(async move {
@@ -308,6 +309,11 @@ impl NodeServer {
             error!("Node's xmlrpc server was stopped unexpectedly: {x:?}");
         });
         addr.port()
+    }
+
+    /// Actually starts the server running
+    pub(crate) fn run(self, handle: NodeHandle) {
+
     }
 
     async fn respond(

@@ -3,7 +3,7 @@
 
 use std::{
     net::{IpAddr, Ipv4Addr, ToSocketAddrs},
-    sync::{Arc, RwLock},
+    sync::{Arc},
 };
 
 use dashmap::DashMap;
@@ -15,18 +15,29 @@ use crate::{
 /// Represents a single "real" node, typically only one of these is expected per process
 /// but nothing should specifically prevent that.
 pub struct Node {
+    client: Option<MasterClient>,
     publishers: DashMap<String, PublisherHandle>,
     subscriptions: DashMap<String, Subscription>,
     services: DashMap<String, ServiceCallback>,
 }
 
 impl Node {
-    async fn new() -> Result<Node, Box<dyn std::error::Error>> {
+    // TODO better error
+    async fn new() -> Result<Node, Box<dyn std::error::Error + Send + Sync>> {
+        // We have an initialization loop, because we don't have all the information we
+        // need to create our client until we spawn our server and actually bind our
+        // local TCP port, but our server needs a NodeHandle...
+        // So I'm breaking RAII and assigning client after construction.
         Ok(Node {
+            client: None, 
             publishers: DashMap::new(),
             subscriptions: DashMap::new(),
             services: DashMap::new(),
         })
+    }
+
+    fn set_client(&mut self, client: MasterClient) {
+        self.client = Some(client);
     }
 }
 
@@ -34,21 +45,21 @@ impl Node {
 /// This class provides the user facing API for interacting with ROS.
 #[derive(Clone)]
 pub struct NodeHandle {
-    pub(crate) inner: Arc<RwLock<Node>>, // TODO we may be able to get away with no RwLock here?
+    pub(crate) inner: Arc<tokio::sync::RwLock<Node>>, // TODO we may be able to get away with no RwLock here?
 }
 
 impl NodeHandle {
-    // TODO builder, async, result
+    // TODO builder, async, result, better error type
     /// Creates a new node connect and returns a handle to it
     /// It is idiomatic to call this once per process and treat the created node as singleton.
     /// The returned handle can be freely clone'd to create additional handles without creating additional connections.
     pub async fn new(
         master_uri: &str,
         name: &str,
-    ) -> Result<NodeHandle, Box<dyn std::error::Error>> {
+    ) -> Result<NodeHandle, Box<dyn std::error::Error + Send + Sync>> {
         // Create the central "Node" data record
         let nh = NodeHandle {
-            inner: Arc::new(RwLock::new(Node::new().await?)),
+            inner: Arc::new(tokio::sync::RwLock::new(Node::new().await?)),
         };
 
         // Follow ROS rules and determine our IP and hostname
@@ -59,6 +70,7 @@ impl NodeHandle {
 
         let client_uri = format!("http://{hostname}:{port}");
         let client = MasterClient::new(master_uri, client_uri, name).await?;
+        nh.inner.write().await.set_client(client);
 
         // TODO spawn our TcpManager here for TCPROS
 
