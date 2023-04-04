@@ -5,7 +5,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr, ToSocketAddrs},
 };
 
-use hyper::{Body, Response};
+use hyper::{Body, Response, StatusCode};
 use log::*;
 
 #[derive(thiserror::Error, Debug)]
@@ -101,6 +101,7 @@ impl MasterClient {
         }
     }
 
+    // TODO at the end of the day I'd like to offer a builder pattern for configuration that allow manual setting of this or "ros idiomatic" behavior - Carter
     /// Following ROS's idiomatic address rules uses ROS_HOSTNAME and ROS_IP to determine the address that server should be hosted at.
     /// Returns both the resolved IpAddress of the host (used for actually opening the socket), and the String "hostname" which should
     /// be used in the URI.
@@ -225,7 +226,7 @@ impl MasterClient {
         self.post(body).await
     }
 
-    /// Hits the master's xmlrpc endpoint "unreisterSubscriber", returns true if the subscriber was registered
+    /// Hits the master's xmlrpc endpoint "unregisterSubscriber", returns true if the subscriber was registered
     /// for the topic and false if the server reported this operation as a no-op.
     pub async fn unregister_subscriber(
         &self,
@@ -345,7 +346,7 @@ impl NodeServer {
         let host_addr = SocketAddr::from((host_addr, 0));
 
         let make_svc = hyper::service::make_service_fn(|connection| {
-            warn!("New node xmlrpc connection {connection:?}");
+            debug!("New node xmlrpc connection {connection:?}");
             async { Ok::<_, Infallible>(hyper::service::service_fn(NodeServer::respond)) }
         });
 
@@ -363,13 +364,71 @@ impl NodeServer {
         let body = match hyper::body::to_bytes(body).await {
             Ok(bytes) => bytes,
             Err(e) => {
-                warn!("Failed to get bytes from http request on xmlrpc server, ignoring: {e:?}");
-                return Ok(Response::new("".into()));
+                let error_str = format!(
+                    "Failed to get bytes from http request on xmlrpc server, ignoring: {e:?}"
+                );
+                warn!("{error_str}");
+                return Ok(Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(Body::from(error_str))
+                    .unwrap());
             }
         };
-
-        // TODO need to parse request and actually do the things...
-
+        let body = match String::from_utf8(body.to_vec()) {
+            Ok(s) => s,
+            Err(e) => {
+                let error_str = format!("Failed to parse http body as valid utf8 string: {e:?}");
+                warn!("{error_str}");
+                return Ok(Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(Body::from(error_str))
+                    .unwrap());
+            }
+        };
+        let (method_name, args) = match serde_xmlrpc::request_from_str(&body) {
+            Ok(x) => x,
+            Err(e) => {
+                let error_str =
+                    format!("Failed to parse valid xmlrpc method request out of body: {e:?}");
+                warn!("{error_str}");
+                return Ok(Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(Body::from(error_str))
+                    .unwrap());
+            }
+        };
+        match method_name.as_str() {
+            "getMasterUri" => {
+                debug!("getMasterUri called");
+            }
+            "getPid" => {
+                debug!("getPid called");
+            }
+            "getSubscriptions" => {
+                debug!("getSubscriptions called")
+            }
+            "getPublications" => {
+                debug!("getPublications called");
+            }
+            "paramUpdate" => {
+                debug!("paramUpdate called");
+            }
+            "publisherUpdate" => {
+                debug!("publisherUpdate called");
+            }
+            "requestTopic" => {
+                debug!("requestTopic called");
+            }
+            // getBusStats, getBusInfo <= have decided not to impl these
+            _ => {
+                let error_str = format!("Client attempted call function {method_name} which is not implemented by the Node's xmlrpc server.");
+                warn!("{error_str}");
+                return Ok(Response::builder()
+                    .status(StatusCode::NOT_IMPLEMENTED)
+                    .body(Body::from(error_str))
+                    .unwrap());
+            }
+        };
         info!("GOT REQUEST: {body:?}");
         Ok(Response::new("Hello World".into()))
     }

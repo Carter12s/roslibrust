@@ -61,9 +61,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         client.unregister_publisher("/my_topic").await?
     );
 
-
     // Testing our server is up
-    client.register_publisher("/rosout", "rosgraph_msgs/Log").await?;
+    client
+        .register_publisher("/rosout", "rosgraph_msgs/Log")
+        .await?;
 
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
