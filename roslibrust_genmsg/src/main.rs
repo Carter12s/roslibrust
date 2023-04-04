@@ -1,5 +1,5 @@
 use clap::Parser;
-use roslibrust_gencpp::IncludedNamespace;
+use roslibrust_genmsg::IncludedNamespace;
 use std::{io::Write, path::PathBuf};
 
 #[derive(Parser, Debug)]
@@ -44,14 +44,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let short_name = args.msg_path.file_stem().unwrap().to_str().unwrap();
-    let opts = roslibrust_gencpp::MessageGenOpts {
+    let opts = roslibrust_genmsg::MessageGenOpts {
         package: args.package,
         includes: args.include.unwrap_or_default(),
     };
     let extension = args.msg_path.extension().unwrap().to_str().unwrap();
     match extension {
         "msg" => {
-            let generated_source = roslibrust_gencpp::generate_messages(&[&args.msg_path], &opts)?;
+            let generated_source = roslibrust_genmsg::generate_cpp_messages(&[&args.msg_path], &opts)?;
             let generated_source = generated_source.get(0).unwrap();
             let mut out_file_path = args.output;
             out_file_path.push(format!("{short_name}.h"));
@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             out_file.write_all(generated_source.as_bytes())?;
         }
         "srv" => {
-            let generated_source = roslibrust_gencpp::generate_services(&[&args.msg_path], &opts)?;
+            let generated_source = roslibrust_genmsg::generate_cpp_services(&[&args.msg_path], &opts)?;
             let generated_source = generated_source.get(0).unwrap();
             let mut srv_out_path = args.output.clone();
             srv_out_path.push(format!("{short_name}.h"));
@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod test {
     use const_format::concatcp;
-    use roslibrust_gencpp::{IncludedNamespace, MessageGenOpts};
+    use roslibrust_genmsg::{IncludedNamespace, MessageGenOpts};
     use std::path::PathBuf;
 
     const ROS_1_PATH: &str = concat!(
@@ -105,6 +105,7 @@ mod test {
     const HEADER_MSG_PATH: &str = concatcp!(STD_MSGS_PKG_PATH, "/msg/Header.msg");
     const BATTERY_STATE_MSG_PATH: &str = concatcp!(SENSOR_MSGS_PKG_PATH, "/msg/BatteryState.msg");
     const TRIGGER_SRV_PATH: &str = concatcp!(STD_SRVS_PKG_PATH, "/srv/Trigger.srv");
+    const TRANSFORM_STAMPED_MSG_PATH: &str = concatcp!(GEOMETRY_MSGS_PKG_PATH, "/msg/TransformStamped.msg");
 
     fn remove_whitespace(s: &str) -> String {
         s.split_whitespace().collect()
@@ -120,7 +121,7 @@ mod test {
             }],
         };
         let generated_source =
-            roslibrust_gencpp::generate_messages(&[&PathBuf::from(HEADER_MSG_PATH)], &options)
+            roslibrust_genmsg::generate_cpp_messages(&[&PathBuf::from(HEADER_MSG_PATH)], &options)
                 .unwrap();
 
         let current_source = std::fs::read_to_string(concat!(
@@ -153,7 +154,7 @@ mod test {
                 },
             ],
         };
-        let generated_source = roslibrust_gencpp::generate_messages(
+        let generated_source = roslibrust_genmsg::generate_cpp_messages(
             &[&PathBuf::from(BATTERY_STATE_MSG_PATH)],
             &options,
         )
@@ -180,7 +181,7 @@ mod test {
             }],
         };
         let generated_source =
-            roslibrust_gencpp::generate_services(&[&PathBuf::from(TRIGGER_SRV_PATH)], &options)
+            roslibrust_genmsg::generate_cpp_services(&[&PathBuf::from(TRIGGER_SRV_PATH)], &options)
                 .unwrap();
 
         let current_source = std::fs::read_to_string(concat!(
@@ -190,6 +191,47 @@ mod test {
         .unwrap();
         assert_eq!(
             remove_whitespace(&generated_source[0].srv_header),
+            remove_whitespace(&current_source)
+        );
+    }
+
+    #[test]
+    fn transform_stamped_with_user_template() {
+        let options = MessageGenOpts {
+            package: "geometry_msgs".into(),
+            includes: vec![
+                IncludedNamespace {
+                    package: "std_msgs".into(),
+                    path: STD_MSGS_PKG_PATH.into(),
+                },
+                IncludedNamespace {
+                    package: "geometry_msgs".into(),
+                    path: GEOMETRY_MSGS_PKG_PATH.into(),
+                },
+            ],
+        };
+        let generated_source = roslibrust_genmsg::generate_messages_with_templates(
+            &[&PathBuf::from(TRANSFORM_STAMPED_MSG_PATH)],
+            &options,
+            r#"
+            pub struct {{ spec.short_name }} {
+                {% for field in spec.fields %}
+                {{ field.name }}: {{ field.field_type }},
+                {%- endfor %}        
+            }
+            "#
+        )
+        .unwrap();
+
+        let current_source = r#"
+            pub struct TransformStamped {
+                header: Header,
+                child_frame_id: string,
+                transform: Transform,
+            }
+        "#;
+        assert_eq!(
+            remove_whitespace(&generated_source[0]),
             remove_whitespace(&current_source)
         );
     }

@@ -799,7 +799,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "roslibrust_gencpp"
+name = "roslibrust_genmsg"
 version = "0.1.0"
 dependencies = [
  "clap",

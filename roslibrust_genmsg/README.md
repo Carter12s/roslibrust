@@ -1,4 +1,4 @@
-# roslibrust_gencpp
+# roslibrust_genmsg
 A CLI application and library for generating ROS C++ headers using `roslibrust_codegen` as the backend.
 
 Running the command line application:
