@@ -1,27 +1,10 @@
 use roslibrust_codegen::{ConstantInfo, FieldInfo, MessageFile, ServiceFile};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-lazy_static::lazy_static! {
-    pub static ref ROS_TYPE_TO_CPP_TYPE_MAP: HashMap<&'static str, &'static str> = vec![
-        ("bool", "bool"),
-        ("int8", "int8_t"),
-        ("uint8", "uint8_t"),
-        ("byte", "uint8_t"),
-        ("char", "char"),
-        ("int16", "int16_t"),
-        ("uint16", "uint16_t"),
-        ("int32", "int32_t"),
-        ("uint32", "uint32_t"),
-        ("int64", "int64_t"),
-        ("uint64", "uint64_t"),
-        ("float32", "float"),
-        ("float64", "double"),
-        ("string", "::std::string"),
-        ("time", "::ros::Time"),
-        ("duration", "::ros::Duration"),
-    ].into_iter().collect();
-}
+pub static ROS_TYPENAMES: &[&'static str] = &[
+    "bool", "int8", "uint8", "byte", "char", "int16", "uint16", "int32", "uint32", "int64",
+    "float32", "float64", "string", "time", "duration",
+];
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Field {
@@ -42,7 +25,7 @@ impl From<&FieldInfo> for Field {
 
 impl Field {
     pub fn is_intrinsic_type(&self) -> bool {
-        ROS_TYPE_TO_CPP_TYPE_MAP.contains_key(self.field_type.as_str())
+        ROS_TYPENAMES.contains(&self.field_type.as_str())
     }
 }
 

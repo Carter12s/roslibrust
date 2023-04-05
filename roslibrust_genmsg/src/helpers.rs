@@ -1,5 +1,29 @@
-use crate::spec::{Field, MessageSpecification, ROS_TYPE_TO_CPP_TYPE_MAP};
-use minijinja::value::Value;
+use crate::spec::{Field, MessageSpecification};
+use minijinja::{value::Value, Environment};
+use std::collections::HashMap;
+
+pub fn prepare_environment<'a>(
+    message_template: &'a str,
+    service_template: &'a str,
+    typename_conversion_mapping: HashMap<String, String>,
+) -> Environment<'a> {
+    let mut env = Environment::new();
+    env.add_function("has_header", has_header);
+    env.add_function("is_fixed_length", is_fixed_length);
+    env.add_function("is_intrinsic_type", is_intrinsic_type);
+    env.add_filter("typename_conversion", move |v: Value| {
+        let value = serde_json::to_value(v).unwrap();
+        let ros_type = value.as_str().unwrap();
+        let typename = match typename_conversion_mapping.get(ros_type) {
+            Some(native_type) => native_type.clone(),
+            None => ros_type.to_string(),
+        };
+        Value::from_serializable(&typename)
+    });
+    env.add_template("message", message_template).unwrap();
+    env.add_template("service", service_template).unwrap();
+    env
+}
 
 /// Given a message specification determines if the message has a header
 pub fn has_header(value: Value) -> bool {
@@ -27,17 +51,6 @@ pub fn is_fixed_length(value: Value) -> bool {
     } else {
         false
     }
-}
-
-/// Takes a ROS type as a string and converts it to a C++ type as a string
-pub fn cpp_type(value: Value) -> Value {
-    let value = serde_json::to_value(value).unwrap();
-    let ros_type = value.as_str().unwrap();
-    Value::from_serializable(ROS_TYPE_TO_CPP_TYPE_MAP.get(ros_type).unwrap())
-}
-
-pub fn cpp_literal(value: Value) -> Value {
-    value
 }
 
 pub fn is_intrinsic_type(value: Value) -> bool {

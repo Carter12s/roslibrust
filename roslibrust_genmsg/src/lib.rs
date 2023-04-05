@@ -1,18 +1,14 @@
-use minijinja::{context, Environment, Template};
+use minijinja::{context, Template};
 use roslibrust_codegen::{MessageFile, ServiceFile};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+mod cpp;
 mod helpers;
 mod spec;
 
-use spec::MessageSpecification;
-
-use crate::spec::ServiceSpecification;
-
-const MESSAGE_HEADER_TMPL: &str =
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/msg.h.j2"));
-const SERVICE_HEADER_TMPL: &str =
-    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/srv.h.j2"));
+pub use cpp::{generate_cpp_messages, generate_cpp_services};
+use spec::{MessageSpecification, ServiceSpecification};
 
 #[derive(Clone, Debug)]
 pub struct IncludedNamespace {
@@ -41,25 +37,18 @@ pub struct ServiceGenOutput {
     pub srv_header: String,
 }
 
-pub fn generate_cpp_messages(
-    msg_paths: &[&Path],
-    opts: &MessageGenOpts,
-) -> Result<Vec<String>, minijinja::Error> {
-    generate_messages_with_templates(msg_paths, opts, MESSAGE_HEADER_TMPL)
-}
-
 pub fn generate_messages_with_templates(
     msg_paths: &[&Path],
     opts: &MessageGenOpts,
+    typename_conversion_mapping: HashMap<String, String>,
     msg_template: &str,
-) -> Result<Vec<String>, minijinja::Error> 
-{
+) -> Result<Vec<String>, minijinja::Error> {
     let (messages, services) =
         roslibrust_codegen::find_and_parse_ros_messages(opts.get_search_paths())
-            .unwrap_or_else(|_| panic!("Unable to find ROS messages"));
+            .expect("Unable to find ROS messages");
     let (messages, _) = roslibrust_codegen::resolve_dependency_graph(messages, services).unwrap();
 
-    let env = prepare_environment(msg_template, "");
+    let env = helpers::prepare_environment(msg_template, "", typename_conversion_mapping);
 
     let message_names: Vec<_> = msg_paths
         .iter()
@@ -82,16 +71,10 @@ pub fn generate_messages_with_templates(
         .collect()
 }
 
-pub fn generate_cpp_services(
-    msg_paths: &[&Path],
-    opts: &MessageGenOpts,
-) -> Result<Vec<ServiceGenOutput>, minijinja::Error> {
-    generate_services_with_templates(msg_paths, opts, MESSAGE_HEADER_TMPL, SERVICE_HEADER_TMPL)
-}
-
 pub fn generate_services_with_templates(
     msg_paths: &[&Path],
     opts: &MessageGenOpts,
+    typename_conversion_mapping: HashMap<String, String>,
     msg_template: &str,
     srv_template: &str,
 ) -> Result<Vec<ServiceGenOutput>, minijinja::Error> {
@@ -100,7 +83,7 @@ pub fn generate_services_with_templates(
             .expect("Unable to find ROS messages");
     let (_, services) = roslibrust_codegen::resolve_dependency_graph(messages, services).unwrap();
 
-    let env = prepare_environment(msg_template, srv_template);
+    let env = helpers::prepare_environment(msg_template, srv_template, typename_conversion_mapping);
 
     msg_paths
         .iter()
@@ -153,19 +136,4 @@ fn fill_service_template(
         spec => ServiceSpecification::from(srv_data),
     };
     template.render(&context)
-}
-
-fn prepare_environment<'a>(
-    message_template: &'a str,
-    service_template: &'a str,
-) -> Environment<'a> {
-    let mut env = Environment::new();
-    env.add_function("has_header", helpers::has_header);
-    env.add_function("is_fixed_length", helpers::is_fixed_length);
-    env.add_function("is_intrinsic_type", helpers::is_intrinsic_type);
-    env.add_filter("cpp_type", helpers::cpp_type);
-    env.add_filter("cpp_literal", helpers::cpp_literal);
-    env.add_template("message", message_template).unwrap();
-    env.add_template("service", service_template).unwrap();
-    env
 }

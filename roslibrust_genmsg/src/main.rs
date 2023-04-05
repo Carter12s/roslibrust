@@ -51,7 +51,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let extension = args.msg_path.extension().unwrap().to_str().unwrap();
     match extension {
         "msg" => {
-            let generated_source = roslibrust_genmsg::generate_cpp_messages(&[&args.msg_path], &opts)?;
+            let generated_source =
+                roslibrust_genmsg::generate_cpp_messages(&[&args.msg_path], &opts)?;
             let generated_source = generated_source.get(0).unwrap();
             let mut out_file_path = args.output;
             out_file_path.push(format!("{short_name}.h"));
@@ -60,7 +61,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             out_file.write_all(generated_source.as_bytes())?;
         }
         "srv" => {
-            let generated_source = roslibrust_genmsg::generate_cpp_services(&[&args.msg_path], &opts)?;
+            let generated_source =
+                roslibrust_genmsg::generate_cpp_services(&[&args.msg_path], &opts)?;
             let generated_source = generated_source.get(0).unwrap();
             let mut srv_out_path = args.output.clone();
             srv_out_path.push(format!("{short_name}.h"));
@@ -105,7 +107,8 @@ mod test {
     const HEADER_MSG_PATH: &str = concatcp!(STD_MSGS_PKG_PATH, "/msg/Header.msg");
     const BATTERY_STATE_MSG_PATH: &str = concatcp!(SENSOR_MSGS_PKG_PATH, "/msg/BatteryState.msg");
     const TRIGGER_SRV_PATH: &str = concatcp!(STD_SRVS_PKG_PATH, "/srv/Trigger.srv");
-    const TRANSFORM_STAMPED_MSG_PATH: &str = concatcp!(GEOMETRY_MSGS_PKG_PATH, "/msg/TransformStamped.msg");
+    const TRANSFORM_STAMPED_MSG_PATH: &str =
+        concatcp!(GEOMETRY_MSGS_PKG_PATH, "/msg/TransformStamped.msg");
 
     fn remove_whitespace(s: &str) -> String {
         s.split_whitespace().collect()
@@ -210,23 +213,26 @@ mod test {
                 },
             ],
         };
+        let mapping =
+            std::collections::HashMap::from([("string".to_owned(), "NativeString".to_owned())]);
         let generated_source = roslibrust_genmsg::generate_messages_with_templates(
             &[&PathBuf::from(TRANSFORM_STAMPED_MSG_PATH)],
             &options,
+            mapping,
             r#"
             pub struct {{ spec.short_name }} {
                 {% for field in spec.fields %}
-                {{ field.name }}: {{ field.field_type }},
+                {{ field.name }}: {{ field.field_type|typename_conversion }},
                 {%- endfor %}        
             }
-            "#
+            "#,
         )
         .unwrap();
 
         let current_source = r#"
             pub struct TransformStamped {
                 header: Header,
-                child_frame_id: string,
+                child_frame_id: NativeString,
                 transform: Transform,
             }
         "#;

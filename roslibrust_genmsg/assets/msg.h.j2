@@ -45,7 +45,7 @@ struct {{ spec.short_name }}_
 
   {% for field in spec.fields %}
   {% if is_intrinsic_type(field) %}
-  typedef {{ field.field_type|cpp_type }} _{{ field.name }}_type;
+  typedef {{ field.field_type|typename_conversion }} _{{ field.name }}_type;
   {%- else %}
   typedef ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator> _{{ field.name }}_type;
   {%- endif %}
@@ -56,9 +56,9 @@ struct {{ spec.short_name }}_
     enum {
     {% for constant in spec.constants %}
       {%- if constant.constant_type in ['byte', 'int8', 'int16', 'int32', 'int64', 'char'] %}
-        {{ constant.name }} = {{ constant.constant_value|cpp_literal }},
+        {{ constant.name }} = {{ constant.constant_value }},
       {%- elif constant.constant_type in ['uint8', 'uint16', 'uint32', 'uint64'] %}
-        {{ constant.name }} = {{ constant.constant_value|cpp_literal }}u,
+        {{ constant.name }} = {{ constant.constant_value }}u,
       {%- endif -%}
     {%- endfor %}
     };
@@ -66,7 +66,7 @@ struct {{ spec.short_name }}_
 
   {% for constant in spec.constants %}
     {%- if constant.constant_type not in ['byte', 'int8', 'int16', 'int32', 'int64', 'char', 'uint8', 'uint16', 'uint32', 'uint64'] %}
-      static const {{ constant.constant_type|cpp_type }} {{ constant.name }};
+      static const {{ constant.constant_type|typename_conversion }} {{ constant.name }};
     {% endif %}
   {%- endfor %}
 
@@ -83,14 +83,14 @@ typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }} const> {{
 // constants requiring out of line definition
 {% for constant in spec.constants %}
   {%- if constant.constant_type not in ['byte', 'int8', 'int16', 'int32', 'int64', 'char', 'uint8', 'uint16', 'uint32', 'uint64'] -%}
-    template<typename ContainerAllocator> const {{ constant.constant_type|cpp_type }}
+    template<typename ContainerAllocator> const {{ constant.constant_type|typename_conversion }}
       {{ spec.short_name }}_<ContainerAllocator>::{{ constant.name }} = 
         {%- if constant.constant_type == 'string' %}
           R"{{ constant.constant_value }}"
         {%- elif constant.constant_type == 'bool' %}
           int({{ constant.constant_value|lower }})
         {%- else %}
-          {{ constant.constant_value|cpp_literal }}
+          {{ constant.constant_value }}
         {% endif -%}
         ;
   {% endif -%}
@@ -245,7 +245,7 @@ struct Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>
     s << indent << "{{ field.name }}: ";
     s << std::endl;
     {% if is_intrinsic_type(field) %}
-    Printer< {{ field.field_type|cpp_type }}>::stream(s, indent + "  ", v.{{ field.name }});
+    Printer< {{ field.field_type|typename_conversion }}>::stream(s, indent + "  ", v.{{ field.name }});
     {% else %}
     Printer< ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>>::stream(s, indent + "  ", v.{{ field.name }});
     {% endif %}
