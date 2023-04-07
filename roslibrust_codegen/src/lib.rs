@@ -379,7 +379,7 @@ pub fn find_and_parse_ros_messages(
         "Codegen is looking in following paths for files: {:?}",
         &search_paths
     );
-    let packages = utils::crawl(search_paths.clone());
+    let packages = utils::crawl(&search_paths);
     // Check for duplicate package names
     let packages = utils::deduplicate_packages(packages);
     if packages.is_empty() {
