@@ -1,4 +1,7 @@
-use std::{net::{Ipv4Addr, SocketAddr}, convert::Infallible};
+use std::{
+    convert::Infallible,
+    net::{Ipv4Addr, SocketAddr},
+};
 
 use hyper::{Body, Response, StatusCode};
 use log::*;
@@ -20,7 +23,7 @@ impl NodeServer {
 
         let make_svc = hyper::service::make_service_fn(move |connection| {
             debug!("New node xmlrpc connection {connection:?}");
-            let handle =  handle.clone(); // Make a unique handle for each connection
+            let handle = handle.clone(); // Make a unique handle for each connection
             async move {
                 Ok::<_, Infallible>(hyper::service::service_fn(move |req| {
                     let handle = handle.clone(); // Each call gets their own copy of the handle too
@@ -82,11 +85,32 @@ impl NodeServer {
         };
         match method_name.as_str() {
             "getMasterUri" => {
-                debug!("getMasterUri called");
+                debug!("getMasterUri called by {args:?}");
                 let lock = handle.inner.read().await;
                 let uri = lock.get_master_uri();
-                serde_xmlrpc::re
-                return Ok(Response::builder().status(StatusCode::OK).body(Body::from()).unwrap());
+                // Ros response is (int, str, str) (Status Code, Error Message, Master URI)
+                // Double vec is because ROS is stupid
+                let response = serde_xmlrpc::Value::Array(vec![0.into(), "".into(), uri.into()]);
+                let body = match serde_xmlrpc::response_to_string(vec![response].into_iter()) {
+                    Ok(b) => {
+                        debug!("Responding: {b}");
+                        b
+                    }
+                    Err(e) => {
+                        let error_str =
+                            format!("Failed to serialize result to valid xmlrpc: {e:?}");
+                        warn!("{error_str}");
+                        // TODO may be better to return an xmlrpc fault instead of an http error here?
+                        return Ok(Response::builder()
+                            .status(StatusCode::INTERNAL_SERVER_ERROR)
+                            .body(Body::from(error_str))
+                            .unwrap());
+                    }
+                };
+                return Ok(Response::builder()
+                    .status(StatusCode::OK)
+                    .body(Body::from(body))
+                    .unwrap());
             }
             "getPid" => {
                 debug!("getPid called");
@@ -118,5 +142,39 @@ impl NodeServer {
         };
         info!("GOT REQUEST: {body:?}");
         Ok(Response::new("Hello World".into()))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{MasterClient, NodeHandle};
+
+    #[tokio::test]
+    async fn test_get_master_uri() {
+        let nh = NodeHandle::new("http://localhost:11311", "/get_master_uri_test_node")
+            .await
+            .unwrap();
+        let client_uri = nh.get_client_uri().await;
+
+        // Manually call the nodes "getMasterUri" and check the response
+        let client = reqwest::Client::new();
+        let body =
+            serde_xmlrpc::request_to_string("getMasterUri", vec!["/get_master_uri_tester".into()])
+                .unwrap();
+        let res = client
+            .post(client_uri)
+            .body(body)
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
+        let (error_code, debug_str, uri): (i8, String, String) =
+            serde_xmlrpc::response_from_str(&res).unwrap();
+
+        assert_eq!(error_code, 0);
+        assert_eq!(debug_str, "");
+        assert_eq!(uri, "http://localhost:11311");
     }
 }

@@ -3,7 +3,7 @@
 
 use std::{
     net::{IpAddr, Ipv4Addr, ToSocketAddrs},
-    sync::{Arc},
+    sync::Arc,
 };
 
 use dashmap::DashMap;
@@ -29,7 +29,7 @@ impl Node {
         // local TCP port, but our server needs a NodeHandle...
         // So I'm breaking RAII and assigning client after construction.
         Ok(Node {
-            client: None, 
+            client: None,
             publishers: DashMap::new(),
             subscriptions: DashMap::new(),
             services: DashMap::new(),
@@ -130,5 +130,17 @@ impl NodeHandle {
                 "ROS_HOSTNAME did not resolve any address: {name:?}"
             )))
         }
+    }
+
+    /// Gets the URI at which this node is hosting its xmlrpc server
+    pub async fn get_client_uri(&self) -> String {
+        self.inner
+            .read()
+            .await
+            .client
+            .as_ref()
+            .unwrap()
+            .client_uri()
+            .to_string()
     }
 }

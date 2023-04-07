@@ -1276,8 +1276,8 @@ dependencies = [
 
 [[package]]
 name = "serde_xmlrpc"
-version = "0.2.0-alpha.2"
-source = "git+https://github.com/belak/serde-xmlrpc.git?branch=main#d623353fd62f4b44a49d8badebbaf56f9981b0a9"
+version = "0.2.0-alpha.3"
+source = "git+https://github.com/belak/serde-xmlrpc.git?branch=main#fbd453e786ffe737e8ab7cf4b65801cf3818bf03"
 dependencies = [
  "anyhow",
  "base64 0.21.0",

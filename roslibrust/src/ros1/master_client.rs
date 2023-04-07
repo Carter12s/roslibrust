@@ -273,6 +273,12 @@ impl MasterClient {
         self.post(body).await
     }
 
+    /// Returns where this client believes its own node's xmlrpc server is hosted at.
+    /// This is simply a getter for the client_uri passed in while constructing this client.
+    pub fn client_uri(&self) -> &str {
+        &self.client_uri
+    }
+
     // TODO not working
     // /// Hits the master's xmlrpc endpoint "getSystemState" and returns the response
     // pub async fn get_system_state(&self) -> Result<SystemState, RosMasterError> {
@@ -280,7 +286,6 @@ impl MasterClient {
     //     self.post(body).await
     // }
 }
-
 
 #[cfg(feature = "ros1_test")]
 #[cfg(test)]
@@ -290,7 +295,12 @@ mod test {
 
     // TODO may be a bug here in testing due to overlapping clients...
     async fn test_client() -> Result<MasterClient, RosMasterError> {
-        MasterClient::new("http://localhost:11311", "http://localhost:11312", "/native_ros1_test").await
+        MasterClient::new(
+            "http://localhost:11311",
+            "http://localhost:11312",
+            "/native_ros1_test",
+        )
+        .await
     }
 
     // Testing MasterClient's get_uri function returns a non-empty string

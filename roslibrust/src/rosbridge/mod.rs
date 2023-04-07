@@ -124,7 +124,6 @@ type MessageQueue<T> = deadqueue::limited::Queue<T>;
 // TODO queue size should be configurable for subscribers
 const QUEUE_SIZE: usize = 1_000;
 
-
 // TODO move out of rosbridge and into common
 /// Internal tracking structure used to maintain information about each subscription our client has
 /// with rosbridge.
