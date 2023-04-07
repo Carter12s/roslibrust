@@ -39,6 +39,11 @@ impl Node {
     fn set_client(&mut self, client: MasterClient) {
         self.client = Some(client);
     }
+
+    pub(crate) fn get_master_uri(&self) -> String {
+        // Client is option due to connection loop issue, but always valid to unwrap
+        self.client.as_ref().unwrap().get_master_uri().to_string()
+    }
 }
 
 /// Represents a handle to an underlying [Node]. NodeHandle's can be freely cloned, moved, copied, etc.
