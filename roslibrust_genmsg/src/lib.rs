@@ -61,11 +61,13 @@ pub enum GeneratedMessage {
 }
 
 pub struct MessageGenOutput {
+    pub message_name: String,
     pub package_name: String,
     pub message_source: String,
 }
 
 pub struct ServiceGenOutput {
+    pub service_name: String,
     pub package_name: String,
     pub request_msg_header: String,
     pub response_msg_header: String,
@@ -73,6 +75,7 @@ pub struct ServiceGenOutput {
 }
 
 pub struct ActionGenOutput {
+    pub action_name: String,
     pub package_name: String,
     pub action_source: String,
     pub goal_source: String,
@@ -99,15 +102,16 @@ pub fn generate_messages_with_templates<P: AsRef<Path>>(
     let message_names: Vec<_> = msg_paths.iter().map(message_name_from_path).collect();
 
     message_names
-        .iter()
+        .into_iter()
         .map(|message_name| {
             match messages.iter().find(|msg| {
-                msg.get_short_name() == *message_name && msg.get_package_name() == opts.package
+                msg.get_short_name() == message_name && msg.get_package_name() == opts.package
             }) {
                 Some(msg) => {
                     let message_source =
                         fill_message_template(&env.get_template("message").unwrap(), msg)?;
                     Ok(MessageGenOutput {
+                        message_name,
                         package_name: opts.package.clone(),
                         message_source,
                     })
@@ -154,6 +158,7 @@ pub fn generate_services_with_templates<P: AsRef<Path>>(
                     let srv_header =
                         fill_service_template(&env.get_template("service").unwrap(), srv)?;
                     Ok(ServiceGenOutput {
+                        service_name,
                         package_name: opts.package.clone(),
                         request_msg_header,
                         response_msg_header,
@@ -222,6 +227,7 @@ pub fn generate_actions_with_templates<P: AsRef<Path>>(
                 .collect::<Result<VecDeque<_>, _>>()?;
             // Warning: this is of course very dependent on the order and number of messages assigned to each action above
             Ok(ActionGenOutput {
+                action_name: action_sources.front().unwrap().clone(),
                 package_name: opts.package.clone(),
                 action_source: action_sources.pop_front().unwrap(),
                 goal_source: action_sources.pop_front().unwrap(),
