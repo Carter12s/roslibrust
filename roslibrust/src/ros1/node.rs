@@ -132,6 +132,7 @@ impl NodeHandle {
         }
     }
 
+    // TODO pub vs. pub(crate)
     /// Gets the URI at which this node is hosting its xmlrpc server
     pub async fn get_client_uri(&self) -> String {
         self.inner
@@ -142,5 +143,29 @@ impl NodeHandle {
             .unwrap()
             .client_uri()
             .to_string()
+    }
+
+    /// Gets the list of topics the node is currently subscribed to.
+    /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
+    pub async fn get_subscriptions(&self) -> Vec<(String, String)> {
+        self.inner
+            .read()
+            .await
+            .subscriptions
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.topic_type.clone()))
+            .collect()
+    }
+
+    /// Gets the list of topic the node is currently publishing to.
+    /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
+    pub async fn get_publications(&self) -> Vec<(String, String)> {
+        self.inner
+            .read()
+            .await
+            .publishers
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.topic_type.clone()))
+            .collect()
     }
 }

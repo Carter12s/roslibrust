@@ -320,8 +320,7 @@ impl ClientHandle {
             client.publishers.insert(
                 topic.to_string(),
                 PublisherHandle {
-                    topic: topic.to_string(),
-                    msg_type: T::ROS_TYPE_NAME.to_string(),
+                    topic_type: T::ROS_TYPE_NAME.to_string(),
                 },
             );
         }

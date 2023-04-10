@@ -132,15 +132,12 @@ pub(crate) struct Subscription {
     /// Subscriber ids are randomly generated
     /// There will be one callback per subscriber to the topic.
     // Note: don't need dashmap here as the subscription is already inside a dashmap
-    pub handles: HashMap<uuid::Uuid, Callback>,
+    pub(crate) handles: HashMap<uuid::Uuid, Callback>,
     /// Name of ros type (package_name/message_name), used for re-subscribes
-    pub topic_type: String,
+    pub(crate) topic_type: String,
 }
 
 // TODO move out of rosbridge and into common
 pub(crate) struct PublisherHandle {
-    #[allow(dead_code)]
-    topic: String,
-    #[allow(dead_code)]
-    msg_type: String,
+    pub(crate) topic_type: String,
 }

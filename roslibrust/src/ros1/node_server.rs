@@ -43,92 +43,90 @@ impl NodeServer {
         addr.port()
     }
 
-    async fn respond(
+    // Our actual service handler with our error type
+    async fn respond_inner(
         handle: NodeHandle,
         body: hyper::Request<Body>,
-    ) -> Result<Response<Body>, Infallible> {
-        let body = match hyper::body::to_bytes(body).await {
-            Ok(bytes) => bytes,
-            Err(e) => {
-                let error_str = format!(
-                    "Failed to get bytes from http request on xmlrpc server, ignoring: {e:?}"
-                );
-                warn!("{error_str}");
-                return Ok(Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .body(Body::from(error_str))
-                    .unwrap());
-            }
-        };
-        let body = match String::from_utf8(body.to_vec()) {
-            Ok(s) => s,
-            Err(e) => {
-                let error_str = format!("Failed to parse http body as valid utf8 string: {e:?}");
-                warn!("{error_str}");
-                return Ok(Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .body(Body::from(error_str))
-                    .unwrap());
-            }
-        };
-        let (method_name, args) = match serde_xmlrpc::request_from_str(&body) {
-            Ok(x) => x,
-            Err(e) => {
-                let error_str =
-                    format!("Failed to parse valid xmlrpc method request out of body: {e:?}");
-                warn!("{error_str}");
-                return Ok(Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .body(Body::from(error_str))
-                    .unwrap());
-            }
-        };
+    ) -> Result<Response<Body>, Response<Body>> {
+        // Await the bytes of the body
+        let body = hyper::body::to_bytes(body).await.map_err(|e| {
+            Self::error_mapper(
+                e,
+                "Failed to get bytes from http request on xmlrpc server, request ignored",
+                StatusCode::BAD_REQUEST,
+            )
+        })?;
+
+        // Parse as string
+        let body = String::from_utf8(body.to_vec()).map_err(|e| {
+            Self::error_mapper(
+                e,
+                "Failed to parse http body as valid utf8 string, request ignored",
+                StatusCode::BAD_REQUEST,
+            )
+        })?;
+
+        // Parse as xmlrpc request
+        let (method_name, args) = serde_xmlrpc::request_from_str(&body).map_err(|e| {
+            Self::error_mapper(
+                e,
+                "Failed to parse valid xmlrpc method request out of body, request ignored",
+                StatusCode::BAD_REQUEST,
+            )
+        })?;
+
+        // Match on allowable functions
         match method_name.as_str() {
             "getMasterUri" => {
                 debug!("getMasterUri called by {args:?}");
                 let lock = handle.inner.read().await;
                 let uri = lock.get_master_uri();
-                // Ros response is (int, str, str) (Status Code, Error Message, Master URI)
-                // Double vec is because ROS is stupid
-                let response = serde_xmlrpc::Value::Array(vec![0.into(), "".into(), uri.into()]);
-                let body = match serde_xmlrpc::response_to_string(vec![response].into_iter()) {
-                    Ok(b) => {
-                        debug!("Responding: {b}");
-                        b
-                    }
-                    Err(e) => {
-                        let error_str =
-                            format!("Failed to serialize result to valid xmlrpc: {e:?}");
-                        warn!("{error_str}");
-                        // TODO may be better to return an xmlrpc fault instead of an http error here?
-                        return Ok(Response::builder()
-                            .status(StatusCode::INTERNAL_SERVER_ERROR)
-                            .body(Body::from(error_str))
-                            .unwrap());
-                    }
-                };
-                return Ok(Response::builder()
-                    .status(StatusCode::OK)
-                    .body(Body::from(body))
-                    .unwrap());
+                Self::to_response(uri)
             }
             "getPid" => {
-                debug!("getPid called");
+                debug!("getPid called by {args:?}");
+                let pid = std::process::id();
+                let pid: i32 = pid.try_into().map_err(|e| {
+                    Self::error_mapper(e,
+                         "Operation system returned a PID which does not fit into i32, and therefor cannot be sent via xmlrpc",
+                         StatusCode::INTERNAL_SERVER_ERROR)})?;
+                Self::to_response(pid)
             }
             "getSubscriptions" => {
-                debug!("getSubscriptions called")
+                debug!("getSubscriptions called by {args:?}");
+                let subs = handle.get_subscriptions().await;
+                // Have to manually convert to value because of Vec specialization
+                let subs = serde_xmlrpc::to_value(subs).map_err(|e| {
+                    Self::error_mapper(
+                        e,
+                        "Subscriptions contained names which could not be validly serialized to xmlrpc",
+                        StatusCode::INTERNAL_SERVER_ERROR)})?;
+                Self::to_response(subs)
             }
             "getPublications" => {
-                debug!("getPublications called");
+                debug!("getPublications called by {args:?}");
+                let pubs = handle.get_publications().await;
+                let pubs = serde_xmlrpc::to_value(pubs).map_err(|e| {
+                    Self::error_mapper(
+                        e,
+                        "Publications contained names which could not be validly serialized to xmlrpc",
+                        StatusCode::INTERNAL_SERVER_ERROR)})?;
+                Self::to_response(pubs)
             }
             "paramUpdate" => {
-                debug!("paramUpdate called");
+                debug!("paramUpdate called by {args:?}");
+                if args.len() != 3 {
+
+                }
+                unimplemented!()
             }
             "publisherUpdate" => {
-                debug!("publisherUpdate called");
+                debug!("publisherUpdate called by {args:?}");
+                unimplemented!()
             }
             "requestTopic" => {
-                debug!("requestTopic called");
+                debug!("requestTopic called by {args:?}");
+                unimplemented!()
             }
             // getBusStats, getBusInfo <= have decided not to impl these
             _ => {
@@ -139,15 +137,94 @@ impl NodeServer {
                     .body(Body::from(error_str))
                     .unwrap());
             }
-        };
-        info!("GOT REQUEST: {body:?}");
-        Ok(Response::new("Hello World".into()))
+        }
+    }
+
+    // Helper function for converting serde_xmlrpc stuff into responses
+    fn to_response(v: impl Into<serde_xmlrpc::Value>) -> Result<Response<Body>, Response<Body>> {
+        serde_xmlrpc::response_to_string(
+            vec![serde_xmlrpc::Value::Array(vec![
+                0.into(),
+                "".into(),
+                v.into(),
+            ])]
+            .into_iter(),
+        )
+        .map_err(|e| {
+            Self::error_mapper(
+                e,
+                "Failed to serialize response data into valid xml",
+                StatusCode::INTERNAL_SERVER_ERROR,
+            )
+        })
+        .map(|body| {
+            Response::builder()
+                .status(StatusCode::OK)
+                .body(Body::from(body))
+                .unwrap()
+        })
+    }
+
+    // Helper function for converting error to http responses
+    fn error_mapper(
+        e: impl std::error::Error,
+        msg: &str,
+        code: hyper::http::StatusCode,
+    ) -> Response<Body> {
+        let error_msg = format!("{msg}: {e:?}");
+        warn!("{error_msg}");
+        Response::builder()
+            .status(code)
+            .body(Body::from(error_msg))
+            .unwrap()
+    }
+
+    // Is the actual function we hand to hyper
+    async fn respond(
+        handle: NodeHandle,
+        body: hyper::Request<Body>,
+    ) -> Result<Response<Body>, Infallible> {
+        // Call our inner function and unwrap error type into response
+        match Self::respond_inner(handle, body).await {
+            Ok(body) => Ok(body),
+            Err(body) => Ok(body),
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{MasterClient, NodeHandle};
+    use log::debug;
+    use serde::de::DeserializeOwned;
+    use serde_xmlrpc::Value;
+
+    use crate::NodeHandle;
+
+    // Helper function for making a call to one of the node server apis
+    async fn call_node_server<T: DeserializeOwned>(
+        uri: &str,
+        endpoint: &str,
+        args: Vec<Value>,
+    ) -> T {
+        let client = reqwest::Client::new();
+        let body = serde_xmlrpc::request_to_string(endpoint, args).unwrap();
+        let res = client
+            .post(uri)
+            .body(body)
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
+        debug!("Got response: {res:?}");
+        let (error_code, debug_str, value): (i8, String, T) =
+            serde_xmlrpc::response_from_str(&res).unwrap();
+
+        assert_eq!(error_code, 0);
+        assert_eq!(debug_str, "");
+        value
+    }
 
     #[tokio::test]
     async fn test_get_master_uri() {
@@ -156,25 +233,31 @@ mod test {
             .unwrap();
         let client_uri = nh.get_client_uri().await;
 
-        // Manually call the nodes "getMasterUri" and check the response
-        let client = reqwest::Client::new();
-        let body =
-            serde_xmlrpc::request_to_string("getMasterUri", vec!["/get_master_uri_tester".into()])
-                .unwrap();
-        let res = client
-            .post(client_uri)
-            .body(body)
-            .send()
-            .await
-            .unwrap()
-            .text()
+        let uri: String = call_node_server(
+            &client_uri,
+            "getMasterUri",
+            vec!["/get_master_uri_tester".into()],
+        )
+        .await;
+        assert_eq!(uri, "http://localhost:11311");
+    }
+
+    #[tokio::test]
+    async fn test_get_subscriptions() {
+        // Stub test until we can actually subscribe
+        let nh = NodeHandle::new("http://localhost:11311", "/get_subscriptions_test_node")
             .await
             .unwrap();
-        let (error_code, debug_str, uri): (i8, String, String) =
-            serde_xmlrpc::response_from_str(&res).unwrap();
+        let client_uri = nh.get_client_uri().await;
+        // TODO actually subscribe here
 
-        assert_eq!(error_code, 0);
-        assert_eq!(debug_str, "");
-        assert_eq!(uri, "http://localhost:11311");
+        let uri: Vec<(String, String)> = call_node_server(
+            &client_uri,
+            "getSubscriptions",
+            vec!["/get_subscriptions_tester".into()],
+        )
+        .await;
+
+        // TODO assert we get our subscription back here
     }
 }
