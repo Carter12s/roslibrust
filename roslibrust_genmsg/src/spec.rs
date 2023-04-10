@@ -1,7 +1,7 @@
 use roslibrust_codegen::{ConstantInfo, FieldInfo, MessageFile, ServiceFile};
 use serde::{Deserialize, Serialize};
 
-pub static ROS_TYPENAMES: &[&'static str] = &[
+pub static ROS_TYPENAMES: &[&str] = &[
     "bool", "int8", "uint8", "byte", "char", "int16", "uint16", "int32", "uint32", "int64",
     "float32", "float64", "string", "time", "duration",
 ];

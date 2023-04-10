@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             out_file_path.push(format!("{short_name}.h"));
 
             let mut out_file = std::fs::File::create(out_file_path)?;
-            out_file.write_all(generated_source.as_bytes())?;
+            out_file.write_all(generated_source.message_source.as_bytes())?;
         }
         "srv" => {
             let generated_source =
@@ -133,7 +133,7 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source[0]),
+            remove_whitespace(&generated_source[0].message_source),
             remove_whitespace(&current_source)
         );
     }
@@ -169,7 +169,7 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source[0]),
+            remove_whitespace(&generated_source[0].message_source),
             remove_whitespace(&current_source)
         );
     }
@@ -237,7 +237,7 @@ mod test {
             }
         "#;
         assert_eq!(
-            remove_whitespace(&generated_source[0]),
+            remove_whitespace(&generated_source[0].message_source),
             remove_whitespace(&current_source)
         );
     }
