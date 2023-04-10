@@ -251,7 +251,7 @@ mod test {
         let client_uri = nh.get_client_uri().await;
         // TODO actually subscribe here
 
-        let uri: Vec<(String, String)> = call_node_server(
+        let subs: Vec<(String, String)> = call_node_server(
             &client_uri,
             "getSubscriptions",
             vec!["/get_subscriptions_tester".into()],
@@ -259,5 +259,25 @@ mod test {
         .await;
 
         // TODO assert we get our subscription back here
+    }
+
+    #[tokio::test]
+    async fn test_get_publications() {
+        // Stub test until we can actually advertise
+        let nh = NodeHandle::new("http://localhost:11311", "/get_subscriptions_test_node")
+            .await
+            .unwrap();
+        let client_uri = nh.get_client_uri().await;
+        // TODO actually subscribe here
+
+        let pubs: Vec<(String, String)> = call_node_server(
+            &client_uri,
+            "getPublications",
+            vec!["/get_publications_tester".into()],
+        )
+        .await;
+
+        // TODO assert we get our subscription back here
+
     }
 }
