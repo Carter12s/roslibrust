@@ -145,6 +145,7 @@ impl NodeHandle {
             .to_string()
     }
 
+    // TODO pub vs. pub(crate)
     /// Gets the list of topics the node is currently subscribed to.
     /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
     pub async fn get_subscriptions(&self) -> Vec<(String, String)> {
@@ -157,6 +158,7 @@ impl NodeHandle {
             .collect()
     }
 
+    // TODO pub vs. pub(crate)
     /// Gets the list of topic the node is currently publishing to.
     /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
     pub async fn get_publications(&self) -> Vec<(String, String)> {

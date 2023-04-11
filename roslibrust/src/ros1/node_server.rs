@@ -114,10 +114,8 @@ impl NodeServer {
                 Self::to_response(pubs)
             }
             "paramUpdate" => {
+                // Not supporting params for first cut
                 debug!("paramUpdate called by {args:?}");
-                if args.len() != 3 {
-
-                }
                 unimplemented!()
             }
             "publisherUpdate" => {
