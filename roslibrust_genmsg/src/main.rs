@@ -72,11 +72,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             srv_response_out_path.push(format!("{short_name}Response.h"));
 
             let mut out_file = std::fs::File::create(srv_out_path)?;
-            out_file.write_all(generated_source.srv_header.as_bytes())?;
+            out_file.write_all(generated_source.service_source.as_bytes())?;
             let mut out_file = std::fs::File::create(srv_request_out_path)?;
-            out_file.write_all(generated_source.request_msg_header.as_bytes())?;
+            out_file.write_all(generated_source.request_source.as_bytes())?;
             let mut out_file = std::fs::File::create(srv_response_out_path)?;
-            out_file.write_all(generated_source.response_msg_header.as_bytes())?;
+            out_file.write_all(generated_source.response_source.as_bytes())?;
         }
         _ => {
             log::error!(
@@ -193,7 +193,7 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source[0].srv_header),
+            remove_whitespace(&generated_source[0].service_source),
             remove_whitespace(&current_source)
         );
     }

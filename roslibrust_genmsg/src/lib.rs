@@ -69,9 +69,9 @@ pub struct MessageGenOutput {
 pub struct ServiceGenOutput {
     pub service_name: String,
     pub package_name: String,
-    pub request_msg_header: String,
-    pub response_msg_header: String,
-    pub srv_header: String,
+    pub request_source: String,
+    pub response_source: String,
+    pub service_source: String,
 }
 
 pub struct ActionGenOutput {
@@ -147,22 +147,22 @@ pub fn generate_services_with_templates<P: AsRef<Path>>(
                 srv.get_short_name() == service_name && srv.get_package_name() == opts.package
             }) {
                 Some(srv) => {
-                    let request_msg_header = fill_message_template(
+                    let request_source = fill_message_template(
                         &env.get_template("message").unwrap(),
                         srv.request(),
                     )?;
-                    let response_msg_header = fill_message_template(
+                    let response_source = fill_message_template(
                         &env.get_template("message").unwrap(),
                         srv.response(),
                     )?;
-                    let srv_header =
+                    let service_source =
                         fill_service_template(&env.get_template("service").unwrap(), srv)?;
                     Ok(ServiceGenOutput {
                         service_name,
                         package_name: opts.package.clone(),
-                        request_msg_header,
-                        response_msg_header,
-                        srv_header,
+                        request_source,
+                        response_source,
+                        service_source,
                     })
                 }
                 None => Err(minijinja::Error::new(
