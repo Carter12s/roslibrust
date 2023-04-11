@@ -131,6 +131,7 @@ impl ClientHandle {
             .or_insert(Subscription {
                 handles: HashMap::new(),
                 topic_type: Msg::ROS_TYPE_NAME.to_string(),
+                known_publishers: vec![],
             });
 
         // TODO Possible bug here? We send a subscribe message each time even if already subscribed

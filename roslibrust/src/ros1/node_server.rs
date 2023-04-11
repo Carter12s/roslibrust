@@ -17,7 +17,6 @@ pub(crate) struct NodeServer {}
 impl NodeServer {
     // Creates a new node server and starts it running
     // Returns a join handle used to indicate if the server stops running, and the port the server bound to
-    // TODO this will need to take in some kind of async handle back to nodes data
     pub(crate) fn new(handle: NodeHandle, host_addr: Ipv4Addr) -> u16 {
         let host_addr = SocketAddr::from((host_addr, 0));
 
@@ -120,7 +119,19 @@ impl NodeServer {
             }
             "publisherUpdate" => {
                 debug!("publisherUpdate called by {args:?}");
-                unimplemented!()
+                let (caller_id, topic, publishers): (String, String, Vec<String>) =
+                    serde_xmlrpc::from_values(args).map_err(|e| {
+                        Self::error_mapper(
+                            e,
+                            "Failed to parse arguments to publisherUpdate",
+                            StatusCode::BAD_REQUEST,
+                        )
+                    })?;
+
+                handle.set_peer_publishers(topic, publishers).await;
+
+                // ROS's API is for us to still return an int, but the value is literally named "ignore"...
+                Self::to_response(0)
             }
             "requestTopic" => {
                 debug!("requestTopic called by {args:?}");
@@ -276,6 +287,5 @@ mod test {
         .await;
 
         // TODO assert we get our subscription back here
-
     }
 }

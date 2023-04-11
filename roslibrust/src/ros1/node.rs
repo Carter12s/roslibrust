@@ -7,6 +7,7 @@ use std::{
 };
 
 use dashmap::DashMap;
+use log::warn;
 
 use crate::{
     MasterClient, NodeServer, PublisherHandle, RosMasterError, ServiceCallback, Subscription,
@@ -15,10 +16,15 @@ use crate::{
 /// Represents a single "real" node, typically only one of these is expected per process
 /// but nothing should specifically prevent that.
 pub struct Node {
+    // The xmlrpc client this node uses to make requests to master
     client: Option<MasterClient>,
+    // Record of what this node publishes
     publishers: DashMap<String, PublisherHandle>,
+    // Record of subscriptions this node has
     subscriptions: DashMap<String, Subscription>,
+    // Record of what services this node is serving
     services: DashMap<String, ServiceCallback>,
+    // TODO need signal to shutdown xmlrpc server when node is dropped
 }
 
 impl Node {
@@ -158,7 +164,6 @@ impl NodeHandle {
             .collect()
     }
 
-    // TODO pub vs. pub(crate)
     /// Gets the list of topic the node is currently publishing to.
     /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
     pub async fn get_publications(&self) -> Vec<(String, String)> {
@@ -169,5 +174,23 @@ impl NodeHandle {
             .iter()
             .map(|entry| (entry.key().clone(), entry.topic_type.clone()))
             .collect()
+    }
+
+    /// Updates the list of know publishers for a given topic
+    /// This is used to know who to reach out to for updates
+    /// TODO this kind of update flow could probably be done better with a channel, for now sticking info
+    /// into a DashMap cause I think it will be easier to debug
+    pub(crate) async fn set_peer_publishers(&self, topic: String, publishers: Vec<String>) {
+        let lock = self.inner.read().await;
+        let item = lock.subscriptions.get_mut(&topic);
+        let mut item = match item {
+            Some(i) => i,
+            None => {
+                warn!("Got peer publisher update for topic we weren't subscribed to, ignoring");
+                return;
+            }
+        };
+        // Update our internal list of known publishers
+        item.known_publishers = publishers;
     }
 }
