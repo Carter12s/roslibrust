@@ -98,3 +98,8 @@ pub use rosbridge::*;
 
 #[cfg(feature = "rosapi")]
 pub mod rosapi;
+
+#[cfg(feature = "ros1")]
+mod ros1;
+#[cfg(feature = "ros1")]
+pub use ros1::*;
