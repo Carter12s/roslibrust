@@ -127,12 +127,12 @@ struct BatteryState_
     
     
       
-        typedef std::vector<float<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float<ContainerAllocator>>> _cell_voltage_type;
+        typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _cell_voltage_type;
     _cell_voltage_type cell_voltage;
     
     
       
-        typedef std::vector<float<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float<ContainerAllocator>>> _cell_temperature_type;
+        typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _cell_temperature_type;
     _cell_temperature_type cell_temperature;
     
     

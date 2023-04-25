@@ -52,7 +52,7 @@ struct {{ spec.short_name }}_
     #}
     {% if is_array(field) %}
       {% if is_intrinsic_type(field) %}
-        typedef std::vector<{{ field.field_type|typename_conversion }}<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<{{ field.field_type|typename_conversion }}<ContainerAllocator>>> _{{ field.name }}_type;
+        typedef std::vector<{{ field.field_type|typename_conversion }}, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<{{ field.field_type|typename_conversion }}>> _{{ field.name }}_type;
       {%- else %}
         typedef std::vector<::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>>> _{{ field.name }}_type;
       {%- endif %}
