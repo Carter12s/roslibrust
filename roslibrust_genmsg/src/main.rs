@@ -1,6 +1,9 @@
 use clap::Parser;
 use roslibrust_genmsg::IncludedNamespace;
-use std::{io::Write, path::PathBuf};
+use std::{
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -44,39 +47,87 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let short_name = args.msg_path.file_stem().unwrap().to_str().unwrap();
-    let opts = roslibrust_genmsg::MessageGenOpts {
-        package: args.package,
-        includes: args.include.unwrap_or_default(),
-    };
     let extension = args.msg_path.extension().unwrap().to_str().unwrap();
+    let msg_paths = args
+        .include
+        .unwrap_or_default()
+        .into_iter()
+        .map(|inc| inc.path)
+        .collect::<Vec<_>>();
+    let generator = roslibrust_genmsg::make_cpp_generator(&msg_paths).unwrap();
+
     match extension {
         "msg" => {
-            let generated_source =
-                roslibrust_genmsg::generate_cpp_messages(&[&args.msg_path], &opts)?;
-            let generated_source = generated_source.get(0).unwrap();
-            let mut out_file_path = args.output;
-            out_file_path.push(format!("{short_name}.h"));
-
-            let mut out_file = std::fs::File::create(out_file_path)?;
-            out_file.write_all(generated_source.message_source.as_bytes())?;
+            let generated_source = generator.generate_messages().unwrap();
+            let msg_source = generated_source
+                .iter()
+                .find(|msg| msg.message_name == short_name && msg.package_name == args.package)
+                .unwrap();
+            write_source_file(
+                &args.output,
+                &format!("{short_name}.h"),
+                &msg_source.message_source,
+            )?;
         }
         "srv" => {
-            let generated_source =
-                roslibrust_genmsg::generate_cpp_services(&[&args.msg_path], &opts)?;
-            let generated_source = generated_source.get(0).unwrap();
-            let mut srv_out_path = args.output.clone();
-            srv_out_path.push(format!("{short_name}.h"));
-            let mut srv_request_out_path = args.output.clone();
-            srv_request_out_path.push(format!("{short_name}Request.h"));
-            let mut srv_response_out_path = args.output;
-            srv_response_out_path.push(format!("{short_name}Response.h"));
+            let generated_source = generator.generate_services().unwrap();
+            let srv_source = generated_source
+                .iter()
+                .find(|srv| srv.service_name == short_name && srv.package_name == args.package)
+                .unwrap();
+            write_source_file(
+                &args.output,
+                &format!("{short_name}.h"),
+                &srv_source.service_source,
+            )?;
+            write_source_file(
+                &args.output,
+                &format!("{short_name}Request.h"),
+                &srv_source.request_source,
+            )?;
+            write_source_file(
+                &args.output,
+                &format!("{short_name}Response.h"),
+                &srv_source.response_source,
+            )?;
+        }
+        "action" => {
+            let expected_messages = [
+                short_name.to_string(),
+                format!("{short_name}Goal"),
+                format!("{short_name}Result"),
+                format!("{short_name}Feedback"),
+                format!("{short_name}ActionGoal"),
+                format!("{short_name}ActionResult"),
+                format!("{short_name}ActionFeedback"),
+            ];
 
-            let mut out_file = std::fs::File::create(srv_out_path)?;
-            out_file.write_all(generated_source.service_source.as_bytes())?;
-            let mut out_file = std::fs::File::create(srv_request_out_path)?;
-            out_file.write_all(generated_source.request_source.as_bytes())?;
-            let mut out_file = std::fs::File::create(srv_response_out_path)?;
-            out_file.write_all(generated_source.response_source.as_bytes())?;
+            let generated_source = generator.generate_messages().unwrap();
+            let action_sources = generated_source
+                .into_iter()
+                .filter(|msg| {
+                    expected_messages.contains(&msg.message_name)
+                        && msg.package_name == args.package
+                })
+                .collect::<Vec<_>>();
+            if action_sources.len() == expected_messages.len() {
+                action_sources.into_iter().try_for_each(|src| {
+                    write_source_file(
+                        &args.output,
+                        &format!("{}.h", src.message_name),
+                        &src.message_source,
+                    )
+                })?;
+            } else {
+                log::error!(
+                    "Improperly generated action messages, generated: {:?}",
+                    action_sources
+                        .into_iter()
+                        .map(|src| src.message_name)
+                        .collect::<Vec<_>>()
+                );
+                std::process::exit(1);
+            }
         }
         _ => {
             log::error!(
@@ -89,11 +140,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn write_source_file(out_path: &Path, filename: &str, source: &str) -> std::io::Result<()> {
+    let mut out_file_path = out_path.to_owned();
+    out_file_path.push(filename);
+
+    let mut out_file = std::fs::File::create(out_file_path)?;
+    out_file.write_all(source.as_bytes())
+}
+
 #[cfg(test)]
 mod test {
     use const_format::concatcp;
-    use roslibrust_genmsg::{IncludedNamespace, MessageGenOpts};
-    use std::path::PathBuf;
 
     const ROS_1_PATH: &str = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -104,28 +161,20 @@ mod test {
     const SENSOR_MSGS_PKG_PATH: &str = concatcp!(ROS_1_PATH, "/common_msgs/sensor_msgs");
     const STD_SRVS_PKG_PATH: &str = concatcp!(ROS_1_PATH, "/ros_comm_msgs/std_srvs");
 
-    const HEADER_MSG_PATH: &str = concatcp!(STD_MSGS_PKG_PATH, "/msg/Header.msg");
-    const BATTERY_STATE_MSG_PATH: &str = concatcp!(SENSOR_MSGS_PKG_PATH, "/msg/BatteryState.msg");
-    const TRIGGER_SRV_PATH: &str = concatcp!(STD_SRVS_PKG_PATH, "/srv/Trigger.srv");
-    const TRANSFORM_STAMPED_MSG_PATH: &str =
-        concatcp!(GEOMETRY_MSGS_PKG_PATH, "/msg/TransformStamped.msg");
-
     fn remove_whitespace(s: &str) -> String {
         s.split_whitespace().collect()
     }
 
     #[test]
     fn std_msgs_header_up_to_date() {
-        let options = MessageGenOpts {
-            package: "std_msgs".into(),
-            includes: vec![IncludedNamespace {
-                package: "std_msgs".into(),
-                path: STD_MSGS_PKG_PATH.into(),
-            }],
-        };
-        let generated_source =
-            roslibrust_genmsg::generate_cpp_messages(&[&PathBuf::from(HEADER_MSG_PATH)], &options)
-                .unwrap();
+        let generated_source = roslibrust_genmsg::make_cpp_generator(&[STD_MSGS_PKG_PATH])
+            .unwrap()
+            .generate_messages()
+            .unwrap();
+        let header = generated_source
+            .iter()
+            .find(|msg| &msg.message_name == "Header" && &msg.package_name == "std_msgs")
+            .unwrap();
 
         let current_source = std::fs::read_to_string(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -133,35 +182,26 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source[0].message_source),
+            remove_whitespace(&header.message_source),
             remove_whitespace(&current_source)
         );
     }
 
     #[test]
     fn sensor_msgs_battery_state_up_to_date() {
-        let options = MessageGenOpts {
-            package: "sensor_msgs".into(),
-            includes: vec![
-                IncludedNamespace {
-                    package: "std_msgs".into(),
-                    path: STD_MSGS_PKG_PATH.into(),
-                },
-                IncludedNamespace {
-                    package: "geometry_msgs".into(),
-                    path: GEOMETRY_MSGS_PKG_PATH.into(),
-                },
-                IncludedNamespace {
-                    package: "sensor_msgs".into(),
-                    path: SENSOR_MSGS_PKG_PATH.into(),
-                },
-            ],
-        };
-        let generated_source = roslibrust_genmsg::generate_cpp_messages(
-            &[&PathBuf::from(BATTERY_STATE_MSG_PATH)],
-            &options,
-        )
+        let generated_source = roslibrust_genmsg::make_cpp_generator(&[
+            STD_MSGS_PKG_PATH,
+            GEOMETRY_MSGS_PKG_PATH,
+            SENSOR_MSGS_PKG_PATH,
+        ])
+        .unwrap()
+        .generate_messages()
         .unwrap();
+
+        let battery_state = generated_source
+            .iter()
+            .find(|msg| &msg.message_name == "BatteryState" && &msg.package_name == "sensor_msgs")
+            .unwrap();
 
         let current_source = std::fs::read_to_string(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -169,23 +209,21 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source[0].message_source),
+            remove_whitespace(&battery_state.message_source),
             remove_whitespace(&current_source)
         );
     }
 
     #[test]
     fn std_srvs_trigger_up_to_date() {
-        let options = MessageGenOpts {
-            package: "std_srvs".into(),
-            includes: vec![IncludedNamespace {
-                package: "std_srvs".into(),
-                path: STD_SRVS_PKG_PATH.into(),
-            }],
-        };
-        let generated_source =
-            roslibrust_genmsg::generate_cpp_services(&[&PathBuf::from(TRIGGER_SRV_PATH)], &options)
-                .unwrap();
+        let generated_source = roslibrust_genmsg::make_cpp_generator(&[STD_SRVS_PKG_PATH])
+            .unwrap()
+            .generate_services()
+            .unwrap();
+        let trigger_srv = generated_source
+            .iter()
+            .find(|srv| &srv.service_name == "Trigger" && &srv.package_name == "std_srvs")
+            .unwrap();
 
         let current_source = std::fs::read_to_string(concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -193,32 +231,17 @@ mod test {
         ))
         .unwrap();
         assert_eq!(
-            remove_whitespace(&generated_source[0].service_source),
+            remove_whitespace(&trigger_srv.service_source),
             remove_whitespace(&current_source)
         );
     }
 
     #[test]
     fn transform_stamped_with_user_template() {
-        let options = MessageGenOpts {
-            package: "geometry_msgs".into(),
-            includes: vec![
-                IncludedNamespace {
-                    package: "std_msgs".into(),
-                    path: STD_MSGS_PKG_PATH.into(),
-                },
-                IncludedNamespace {
-                    package: "geometry_msgs".into(),
-                    path: GEOMETRY_MSGS_PKG_PATH.into(),
-                },
-            ],
-        };
         let mapping =
             std::collections::HashMap::from([("string".to_owned(), "NativeString".to_owned())]);
-        let generated_source = roslibrust_genmsg::generate_messages_with_templates(
-            &[&PathBuf::from(TRANSFORM_STAMPED_MSG_PATH)],
-            &options,
-            mapping,
+        let generator = roslibrust_genmsg::CodeGeneratorBuilder::new(
+            &[STD_MSGS_PKG_PATH, GEOMETRY_MSGS_PKG_PATH],
             r#"
             pub struct {{ spec.short_name }} {
                 {% for field in spec.fields %}
@@ -226,8 +249,18 @@ mod test {
                 {%- endfor %}        
             }
             "#,
+            mapping,
         )
+        .build()
         .unwrap();
+
+        let sources = generator.generate_messages().unwrap();
+        let transform_stamped = sources
+            .iter()
+            .find(|msg| {
+                &msg.message_name == "TransformStamped" && &msg.package_name == "geometry_msgs"
+            })
+            .unwrap();
 
         let current_source = r#"
             pub struct TransformStamped {
@@ -237,7 +270,7 @@ mod test {
             }
         "#;
         assert_eq!(
-            remove_whitespace(&generated_source[0].message_source),
+            remove_whitespace(&transform_stamped.message_source),
             remove_whitespace(&current_source)
         );
     }

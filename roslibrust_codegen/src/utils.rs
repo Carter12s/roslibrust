@@ -78,7 +78,7 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
         // We have a valid path
         path.push(CATKIN_IGNORE);
         // We'll only check this directory if no CATKIN_IGNORE file is present
-        // TODO: support for ament ignore and calcon ignore
+        // TODO: support for ament ignore and colcon ignore
         if !path.as_path().is_file() {
             assert!(path.pop());
 

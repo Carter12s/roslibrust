@@ -32,6 +32,20 @@ cargo run --bin gencpp -- \
 --output roslibrust_genmsg/test_package/include/sensor_msgs
 
 cargo run --bin gencpp -- \
+--msg assets/ros1_common_interfaces/common_msgs/geometry_msgs/msg/Point32.msg \
+--package geometry_msgs \
+-I std_msgs:assets/ros1_common_interfaces/std_msgs \
+-I geometry_msgs:assets/ros1_common_interfaces/common_msgs/geometry_msgs \
+--output roslibrust_genmsg/test_package/include/geometry_msgs
+
+cargo run --bin gencpp -- \
+--msg assets/ros1_common_interfaces/common_msgs/geometry_msgs/msg/Polygon.msg \
+--package geometry_msgs \
+-I std_msgs:assets/ros1_common_interfaces/std_msgs \
+-I geometry_msgs:assets/ros1_common_interfaces/common_msgs/geometry_msgs \
+--output roslibrust_genmsg/test_package/include/geometry_msgs
+
+cargo run --bin gencpp -- \
 --msg assets/ros1_common_interfaces/ros_comm_msgs/std_srvs/srv/Trigger.srv \
 --package std_srvs \
 -I std_srvs:assets/ros1_common_interfaces/ros_comm_msgs/std_srvs \

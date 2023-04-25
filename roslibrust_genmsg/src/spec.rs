@@ -11,6 +11,7 @@ pub struct Field {
     pub name: String,
     pub field_type: String,
     pub package: Option<String>,
+    pub is_array_type: bool,
 }
 
 impl From<&FieldInfo> for Field {
@@ -19,6 +20,7 @@ impl From<&FieldInfo> for Field {
             name: value.field_name.clone(),
             field_type: value.field_type.field_type.clone(),
             package: value.field_type.package_name.clone(),
+            is_array_type: value.field_type.is_vec,
         }
     }
 }
@@ -26,6 +28,10 @@ impl From<&FieldInfo> for Field {
 impl Field {
     pub fn is_intrinsic_type(&self) -> bool {
         ROS_TYPENAMES.contains(&self.field_type.as_str())
+    }
+
+    pub fn is_array_type(&self) -> bool {
+        self.is_array_type
     }
 }
 

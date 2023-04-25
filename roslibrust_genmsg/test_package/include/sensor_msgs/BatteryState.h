@@ -20,8 +20,10 @@ struct BatteryState_
 {
   typedef BatteryState_<ContainerAllocator> Type;
 
-  BatteryState_()
-    : header()
+  
+  
+    BatteryState_()
+      : header()
     , voltage()
     , temperature()
     , current()
@@ -37,10 +39,10 @@ struct BatteryState_
     , cell_temperature()
     , location()
     , serial_number() {
-  }
+    }
 
-  BatteryState_(const ContainerAllocator& _alloc)
-    : header(_alloc)
+    BatteryState_(const ContainerAllocator& _alloc)
+      : header(_alloc)
     , voltage(_alloc)
     , temperature(_alloc)
     , current(_alloc)
@@ -56,59 +58,94 @@ struct BatteryState_
     , cell_temperature(_alloc)
     , location(_alloc)
     , serial_number(_alloc) {
-    (void)_alloc;
-  }
+      (void)_alloc;
+    }
+  
 
   
   
-  typedef ::std_msgs::Header_<ContainerAllocator> _header_type;
-  _header_type header;
-  
-  typedef float _voltage_type;
-  _voltage_type voltage;
-  
-  typedef float _temperature_type;
-  _temperature_type temperature;
-  
-  typedef float _current_type;
-  _current_type current;
-  
-  typedef float _charge_type;
-  _charge_type charge;
-  
-  typedef float _capacity_type;
-  _capacity_type capacity;
-  
-  typedef float _design_capacity_type;
-  _design_capacity_type design_capacity;
-  
-  typedef float _percentage_type;
-  _percentage_type percentage;
-  
-  typedef uint8_t _power_supply_status_type;
-  _power_supply_status_type power_supply_status;
-  
-  typedef uint8_t _power_supply_health_type;
-  _power_supply_health_type power_supply_health;
-  
-  typedef uint8_t _power_supply_technology_type;
-  _power_supply_technology_type power_supply_technology;
-  
-  typedef bool _present_type;
-  _present_type present;
-  
-  typedef float _cell_voltage_type;
-  _cell_voltage_type cell_voltage;
-  
-  typedef float _cell_temperature_type;
-  _cell_temperature_type cell_temperature;
-  
-  typedef ::std::string _location_type;
-  _location_type location;
-  
-  typedef ::std::string _serial_number_type;
-  _serial_number_type serial_number;
+    
+    
+      
+        typedef ::std_msgs::Header_<ContainerAllocator> _header_type;
+    _header_type header;
+    
+    
+      
+        typedef float _voltage_type;
+    _voltage_type voltage;
+    
+    
+      
+        typedef float _temperature_type;
+    _temperature_type temperature;
+    
+    
+      
+        typedef float _current_type;
+    _current_type current;
+    
+    
+      
+        typedef float _charge_type;
+    _charge_type charge;
+    
+    
+      
+        typedef float _capacity_type;
+    _capacity_type capacity;
+    
+    
+      
+        typedef float _design_capacity_type;
+    _design_capacity_type design_capacity;
+    
+    
+      
+        typedef float _percentage_type;
+    _percentage_type percentage;
+    
+    
+      
+        typedef uint8_t _power_supply_status_type;
+    _power_supply_status_type power_supply_status;
+    
+    
+      
+        typedef uint8_t _power_supply_health_type;
+    _power_supply_health_type power_supply_health;
+    
+    
+      
+        typedef uint8_t _power_supply_technology_type;
+    _power_supply_technology_type power_supply_technology;
+    
+    
+      
+        typedef bool _present_type;
+    _present_type present;
+    
+    
+      
+        typedef std::vector<float<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float<ContainerAllocator>>> _cell_voltage_type;
+    _cell_voltage_type cell_voltage;
+    
+    
+      
+        typedef std::vector<float<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float<ContainerAllocator>>> _cell_temperature_type;
+    _cell_temperature_type cell_temperature;
+    
+    
+      
+        typedef ::std::string _location_type;
+    _location_type location;
+    
+    
+      
+        typedef ::std::string _serial_number_type;
+    _serial_number_type serial_number;
 
+  
   
     enum {
     
@@ -136,6 +173,7 @@ struct BatteryState_
     };
   
 
+  
   
 
   typedef boost::shared_ptr< ::sensor_msgs::BatteryState_<ContainerAllocator>> Ptr;
