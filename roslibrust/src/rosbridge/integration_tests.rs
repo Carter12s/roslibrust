@@ -153,8 +153,9 @@ mod integration_tests {
     /// The whole goal here is to catch send / sync complier errors
     #[tokio::test]
     async fn parallel_construction() {
-        let mut client = ClientHandle::new(LOCAL_WS)
+        let mut client = timeout(TIMEOUT, ClientHandle::new(LOCAL_WS))
             .await
+            .expect("Timeout constructing client")
             .expect("Failed to construct client");
 
         let client_1 = client.clone();
