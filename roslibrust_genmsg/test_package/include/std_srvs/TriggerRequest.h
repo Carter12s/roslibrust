@@ -20,20 +20,24 @@ struct TriggerRequest_
   typedef TriggerRequest_<ContainerAllocator> Type;
 
   
-  TriggerRequest_()
-  {
-  }
+  
+    TriggerRequest_()
+    {
+    }
 
-  TriggerRequest_(const ContainerAllocator& _alloc)
-  {
-    (void)_alloc;
-  }
+    TriggerRequest_(const ContainerAllocator& _alloc)
+    {
+      (void)_alloc;
+    }
   
 
   
-
   
 
+  
+  
+
+  
   
 
   typedef boost::shared_ptr< ::std_srvs::TriggerRequest_<ContainerAllocator>> Ptr;

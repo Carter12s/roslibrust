@@ -48,12 +48,14 @@ pub fn get_search_paths() -> Vec<PathBuf> {
 /// This function may panic if it reaches a maximum search depth. If this function
 /// panics while you're using it, you may have some infinite loop in your paths
 /// due to symlinking.
-pub fn crawl(search_paths: Vec<PathBuf>) -> Vec<Package> {
+pub fn crawl<P: AsRef<Path>>(search_paths: &[P]) -> Vec<Package> {
     let mut packages = vec![];
 
     for path in search_paths {
         const MAX_RECURSION_DEPTH: u16 = 1000;
-        if let Ok(found_packages) = packages_from_path(path, MAX_RECURSION_DEPTH) {
+        if let Ok(found_packages) =
+            packages_from_path(path.as_ref().to_owned(), MAX_RECURSION_DEPTH)
+        {
             packages = [packages, found_packages].concat();
         }
     }
@@ -76,7 +78,7 @@ fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>>
         // We have a valid path
         path.push(CATKIN_IGNORE);
         // We'll only check this directory if no CATKIN_IGNORE file is present
-        // TODO: support for ament ignore and calcon ignore
+        // TODO: support for ament ignore and colcon ignore
         if !path.as_path().is_file() {
             assert!(path.pop());
 

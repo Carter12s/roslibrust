@@ -20,28 +20,36 @@ struct TriggerResponse_
   typedef TriggerResponse_<ContainerAllocator> Type;
 
   
-  TriggerResponse_()
-    : success()
+  
+    TriggerResponse_()
+      : success()
     , message() {
-  }
+    }
 
-  TriggerResponse_(const ContainerAllocator& _alloc)
-    : success(_alloc)
+    TriggerResponse_(const ContainerAllocator& _alloc)
+      : success(_alloc)
     , message(_alloc) {
-    (void)_alloc;
-  }
+      (void)_alloc;
+    }
   
 
   
   
-  typedef bool _success_type;
-  _success_type success;
-  
-  typedef ::std::string _message_type;
-  _message_type message;
+    
+    
+      
+        typedef bool _success_type;
+    _success_type success;
+    
+    
+      
+        typedef ::std::string _message_type;
+    _message_type message;
 
   
+  
 
+  
   
 
   typedef boost::shared_ptr< ::std_srvs::TriggerResponse_<ContainerAllocator>> Ptr;

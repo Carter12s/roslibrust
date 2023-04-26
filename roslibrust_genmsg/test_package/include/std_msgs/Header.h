@@ -19,32 +19,44 @@ struct Header_
 {
   typedef Header_<ContainerAllocator> Type;
 
-  Header_()
-    : seq()
+  
+  
+    Header_()
+      : seq()
     , stamp()
     , frame_id() {
-  }
+    }
 
-  Header_(const ContainerAllocator& _alloc)
-    : seq(_alloc)
+    Header_(const ContainerAllocator& _alloc)
+      : seq(_alloc)
     , stamp(_alloc)
     , frame_id(_alloc) {
-    (void)_alloc;
-  }
+      (void)_alloc;
+    }
+  
+
+  
+  
+    
+    
+      
+        typedef uint32_t _seq_type;
+    _seq_type seq;
+    
+    
+      
+        typedef ::ros::Time _stamp_type;
+    _stamp_type stamp;
+    
+    
+      
+        typedef ::std::string _frame_id_type;
+    _frame_id_type frame_id;
 
   
   
-  typedef uint32_t _seq_type;
-  _seq_type seq;
-  
-  typedef ::ros::Time _stamp_type;
-  _stamp_type stamp;
-  
-  typedef ::std::string _frame_id_type;
-  _frame_id_type frame_id;
 
   
-
   
 
   typedef boost::shared_ptr< ::std_msgs::Header_<ContainerAllocator>> Ptr;

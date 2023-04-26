@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Current - Unreleased
 
+### Added
+
+ - Generation of C++ source added via `roslibrust_genmsg` along with arbitrary languages via passed in templates
+ - Generation of Rust source for actions
+
+### Fixed
+
+
+### Changed
+
+ - `crawl` function in `roslibrust_codegen` updated to a more flexible API
+
 ## 0.7.0 - March 13, 2022
 
 ### Added
@@ -31,8 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Refactor some of the public APIs and types in roslibrust_codegen (concept of `ParsedMessageFile` vs `MessageFile`)
  - Added a method `get_md5sum` to `MessageFile`
  - Additional code generation API and macro which excludes `ROS_PACKAGE_PATH`
- - Generation of C++ headers for messages and services under `roslibrust_gencpp`.
- - Generation of Rust source for actions.
 
 ### Fixed
 

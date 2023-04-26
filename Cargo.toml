@@ -4,6 +4,6 @@ members = [
     "roslibrust",
     "roslibrust_codegen",
     "roslibrust_codegen_macro",
-    "roslibrust_gencpp",
+    "roslibrust_genmsg",
     "roslibrust_test"
 ]
