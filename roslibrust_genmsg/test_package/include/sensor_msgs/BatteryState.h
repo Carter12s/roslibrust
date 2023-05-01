@@ -137,12 +137,12 @@ struct BatteryState_
     
     
       
-        typedef ::std::string _location_type;
+        typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _location_type;
     _location_type location;
     
     
       
-        typedef ::std::string _serial_number_type;
+        typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _serial_number_type;
     _serial_number_type serial_number;
 
   
@@ -417,12 +417,12 @@ struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
     s << indent << "location: ";
     s << std::endl;
     
-    Printer< ::std::string>::stream(s, indent + "  ", v.location);
+    Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.location);
     
     s << indent << "serial_number: ";
     s << std::endl;
     
-    Printer< ::std::string>::stream(s, indent + "  ", v.serial_number);
+    Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.serial_number);
     
   }
 };

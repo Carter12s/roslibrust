@@ -20,7 +20,7 @@ lazy_static::lazy_static! {
         ("uint64", "uint64_t"),
         ("float32", "float"),
         ("float64", "double"),
-        ("string", "::std::string"),
+        ("string", "std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>"),
         ("time", "::ros::Time"),
         ("duration", "::ros::Duration"),
     ].into_iter().map(|(k, v)| (k.to_owned(), v.to_owned())).collect();
