@@ -50,7 +50,7 @@ struct Header_
     
     
       
-        typedef ::std::string _frame_id_type;
+        typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _frame_id_type;
     _frame_id_type frame_id;
 
   
@@ -214,7 +214,7 @@ struct Printer< ::std_msgs::Header_<ContainerAllocator>>
     s << indent << "frame_id: ";
     s << std::endl;
     
-    Printer< ::std::string>::stream(s, indent + "  ", v.frame_id);
+    Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.frame_id);
     
   }
 };

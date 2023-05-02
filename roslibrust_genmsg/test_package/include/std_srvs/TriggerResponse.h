@@ -43,7 +43,7 @@ struct TriggerResponse_
     
     
       
-        typedef ::std::string _message_type;
+        typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _message_type;
     _message_type message;
 
   
@@ -200,7 +200,7 @@ struct Printer< ::std_srvs::TriggerResponse_<ContainerAllocator>>
     s << indent << "message: ";
     s << std::endl;
     
-    Printer< ::std::string>::stream(s, indent + "  ", v.message);
+    Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.message);
     
   }
 };
