@@ -249,7 +249,6 @@ mod test {
                 {%- endfor %}        
             }
             "#,
-            std::collections::HashMap::new(),
         )
         .add_filter("map_type", move |v| {
             let value = serde_json::to_value(v).unwrap();
