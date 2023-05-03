@@ -57,6 +57,10 @@ pub struct CodeGeneratorBuilder<'a> {
     msg_template: &'a str,
     srv_template: Option<&'a str>,
     typename_conversion_mapping: HashMap<String, String>,
+    filters: Vec<(
+        String,
+        Box<dyn Fn(minijinja::value::Value) -> minijinja::value::Value + Send + Sync>,
+    )>,
 }
 
 impl<'a> CodeGeneratorBuilder<'a> {
@@ -70,6 +74,7 @@ impl<'a> CodeGeneratorBuilder<'a> {
             msg_template,
             srv_template: None,
             typename_conversion_mapping,
+            filters: vec![],
         }
     }
 
@@ -78,11 +83,15 @@ impl<'a> CodeGeneratorBuilder<'a> {
         let (messages, services) =
             roslibrust_codegen::resolve_dependency_graph(messages, services).unwrap();
 
-        let env = helpers::prepare_environment(
+        let mut env = helpers::prepare_environment(
             self.msg_template,
             self.srv_template.unwrap_or(""),
             self.typename_conversion_mapping.clone(),
         );
+
+        self.filters
+            .into_iter()
+            .for_each(|(name, filter)| env.add_filter(name, filter));
 
         Ok(CodeGenerator {
             messages,
@@ -93,6 +102,14 @@ impl<'a> CodeGeneratorBuilder<'a> {
 
     pub fn service_template(mut self, srv_template: &'a str) -> Self {
         self.srv_template = Some(srv_template);
+        self
+    }
+
+    pub fn add_filter<F>(mut self, name: &str, filter: F) -> Self
+    where
+        F: Fn(minijinja::value::Value) -> minijinja::value::Value + Send + Sync + 'static,
+    {
+        self.filters.push((name.to_owned(), Box::new(filter)));
         self
     }
 }
