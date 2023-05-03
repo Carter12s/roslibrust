@@ -245,12 +245,20 @@ mod test {
             r#"
             pub struct {{ spec.short_name }} {
                 {% for field in spec.fields %}
-                {{ field.name }}: {{ field.field_type|typename_conversion }},
+                {{ field.name }}: {{ field.field_type|map_type }},
                 {%- endfor %}        
             }
             "#,
-            mapping,
         )
+        .add_filter("map_type", move |v| {
+            let value = serde_json::to_value(v).unwrap();
+            let ros_type = value.as_str().unwrap();
+            let typename = match mapping.get(ros_type) {
+                Some(native_type) => native_type.clone(),
+                None => ros_type.to_string(),
+            };
+            typename.into()
+        })
         .build()
         .unwrap();
 
