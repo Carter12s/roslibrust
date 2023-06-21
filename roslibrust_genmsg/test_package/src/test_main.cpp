@@ -14,5 +14,7 @@ int main() {
     geometry_msgs::Polygon polygon;
     polygon.points.push_back(point);
 
+    std::cout << "Polygon: " << polygon << std::endl;
+
     return 0;
 }
