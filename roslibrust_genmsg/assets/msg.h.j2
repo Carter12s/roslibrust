@@ -264,7 +264,7 @@ struct Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>
     {% if is_array(field) %}
     
     s << indent << "{{ field.name }}[]" << std::endl;
-    for (size_t i = 0; i < v.{{ field.name }},size(); ++i)
+    for (size_t i = 0; i < v.{{ field.name }}.size(); ++i)
     {
       s << indent << "  {{ field.name }}[" << i << "]: ";
       {% if not is_intrinsic_type(field) %}

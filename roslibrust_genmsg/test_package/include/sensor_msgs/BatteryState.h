@@ -445,7 +445,7 @@ struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
     
     
     s << indent << "cell_voltage[]" << std::endl;
-    for (size_t i = 0; i < v.cell_voltage,size(); ++i)
+    for (size_t i = 0; i < v.cell_voltage.size(); ++i)
     {
       s << indent << "  cell_voltage[" << i << "]: ";
       
@@ -456,7 +456,7 @@ struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
     
     
     s << indent << "cell_temperature[]" << std::endl;
-    for (size_t i = 0; i < v.cell_temperature,size(); ++i)
+    for (size_t i = 0; i < v.cell_temperature.size(); ++i)
     {
       s << indent << "  cell_temperature[" << i << "]: ";
       

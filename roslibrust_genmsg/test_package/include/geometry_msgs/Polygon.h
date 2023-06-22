@@ -188,7 +188,7 @@ struct Printer< ::geometry_msgs::Polygon_<ContainerAllocator>>
     
     
     s << indent << "points[]" << std::endl;
-    for (size_t i = 0; i < v.points,size(); ++i)
+    for (size_t i = 0; i < v.points.size(); ++i)
     {
       s << indent << "  points[" << i << "]: ";
       
