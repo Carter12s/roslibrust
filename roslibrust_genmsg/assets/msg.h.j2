@@ -236,12 +236,17 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
+  {% if spec.fields|len > 0 %}
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     {%- for field in spec.fields %}
     stream.next(m.{{ field.name }});
     {%- endfor %}
   }
+  {% else %}
+  template<typename Stream, typename T> inline static void allInOne(Stream&, T)
+  {}
+  {% endif %}
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct {{ spec.short_name }}_
