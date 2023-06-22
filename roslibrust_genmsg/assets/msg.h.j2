@@ -272,7 +272,7 @@ struct Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>
       s << indent;
       Printer<::{{ field.package }}::{{ field.field_type}}>::stream(s, indent + "    ", v.{{ field.name }}[i]);
       {% else %}
-      Printer<{{ field.field_type|typename_conversion }}>::stream(s, indent + "  ", {{ field.name }}[i]);
+      Printer<{{ field.field_type|typename_conversion }}>::stream(s, indent + "  ", v.{{ field.name }}[i]);
       {% endif %}
     }
     {% else %}

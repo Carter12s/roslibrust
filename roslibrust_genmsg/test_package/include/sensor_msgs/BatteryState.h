@@ -449,7 +449,7 @@ struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
     {
       s << indent << "  cell_voltage[" << i << "]: ";
       
-      Printer<float>::stream(s, indent + "  ", cell_voltage[i]);
+      Printer<float>::stream(s, indent + "  ", v.cell_voltage[i]);
       
     }
     
@@ -460,7 +460,7 @@ struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
     {
       s << indent << "  cell_temperature[" << i << "]: ";
       
-      Printer<float>::stream(s, indent + "  ", cell_temperature[i]);
+      Printer<float>::stream(s, indent + "  ", v.cell_temperature[i]);
       
     }
     
