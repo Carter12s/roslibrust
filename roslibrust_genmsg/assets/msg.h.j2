@@ -104,7 +104,7 @@ typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }} const> {{
     template<typename ContainerAllocator> const {{ constant.constant_type|typename_conversion }}
       {{ spec.short_name }}_<ContainerAllocator>::{{ constant.name }} = 
         {%- if constant.constant_type == 'string' %}
-          R"{{ constant.constant_value }}"
+          R{{ constant.constant_value }}
         {%- elif constant.constant_type == 'bool' %}
           int({{ constant.constant_value|lower }})
         {%- else %}
