@@ -257,18 +257,41 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
+  {% if spec.fields|count > 0 %}
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>& v)
   {
     {%- for field in spec.fields %}
+    {% if is_array(field) %}
+    
+    s << indent << "{{ field.name }}[]" << std::endl;
+    for (size_t i = 0; i < v.{{ field.name }},size(); ++i)
+    {
+      s << indent << "  {{ field.name }}[" << i << "]: ";
+      {% if not is_intrinsic_type(field) %}
+      s << std::endl;
+      s << indent;
+      Printer<::{{ field.package }}::{{ field.field_type}}>::stream(s, indent + "    ", v.{{ field.name }}[i]);
+      {% else %}
+      Printer<{{ field.field_type|typename_conversion }}>::stream(s, indent + "  ", {{ field.name }}[i]);
+      {% endif %}
+    }
+    {% else %}
+
     s << indent << "{{ field.name }}: ";
-    s << std::endl;
     {% if is_intrinsic_type(field) %}
     Printer< {{ field.field_type|typename_conversion }}>::stream(s, indent + "  ", v.{{ field.name }});
     {% else %}
+    s << std::endl;
     Printer< ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>>::stream(s, indent + "  ", v.{{ field.name }});
+    {% endif %}
+
     {% endif %}
     {%- endfor %}
   }
+  {% else %}
+  template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>& v)
+  {}
+  {% endif %}
 };
 
 } // namespace message_operations

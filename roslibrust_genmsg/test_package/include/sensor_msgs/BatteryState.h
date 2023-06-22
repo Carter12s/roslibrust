@@ -342,89 +342,146 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 {
+  
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::sensor_msgs::BatteryState_<ContainerAllocator>& v)
   {
-    s << indent << "header: ";
-    s << std::endl;
     
+
+    s << indent << "header: ";
+    
+    s << std::endl;
     Printer< ::std_msgs::Header_<ContainerAllocator>>::stream(s, indent + "  ", v.header);
     
+
+    
+    
+
     s << indent << "voltage: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.voltage);
     
+
+    
+    
+
     s << indent << "temperature: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.temperature);
     
+
+    
+    
+
     s << indent << "current: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.current);
     
+
+    
+    
+
     s << indent << "charge: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.charge);
     
+
+    
+    
+
     s << indent << "capacity: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.capacity);
     
+
+    
+    
+
     s << indent << "design_capacity: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.design_capacity);
     
+
+    
+    
+
     s << indent << "percentage: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.percentage);
     
+
+    
+    
+
     s << indent << "power_supply_status: ";
-    s << std::endl;
     
     Printer< uint8_t>::stream(s, indent + "  ", v.power_supply_status);
     
+
+    
+    
+
     s << indent << "power_supply_health: ";
-    s << std::endl;
     
     Printer< uint8_t>::stream(s, indent + "  ", v.power_supply_health);
     
+
+    
+    
+
     s << indent << "power_supply_technology: ";
-    s << std::endl;
     
     Printer< uint8_t>::stream(s, indent + "  ", v.power_supply_technology);
     
+
+    
+    
+
     s << indent << "present: ";
-    s << std::endl;
     
     Printer< bool>::stream(s, indent + "  ", v.present);
     
-    s << indent << "cell_voltage: ";
-    s << std::endl;
+
     
-    Printer< float>::stream(s, indent + "  ", v.cell_voltage);
     
-    s << indent << "cell_temperature: ";
-    s << std::endl;
     
-    Printer< float>::stream(s, indent + "  ", v.cell_temperature);
+    s << indent << "cell_voltage[]" << std::endl;
+    for (size_t i = 0; i < v.cell_voltage,size(); ++i)
+    {
+      s << indent << "  cell_voltage[" << i << "]: ";
+      
+      Printer<float>::stream(s, indent + "  ", cell_voltage[i]);
+      
+    }
     
+    
+    
+    s << indent << "cell_temperature[]" << std::endl;
+    for (size_t i = 0; i < v.cell_temperature,size(); ++i)
+    {
+      s << indent << "  cell_temperature[" << i << "]: ";
+      
+      Printer<float>::stream(s, indent + "  ", cell_temperature[i]);
+      
+    }
+    
+    
+
     s << indent << "location: ";
-    s << std::endl;
     
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.location);
     
+
+    
+    
+
     s << indent << "serial_number: ";
-    s << std::endl;
     
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.serial_number);
     
+
+    
   }
+  
 };
 
 } // namespace message_operations

@@ -182,14 +182,24 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::geometry_msgs::Polygon_<ContainerAllocator>>
 {
+  
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::geometry_msgs::Polygon_<ContainerAllocator>& v)
   {
-    s << indent << "points: ";
-    s << std::endl;
     
-    Printer< ::geometry_msgs::Point32_<ContainerAllocator>>::stream(s, indent + "  ", v.points);
+    
+    s << indent << "points[]" << std::endl;
+    for (size_t i = 0; i < v.points,size(); ++i)
+    {
+      s << indent << "  points[" << i << "]: ";
+      
+      s << std::endl;
+      s << indent;
+      Printer<::geometry_msgs::Point32>::stream(s, indent + "    ", v.points[i]);
+      
+    }
     
   }
+  
 };
 
 } // namespace message_operations

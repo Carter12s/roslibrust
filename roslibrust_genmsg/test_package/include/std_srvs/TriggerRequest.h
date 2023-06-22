@@ -174,9 +174,10 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::std_srvs::TriggerRequest_<ContainerAllocator>>
 {
+  
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::std_srvs::TriggerRequest_<ContainerAllocator>& v)
-  {
-  }
+  {}
+  
 };
 
 } // namespace message_operations

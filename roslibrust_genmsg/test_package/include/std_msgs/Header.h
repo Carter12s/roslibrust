@@ -199,24 +199,35 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::std_msgs::Header_<ContainerAllocator>>
 {
+  
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::std_msgs::Header_<ContainerAllocator>& v)
   {
+    
+
     s << indent << "seq: ";
-    s << std::endl;
     
     Printer< uint32_t>::stream(s, indent + "  ", v.seq);
     
+
+    
+    
+
     s << indent << "stamp: ";
-    s << std::endl;
     
     Printer< ::ros::Time>::stream(s, indent + "  ", v.stamp);
     
+
+    
+    
+
     s << indent << "frame_id: ";
-    s << std::endl;
     
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.frame_id);
     
+
+    
   }
+  
 };
 
 } // namespace message_operations

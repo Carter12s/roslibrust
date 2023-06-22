@@ -199,24 +199,35 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::geometry_msgs::Point32_<ContainerAllocator>>
 {
+  
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::geometry_msgs::Point32_<ContainerAllocator>& v)
   {
+    
+
     s << indent << "x: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.x);
     
+
+    
+    
+
     s << indent << "y: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.y);
     
+
+    
+    
+
     s << indent << "z: ";
-    s << std::endl;
     
     Printer< float>::stream(s, indent + "  ", v.z);
     
+
+    
   }
+  
 };
 
 } // namespace message_operations
