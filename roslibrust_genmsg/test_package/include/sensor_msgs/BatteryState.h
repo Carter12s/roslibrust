@@ -122,7 +122,7 @@ struct BatteryState_
     
     
       
-        typedef bool _present_type;
+        typedef uint8_t _present_type;
     _present_type present;
     
     
@@ -308,6 +308,7 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 {
+  
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     stream.next(m.header);
@@ -327,6 +328,7 @@ struct Serializer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
     stream.next(m.location);
     stream.next(m.serial_number);
   }
+  
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct BatteryState_
@@ -438,7 +440,7 @@ struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 
     s << indent << "present: ";
     
-    Printer< bool>::stream(s, indent + "  ", v.present);
+    Printer< uint8_t>::stream(s, indent + "  ", v.present);
     
 
     

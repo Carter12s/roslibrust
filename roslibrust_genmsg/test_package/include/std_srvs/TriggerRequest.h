@@ -156,9 +156,10 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::std_srvs::TriggerRequest_<ContainerAllocator>>
 {
-  template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
-  {
-  }
+  
+  template<typename Stream, typename T> inline static void allInOne(Stream&, T)
+  {}
+  
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct TriggerRequest_

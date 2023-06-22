@@ -38,7 +38,7 @@ struct TriggerResponse_
     
     
       
-        typedef bool _success_type;
+        typedef uint8_t _success_type;
     _success_type success;
     
     
@@ -170,11 +170,13 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 {
+  
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     stream.next(m.success);
     stream.next(m.message);
   }
+  
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct TriggerResponse_
@@ -197,7 +199,7 @@ struct Printer< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 
     s << indent << "success: ";
     
-    Printer< bool>::stream(s, indent + "  ", v.success);
+    Printer< uint8_t>::stream(s, indent + "  ", v.success);
     
 
     

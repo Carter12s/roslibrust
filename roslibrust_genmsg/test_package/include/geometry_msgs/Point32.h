@@ -178,12 +178,14 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::geometry_msgs::Point32_<ContainerAllocator>>
 {
+  
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     stream.next(m.x);
     stream.next(m.y);
     stream.next(m.z);
   }
+  
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct Point32_

@@ -178,12 +178,14 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::std_msgs::Header_<ContainerAllocator>>
 {
+  
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     stream.next(m.seq);
     stream.next(m.stamp);
     stream.next(m.frame_id);
   }
+  
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct Header_
