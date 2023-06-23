@@ -9,7 +9,6 @@
 #include <ros/serialization.h>
 #include <ros/builtin_message_traits.h>
 #include <ros/message_operations.h>
-
 {% for field in spec.fields %}
 {%- if not is_intrinsic_type(field) %}
 #include <{{ field.package }}/{{ field.field_type }}.h>
@@ -23,41 +22,41 @@ struct {{ spec.short_name }}_
 {
   typedef {{ spec.short_name }}_<ContainerAllocator> Type;
 
-  {# Constructors and initializer lists #}
-  {% if spec.fields|length > 0 %}
-    {{ spec.short_name }}_()
-      : {{ spec.fields|map(attribute="name")|join('()\n    , ') }}() {
-    }
+  {#- Constructors and initializer lists #}
+  {%- if spec.fields|length > 0 %}
+  {{ spec.short_name }}_()
+    : {{ spec.fields|map(attribute="name")|join('()\n    , ') }}() {
+  }
 
-    {{ spec.short_name }}_(const ContainerAllocator& _alloc)
-      : {{ spec.fields|map(attribute="name")|join('(_alloc)\n    , ') }}(_alloc) {
-      (void)_alloc;
-    }
-  {% else %}
-    {{ spec.short_name }}_()
-    {
-    }
+  {{ spec.short_name }}_(const ContainerAllocator& _alloc)
+    : {{ spec.fields|map(attribute="name")|join('(_alloc)\n    , ') }}(_alloc) {
+    (void)_alloc;
+  }
+  {%- else %}
+  {{ spec.short_name }}_()
+  {
+  }
 
-    {{ spec.short_name }}_(const ContainerAllocator& _alloc)
-    {
-      (void)_alloc;
-    }
-  {% endif %}
+  {{ spec.short_name }}_(const ContainerAllocator& _alloc)
+  {
+    (void)_alloc;
+  }
+  {%- endif %}
 
-  {# Each variable field of the message type is defined here #}
-  {% for field in spec.fields %}
+  {#- Each variable field of the message type is defined here #}
+  {%- for field in spec.fields %}
     {# This section is extremely verbose with repeated elements. 
        Trade-off here between repetition and ability to reason about what 
        code should be generated. 
     #}
-    {% if is_array(field) %}
-      {% if is_intrinsic_type(field) %}
+    {%- if is_array(field) %}
+      {%- if is_intrinsic_type(field) %}
         typedef std::vector<{{ field.field_type|typename_conversion }}, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<{{ field.field_type|typename_conversion }}>> _{{ field.name }}_type;
       {%- else %}
         typedef std::vector<::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>>> _{{ field.name }}_type;
       {%- endif %}
     {%- else %}
-      {% if is_intrinsic_type(field) %}
+      {%- if is_intrinsic_type(field) %}
         typedef {{ field.field_type|typename_conversion }} _{{ field.name }}_type;
       {%- else %}
         typedef ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator> _{{ field.name }}_type;
@@ -67,9 +66,9 @@ struct {{ spec.short_name }}_
   {%- endfor %}
 
   {# Numeric constant fields (like enums ) are each defined here #}
-  {% if spec.constants|length > 0 %}
+  {%- if spec.constants|length > 0 %}
     enum {
-    {% for constant in spec.constants %}
+    {%- for constant in spec.constants %}
       {%- if constant.constant_type in ['byte', 'int8', 'int16', 'int32', 'int64', 'char'] %}
         {{ constant.name }} = {{ constant.constant_value }},
       {%- elif constant.constant_type in ['uint8', 'uint16', 'uint32', 'uint64'] %}
@@ -77,15 +76,15 @@ struct {{ spec.short_name }}_
       {%- endif -%}
     {%- endfor %}
     };
-  {% endif %}
+  {%- endif %}
 
-  {# Non-numeric constant fields are declared here, but defined below 
+  {#- Non-numeric constant fields are declared here, but defined below 
      outside of the class definition.
   #}
-  {% for constant in spec.constants %}
+  {%- for constant in spec.constants %}
     {%- if constant.constant_type not in ['byte', 'int8', 'int16', 'int32', 'int64', 'char', 'uint8', 'uint16', 'uint32', 'uint64'] %}
       static const {{ constant.constant_type|typename_conversion }} {{ constant.name }};
-    {% endif %}
+    {%- endif %}
   {%- endfor %}
 
   typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>> Ptr;
@@ -99,7 +98,7 @@ typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }}> {{ spec.
 typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }} const> {{ spec.short_name }}ConstPtr;
 
 // constants requiring out of line definition
-{% for constant in spec.constants %}
+{%- for constant in spec.constants %}
   {%- if constant.constant_type not in ['byte', 'int8', 'int16', 'int32', 'int64', 'char', 'uint8', 'uint16', 'uint32', 'uint64'] -%}
     template<typename ContainerAllocator> const {{ constant.constant_type|typename_conversion }}
       {{ spec.short_name }}_<ContainerAllocator>::{{ constant.name }} = 
@@ -236,17 +235,17 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
-  {% if spec.fields|count > 0 %}
+  {%- if spec.fields|count > 0 %}
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     {%- for field in spec.fields %}
     stream.next(m.{{ field.name }});
     {%- endfor %}
   }
-  {% else %}
+  {%- else %}
   template<typename Stream, typename T> inline static void allInOne(Stream&, T)
   {}
-  {% endif %}
+  {%- endif %}
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct {{ spec.short_name }}_
@@ -262,41 +261,41 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
-  {% if spec.fields|count > 0 %}
+  {%- if spec.fields|count > 0 %}
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>& v)
   {
     {%- for field in spec.fields %}
-    {% if is_array(field) %}
+    {%- if is_array(field) %}
     
     s << indent << "{{ field.name }}[]" << std::endl;
     for (size_t i = 0; i < v.{{ field.name }}.size(); ++i)
     {
       s << indent << "  {{ field.name }}[" << i << "]: ";
-      {% if not is_intrinsic_type(field) %}
+      {%- if not is_intrinsic_type(field) %}
       s << std::endl;
       s << indent;
       Printer<::{{ field.package }}::{{ field.field_type}}>::stream(s, indent + "    ", v.{{ field.name }}[i]);
-      {% else %}
+      {%- else %}
       Printer<{{ field.field_type|typename_conversion }}>::stream(s, indent + "  ", v.{{ field.name }}[i]);
-      {% endif %}
+      {%- endif %}
     }
-    {% else %}
+    {%- else %}
 
     s << indent << "{{ field.name }}: ";
-    {% if is_intrinsic_type(field) %}
+    {%- if is_intrinsic_type(field) %}
     Printer< {{ field.field_type|typename_conversion }}>::stream(s, indent + "  ", v.{{ field.name }});
-    {% else %}
+    {%- else %}
     s << std::endl;
     Printer< ::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>>::stream(s, indent + "  ", v.{{ field.name }});
-    {% endif %}
+    {%- endif %}
 
-    {% endif %}
+    {%- endif %}
     {%- endfor %}
   }
-  {% else %}
+  {%- else %}
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>& v)
   {}
-  {% endif %}
+  {%- endif %}
 };
 
 } // namespace message_operations

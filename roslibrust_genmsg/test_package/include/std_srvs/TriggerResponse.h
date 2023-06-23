@@ -11,45 +11,29 @@
 #include <ros/message_operations.h>
 
 
-
 namespace std_srvs {
 
 template <class ContainerAllocator>
 struct TriggerResponse_
 {
   typedef TriggerResponse_<ContainerAllocator> Type;
-
-  
-  
-    TriggerResponse_()
-      : success()
+  TriggerResponse_()
+    : success()
     , message() {
-    }
+  }
 
-    TriggerResponse_(const ContainerAllocator& _alloc)
-      : success(_alloc)
+  TriggerResponse_(const ContainerAllocator& _alloc)
+    : success(_alloc)
     , message(_alloc) {
-      (void)_alloc;
-    }
-  
-
-  
-  
+    (void)_alloc;
+  }
     
-    
-      
         typedef uint8_t _success_type;
     _success_type success;
     
-    
-      
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _message_type;
     _message_type message;
 
-  
-  
-
-  
   
 
   typedef boost::shared_ptr< ::std_srvs::TriggerResponse_<ContainerAllocator>> Ptr;
@@ -63,7 +47,6 @@ typedef boost::shared_ptr< ::std_srvs::TriggerResponse> TriggerResponsePtr;
 typedef boost::shared_ptr< ::std_srvs::TriggerResponse const> TriggerResponseConstPtr;
 
 // constants requiring out of line definition
-
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s, const ::std_srvs::TriggerResponse_<ContainerAllocator> & v)
@@ -170,13 +153,11 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 {
-  
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     stream.next(m.success);
     stream.next(m.message);
   }
-  
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct TriggerResponse_
@@ -192,27 +173,15 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 {
-  
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::std_srvs::TriggerResponse_<ContainerAllocator>& v)
   {
-    
 
     s << indent << "success: ";
-    
     Printer< uint8_t>::stream(s, indent + "  ", v.success);
-    
-
-    
-    
 
     s << indent << "message: ";
-    
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.message);
-    
-
-    
   }
-  
 };
 
 } // namespace message_operations

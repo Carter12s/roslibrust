@@ -10,7 +10,6 @@
 #include <ros/builtin_message_traits.h>
 #include <ros/message_operations.h>
 
-
 #include <geometry_msgs/Point32.h>
 
 namespace geometry_msgs {
@@ -19,31 +18,18 @@ template <class ContainerAllocator>
 struct Polygon_
 {
   typedef Polygon_<ContainerAllocator> Type;
+  Polygon_()
+    : points() {
+  }
 
-  
-  
-    Polygon_()
-      : points() {
-    }
-
-    Polygon_(const ContainerAllocator& _alloc)
-      : points(_alloc) {
-      (void)_alloc;
-    }
-  
-
-  
-  
+  Polygon_(const ContainerAllocator& _alloc)
+    : points(_alloc) {
+    (void)_alloc;
+  }
     
-    
-      
         typedef std::vector<::geometry_msgs::Point32_<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<::geometry_msgs::Point32_<ContainerAllocator>>> _points_type;
     _points_type points;
 
-  
-  
-
-  
   
 
   typedef boost::shared_ptr< ::geometry_msgs::Polygon_<ContainerAllocator>> Ptr;
@@ -57,7 +43,6 @@ typedef boost::shared_ptr< ::geometry_msgs::Polygon> PolygonPtr;
 typedef boost::shared_ptr< ::geometry_msgs::Polygon const> PolygonConstPtr;
 
 // constants requiring out of line definition
-
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s, const ::geometry_msgs::Polygon_<ContainerAllocator> & v)
@@ -163,12 +148,10 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::geometry_msgs::Polygon_<ContainerAllocator>>
 {
-  
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     stream.next(m.points);
   }
-  
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct Polygon_
@@ -184,24 +167,18 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::geometry_msgs::Polygon_<ContainerAllocator>>
 {
-  
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::geometry_msgs::Polygon_<ContainerAllocator>& v)
   {
-    
     
     s << indent << "points[]" << std::endl;
     for (size_t i = 0; i < v.points.size(); ++i)
     {
       s << indent << "  points[" << i << "]: ";
-      
       s << std::endl;
       s << indent;
       Printer<::geometry_msgs::Point32>::stream(s, indent + "    ", v.points[i]);
-      
     }
-    
   }
-  
 };
 
 } // namespace message_operations

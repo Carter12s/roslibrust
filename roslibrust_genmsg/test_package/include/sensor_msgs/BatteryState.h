@@ -10,7 +10,6 @@
 #include <ros/builtin_message_traits.h>
 #include <ros/message_operations.h>
 
-
 #include <std_msgs/Header.h>
 
 namespace sensor_msgs {
@@ -19,11 +18,8 @@ template <class ContainerAllocator>
 struct BatteryState_
 {
   typedef BatteryState_<ContainerAllocator> Type;
-
-  
-  
-    BatteryState_()
-      : header()
+  BatteryState_()
+    : header()
     , voltage()
     , temperature()
     , current()
@@ -39,10 +35,10 @@ struct BatteryState_
     , cell_temperature()
     , location()
     , serial_number() {
-    }
+  }
 
-    BatteryState_(const ContainerAllocator& _alloc)
-      : header(_alloc)
+  BatteryState_(const ContainerAllocator& _alloc)
+    : header(_alloc)
     , voltage(_alloc)
     , temperature(_alloc)
     , current(_alloc)
@@ -58,97 +54,59 @@ struct BatteryState_
     , cell_temperature(_alloc)
     , location(_alloc)
     , serial_number(_alloc) {
-      (void)_alloc;
-    }
-  
-
-  
-  
+    (void)_alloc;
+  }
     
-    
-      
         typedef ::std_msgs::Header_<ContainerAllocator> _header_type;
     _header_type header;
     
-    
-      
         typedef float _voltage_type;
     _voltage_type voltage;
     
-    
-      
         typedef float _temperature_type;
     _temperature_type temperature;
     
-    
-      
         typedef float _current_type;
     _current_type current;
     
-    
-      
         typedef float _charge_type;
     _charge_type charge;
     
-    
-      
         typedef float _capacity_type;
     _capacity_type capacity;
     
-    
-      
         typedef float _design_capacity_type;
     _design_capacity_type design_capacity;
     
-    
-      
         typedef float _percentage_type;
     _percentage_type percentage;
     
-    
-      
         typedef uint8_t _power_supply_status_type;
     _power_supply_status_type power_supply_status;
     
-    
-      
         typedef uint8_t _power_supply_health_type;
     _power_supply_health_type power_supply_health;
     
-    
-      
         typedef uint8_t _power_supply_technology_type;
     _power_supply_technology_type power_supply_technology;
     
-    
-      
         typedef uint8_t _present_type;
     _present_type present;
     
-    
-      
         typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _cell_voltage_type;
     _cell_voltage_type cell_voltage;
     
-    
-      
         typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _cell_temperature_type;
     _cell_temperature_type cell_temperature;
     
-    
-      
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _location_type;
     _location_type location;
     
-    
-      
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _serial_number_type;
     _serial_number_type serial_number;
 
   
-  
     enum {
-    
         POWER_SUPPLY_STATUS_UNKNOWN = 0u,
         POWER_SUPPLY_STATUS_CHARGING = 1u,
         POWER_SUPPLY_STATUS_DISCHARGING = 2u,
@@ -171,10 +129,6 @@ struct BatteryState_
         POWER_SUPPLY_TECHNOLOGY_NICD = 5u,
         POWER_SUPPLY_TECHNOLOGY_LIMN = 6u,
     };
-  
-
-  
-  
 
   typedef boost::shared_ptr< ::sensor_msgs::BatteryState_<ContainerAllocator>> Ptr;
   typedef boost::shared_ptr< ::sensor_msgs::BatteryState_<ContainerAllocator> const> ConstPtr;
@@ -187,7 +141,6 @@ typedef boost::shared_ptr< ::sensor_msgs::BatteryState> BatteryStatePtr;
 typedef boost::shared_ptr< ::sensor_msgs::BatteryState const> BatteryStateConstPtr;
 
 // constants requiring out of line definition
-
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s, const ::sensor_msgs::BatteryState_<ContainerAllocator> & v)
@@ -308,7 +261,6 @@ namespace serialization
 template<class ContainerAllocator>
 struct Serializer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 {
-  
   template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
   {
     stream.next(m.header);
@@ -328,7 +280,6 @@ struct Serializer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
     stream.next(m.location);
     stream.next(m.serial_number);
   }
-  
 
   ROS_DECLARE_ALLINONE_SERIALIZER
 }; // struct BatteryState_
@@ -344,146 +295,66 @@ namespace message_operations
 template<class ContainerAllocator>
 struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 {
-  
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::sensor_msgs::BatteryState_<ContainerAllocator>& v)
   {
-    
 
     s << indent << "header: ";
-    
     s << std::endl;
     Printer< ::std_msgs::Header_<ContainerAllocator>>::stream(s, indent + "  ", v.header);
-    
-
-    
-    
 
     s << indent << "voltage: ";
-    
     Printer< float>::stream(s, indent + "  ", v.voltage);
-    
-
-    
-    
 
     s << indent << "temperature: ";
-    
     Printer< float>::stream(s, indent + "  ", v.temperature);
-    
-
-    
-    
 
     s << indent << "current: ";
-    
     Printer< float>::stream(s, indent + "  ", v.current);
-    
-
-    
-    
 
     s << indent << "charge: ";
-    
     Printer< float>::stream(s, indent + "  ", v.charge);
-    
-
-    
-    
 
     s << indent << "capacity: ";
-    
     Printer< float>::stream(s, indent + "  ", v.capacity);
-    
-
-    
-    
 
     s << indent << "design_capacity: ";
-    
     Printer< float>::stream(s, indent + "  ", v.design_capacity);
-    
-
-    
-    
 
     s << indent << "percentage: ";
-    
     Printer< float>::stream(s, indent + "  ", v.percentage);
-    
-
-    
-    
 
     s << indent << "power_supply_status: ";
-    
     Printer< uint8_t>::stream(s, indent + "  ", v.power_supply_status);
-    
-
-    
-    
 
     s << indent << "power_supply_health: ";
-    
     Printer< uint8_t>::stream(s, indent + "  ", v.power_supply_health);
-    
-
-    
-    
 
     s << indent << "power_supply_technology: ";
-    
     Printer< uint8_t>::stream(s, indent + "  ", v.power_supply_technology);
-    
-
-    
-    
 
     s << indent << "present: ";
-    
     Printer< uint8_t>::stream(s, indent + "  ", v.present);
-    
-
-    
-    
     
     s << indent << "cell_voltage[]" << std::endl;
     for (size_t i = 0; i < v.cell_voltage.size(); ++i)
     {
       s << indent << "  cell_voltage[" << i << "]: ";
-      
       Printer<float>::stream(s, indent + "  ", v.cell_voltage[i]);
-      
     }
-    
-    
     
     s << indent << "cell_temperature[]" << std::endl;
     for (size_t i = 0; i < v.cell_temperature.size(); ++i)
     {
       s << indent << "  cell_temperature[" << i << "]: ";
-      
       Printer<float>::stream(s, indent + "  ", v.cell_temperature[i]);
-      
     }
-    
-    
 
     s << indent << "location: ";
-    
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.location);
-    
-
-    
-    
 
     s << indent << "serial_number: ";
-    
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.serial_number);
-    
-
-    
   }
-  
 };
 
 } // namespace message_operations
