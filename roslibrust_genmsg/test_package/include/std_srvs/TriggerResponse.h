@@ -11,45 +11,29 @@
 #include <ros/message_operations.h>
 
 
-
 namespace std_srvs {
 
 template <class ContainerAllocator>
 struct TriggerResponse_
 {
   typedef TriggerResponse_<ContainerAllocator> Type;
-
-  
-  
-    TriggerResponse_()
-      : success()
+  TriggerResponse_()
+    : success()
     , message() {
-    }
+  }
 
-    TriggerResponse_(const ContainerAllocator& _alloc)
-      : success(_alloc)
+  TriggerResponse_(const ContainerAllocator& _alloc)
+    : success(_alloc)
     , message(_alloc) {
-      (void)_alloc;
-    }
-  
-
-  
-  
+    (void)_alloc;
+  }
     
-    
-      
-        typedef bool _success_type;
+        typedef uint8_t _success_type;
     _success_type success;
     
-    
-      
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _message_type;
     _message_type message;
 
-  
-  
-
-  
   
 
   typedef boost::shared_ptr< ::std_srvs::TriggerResponse_<ContainerAllocator>> Ptr;
@@ -63,7 +47,6 @@ typedef boost::shared_ptr< ::std_srvs::TriggerResponse> TriggerResponsePtr;
 typedef boost::shared_ptr< ::std_srvs::TriggerResponse const> TriggerResponseConstPtr;
 
 // constants requiring out of line definition
-
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s, const ::std_srvs::TriggerResponse_<ContainerAllocator> & v)
@@ -192,16 +175,12 @@ struct Printer< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::std_srvs::TriggerResponse_<ContainerAllocator>& v)
   {
+
     s << indent << "success: ";
-    s << std::endl;
-    
-    Printer< bool>::stream(s, indent + "  ", v.success);
-    
+    Printer< uint8_t>::stream(s, indent + "  ", v.success);
+
     s << indent << "message: ";
-    s << std::endl;
-    
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.message);
-    
   }
 };
 

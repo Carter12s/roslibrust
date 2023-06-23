@@ -11,52 +11,34 @@
 #include <ros/message_operations.h>
 
 
-
 namespace std_msgs {
 
 template <class ContainerAllocator>
 struct Header_
 {
   typedef Header_<ContainerAllocator> Type;
-
-  
-  
-    Header_()
-      : seq()
+  Header_()
+    : seq()
     , stamp()
     , frame_id() {
-    }
+  }
 
-    Header_(const ContainerAllocator& _alloc)
-      : seq(_alloc)
+  Header_(const ContainerAllocator& _alloc)
+    : seq(_alloc)
     , stamp(_alloc)
     , frame_id(_alloc) {
-      (void)_alloc;
-    }
-  
-
-  
-  
+    (void)_alloc;
+  }
     
-    
-      
         typedef uint32_t _seq_type;
     _seq_type seq;
     
-    
-      
         typedef ::ros::Time _stamp_type;
     _stamp_type stamp;
     
-    
-      
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _frame_id_type;
     _frame_id_type frame_id;
 
-  
-  
-
-  
   
 
   typedef boost::shared_ptr< ::std_msgs::Header_<ContainerAllocator>> Ptr;
@@ -70,7 +52,6 @@ typedef boost::shared_ptr< ::std_msgs::Header> HeaderPtr;
 typedef boost::shared_ptr< ::std_msgs::Header const> HeaderConstPtr;
 
 // constants requiring out of line definition
-
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s, const ::std_msgs::Header_<ContainerAllocator> & v)
@@ -201,21 +182,15 @@ struct Printer< ::std_msgs::Header_<ContainerAllocator>>
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::std_msgs::Header_<ContainerAllocator>& v)
   {
+
     s << indent << "seq: ";
-    s << std::endl;
-    
     Printer< uint32_t>::stream(s, indent + "  ", v.seq);
-    
+
     s << indent << "stamp: ";
-    s << std::endl;
-    
     Printer< ::ros::Time>::stream(s, indent + "  ", v.stamp);
-    
+
     s << indent << "frame_id: ";
-    s << std::endl;
-    
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.frame_id);
-    
   }
 };
 

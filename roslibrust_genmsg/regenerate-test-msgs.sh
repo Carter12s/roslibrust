@@ -24,6 +24,12 @@ cargo run --bin gencpp -- \
 --output roslibrust_genmsg/test_package/include/std_msgs
 
 cargo run --bin gencpp -- \
+--msg assets/ros1_common_interfaces/std_msgs/msg/Char.msg \
+--package std_msgs \
+-I std_msgs:assets/ros1_common_interfaces/std_msgs \
+--output roslibrust_genmsg/test_package/include/std_msgs
+
+cargo run --bin gencpp -- \
 --msg assets/ros1_common_interfaces/common_msgs/sensor_msgs/msg/BatteryState.msg \
 --package sensor_msgs \
 -I std_msgs:assets/ros1_common_interfaces/std_msgs \

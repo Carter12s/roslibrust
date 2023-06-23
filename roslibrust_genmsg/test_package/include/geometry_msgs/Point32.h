@@ -11,52 +11,34 @@
 #include <ros/message_operations.h>
 
 
-
 namespace geometry_msgs {
 
 template <class ContainerAllocator>
 struct Point32_
 {
   typedef Point32_<ContainerAllocator> Type;
-
-  
-  
-    Point32_()
-      : x()
+  Point32_()
+    : x()
     , y()
     , z() {
-    }
+  }
 
-    Point32_(const ContainerAllocator& _alloc)
-      : x(_alloc)
+  Point32_(const ContainerAllocator& _alloc)
+    : x(_alloc)
     , y(_alloc)
     , z(_alloc) {
-      (void)_alloc;
-    }
-  
-
-  
-  
+    (void)_alloc;
+  }
     
-    
-      
         typedef float _x_type;
     _x_type x;
     
-    
-      
         typedef float _y_type;
     _y_type y;
     
-    
-      
         typedef float _z_type;
     _z_type z;
 
-  
-  
-
-  
   
 
   typedef boost::shared_ptr< ::geometry_msgs::Point32_<ContainerAllocator>> Ptr;
@@ -70,7 +52,6 @@ typedef boost::shared_ptr< ::geometry_msgs::Point32> Point32Ptr;
 typedef boost::shared_ptr< ::geometry_msgs::Point32 const> Point32ConstPtr;
 
 // constants requiring out of line definition
-
 
 template<typename ContainerAllocator>
 std::ostream& operator<<(std::ostream& s, const ::geometry_msgs::Point32_<ContainerAllocator> & v)
@@ -201,21 +182,15 @@ struct Printer< ::geometry_msgs::Point32_<ContainerAllocator>>
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::geometry_msgs::Point32_<ContainerAllocator>& v)
   {
+
     s << indent << "x: ";
-    s << std::endl;
-    
     Printer< float>::stream(s, indent + "  ", v.x);
-    
+
     s << indent << "y: ";
-    s << std::endl;
-    
     Printer< float>::stream(s, indent + "  ", v.y);
-    
+
     s << indent << "z: ";
-    s << std::endl;
-    
     Printer< float>::stream(s, indent + "  ", v.z);
-    
   }
 };
 

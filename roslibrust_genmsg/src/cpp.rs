@@ -7,11 +7,11 @@ pub const SERVICE_HEADER_TMPL: &str =
 
 lazy_static::lazy_static! {
     pub static ref ROS_TYPE_TO_CPP_TYPE_MAP: HashMap<String, String> = vec![
-        ("bool", "bool"),
+        ("bool", "uint8_t"),
         ("int8", "int8_t"),
         ("uint8", "uint8_t"),
         ("byte", "uint8_t"),
-        ("char", "char"),
+        ("char", "uint8_t"),
         ("int16", "int16_t"),
         ("uint16", "uint16_t"),
         ("int32", "int32_t"),
