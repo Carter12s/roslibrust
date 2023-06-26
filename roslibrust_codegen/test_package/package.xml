@@ -1,5 +1,5 @@
 <package>
-  <name>test_msgs</name>
+  <name>test_package</name>
   <version>0.1.0</version>
   <description>
     This is a test package with message definitions.

@@ -2472,7 +2472,7 @@ pub mod test_msgs {
         Clone,
         PartialEq,
     )]
-    pub struct Deafults {
+    pub struct Defaults {
         #[default(42u8)]
         pub r#x: u8,
         # [default (- 2000i16)]
@@ -2486,8 +2486,8 @@ pub mod test_msgs {
         #[default(_code = "[\"hello\", \"world\"].iter().map(|x| x.to_string()).collect()")]
         pub r#s_vec: ::std::vec::Vec<::std::string::String>,
     }
-    impl ::roslibrust_codegen::RosMessageType for Deafults {
-        const ROS_TYPE_NAME: &'static str = "test_msgs/Deafults";
+    impl ::roslibrust_codegen::RosMessageType for Defaults {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/Defaults";
         const MD5SUM: &'static str = "43c441dc2b521c313f54affd982b5314";
     }
 }

@@ -57,6 +57,14 @@ cargo run --bin gencpp -- \
 -I std_srvs:assets/ros1_common_interfaces/ros_comm_msgs/std_srvs \
 --output roslibrust_genmsg/test_package/include/std_srvs
 
+cargo run --bin gencpp -- \
+--msg roslibrust_codegen/test_package/msg/Test.msg \
+--package test_package \
+-I std_msgs:assets/ros1_common_interfaces/std_msgs \
+-I geometry_msgs:assets/ros1_common_interfaces/common_msgs/geometry_msgs \
+-I test_package:roslibrust_codegen/test_package \
+--output roslibrust_genmsg/test_package/include/test_package
+
 echo "Done"
 
 cd $start_dir
