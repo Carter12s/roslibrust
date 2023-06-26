@@ -57,10 +57,12 @@ typedef ::test_package::Test_<std::allocator<void>> Test;
 typedef boost::shared_ptr< ::test_package::Test> TestPtr;
 typedef boost::shared_ptr< ::test_package::Test const> TestConstPtr;
 
-// constants requiring out of line definitiontemplate<typename ContainerAllocator> const std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>
+// constants requiring out of line definition
+    template<typename ContainerAllocator> const std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>
       Test_<ContainerAllocator>::RUNNING_STATE =
           u8"RUNNING";
-  template<typename ContainerAllocator> const std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>
+  
+    template<typename ContainerAllocator> const std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>
       Test_<ContainerAllocator>::STOPPED_STATE =
           u8"STOPPED";
   
