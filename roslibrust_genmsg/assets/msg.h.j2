@@ -99,7 +99,7 @@ typedef boost::shared_ptr< ::{{ spec.package }}::{{ spec.short_name }} const> {{
 
 // constants requiring out of line definition
 {%- for constant in spec.constants %}
-  {%- if constant.constant_type not in ['byte', 'int8', 'int16', 'int32', 'int64', 'char', 'uint8', 'uint16', 'uint32', 'uint64'] -%}
+  {%- if constant.constant_type not in ['byte', 'int8', 'int16', 'int32', 'int64', 'char', 'uint8', 'uint16', 'uint32', 'uint64'] %}
     template<typename ContainerAllocator> const {{ constant.constant_type|typename_conversion }}
       {{ spec.short_name }}_<ContainerAllocator>::{{ constant.name }} = 
         {%- if constant.constant_type == 'string' %}

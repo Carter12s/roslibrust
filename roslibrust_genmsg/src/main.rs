@@ -62,7 +62,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let msg_source = generated_source
                 .iter()
                 .find(|msg| msg.message_name == short_name && msg.package_name == args.package)
-                .unwrap();
+                .expect(
+                    format!("Could not find message: {}/{}", args.package, short_name).as_str(),
+                );
             write_source_file(
                 &args.output,
                 &format!("{short_name}.h"),
