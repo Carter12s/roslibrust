@@ -60,7 +60,7 @@ struct CameraInfo_
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _distortion_model_type;
     _distortion_model_type distortion_model;
     
-        typedef std::vector<double, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<double>> _D_type;
+        typedef double _D_type;
     _D_type D;
     
         typedef std::vector<double, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<double>> _K_type;
@@ -168,12 +168,12 @@ struct MD5Sum< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 {
   static const char* value()
   {
-    return "0b90a09f7d964437a2b7ac1f61cd712f";
+    return "c9a58c1b0b154e0e6da7578cb991d214";
   }
 
   static const char* value(const ::sensor_msgs::CameraInfo_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x0b90a09f7d964437ULL;
-  static const uint64_t static_value2 = 0xa2b7ac1f61cd712fULL;
+  static const uint64_t static_value1 = 0xc9a58c1b0b154e0eULL;
+  static const uint64_t static_value2 = 0x6da7578cb991d214ULL;
 };
 
 template<class ContainerAllocator>
@@ -253,13 +253,9 @@ struct Printer< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 
     s << indent << "distortion_model: ";
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.distortion_model);
-    
-    s << indent << "D[]" << std::endl;
-    for (size_t i = 0; i < v.D.size(); ++i)
-    {
-      s << indent << "  D[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.D[i]);
-    }
+
+    s << indent << "D: ";
+    Printer< double>::stream(s, indent + "  ", v.D);
     
     s << indent << "K[]" << std::endl;
     for (size_t i = 0; i < v.K.size(); ++i)

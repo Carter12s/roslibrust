@@ -32,7 +32,7 @@ struct Test_
     (void)_alloc;
   }
     
-        typedef std::vector<::geometry_msgs::Point32_<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<::geometry_msgs::Point32_<ContainerAllocator>>> _points_type;
+        typedef ::geometry_msgs::Point32_<ContainerAllocator> _points_type;
     _points_type points;
     
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _test_a_type;
@@ -196,15 +196,10 @@ struct Printer< ::test_package::Test_<ContainerAllocator>>
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::test_package::Test_<ContainerAllocator>& v)
   {
-    
-    s << indent << "points[]" << std::endl;
-    for (size_t i = 0; i < v.points.size(); ++i)
-    {
-      s << indent << "  points[" << i << "]: ";
-      s << std::endl;
-      s << indent;
-      Printer<::geometry_msgs::Point32>::stream(s, indent + "    ", v.points[i]);
-    }
+
+    s << indent << "points: ";
+    s << std::endl;
+    Printer< ::geometry_msgs::Point32_<ContainerAllocator>>::stream(s, indent + "  ", v.points);
 
     s << indent << "test_a: ";
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.test_a);
