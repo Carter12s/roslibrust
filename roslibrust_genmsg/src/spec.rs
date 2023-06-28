@@ -11,7 +11,7 @@ pub struct Field {
     pub name: String,
     pub field_type: String,
     pub package: Option<String>,
-    pub is_array_type: bool,
+    pub array_info: Option<Option<usize>>,
 }
 
 impl From<&FieldInfo> for Field {
@@ -20,7 +20,7 @@ impl From<&FieldInfo> for Field {
             name: value.field_name.clone(),
             field_type: value.field_type.field_type.clone(),
             package: value.field_type.package_name.clone(),
-            is_array_type: value.field_type.is_vec,
+            array_info: value.field_type.array_info,
         }
     }
 }
@@ -31,7 +31,19 @@ impl Field {
     }
 
     pub fn is_array_type(&self) -> bool {
-        self.is_array_type
+        self.array_info.is_some()
+    }
+
+    pub fn is_fixed_size_array_type(&self) -> bool {
+        matches!(self.array_info, Some(Some(_)))
+    }
+
+    pub fn fixed_size_array_size(&self) -> usize {
+        if let Some(Some(n)) = self.array_info {
+            n
+        } else {
+            0
+        }
     }
 }
 

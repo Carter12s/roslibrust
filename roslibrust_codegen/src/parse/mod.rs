@@ -132,7 +132,7 @@ fn strip_comments(line: &str) -> &str {
     line
 }
 
-fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
+fn parse_field_type(type_str: &str, array_info: Option<Option<usize>>, pkg: &Package) -> FieldType {
     let items = type_str.split('/').collect::<Vec<&str>>();
 
     if items.len() == 1 {
@@ -151,7 +151,7 @@ fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
                 }
             },
             field_type: items[0].to_string(),
-            is_vec,
+            array_info,
         }
     } else {
         // If there is more than one item there is a package redirect
@@ -161,13 +161,13 @@ fn parse_field_type(type_str: &str, is_vec: bool, pkg: &Package) -> FieldType {
             FieldType {
                 package_name: None,
                 field_type: type_str.to_string(),
-                is_vec,
+                array_info,
             }
         } else {
             FieldType {
                 package_name: Some(items[0].to_string()),
                 field_type: items[1].to_string(),
-                is_vec,
+                array_info,
             }
         }
     }
@@ -181,13 +181,26 @@ fn parse_type(type_str: &str, pkg: &Package) -> FieldType {
     let open_bracket_idx = type_str.find('[');
     let close_bracket_idx = type_str.find(']');
     match (open_bracket_idx, close_bracket_idx) {
-        (Some(o), Some(_c)) => {
+        (Some(o), Some(c)) => {
             // After having stripped array information, parse the remainder of the type
-            parse_field_type(&type_str[..o], true, pkg)
+            let array_size = if c - o == 1 {
+                // No size specified
+                None
+            } else {
+                let fixed_size_str = &type_str[(o + 1)..c];
+                let fixed_size = fixed_size_str.parse::<usize>().unwrap_or_else(|err| {
+                    log::warn!(
+                        "Unable to parse size of the array: {type_str}, defaulting to 0: {err}"
+                    );
+                    0
+                });
+                Some(fixed_size)
+            };
+            parse_field_type(&type_str[..o], Some(array_size), pkg)
         }
         (None, None) => {
             // Not an array parse normally
-            parse_field_type(type_str, false, pkg)
+            parse_field_type(type_str, None, pkg)
         }
         _ => {
             panic!("Found malformed type: {type_str}");
