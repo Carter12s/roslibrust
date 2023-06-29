@@ -218,7 +218,7 @@ struct HasHeader< ::sensor_msgs::BatteryState_<ContainerAllocator> const>
 template<class ContainerAllocator>
 struct MD5Sum< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const * value()
   {
     return "4ddae7f048e32fda22cac764685e3974";
   }
@@ -231,7 +231,7 @@ struct MD5Sum< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct DataType< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "sensor_msgs/BatteryState";
   }
@@ -242,7 +242,7 @@ struct DataType< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct Definition< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "";
   }

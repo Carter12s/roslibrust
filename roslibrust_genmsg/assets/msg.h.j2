@@ -49,11 +49,17 @@ struct {{ spec.short_name }}_
        Trade-off here between repetition and ability to reason about what 
        code should be generated. 
     #}
-    {%- if is_array(field) %}
+    {%- if is_vector(field) %}
       {%- if is_intrinsic_type(field) %}
         typedef std::vector<{{ field.field_type|typename_conversion }}, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<{{ field.field_type|typename_conversion }}>> _{{ field.name }}_type;
       {%- else %}
         typedef std::vector<::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>>> _{{ field.name }}_type;
+      {%- endif %}
+    {%- elif is_fixed_array(field) %}
+      {%- if is_intrinsic_type(field) %}
+        typedef boost::array<{{ field.field_type|typename_conversion }}, {{ field|fixed_size_array_size }}> _{{ field.name }}_type;
+      {%- else %}
+        typedef boost::array<::{{ field.package }}::{{ field.field_type }}_<ContainerAllocator>, {{ field|fixed_size_array_size }}> _{{ field.name }}_type;
       {%- endif %}
     {%- else %}
       {%- if is_intrinsic_type(field) %}
@@ -192,7 +198,7 @@ struct HasHeader< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocato
 template<class ContainerAllocator>
 struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const * value()
   {
     return "{{ spec.md5sum_first }}{{ spec.md5sum_second }}";
   }
@@ -205,7 +211,7 @@ struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct DataType< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "{{ spec.package }}/{{ spec.short_name }}";
   }
@@ -216,7 +222,7 @@ struct DataType< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator
 template<class ContainerAllocator>
 struct Definition< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "{{ spec.definition }}";
   }
@@ -265,7 +271,7 @@ struct Printer< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>& v)
   {
     {%- for field in spec.fields %}
-    {%- if is_array(field) %}
+    {%- if is_vector(field) %}
     
     s << indent << "{{ field.name }}[]" << std::endl;
     for (size_t i = 0; i < v.{{ field.name }}.size(); ++i)

@@ -116,7 +116,7 @@ struct HasHeader< ::geometry_msgs::Point32_<ContainerAllocator> const>
 template<class ContainerAllocator>
 struct MD5Sum< ::geometry_msgs::Point32_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const * value()
   {
     return "cc153912f1453b708d221682bc23d9ac";
   }
@@ -129,7 +129,7 @@ struct MD5Sum< ::geometry_msgs::Point32_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct DataType< ::geometry_msgs::Point32_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "geometry_msgs/Point32";
   }
@@ -140,7 +140,7 @@ struct DataType< ::geometry_msgs::Point32_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct Definition< ::geometry_msgs::Point32_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "";
   }

@@ -291,7 +291,7 @@ pub mod geometry_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for AccelWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelWithCovariance";
-        const MD5SUM: &'static str = "c6f49a48c87b365e434f7864bd9539b3";
+        const MD5SUM: &'static str = "ad5a718d699c6be72a02b8d6a139f334";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -308,7 +308,7 @@ pub mod geometry_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for AccelWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelWithCovarianceStamped";
-        const MD5SUM: &'static str = "2ffaa449593251db0b3c12257ba4b247";
+        const MD5SUM: &'static str = "36b6f1177d3c3f476d4c306279c6f18a";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -520,7 +520,7 @@ pub mod geometry_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for PoseWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseWithCovariance";
-        const MD5SUM: &'static str = "5b711e242c1ee70503c6bddce2439ca8";
+        const MD5SUM: &'static str = "c23e848cf1b7533a8d7c259073a97e6f";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -537,7 +537,7 @@ pub mod geometry_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for PoseWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseWithCovarianceStamped";
-        const MD5SUM: &'static str = "8d1f95db1811f91535f690acc723630a";
+        const MD5SUM: &'static str = "2178452bf195c1abe1e99b07b4e6c8f0";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -663,7 +663,7 @@ pub mod geometry_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for TwistWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistWithCovariance";
-        const MD5SUM: &'static str = "75fcb7b0fec4e5cc35535e727ba979bd";
+        const MD5SUM: &'static str = "1fe8a28e6890a4cc3ae4c3ca5c7d82e6";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -680,7 +680,7 @@ pub mod geometry_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for TwistWithCovarianceStamped {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistWithCovarianceStamped";
-        const MD5SUM: &'static str = "5423aed9160897bf26a34981339cc85d";
+        const MD5SUM: &'static str = "7019807c85ce8602fb83180366470670";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -839,7 +839,7 @@ pub mod nav_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for Odometry {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/Odometry";
-        const MD5SUM: &'static str = "5554098bea214231bfb444a6df7a41cd";
+        const MD5SUM: &'static str = "81a0900daae2c6c0acc71c9f8df88947";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -998,7 +998,7 @@ pub mod nav_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for SetMapRequest {
         const ROS_TYPE_NAME: &'static str = "nav_msgs/SetMapRequest";
-        const MD5SUM: &'static str = "1362070bf1594e3c3a800b8a926ae808";
+        const MD5SUM: &'static str = "98782a373ad73e1165352caf85923850";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1019,7 +1019,7 @@ pub mod nav_msgs {
     pub struct SetMap {}
     impl ::roslibrust_codegen::RosServiceType for SetMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/SetMap";
-        const MD5SUM: &'static str = "3259327d9856c8a615675f6c7f0d4420";
+        const MD5SUM: &'static str = "6c3f8182fbcb3d4ee7aef02d1dcd1e16";
         type Request = SetMapRequest;
         type Response = SetMapResponse;
     }
@@ -1115,7 +1115,7 @@ pub mod sensor_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for CameraInfo {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/CameraInfo";
-        const MD5SUM: &'static str = "6ed1374c273af05e0a4310d74bacbaff";
+        const MD5SUM: &'static str = "47b55ddbbf2ec398f94cddf328bbc2ac";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1230,7 +1230,7 @@ pub mod sensor_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for Imu {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Imu";
-        const MD5SUM: &'static str = "0778670fb00acae60a84a9e24c1d1400";
+        const MD5SUM: &'static str = "058a92f712764b4ade1563e82041c569";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1366,7 +1366,7 @@ pub mod sensor_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for MagneticField {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/MagneticField";
-        const MD5SUM: &'static str = "baa70b1dbaa90fd66e5241377ca453f6";
+        const MD5SUM: &'static str = "c8761d20eb9dc59addd882f1d4de2266";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1433,7 +1433,7 @@ pub mod sensor_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for NavSatFix {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/NavSatFix";
-        const MD5SUM: &'static str = "4772ea7752199e85449ef71667f9101e";
+        const MD5SUM: &'static str = "faa1756146a6a934d7e4ef0e3855c531";
     }
     impl NavSatFix {
         pub const r#COVARIANCE_TYPE_UNKNOWN: u8 = 0u8;
@@ -1652,7 +1652,7 @@ pub mod sensor_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for SetCameraInfoRequest {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/SetCameraInfoRequest";
-        const MD5SUM: &'static str = "d01d173ac0f730f0076e8b9ecabcf422";
+        const MD5SUM: &'static str = "251c96e357751cc7c699c496178141d5";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1674,7 +1674,7 @@ pub mod sensor_msgs {
     pub struct SetCameraInfo {}
     impl ::roslibrust_codegen::RosServiceType for SetCameraInfo {
         const ROS_SERVICE_NAME: &'static str = "sensor_msgs/SetCameraInfo";
-        const MD5SUM: &'static str = "05fe977980e126fa16e30568dad4042f";
+        const MD5SUM: &'static str = "c191a50a3d5730b8679f4b95b3948b15";
         type Request = SetCameraInfoRequest;
         type Response = SetCameraInfoResponse;
     }
@@ -1707,7 +1707,7 @@ pub mod shape_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for Mesh {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/Mesh";
-        const MD5SUM: &'static str = "074b644fc5c01938c4e68ae14f4f0527";
+        const MD5SUM: &'static str = "1ffdae9486cd3316a121c578b47a85cc";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1723,7 +1723,7 @@ pub mod shape_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for MeshTriangle {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/MeshTriangle";
-        const MD5SUM: &'static str = "153f61dee254ce3792e80cfd99cbcee3";
+        const MD5SUM: &'static str = "23688b2e6d2de3d32fe8af104a903253";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1739,7 +1739,7 @@ pub mod shape_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for Plane {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/Plane";
-        const MD5SUM: &'static str = "ab3614b72ca3f82aad54a53021284fb5";
+        const MD5SUM: &'static str = "2c1b92ed8f31492f8e73f6a4a44ca796";
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1757,7 +1757,7 @@ pub mod shape_msgs {
     }
     impl ::roslibrust_codegen::RosMessageType for SolidPrimitive {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/SolidPrimitive";
-        const MD5SUM: &'static str = "64566630a0f2fc6b0e02f71ceb36fd48";
+        const MD5SUM: &'static str = "0cdf91a0a45ccd7bc1e0deb784cb2958";
     }
     impl SolidPrimitive {
         pub const r#BOX: u8 = 1u8;

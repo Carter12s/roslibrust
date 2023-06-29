@@ -149,7 +149,9 @@ impl MessageFile {
         graph: &BTreeMap<String, MessageFile>,
     ) -> Option<bool> {
         for field in &parsed.fields {
-            if field.field_type.is_vec {
+            if matches!(field.field_type.array_info, Some(Some(_))) {
+                return Some(true);
+            } else if matches!(field.field_type.array_info, Some(None)) {
                 return Some(false);
             }
             if field.field_type.package_name.is_none() {
@@ -265,17 +267,18 @@ pub struct FieldType {
     pub package_name: Option<String>,
     // Explicit text of type without array specifier
     pub field_type: String,
-    // true iff "[]" or "[#]" are found
-    // Note: no support for fixed size arrays yet
-    pub is_vec: bool,
+    // Metadata indicating whether the field is a collection.
+    // Is Some(None) if it's an array type of variable size or Some(Some(N))
+    // if it's an array type of fixed size.
+    pub array_info: Option<Option<usize>>,
 }
 
 impl std::fmt::Display for FieldType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.is_vec {
-            f.write_fmt(format_args!("{}[]", self.field_type))
-        } else {
-            f.write_fmt(format_args!("{}", self.field_type))
+        match self.array_info {
+            Some(Some(n)) => f.write_fmt(format_args!("{}[{}]", self.field_type, n)),
+            Some(None) => f.write_fmt(format_args!("{}[]", self.field_type)),
+            None => f.write_fmt(format_args!("{}", self.field_type)),
         }
     }
 }

@@ -11,7 +11,9 @@ pub fn prepare_environment<'a>(
     env.add_function("has_header", has_header);
     env.add_function("is_fixed_length", is_fixed_length);
     env.add_function("is_intrinsic_type", is_intrinsic_type);
-    env.add_function("is_array", is_array_type);
+    env.add_function("is_vector", is_vector_type);
+    env.add_function("is_fixed_array", is_fixed_size_array_type);
+    env.add_filter("fixed_size_array_size", fixed_size_array_size);
     if let Some(map) = typename_conversion_mapping {
         env.add_filter("typename_conversion", move |v: Value| {
             let value = serde_json::to_value(v).unwrap();
@@ -68,14 +70,39 @@ pub fn is_intrinsic_type(value: Value) -> bool {
     }
 }
 
-pub fn is_array_type(value: Value) -> bool {
-    if let Ok(value) = serde_json::to_value(value) {
-        if let Ok(field) = serde_json::from_value::<Field>(value) {
-            field.is_array_type()
+pub fn is_vector_type(value: Value) -> bool {
+    if let Ok(v) = serde_json::to_value(value.clone()) {
+        if let Ok(field) = serde_json::from_value::<Field>(v) {
+            field.is_vector_type()
         } else {
             false
         }
     } else {
         false
     }
+}
+
+pub fn is_fixed_size_array_type(value: Value) -> bool {
+    if let Ok(value) = serde_json::to_value(value) {
+        if let Ok(field) = serde_json::from_value::<Field>(value) {
+            field.is_fixed_size_array_type()
+        } else {
+            false
+        }
+    } else {
+        false
+    }
+}
+
+pub fn fixed_size_array_size(value: Value) -> Value {
+    let fixed_size = if let Ok(value) = serde_json::to_value(value) {
+        if let Ok(field) = serde_json::from_value::<Field>(value) {
+            field.fixed_size_array_size()
+        } else {
+            0
+        }
+    } else {
+        0
+    };
+    Value::from_serializable(&fixed_size)
 }

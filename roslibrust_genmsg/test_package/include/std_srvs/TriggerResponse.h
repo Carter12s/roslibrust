@@ -110,7 +110,7 @@ struct HasHeader< ::std_srvs::TriggerResponse_<ContainerAllocator> const>
 template<class ContainerAllocator>
 struct MD5Sum< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const * value()
   {
     return "937c9679a518e3a18d831e57125ea522";
   }
@@ -123,7 +123,7 @@ struct MD5Sum< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct DataType< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "std_srvs/TriggerResponse";
   }
@@ -134,7 +134,7 @@ struct DataType< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct Definition< ::std_srvs::TriggerResponse_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "";
   }

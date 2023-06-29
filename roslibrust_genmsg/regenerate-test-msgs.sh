@@ -38,6 +38,14 @@ cargo run --bin gencpp -- \
 --output roslibrust_genmsg/test_package/include/sensor_msgs
 
 cargo run --bin gencpp -- \
+--msg assets/ros1_common_interfaces/common_msgs/sensor_msgs/msg/CameraInfo.msg \
+--package sensor_msgs \
+-I std_msgs:assets/ros1_common_interfaces/std_msgs \
+-I geometry_msgs:assets/ros1_common_interfaces/common_msgs/geometry_msgs \
+-I sensor_msgs:assets/ros1_common_interfaces/common_msgs/sensor_msgs \
+--output roslibrust_genmsg/test_package/include/sensor_msgs
+
+cargo run --bin gencpp -- \
 --msg assets/ros1_common_interfaces/common_msgs/geometry_msgs/msg/Point32.msg \
 --package geometry_msgs \
 -I std_msgs:assets/ros1_common_interfaces/std_msgs \
