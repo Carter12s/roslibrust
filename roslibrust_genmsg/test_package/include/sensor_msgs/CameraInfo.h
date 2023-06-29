@@ -166,7 +166,7 @@ struct HasHeader< ::sensor_msgs::CameraInfo_<ContainerAllocator> const>
 template<class ContainerAllocator>
 struct MD5Sum< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const * value()
   {
     return "c9a58c1b0b154e0e6da7578cb991d214";
   }
@@ -179,7 +179,7 @@ struct MD5Sum< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct DataType< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "sensor_msgs/CameraInfo";
   }
@@ -190,7 +190,7 @@ struct DataType< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct Definition< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "";
   }

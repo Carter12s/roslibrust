@@ -198,7 +198,7 @@ struct HasHeader< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocato
 template<class ContainerAllocator>
 struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const * value()
   {
     return "{{ spec.md5sum_first }}{{ spec.md5sum_second }}";
   }
@@ -211,7 +211,7 @@ struct MD5Sum< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct DataType< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "{{ spec.package }}/{{ spec.short_name }}";
   }
@@ -222,7 +222,7 @@ struct DataType< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator
 template<class ContainerAllocator>
 struct Definition< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "{{ spec.definition }}";
   }

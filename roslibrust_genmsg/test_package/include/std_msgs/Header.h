@@ -116,7 +116,7 @@ struct HasHeader< ::std_msgs::Header_<ContainerAllocator> const>
 template<class ContainerAllocator>
 struct MD5Sum< ::std_msgs::Header_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const * value()
   {
     return "2176decaecbce78abc3b96ef049fabed";
   }
@@ -129,7 +129,7 @@ struct MD5Sum< ::std_msgs::Header_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct DataType< ::std_msgs::Header_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "std_msgs/Header";
   }
@@ -140,7 +140,7 @@ struct DataType< ::std_msgs::Header_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct Definition< ::std_msgs::Header_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "";
   }

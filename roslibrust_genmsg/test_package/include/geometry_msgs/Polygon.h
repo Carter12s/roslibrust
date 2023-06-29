@@ -105,7 +105,7 @@ struct HasHeader< ::geometry_msgs::Polygon_<ContainerAllocator> const>
 template<class ContainerAllocator>
 struct MD5Sum< ::geometry_msgs::Polygon_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const * value()
   {
     return "cd60a26494a087f577976f0329fa120e";
   }
@@ -118,7 +118,7 @@ struct MD5Sum< ::geometry_msgs::Polygon_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct DataType< ::geometry_msgs::Polygon_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "geometry_msgs/Polygon";
   }
@@ -129,7 +129,7 @@ struct DataType< ::geometry_msgs::Polygon_<ContainerAllocator>>
 template<class ContainerAllocator>
 struct Definition< ::geometry_msgs::Polygon_<ContainerAllocator>>
 {
-  static const char* value()
+  static constexpr char const* value()
   {
     return "";
   }
