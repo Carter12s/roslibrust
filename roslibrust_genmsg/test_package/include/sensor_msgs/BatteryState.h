@@ -93,10 +93,10 @@ struct BatteryState_
         typedef uint8_t _present_type;
     _present_type present;
     
-        typedef float _cell_voltage_type;
+        typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _cell_voltage_type;
     _cell_voltage_type cell_voltage;
     
-        typedef float _cell_temperature_type;
+        typedef std::vector<float, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<float>> _cell_temperature_type;
     _cell_temperature_type cell_temperature;
     
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _location_type;
@@ -334,12 +334,20 @@ struct Printer< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 
     s << indent << "present: ";
     Printer< uint8_t>::stream(s, indent + "  ", v.present);
-
-    s << indent << "cell_voltage: ";
-    Printer< float>::stream(s, indent + "  ", v.cell_voltage);
-
-    s << indent << "cell_temperature: ";
-    Printer< float>::stream(s, indent + "  ", v.cell_temperature);
+    
+    s << indent << "cell_voltage[]" << std::endl;
+    for (size_t i = 0; i < v.cell_voltage.size(); ++i)
+    {
+      s << indent << "  cell_voltage[" << i << "]: ";
+      Printer<float>::stream(s, indent + "  ", v.cell_voltage[i]);
+    }
+    
+    s << indent << "cell_temperature[]" << std::endl;
+    for (size_t i = 0; i < v.cell_temperature.size(); ++i)
+    {
+      s << indent << "  cell_temperature[" << i << "]: ";
+      Printer<float>::stream(s, indent + "  ", v.cell_temperature[i]);
+    }
 
     s << indent << "location: ";
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.location);

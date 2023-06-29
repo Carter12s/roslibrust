@@ -60,16 +60,16 @@ struct CameraInfo_
         typedef std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>> _distortion_model_type;
     _distortion_model_type distortion_model;
     
-        typedef double _D_type;
+        typedef std::vector<double, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<double>> _D_type;
     _D_type D;
     
-        typedef std::vector<double, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<double>> _K_type;
+        typedef boost::array<double, 9> _K_type;
     _K_type K;
     
-        typedef std::vector<double, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<double>> _R_type;
+        typedef boost::array<double, 9> _R_type;
     _R_type R;
     
-        typedef std::vector<double, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<double>> _P_type;
+        typedef boost::array<double, 12> _P_type;
     _P_type P;
     
         typedef uint32_t _binning_x_type;
@@ -253,30 +253,22 @@ struct Printer< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 
     s << indent << "distortion_model: ";
     Printer< std::basic_string<char, std::char_traits<char>, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<char>>>::stream(s, indent + "  ", v.distortion_model);
+    
+    s << indent << "D[]" << std::endl;
+    for (size_t i = 0; i < v.D.size(); ++i)
+    {
+      s << indent << "  D[" << i << "]: ";
+      Printer<double>::stream(s, indent + "  ", v.D[i]);
+    }
 
-    s << indent << "D: ";
-    Printer< double>::stream(s, indent + "  ", v.D);
-    
-    s << indent << "K[]" << std::endl;
-    for (size_t i = 0; i < v.K.size(); ++i)
-    {
-      s << indent << "  K[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.K[i]);
-    }
-    
-    s << indent << "R[]" << std::endl;
-    for (size_t i = 0; i < v.R.size(); ++i)
-    {
-      s << indent << "  R[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.R[i]);
-    }
-    
-    s << indent << "P[]" << std::endl;
-    for (size_t i = 0; i < v.P.size(); ++i)
-    {
-      s << indent << "  P[" << i << "]: ";
-      Printer<double>::stream(s, indent + "  ", v.P[i]);
-    }
+    s << indent << "K: ";
+    Printer< double>::stream(s, indent + "  ", v.K);
+
+    s << indent << "R: ";
+    Printer< double>::stream(s, indent + "  ", v.R);
+
+    s << indent << "P: ";
+    Printer< double>::stream(s, indent + "  ", v.P);
 
     s << indent << "binning_x: ";
     Printer< uint32_t>::stream(s, indent + "  ", v.binning_x);

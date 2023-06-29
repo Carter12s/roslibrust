@@ -7,11 +7,18 @@ pub static ROS_TYPENAMES: &[&str] = &[
 ];
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
+pub enum ArrayInfo {
+    NotAnArray,
+    Vector,
+    Array(usize),
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Field {
     pub name: String,
     pub field_type: String,
     pub package: Option<String>,
-    pub array_info: Option<Option<usize>>,
+    pub array_info: ArrayInfo,
 }
 
 impl From<&FieldInfo> for Field {
@@ -20,7 +27,11 @@ impl From<&FieldInfo> for Field {
             name: value.field_name.clone(),
             field_type: value.field_type.field_type.clone(),
             package: value.field_type.package_name.clone(),
-            array_info: value.field_type.array_info,
+            array_info: match value.field_type.array_info {
+                Some(Some(n)) => ArrayInfo::Array(n),
+                Some(None) => ArrayInfo::Vector,
+                None => ArrayInfo::NotAnArray,
+            },
         }
     }
 }
@@ -30,16 +41,16 @@ impl Field {
         ROS_TYPENAMES.contains(&self.field_type.as_str())
     }
 
-    pub fn is_array_type(&self) -> bool {
-        self.array_info.is_some()
+    pub fn is_vector_type(&self) -> bool {
+        matches!(self.array_info, ArrayInfo::Vector)
     }
 
     pub fn is_fixed_size_array_type(&self) -> bool {
-        matches!(self.array_info, Some(Some(_)))
+        matches!(self.array_info, ArrayInfo::Array(_))
     }
 
     pub fn fixed_size_array_size(&self) -> usize {
-        if let Some(Some(n)) = self.array_info {
+        if let ArrayInfo::Array(n) = self.array_info {
             n
         } else {
             0
