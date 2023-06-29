@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include "sensor_msgs/BatteryState.h"
+#include "sensor_msgs/CameraInfo.h"
 #include "std_srvs/Trigger.h"
 #include "geometry_msgs/Polygon.h"
 #include "test_package/Test.h"
