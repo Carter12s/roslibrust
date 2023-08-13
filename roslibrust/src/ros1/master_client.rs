@@ -29,16 +29,53 @@ pub(crate) struct MasterClient {
     id: String,
 }
 
-// TODO: This is failing to decode system state...
-/// These types are really just aliases to make the getSystemState's return type workable
-// #[derive(serde::Deserialize, Debug)]
-// pub struct ServiceList(Vec<(String, Vec<String>)>);
-// #[derive(serde::Deserialize, Debug)]
-// pub struct SubscriberList(Vec<(String, Vec<String>)>);
-// #[derive(serde::Deserialize, Debug)]
-// pub struct PublisherList(Vec<(String, Vec<String>)>);
-// #[derive(serde::Deserialize, Debug)]
-// pub struct SystemState((PublisherList, SubscriberList, ServiceList));
+/// Format of data returned by rosmaster's getSystemState
+#[derive(Debug)]
+struct StateEntry {
+    topic: String,
+    nodes: Vec<String>,
+}
+
+/// The complete list of publishers, subscribers, and service hosts know to the master
+#[derive(Debug)]
+pub struct SystemState {
+    publishers: Vec<StateEntry>,
+    subscribers: Vec<StateEntry>,
+    service_providers: Vec<StateEntry>,
+}
+
+impl SystemState {
+    /// Helper function for checking if a node is registered as a publisher of a given topic.
+    /// Returns true iff the node is a publisher of that topic
+    pub fn is_publishing(&self, topic: &str, node: &str) -> bool {
+        let Some(entry) = self.publishers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        entry
+            .nodes
+            .iter()
+            .find(|name| name.as_str().eq(node))
+            .is_some()
+    }
+
+    /// Helper function for checking if a node is registered as a subscriber of a given topic.
+    /// Returns true iff the node is a subscriber of that topic.
+    pub fn is_subscribed(&self, topic: &str, node: &str) -> bool {
+        let Some(entry) = self.subscribers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        entry
+            .nodes
+            .iter()
+            .find(|name| name.as_str().eq(node))
+            .is_some()
+    }
+
+    pub fn is_service_provider(&self, topic: &str, node: &str) -> bool {
+        let Some(entry) = self.service_providers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        entry
+            .nodes
+            .iter()
+            .find(|name| name.as_str().eq(node))
+            .is_some()
+    }
+}
 
 impl MasterClient {
     /// Constructs a new client for communicating with a ros master
@@ -271,12 +308,36 @@ impl MasterClient {
         &self.client_uri
     }
 
-    // TODO not working
-    // /// Hits the master's xmlrpc endpoint "getSystemState" and returns the response
-    // pub async fn get_system_state(&self) -> Result<SystemState, RosMasterError> {
-    //     let body = serde_xmlrpc::request_to_string("getSystemState", vec![self.id.clone().into()])?;
-    //     self.post(body).await
-    // }
+    /// Hits the master's xmlrpc endpoint "getSystemState" and returns the response
+    pub async fn get_system_state(&self) -> Result<SystemState, RosMasterError> {
+        // Comes in order of Publishers, Subscribers, Services
+        // Each entry contains first the topic name then the list of nodes that publish/subscriber/provide that topic/service
+        let body = serde_xmlrpc::request_to_string("getSystemState", vec![self.id.clone().into()])?;
+        debug!("System State Body: {body}");
+        let res: Vec<Vec<(String, Vec<String>)>> = self.post(body).await?;
+        if res.len() != 3 {
+            return Err(RosMasterError::InvalidXmlRpcMessage(
+                serde_xmlrpc::Error::DecodeError(format!(
+                    "Incorrect number of fields returned by getSystemState: {res:?}"
+                )),
+            ));
+        }
+        let mut res: Vec<Vec<StateEntry>> = res
+            .into_iter()
+            .map(|e| {
+                e.into_iter()
+                    .map(|(topic, nodes)| StateEntry { topic, nodes })
+                    .collect()
+            })
+            .collect();
+
+        // WARNING: order matters here:
+        Ok(SystemState {
+            service_providers: res.pop().unwrap(),
+            subscribers: res.pop().unwrap(),
+            publishers: res.pop().unwrap(),
+        })
+    }
 }
 
 #[cfg(feature = "ros1_test")]
@@ -285,14 +346,22 @@ mod test {
 
     use crate::{MasterClient, RosMasterError};
 
+    const TEST_NODE_ID: &str = "/native_ros1_test";
+
     // TODO may be a bug here in testing due to overlapping clients...
     async fn test_client() -> Result<MasterClient, RosMasterError> {
         MasterClient::new(
             "http://localhost:11311",
             "http://localhost:11312",
-            "/native_ros1_test",
+            TEST_NODE_ID,
         )
         .await
+    }
+
+    #[test_log::test(tokio::test)]
+    async fn get_system_state() -> Result<(), RosMasterError> {
+        let _state = test_client().await?.get_system_state().await?;
+        Ok(())
     }
 
     // Testing MasterClient's get_uri function returns a non-empty string
@@ -343,8 +412,16 @@ mod test {
         let topic_type = "std_msgs/String";
         client.register_subscriber(topic, topic_type).await.unwrap();
 
+        // Use system state to verify we are registered as subscribed
+        let state = client.get_system_state().await.unwrap();
+        assert!(state.is_subscribed(topic, TEST_NODE_ID));
+
         // Unregister subscriber
-        client.unregister_subscriber(topic).await.unwrap();
+        assert!(client.unregister_subscriber(topic).await.unwrap());
+
+        // Use system state to verify we are no longer registered
+        let state = client.get_system_state().await.unwrap();
+        assert!(!state.is_subscribed(topic, TEST_NODE_ID));
     }
 
     #[test_log::test(tokio::test)]
@@ -356,8 +433,16 @@ mod test {
         let topic_type = "std_msgs/String";
         client.register_publisher(topic, topic_type).await.unwrap();
 
+        // Use system state to verify we are registered as a publisher
+        let state = client.get_system_state().await.unwrap();
+        assert!(state.is_publishing(topic, TEST_NODE_ID));
+
         // Unregister publisher
         assert!(client.unregister_publisher(topic).await.unwrap());
+
+        // Use system state to verify we are no longer registered as a publisher
+        let state = client.get_system_state().await.unwrap();
+        assert!(!state.is_publishing(topic, TEST_NODE_ID));
     }
 
     #[test_log::test(tokio::test)]
