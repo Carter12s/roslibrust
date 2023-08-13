@@ -97,19 +97,19 @@ mod test {
     // }
 
     // This tests proves that you could use topic provider in a compile time api, but not object safe...
-    #[test]
+    #[test_log::test]
     #[should_panic]
     fn topic_proivder_can_be_used_at_compile_time() {
         struct MyClient<T: TopicProvider> {
-            client: T,
+            _client: T,
         }
 
         // Kinda a hack way to make the compiler prove it could construct a MyClient<ClientHandle> with out actually
         // constructing one at runtime
         let new_mock: Result<ClientHandle, _> = Err(anyhow::anyhow!("Expected error"));
 
-        let x = MyClient {
-            client: new_mock.unwrap(),
+        let _x = MyClient {
+            _client: new_mock.unwrap(),
         };
     }
 }

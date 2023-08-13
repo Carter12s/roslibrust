@@ -13,7 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .init()
         .unwrap();
 
-    let nh = NodeHandle::new("http://localhost:11311", "native_ros1").await?;
+    let _nh = NodeHandle::new("http://localhost:11311", "native_ros1").await?;
 
     // Work to do:
     // * [DONE] Take the ros MasterApi and create valid in/out types for each api call
