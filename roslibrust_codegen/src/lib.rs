@@ -572,7 +572,7 @@ mod test {
     use crate::find_and_generate_ros_messages;
 
     /// Confirms we don't panic on ros1 parsing
-    #[test]
+    #[test_log::test]
     fn generate_ok_on_ros1() {
         let assets_path = concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -585,7 +585,7 @@ mod test {
     }
 
     /// Confirms we don't panic on ros2 parsing
-    #[test]
+    #[test_log::test]
     fn generate_ok_on_ros2() {
         let assets_path = concat!(
             env!("CARGO_MANIFEST_DIR"),
@@ -598,17 +598,22 @@ mod test {
     }
 
     /// Confirms we don't panic on ros1_test_msgs parsing
-    #[test]
+    #[test_log::test]
     #[cfg_attr(not(feature = "ros1_test"), ignore)]
     fn generate_ok_on_ros1_test_msgs() {
+        // Note: because our test msgs depend on std_message this test will fail unless ROS_PACKAGE_PATH includes std_msgs
+        // To avoid that we add std_messsages to the extra paths.
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_test_msgs");
-
-        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        let std_msgs = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../assets/ros1_common_interfaces/std_msgs"
+        );
+        let gen = find_and_generate_ros_messages(vec![assets_path.into(), std_msgs.into()]);
         assert!(!gen.is_empty());
     }
 
     /// Confirms we don't panic on ros2_test_msgs parsing
-    #[test]
+    #[test_log::test]
     #[cfg_attr(not(feature = "ros2_test"), ignore)]
     fn generate_ok_on_ros2_test_msgs() {
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
