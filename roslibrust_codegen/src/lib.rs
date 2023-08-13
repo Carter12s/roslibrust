@@ -96,6 +96,10 @@ impl MessageFile {
         self.is_fixed_length
     }
 
+    pub fn get_definition(&self) -> &str {
+        &self.parsed.source
+    }
+
     fn compute_md5sum(
         parsed: &ParsedMessageFile,
         graph: &BTreeMap<String, MessageFile>,

@@ -224,7 +224,7 @@ struct Definition< ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocat
 {
   static constexpr char const* value()
   {
-    return "{{ spec.definition }}";
+    return "{{ spec.description }}";
   }
 
   static const char* value(const ::{{ spec.package }}::{{ spec.short_name }}_<ContainerAllocator>&) { return value(); }
