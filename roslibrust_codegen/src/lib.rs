@@ -600,7 +600,10 @@ mod test {
         // Note: because our test msgs depend on std_message this test will fail unless ROS_PACKAGE_PATH includes std_msgs
         // To avoid that we add std_messsages to the extra paths.
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_test_msgs");
-        let std_msgs = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros1_common_interfaces/std_msgs");
+        let std_msgs = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../assets/ros1_common_interfaces/std_msgs"
+        );
         let gen = find_and_generate_ros_messages(vec![assets_path.into(), std_msgs.into()]);
         assert!(!gen.is_empty());
     }
