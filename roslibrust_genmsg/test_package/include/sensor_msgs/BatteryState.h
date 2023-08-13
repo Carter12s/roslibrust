@@ -244,7 +244,7 @@ struct Definition< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "";
+    return "Not a real description";
   }
 
   static const char* value(const ::sensor_msgs::BatteryState_<ContainerAllocator>&) { return value(); }

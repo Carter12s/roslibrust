@@ -142,7 +142,7 @@ struct Definition< ::geometry_msgs::Point32_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "";
+    return "Not a real description";
   }
 
   static const char* value(const ::geometry_msgs::Point32_<ContainerAllocator>&) { return value(); }

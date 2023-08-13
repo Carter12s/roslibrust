@@ -156,7 +156,7 @@ struct Definition< ::test_package::Test_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "";
+    return "Not a real description";
   }
 
   static const char* value(const ::test_package::Test_<ContainerAllocator>&) { return value(); }

@@ -131,7 +131,7 @@ struct Definition< ::geometry_msgs::Polygon_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "";
+    return "Not a real description";
   }
 
   static const char* value(const ::geometry_msgs::Polygon_<ContainerAllocator>&) { return value(); }

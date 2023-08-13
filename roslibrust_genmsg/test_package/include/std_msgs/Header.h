@@ -142,7 +142,7 @@ struct Definition< ::std_msgs::Header_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "";
+    return "Not a real description";
   }
 
   static const char* value(const ::std_msgs::Header_<ContainerAllocator>&) { return value(); }

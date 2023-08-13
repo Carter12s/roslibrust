@@ -192,7 +192,7 @@ struct Definition< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "";
+    return "Not a real description";
   }
 
   static const char* value(const ::sensor_msgs::CameraInfo_<ContainerAllocator>&) { return value(); }
