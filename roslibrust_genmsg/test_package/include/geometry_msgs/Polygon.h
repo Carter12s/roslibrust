@@ -131,7 +131,9 @@ struct Definition< ::geometry_msgs::Polygon_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "Not a real description";
+    return "#A specification of a polygon where the first and last points are assumed to be connected"
+"Point32[] points"
+"";
   }
 
   static const char* value(const ::geometry_msgs::Polygon_<ContainerAllocator>&) { return value(); }

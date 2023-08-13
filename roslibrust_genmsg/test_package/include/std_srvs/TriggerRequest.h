@@ -126,7 +126,7 @@ struct Definition< ::std_srvs::TriggerRequest_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "Not a real description";
+    return "";
   }
 
   static const char* value(const ::std_srvs::TriggerRequest_<ContainerAllocator>&) { return value(); }

@@ -156,7 +156,13 @@ struct Definition< ::test_package::Test_<ContainerAllocator>>
 {
   static constexpr char const* value()
   {
-    return "Not a real description";
+    return "geometry_msgs/Point32[] points"
+""
+"string RUNNING_STATE = "RUNNING""
+"string STOPPED_STATE = "STOPPED""
+""
+"string test_a"
+"Header header";
   }
 
   static const char* value(const ::test_package::Test_<ContainerAllocator>&) { return value(); }
