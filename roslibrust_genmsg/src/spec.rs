@@ -97,7 +97,10 @@ impl From<&MessageFile> for MessageSpecification {
             constants: value.get_constants().iter().map(Constant::from).collect(),
             md5sum_first: String::from(&md5sum[..md5sum.len() / 2]),
             md5sum_second: String::from(&md5sum[(md5sum.len() / 2)..]),
-            description: value.get_definition().replace('\n', "\"\n\""),
+            description: value
+                .get_definition()
+                .replace('"', "\\\"")
+                .replace('\n', "\"\n\""),
             is_fixed_length: value.is_fixed_length(),
         };
         spec.fields.iter_mut().for_each(|field| {
