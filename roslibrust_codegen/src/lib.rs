@@ -29,12 +29,16 @@ pub trait RosMessageType:
 
     /// The computed md5sum of the message file and its dependencies
     const MD5SUM: &'static str;
+
+    /// The definition from the msg, srv, or action file
+    const DEFINITION: &'static str;
 }
 
 // This special impl allows for services with no args / returns
 impl RosMessageType for () {
     const ROS_TYPE_NAME: &'static str = "";
     const MD5SUM: &'static str = "";
+    const DEFINITION: &'static str = "";
 }
 
 /// Fundamental traits for service types this crate works with

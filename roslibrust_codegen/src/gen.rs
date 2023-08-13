@@ -82,6 +82,7 @@ pub fn generate_struct(msg: MessageFile) -> TokenStream {
 
     let struct_name = format_ident!("{}", msg.parsed.name);
     let md5sum = msg.md5sum;
+    let definition = msg.parsed.source.trim();
 
     let mut base = quote! {
         #[allow(non_snake_case)]
@@ -93,6 +94,7 @@ pub fn generate_struct(msg: MessageFile) -> TokenStream {
         impl ::roslibrust_codegen::RosMessageType for #struct_name {
             const ROS_TYPE_NAME: &'static str = #ros_type_name;
             const MD5SUM: &'static str = #md5sum;
+            const DEFINITION: &'static str = #definition;
         }
     };
 
