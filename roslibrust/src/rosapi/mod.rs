@@ -390,13 +390,13 @@ mod test {
         ClientHandle::new_with_options(opts).await.unwrap()
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_get_time() {
         let api = fixture_client().await;
         api.get_time().await.unwrap();
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_get_topic_type() {
         let api = fixture_client().await;
         let res = api
@@ -406,7 +406,7 @@ mod test {
         assert_eq!(res.r#type, "rosgraph_msgs/Log");
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_get_topics_for_type() {
         let api = fixture_client().await;
         let res = api
@@ -416,14 +416,14 @@ mod test {
         assert!(res.topics.iter().any(|f| f == "/rosout"));
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_get_nodes() {
         let api = fixture_client().await;
         let nodes = api.get_nodes().await.expect("Failed to get nodes");
         assert!(nodes.nodes.iter().any(|f| f == "/rosapi"));
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_get_node_details() {
         let api = fixture_client().await;
         assert!(
@@ -436,7 +436,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_get_node_for_service() {
         let api = fixture_client().await;
         assert_eq!(
@@ -448,7 +448,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_param_roundtrip() {
         let api = fixture_client().await;
         const PARAM_NAME: &'static str = "/rosapi_param_roundtrip";
@@ -481,7 +481,7 @@ mod test {
         assert!(!api.has_param(PARAM_NAME).await.unwrap().exists);
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_message_details() {
         let api = fixture_client().await;
         let response = api.message_details("std_msgs/Header").await.unwrap();
@@ -492,21 +492,21 @@ mod test {
             .any(|t| t.fieldtypes.contains(&"time".to_string())));
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_publishers() {
         let api = fixture_client().await;
         let response = api.publishers("/rosout").await.unwrap();
         assert!(response.publishers.iter().any(|p| p == "/rosapi"));
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_service_providers() {
         let api = fixture_client().await;
         let response = api.service_providers("rosapi/ServiceHost").await.unwrap();
         assert!(response.providers.iter().any(|p| p == "/rosapi"));
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_service_request_details() {
         let api = fixture_client().await;
         let response = api
@@ -517,7 +517,7 @@ mod test {
         assert!(response.typedefs[0].fieldnames.len() == 2);
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_service_response_details() {
         let api = fixture_client().await;
         let response = api
@@ -528,14 +528,14 @@ mod test {
         assert_eq!(response.typedefs[0].fieldnames[0], "value");
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_get_service_type() {
         let api = fixture_client().await;
         let response = api.get_service_type("/rosapi/node_details").await.unwrap();
         assert_eq!(response.r#type, "rosapi/NodeDetails");
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn rosapi_services() {
         let api = fixture_client().await;
         let response = api.get_services().await.unwrap();

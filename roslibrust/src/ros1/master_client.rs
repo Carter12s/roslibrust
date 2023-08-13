@@ -1,14 +1,6 @@
 //! This module is concerned with direct communication over xmlprc between the master
 
-use std::{
-    convert::Infallible,
-    net::{Ipv4Addr, SocketAddr},
-};
-
-use hyper::{Body, Response, StatusCode};
 use log::*;
-
-use crate::NodeHandle;
 
 #[derive(thiserror::Error, Debug)]
 pub enum RosMasterError {
@@ -304,13 +296,13 @@ mod test {
     }
 
     // Testing MasterClient's get_uri function returns a non-empty string
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_get_uri() -> Result<(), RosMasterError> {
         assert!(!test_client().await?.get_uri().await?.is_empty());
         Ok(())
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_get_topic_types() {
         let topic_types = test_client()
             .await
@@ -321,7 +313,7 @@ mod test {
         assert!(!topic_types.is_empty());
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_register_and_unregister_service() {
         let client = test_client().await.unwrap();
         let service = "/my_service";
@@ -342,7 +334,7 @@ mod test {
             .unwrap());
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_register_and_unregister_subscriber() {
         let client = test_client().await.unwrap();
 
@@ -355,7 +347,7 @@ mod test {
         client.unregister_subscriber(topic).await.unwrap();
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_register_and_unregister_publisher() {
         let client = test_client().await.unwrap();
 
@@ -368,7 +360,7 @@ mod test {
         assert!(client.unregister_publisher(topic).await.unwrap());
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_lookup_node() {
         let client = test_client().await.unwrap();
         let node_name = "/rosout";
@@ -376,7 +368,7 @@ mod test {
         assert!(!node_uri.is_empty());
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_get_published_topics() {
         let client = test_client().await.unwrap();
         let subgraph = "";

@@ -119,7 +119,7 @@ impl NodeServer {
             }
             "publisherUpdate" => {
                 debug!("publisherUpdate called by {args:?}");
-                let (caller_id, topic, publishers): (String, String, Vec<String>) =
+                let (_caller_id, topic, publishers): (String, String, Vec<String>) =
                     serde_xmlrpc::from_values(args).map_err(|e| {
                         Self::error_mapper(
                             e,
@@ -235,7 +235,7 @@ mod test {
         value
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_get_master_uri() {
         let nh = NodeHandle::new("http://localhost:11311", "/get_master_uri_test_node")
             .await
@@ -251,7 +251,7 @@ mod test {
         assert_eq!(uri, "http://localhost:11311");
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_get_subscriptions() {
         // Stub test until we can actually subscribe
         let nh = NodeHandle::new("http://localhost:11311", "/get_subscriptions_test_node")
@@ -270,7 +270,7 @@ mod test {
         // TODO assert we get our subscription back here
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_get_publications() {
         // Stub test until we can actually advertise
         let nh = NodeHandle::new("http://localhost:11311", "/get_subscriptions_test_node")

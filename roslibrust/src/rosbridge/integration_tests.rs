@@ -48,17 +48,11 @@ mod integration_tests {
     Requires a running local rosbridge
     TODO figure out how to automate setting up the needed environment for this
     */
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn self_publish() {
-        // TODO figure out better logging for tests
-        let _ = simple_logger::SimpleLogger::new()
-            .with_level(log::LevelFilter::Debug)
-            .without_timestamps()
-            .init();
-
         const TOPIC: &str = "self_publish";
         // 100ms allowance for connecting so tests still fails
-        let mut client = timeout(TIMEOUT, ClientHandle::new(LOCAL_WS))
+        let client = timeout(TIMEOUT, ClientHandle::new(LOCAL_WS))
             .await
             .expect("Failed to create client in time")
             .unwrap();
@@ -101,12 +95,12 @@ mod integration_tests {
         assert_eq!(msg_in, msg_out);
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     /// Designed to test behavior when receiving a message of unexpected type on a topic
     // TODO this test is good, but actually shows how bad the ergonomics are and how we want to improve them!
     // We want a failed message parse / type mismatch to come through to the subscriber
     async fn bad_message_recv() -> TestResult {
-        let mut client =
+        let client =
             ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
                 .await?;
 
@@ -136,7 +130,7 @@ mod integration_tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn timeouts_new() {
         // Intentionally a port where there won't be a server at
         let opts = ClientHandleOptions::new("ws://localhost:9091").timeout(TIMEOUT);
@@ -151,9 +145,9 @@ mod integration_tests {
 
     /// This test doesn't actually do much, but instead confirms the internal structure of the lib is multi-threaded correctly
     /// The whole goal here is to catch send / sync complier errors
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn parallel_construction() {
-        let mut client = timeout(TIMEOUT, ClientHandle::new(LOCAL_WS))
+        let client = timeout(TIMEOUT, ClientHandle::new(LOCAL_WS))
             .await
             .expect("Timeout constructing client")
             .expect("Failed to construct client");
@@ -175,7 +169,7 @@ mod integration_tests {
     }
 
     /// Tests that dropping a publisher correctly unadvertises
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     // This test is currently broken, it seems that rosbridge still sends the message regardless
     // of advertise / unadvertise status. Unclear how to confirm whether unadvertise was sent or not
     #[ignore]
@@ -195,7 +189,7 @@ mod integration_tests {
 
         let opt = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
 
-        let mut client = ClientHandle::new_with_options(opt).await?;
+        let client = ClientHandle::new_with_options(opt).await?;
         let publisher = client.advertise(TOPIC).await?;
         debug!("Got publisher");
 
@@ -235,15 +229,10 @@ mod integration_tests {
     // It may be that ros2 prevents a "service_loop" where a node calls a service on itself?
     // unclear...
     #[cfg(feature = "ros1_test")]
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn self_service_call() -> TestResult {
-        let _ = simple_logger::SimpleLogger::new()
-            .with_level(log::LevelFilter::Debug)
-            .without_timestamps()
-            .init();
-
         let opt = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
-        let mut client = ClientHandle::new_with_options(opt).await?;
+        let client = ClientHandle::new_with_options(opt).await?;
 
         let cb =
             |_req: SetBoolRequest| -> Result<SetBoolResponse, Box<dyn std::error::Error + Send + Sync>> {
@@ -284,7 +273,7 @@ mod integration_tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_strong_and_weak_client_counts() -> TestResult {
         let opt = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
         let client = ClientHandle::new_with_options(opt).await?;
@@ -314,7 +303,7 @@ mod integration_tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn test_disconnect_returns_error() -> TestResult {
         let client =
             ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
@@ -329,9 +318,9 @@ mod integration_tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn working_with_char() -> TestResult {
-        let mut client =
+        let client =
             ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
                 .await?;
 
@@ -357,7 +346,7 @@ mod integration_tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     async fn error_on_non_existent_service() -> TestResult {
         // This test is designed to catch a specific error raised in issue #88
         // When roslibrust expereiences a server side error, it returns a string instead of our message
