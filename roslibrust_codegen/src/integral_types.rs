@@ -33,6 +33,7 @@ impl RosMessageType for Time {
     const ROS_TYPE_NAME: &'static str = "builtin_interfaces/Time";
     // TODO: ROS2 support
     const MD5SUM: &'static str = "";
+    const DEFINITION: &'static str = "";
 }
 
 // TODO provide chrono conversions here behind a cfg flag
