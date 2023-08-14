@@ -4,4 +4,6 @@ services:
     image: joaquingimenez1/noetic-rosbridge:1.1.2
     ports:
       - "9090:9090"
+      # Pass through the ros master port for native ros1 testing
+      - "11311:11311"
     command: bash -c "source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown; rosrun rosapi rosapi_node"
