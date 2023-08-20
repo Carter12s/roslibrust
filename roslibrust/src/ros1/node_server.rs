@@ -258,6 +258,7 @@ mod test {
             .await
             .unwrap();
         let client_uri = nh.get_client_uri().await;
+
         // TODO actually subscribe here
 
         let subs: Vec<(String, String)> = call_node_server(
@@ -277,7 +278,8 @@ mod test {
             .await
             .unwrap();
         let client_uri = nh.get_client_uri().await;
-        // TODO actually subscribe here
+
+        // TODO actually advertise here
 
         let pubs: Vec<(String, String)> = call_node_server(
             &client_uri,
@@ -286,6 +288,6 @@ mod test {
         )
         .await;
 
-        // TODO assert we get our subscription back here
+        // TODO assert we get our publication back here
     }
 }

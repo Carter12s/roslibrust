@@ -5,8 +5,6 @@ use anyhow::anyhow;
 use dashmap::DashMap;
 use futures::StreamExt;
 use log::*;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -366,12 +364,7 @@ impl ClientHandle {
     ) -> RosLibRustResult<Res> {
         self.check_for_disconnect()?;
         let (tx, rx) = tokio::sync::oneshot::channel();
-        // TODO replace with uuid::v4()
-        let rand_string: String = thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(30)
-            .map(char::from)
-            .collect();
+        let rand_string: String = uuid::Uuid::new_v4().to_string();
         let client = self.inner.read().await;
         {
             if client
@@ -565,7 +558,6 @@ impl ClientHandle {
 
 /// A client connection to the rosbridge_server that allows for publishing and subscribing to topics
 pub(crate) struct Client {
-    // TODO replace Socket with trait RosBridgeComm to allow mocking
     reader: RwLock<Reader>,
     writer: RwLock<Writer>,
     // Stores a record of the publishers we've handed out

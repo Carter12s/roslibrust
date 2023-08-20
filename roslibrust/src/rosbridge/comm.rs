@@ -86,6 +86,10 @@ impl FromStr for Ops {
 }
 
 /// Describes the low level comm capabilities of talking to a rosbridge server
+/// This trait exists because we haven't wrapped Writer in our own type
+/// So we're defining this trait on a foregin type, since we didn't end up
+/// using this trait for mocking. I'm inclined to replace it, and move the
+/// impls directly into some wrapper around [Writer]
 #[async_trait]
 pub(crate) trait RosBridgeComm {
     async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;

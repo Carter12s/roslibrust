@@ -348,7 +348,6 @@ mod test {
 
     const TEST_NODE_ID: &str = "/native_ros1_test";
 
-    // TODO may be a bug here in testing due to overlapping clients...
     async fn test_client() -> Result<MasterClient, RosMasterError> {
         MasterClient::new(
             "http://localhost:11311",
