@@ -119,11 +119,21 @@ impl PublishingChannel {
                 match receiver.recv().await {
                     Some(msg_to_publish) => {
                         let mut streams = subscriber_streams.write().await;
-                        for stream in streams.iter_mut() {
+                        let mut streams_to_remove = vec![];
+                        for (stream_idx, stream) in streams.iter_mut().enumerate() {
                             if let Err(err) = stream.write(&msg_to_publish[..]).await {
-                                log::error!("Failed to send data to subscriber: {err:?}");
+                                log::error!("Failed to send data to subscriber: {err}");
+                                streams_to_remove.push(stream_idx);
                             }
                         }
+                        // Subtract the removed count to account for shifting indices after each
+                        // remove, only works if they're sorted which should be the case given how
+                        // it's being populated (forward enumeration)
+                        streams_to_remove.into_iter().enumerate().for_each(
+                            |(removed_cnt, stream_idx)| {
+                                streams.remove(stream_idx - removed_cnt);
+                            },
+                        );
                     }
                     None => {
                         log::debug!("No more senders for the publisher channel, exiting...");
