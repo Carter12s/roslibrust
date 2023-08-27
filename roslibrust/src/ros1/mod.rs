@@ -5,9 +5,12 @@ mod master_client;
 pub use master_client::*;
 
 /// [node_server] module contains the xmlrpc server that a node must host
-mod node_server;
-pub(crate) use node_server::*;
+mod xmlrpc_server;
+pub(crate) use xmlrpc_server::*;
 
 /// [node] module contains the central Node and NodeHandle APIs
 mod node;
 pub use node::*;
+
+mod publisher;
+mod tcpros;

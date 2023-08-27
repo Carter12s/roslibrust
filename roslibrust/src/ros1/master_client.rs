@@ -241,7 +241,7 @@ impl MasterClient {
         self.post(body).await
     }
 
-    /// Hits the master's xmlrpc endpoint "unreisterPublisher", returns true if the subscriber was registered
+    /// Hits the master's xmlrpc endpoint "unregisterPublisher", returns true if the subscriber was registered
     /// for the topic and false if the server reported this operation as a no-op.
     pub async fn unregister_publisher(
         &self,
