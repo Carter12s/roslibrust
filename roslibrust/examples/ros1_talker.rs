@@ -27,3 +27,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[cfg(not(feature = "ros1"))]
+fn main() {
+    eprintln!("This example does nothing without compiling with the feature 'ros1'");
+}
