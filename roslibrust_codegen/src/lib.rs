@@ -134,15 +134,12 @@ impl MessageFile {
             if is_intrinsic_type(parsed.version.unwrap_or(RosVersion::ROS1), field_type) {
                 md5sum_content.push_str(&format!("{} {}\n", field.field_type, field.field_name));
             } else {
-                let field_full_name = format!(
-                    "{}/{}",
-                    field
-                        .field_type
-                        .package_name
-                        .as_ref()
-                        .unwrap_or_else(|| panic!("Expected package name for field {field:#?}")),
-                    field_type
-                );
+                let field_package = field
+                    .field_type
+                    .package_name
+                    .as_ref()
+                    .expect(&format!("Expected package name for field {field:#?}"));
+                let field_full_name = format!("{field_package}/{field_type}");
                 let sub_message = graph.get(field_full_name.as_str())?;
                 let sub_md5sum = Self::compute_md5sum(&sub_message.parsed, graph)?;
                 md5sum_content.push_str(&format!("{} {}\n", sub_md5sum, field.field_name));
@@ -310,14 +307,12 @@ impl PartialEq for FieldInfo {
 
 impl FieldInfo {
     pub fn get_full_name(&self) -> String {
-        format!(
-            "{}/{}",
-            self.field_type
-                .package_name
-                .as_ref()
-                .unwrap_or_else(|| panic!("Expected package name for field {self:#?}")),
-            self.field_type.field_type
-        )
+        let field_package = self
+            .field_type
+            .package_name
+            .as_ref()
+            .expect(&format!("Expected package name for field {self:#?}"));
+        format!("{field_package}/{}", self.field_type.field_type)
     }
 }
 
