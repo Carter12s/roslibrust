@@ -3,8 +3,7 @@
 
 use super::publisher::{Publisher, PublishingChannel};
 use crate::{
-    MasterClient, PublisherHandle, RosMasterError, ServiceCallback, Subscription, XmlRpcServer,
-    XmlRpcServerHandle,
+    MasterClient, RosMasterError, ServiceCallback, Subscription, XmlRpcServer, XmlRpcServerHandle,
 };
 use dashmap::DashMap;
 use roslibrust_codegen::RosMessageType;

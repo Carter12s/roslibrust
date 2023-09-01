@@ -29,6 +29,7 @@ impl<T: RosMessageType> Publisher<T> {
     pub async fn publish(&self, data: &T) -> Result<(), Box<dyn std::error::Error>> {
         let data = serde_rosmsg::to_vec(&data)?;
         self.sender.send(data).await?;
+        log::debug!("Publishing data on topic {}", self.topic_name);
         Ok(())
     }
 }
@@ -99,6 +100,11 @@ impl PublishingChannel {
                                     .expect("Unable to respond on tcpstream");
                                 let mut wlock = subscriber_streams.write().await;
                                 wlock.push(stream);
+                                log::debug!(
+                                    "Added stream for topic {} to subscriber {}",
+                                    connection_header.topic,
+                                    peer_addr
+                                );
                             }
                         } else {
                             let header_str = connection_header[..bytes]
@@ -122,7 +128,8 @@ impl PublishingChannel {
                         let mut streams_to_remove = vec![];
                         for (stream_idx, stream) in streams.iter_mut().enumerate() {
                             if let Err(err) = stream.write(&msg_to_publish[..]).await {
-                                log::error!("Failed to send data to subscriber: {err}");
+                                // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
+                                log::debug!("Failed to send data to subscriber: {err}, removing");
                                 streams_to_remove.push(stream_idx);
                             }
                         }

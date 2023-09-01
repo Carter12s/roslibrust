@@ -1,6 +1,8 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::{Cursor, Read, Write};
 
+// Implementation of ConnectionHeader is based off of ROS documentation here:
+// wiki.ros.org/ROS/Connection%20Header
 pub struct ConnectionHeader {
     pub caller_id: String,
     pub latching: bool,
