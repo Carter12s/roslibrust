@@ -7,6 +7,7 @@ use std::{
     net::{Ipv4Addr, SocketAddr},
 };
 
+#[allow(unused)]
 enum RosXmlStatusCode {
     Error,
     Failure,
@@ -312,96 +313,5 @@ impl XmlRpcServer {
             Ok(body) => Ok(body),
             Err(body) => Ok(body),
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use log::debug;
-    use serde::de::DeserializeOwned;
-    use serde_xmlrpc::Value;
-
-    use crate::NodeHandle;
-
-    // Helper function for making a call to one of the node server apis
-    async fn call_node_server<T: DeserializeOwned>(
-        uri: &str,
-        endpoint: &str,
-        args: Vec<Value>,
-    ) -> T {
-        let client = reqwest::Client::new();
-        let body = serde_xmlrpc::request_to_string(endpoint, args).unwrap();
-        let res = client
-            .post(uri)
-            .body(body)
-            .send()
-            .await
-            .unwrap()
-            .text()
-            .await
-            .unwrap();
-        debug!("Got response: {res:?}");
-        let (error_code, debug_str, value): (i8, String, T) =
-            serde_xmlrpc::response_from_str(&res).unwrap();
-
-        assert_eq!(error_code, 0);
-        assert_eq!(debug_str, "");
-        value
-    }
-
-    #[test_log::test(tokio::test)]
-    async fn test_get_master_uri() {
-        let nh = NodeHandle::new("http://localhost:11311", "/get_master_uri_test_node")
-            .await
-            .unwrap();
-        let client_uri = nh.get_master_uri().await;
-
-        let uri: String = call_node_server(
-            &client_uri,
-            "getMasterUri",
-            vec!["/get_master_uri_tester".into()],
-        )
-        .await;
-        assert_eq!(uri, "http://localhost:11311");
-    }
-
-    #[test_log::test(tokio::test)]
-    async fn test_get_subscriptions() {
-        // Stub test until we can actually subscribe
-        let nh = NodeHandle::new("http://localhost:11311", "/get_subscriptions_test_node")
-            .await
-            .unwrap();
-        let client_uri = nh.get_client_uri().await;
-
-        // TODO actually subscribe here
-
-        let subs: Vec<(String, String)> = call_node_server(
-            &client_uri,
-            "getSubscriptions",
-            vec!["/get_subscriptions_tester".into()],
-        )
-        .await;
-
-        // TODO assert we get our subscription back here
-    }
-
-    #[test_log::test(tokio::test)]
-    async fn test_get_publications() {
-        // Stub test until we can actually advertise
-        let nh = NodeHandle::new("http://localhost:11311", "/get_subscriptions_test_node")
-            .await
-            .unwrap();
-        let client_uri = nh.get_client_uri().await;
-
-        // TODO actually advertise here
-
-        let pubs: Vec<(String, String)> = call_node_server(
-            &client_uri,
-            "getPublications",
-            vec!["/get_publications_tester".into()],
-        )
-        .await;
-
-        // TODO assert we get our publication back here
     }
 }

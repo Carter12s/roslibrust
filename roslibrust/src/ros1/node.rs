@@ -23,6 +23,9 @@ pub enum NodeMsg {
     GetMasterUri {
         reply: oneshot::Sender<String>,
     },
+    GetClientUri {
+        reply: oneshot::Sender<String>,
+    },
     GetSubscriptions {
         reply: oneshot::Sender<Vec<(String, String)>>,
     },
@@ -62,6 +65,17 @@ impl NodeServerHandle {
         match self
             .node_server_sender
             .send(NodeMsg::GetMasterUri { reply: sender })
+        {
+            Ok(()) => Ok(receiver.await.map_err(|err| Box::new(err))?),
+            Err(e) => Err(Box::new(e)),
+        }
+    }
+
+    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error>> {
+        let (sender, receiver) = oneshot::channel();
+        match self
+            .node_server_sender
+            .send(NodeMsg::GetClientUri { reply: sender })
         {
             Ok(()) => Ok(receiver.await.map_err(|err| Box::new(err))?),
             Err(e) => Err(Box::new(e)),
@@ -238,6 +252,9 @@ impl Node {
             NodeMsg::GetMasterUri { reply } => {
                 let _ = reply.send(self.client.get_master_uri().to_owned());
             }
+            NodeMsg::GetClientUri { reply } => {
+                let _ = reply.send(self.client.client_uri().to_owned());
+            }
             NodeMsg::GetSubscriptions { reply } => {
                 let _ = reply.send(
                     self.subscriptions
@@ -376,6 +393,10 @@ impl NodeHandle {
         // TODO spawn our TcpManager here for TCPROS
 
         Ok(nh)
+    }
+
+    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error>> {
+        self.inner.get_client_uri().await
     }
 
     pub async fn advertise<T: roslibrust_codegen::RosMessageType>(

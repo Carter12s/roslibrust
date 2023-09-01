@@ -4,7 +4,7 @@
 mod master_client;
 pub use master_client::*;
 
-/// [node_server] module contains the xmlrpc server that a node must host
+/// [xmlrpc_server] module contains the xmlrpc server that a node must host
 mod xmlrpc_server;
 pub(crate) use xmlrpc_server::*;
 

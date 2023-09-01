@@ -16,15 +16,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|err| err)?;
     let publisher = nh.advertise::<std_msgs::String>("/chatter", 1).await?;
 
-    let mut counter = 0u32;
-
-    while counter < 1000 {
+    for count in 0..1000 {
         publisher
             .publish(&std_msgs::String {
-                data: format!("hello world from rust {counter}"),
+                data: format!("hello world from rust {count}"),
             })
             .await?;
-        counter = counter.wrapping_add_signed(1);
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
 
