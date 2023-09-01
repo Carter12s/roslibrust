@@ -124,6 +124,13 @@ impl NodeServerHandle {
             .map_err(|err| Box::new(err))?)
     }
 
+    pub fn shutdown(&self) -> Result<(), Box<dyn std::error::Error>> {
+        self.node_server_sender
+            .send(NodeMsg::Shutdown)
+            .map_err(|err| Box::new(err))?;
+        Ok(())
+    }
+
     pub async fn register_publisher<T: RosMessageType>(
         &self,
         topic: &str,
@@ -392,6 +399,10 @@ impl NodeHandle {
         // TODO spawn our TcpManager here for TCPROS
 
         Ok(nh)
+    }
+
+    pub fn is_ok(&self) -> bool {
+        !self.inner.node_server_sender.is_closed()
     }
 
     pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error>> {

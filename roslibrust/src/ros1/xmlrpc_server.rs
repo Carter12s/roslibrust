@@ -214,6 +214,27 @@ impl XmlRpcServer {
                 log::debug!("Sending response for requested topic {response:?}");
                 Ok(response)
             }
+            "shutdown" => {
+                debug!("shutdown called by {args:?}");
+                let (caller_id, msg): (String, String) =
+                    serde_xmlrpc::from_values(args).map_err(|e| {
+                        Self::make_error_response(
+                            e,
+                            "Failed to parse arguments",
+                            StatusCode::BAD_REQUEST,
+                        )
+                    })?;
+                debug!("Received request for shutdown from {caller_id}: {msg}");
+                node_server.shutdown().map_err(|e| {
+                    Self::make_response_from_boxed_error(
+                        e,
+                        "Unable to shutdown",
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                    )
+                })?;
+
+                Self::to_response(0)
+            }
             // getBusStats, getBusInfo <= have decided not to impl these
             _ => {
                 let error_str = format!("Client attempted call function {method_name} which is not implemented by the Node's xmlrpc server.");

@@ -54,4 +54,22 @@ mod tests {
         .await;
         assert_eq!(publications.len(), 0);
     }
+
+    #[tokio::test]
+    async fn verify_shutdown() {
+        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_shutdown")
+            .await
+            .unwrap();
+        let node_uri = node.get_client_uri().await.unwrap();
+        assert!(node.is_ok());
+
+        call_node_api::<i32>(
+            &node_uri,
+            "shutdown",
+            vec!["/verify_shutdown".into(), "".into()],
+        )
+        .await;
+
+        assert!(!node.is_ok());
+    }
 }
