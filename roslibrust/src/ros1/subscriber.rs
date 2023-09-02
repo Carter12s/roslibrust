@@ -177,8 +177,6 @@ async fn send_topic_request(
         ],
     )
     .unwrap();
-    //let publisher_uri = format!("{publisher_uri}/");
-    log::info!("pub uri {publisher_uri}");
 
     let response = xmlrpc_client
         .post(publisher_uri)
