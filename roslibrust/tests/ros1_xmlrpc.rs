@@ -3,10 +3,14 @@ mod tests {
     use serde::de::DeserializeOwned;
     use serde_xmlrpc::Value;
 
-    async fn call_node_api<T: DeserializeOwned>(uri: &str, endpoint: &str, args: Vec<Value>) -> T {
+    roslibrust_codegen_macro::find_and_generate_ros_messages_relative_to_manifest_dir!(
+        "../assets/ros1_common_interfaces"
+    );
+
+    async fn call_node_api_raw(uri: &str, endpoint: &str, args: Vec<Value>) -> String {
         let client = reqwest::Client::new();
         let body = serde_xmlrpc::request_to_string(endpoint, args).unwrap();
-        let response = client
+        client
             .post(uri)
             .body(body)
             .send()
@@ -14,7 +18,11 @@ mod tests {
             .unwrap()
             .text()
             .await
-            .unwrap();
+            .unwrap()
+    }
+
+    async fn call_node_api<T: DeserializeOwned>(uri: &str, endpoint: &str, args: Vec<Value>) -> T {
+        let response = call_node_api_raw(uri, endpoint, args).await;
         let (error_code, error_description, value): (i8, String, T) =
             serde_xmlrpc::response_from_str(&response).unwrap();
 
@@ -71,5 +79,36 @@ mod tests {
         .await;
 
         assert!(!node.is_ok());
+    }
+
+    #[tokio::test]
+    async fn verify_request_topic() {
+        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_request_topic")
+            .await
+            .unwrap();
+        let node_uri = node.get_client_uri().await.unwrap();
+
+        let _publisher = node
+            .advertise::<std_msgs::String>("/test_topic", 1)
+            .await
+            .unwrap();
+
+        let response = call_node_api_raw(
+            &node_uri,
+            "requestTopic",
+            vec![
+                "verify_request_topic".into(),
+                "/test_topic".into(),
+                serde_xmlrpc::Value::Array(vec![serde_xmlrpc::Value::Array(vec!["TCPROS".into()])]),
+            ],
+        )
+        .await;
+
+        let (code, _description, (protocol, host, port)): (i8, String, (String, String, u16)) =
+            serde_xmlrpc::response_from_str(&response).unwrap();
+        assert_eq!(code, 1);
+        assert_eq!(protocol, "TCPROS");
+        assert!(!host.is_empty());
+        assert!(port != 0);
     }
 }

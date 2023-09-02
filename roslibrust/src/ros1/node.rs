@@ -1,14 +1,15 @@
 //! This module contains the top level Node and NodeHandle classes.
 //! These wrap the lower level management of a ROS Node connection into a higher level and thread safe API.
 
-use super::publisher::{Publisher, PublishingChannel};
-use crate::{
-    MasterClient, RosMasterError, ServiceCallback, Subscription, XmlRpcServer, XmlRpcServerHandle,
+use super::{
+    publisher::{Publication, Publisher},
+    subscriber::{Subscriber, Subscription},
 };
+use crate::{MasterClient, RosMasterError, ServiceCallback, XmlRpcServer, XmlRpcServerHandle};
 use dashmap::DashMap;
 use roslibrust_codegen::RosMessageType;
 use std::net::{IpAddr, Ipv4Addr, ToSocketAddrs};
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{broadcast, mpsc, oneshot};
 
 #[derive(Debug)]
 pub struct ProtocolParams {
@@ -38,6 +39,14 @@ pub enum NodeMsg {
     Shutdown,
     RegisterPublisher {
         reply: oneshot::Sender<Result<mpsc::Sender<Vec<u8>>, String>>,
+        topic: String,
+        topic_type: String,
+        queue_size: usize,
+        msg_definition: String,
+        md5sum: String,
+    },
+    RegisterSubscriber {
+        reply: oneshot::Sender<Result<broadcast::Receiver<Vec<u8>>, String>>,
         topic: String,
         topic_type: String,
         queue_size: usize,
@@ -157,6 +166,31 @@ impl NodeServerHandle {
         }
     }
 
+    pub async fn register_subscriber<T: RosMessageType>(
+        &self,
+        topic: &str,
+        queue_size: usize,
+    ) -> Result<broadcast::Receiver<Vec<u8>>, Box<dyn std::error::Error>> {
+        let (sender, receiver) = oneshot::channel();
+        match self.node_server_sender.send(NodeMsg::RegisterSubscriber {
+            reply: sender,
+            topic: topic.to_owned(),
+            topic_type: T::ROS_TYPE_NAME.to_owned(),
+            queue_size,
+            msg_definition: T::DEFINITION.to_owned(),
+            md5sum: T::MD5SUM.to_owned(),
+        }) {
+            Ok(()) => {
+                let received = receiver.await.map_err(|err| Box::new(err))?;
+                Ok(received.map_err(|err| {
+                    log::error!("Failed to register subscriber: {err}");
+                    Box::new(std::io::Error::from(std::io::ErrorKind::ConnectionAborted))
+                })?)
+            }
+            Err(err) => Err(Box::new(err)),
+        }
+    }
+
     pub async fn request_topic(
         &self,
         caller_id: &str,
@@ -194,7 +228,7 @@ pub struct Node {
     // Receiver for requests to the Node actor
     node_msg_rx: mpsc::UnboundedReceiver<NodeMsg>,
     // Map of topic names to the publishing channels associated with the topic
-    publishers: DashMap<String, PublishingChannel>,
+    publishers: DashMap<String, Publication>,
     // Record of subscriptions this node has
     subscriptions: DashMap<String, Subscription>,
     // Record of what services this node is serving
@@ -265,7 +299,7 @@ impl Node {
                 let _ = reply.send(
                     self.subscriptions
                         .iter()
-                        .map(|entry| (entry.key().clone(), entry.topic_type.clone()))
+                        .map(|entry| (entry.key().clone(), entry.topic_type().to_owned()))
                         .collect(),
                 );
             }
@@ -278,15 +312,19 @@ impl Node {
                 );
             }
             NodeMsg::SetPeerPublishers { topic, publishers } => {
-                let item = self.subscriptions.get_mut(&topic);
-                let mut item = match item {
-                    Some(i) => i,
-                    None => {
-                        log::warn!("Got peer publisher update for topic we weren't subscribed to, ignoring");
-                        return;
+                if let Some(mut subscription) = self.subscriptions.get_mut(&topic) {
+                    for publisher_uri in publishers {
+                        if let Err(err) = subscription.add_publisher_source(&publisher_uri).await {
+                            log::error!(
+                                "Unable to create subscribe stream for topic {topic}: {err}"
+                            );
+                        }
                     }
-                };
-                item.known_publishers = publishers;
+                } else {
+                    log::warn!(
+                        "Got peer publisher update for topic we weren't subscribed to, ignoring"
+                    );
+                }
             }
             NodeMsg::RegisterPublisher {
                 reply,
@@ -296,7 +334,7 @@ impl Node {
                 msg_definition,
                 md5sum,
             } => {
-                let channel = match PublishingChannel::new(
+                let channel = match Publication::new(
                     &self.node_name,
                     false,
                     &topic,
@@ -331,6 +369,26 @@ impl Node {
                     format!("{err_str}");
                     let _ = reply.send(Err(err_str));
                 }
+            }
+            NodeMsg::RegisterSubscriber {
+                reply,
+                topic,
+                topic_type,
+                queue_size,
+                msg_definition,
+                md5sum,
+            } => {
+                let _ = reply.send(
+                    self.register_subscriber(
+                        &topic,
+                        &topic_type,
+                        queue_size,
+                        &msg_definition,
+                        &md5sum,
+                    )
+                    .await
+                    .map_err(|err| err.to_string()),
+                );
             }
             NodeMsg::RequestTopic {
                 reply,
@@ -369,6 +427,42 @@ impl Node {
             }
             NodeMsg::Shutdown => {
                 unreachable!("This node msg is handled in the wrapping handling code");
+            }
+        }
+    }
+
+    async fn register_subscriber(
+        &mut self,
+        topic: &str,
+        topic_type: &str,
+        queue_size: usize,
+        msg_definition: &str,
+        md5sum: &str,
+    ) -> Result<broadcast::Receiver<Vec<u8>>, Box<dyn std::error::Error>> {
+        match self
+            .subscriptions
+            .iter()
+            .find(|subscription| subscription.key() == topic)
+        {
+            Some(subscription) => Ok(subscription.get_receiver()),
+            None => {
+                let mut subscription = Subscription::new(
+                    &self.node_name,
+                    &topic,
+                    &topic_type,
+                    queue_size,
+                    msg_definition.to_owned(),
+                    md5sum.to_owned(),
+                );
+                let current_publishers = self.client.register_subscriber(topic, topic_type).await?;
+                for publisher in current_publishers {
+                    if let Err(err) = subscription.add_publisher_source(&publisher).await {
+                        log::error!("Unable to create subscriber connection to {publisher} for {topic}: {err}");
+                    }
+                }
+                let receiver = subscription.get_receiver();
+                self.subscriptions.insert(topic.to_owned(), subscription);
+                Ok(receiver)
             }
         }
     }
@@ -419,6 +513,18 @@ impl NodeHandle {
             .register_publisher::<T>(topic_name, T::ROS_TYPE_NAME, queue_size)
             .await?;
         Ok(Publisher::new(topic_name, sender))
+    }
+
+    pub async fn subscribe<T: roslibrust_codegen::RosMessageType>(
+        &self,
+        topic_name: &str,
+        queue_size: usize,
+    ) -> Result<Subscriber<T>, Box<dyn std::error::Error>> {
+        let receiver = self
+            .inner
+            .register_subscriber::<T>(topic_name, queue_size)
+            .await?;
+        Ok(Subscriber::new(receiver))
     }
 }
 
