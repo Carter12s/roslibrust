@@ -1,5 +1,5 @@
 lazy_static::lazy_static! {
-    static ref GRAPH_NAME_REGEX: regex::Regex = regex::Regex::new(r"^[/~A-z][A-z0-9_/]*[A-z0-9_]$").unwrap();
+    static ref GRAPH_NAME_REGEX: regex::Regex = regex::Regex::new(r"^([/~a-zA-Z]){1}([a-zA-Z0-9_/])*([A-z0-9_])$").unwrap();
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -29,16 +29,20 @@ impl Name {
             match components.len() {
                 0..=1 => unreachable!("Node name {} must have at least one /", node_name.inner),
                 2 => Name {
-                    inner: format!("/{}/{}", components[1], self.inner),
+                    inner: format!("/{}", self.inner),
                 },
                 len => Name {
-                    inner: components[1..len - 1].into_iter().fold(
-                        String::new(),
-                        |mut name, component| {
-                            name.push('/');
-                            name.push_str(component);
-                            name
-                        },
+                    inner: format!(
+                        "{}/{}",
+                        components[1..len - 1].into_iter().fold(
+                            String::new(),
+                            |mut name, component| {
+                                name.push('/');
+                                name.push_str(component);
+                                name
+                            },
+                        ),
+                        self.inner
                     ),
                 },
             }
