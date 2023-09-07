@@ -13,5 +13,6 @@ mod node;
 pub use node::*;
 
 mod publisher;
+mod service_server;
 mod subscriber;
 mod tcpros;

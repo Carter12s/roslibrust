@@ -3,11 +3,12 @@
 
 use super::{
     publisher::{Publication, Publisher},
+    service_server::{ServiceCall, ServiceServer},
     subscriber::{Subscriber, Subscription},
 };
 use crate::{MasterClient, RosMasterError, ServiceCallback, XmlRpcServer, XmlRpcServerHandle};
 use dashmap::DashMap;
-use roslibrust_codegen::RosMessageType;
+use roslibrust_codegen::{RosMessageType, RosServiceType};
 use std::net::{IpAddr, Ipv4Addr, ToSocketAddrs};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
@@ -58,6 +59,10 @@ pub enum NodeMsg {
         caller_id: String,
         topic: String,
         protocols: Vec<String>,
+    },
+    RegisterService {
+        reply: oneshot::Sender<Result<mpsc::Receiver<ServiceCall>, String>>,
+        service_name: String,
     },
 }
 
@@ -215,6 +220,13 @@ impl NodeServerHandle {
             }
             Err(e) => Err(Box::new(e)),
         }
+    }
+
+    pub async fn register_service<T: RosServiceType>(
+        &self,
+        service_name: &str,
+    ) -> Result<mpsc::Receiver<ServiceCall>, Box<dyn std::error::Error>> {
+        todo!()
     }
 }
 
@@ -425,6 +437,16 @@ impl Node {
                     let _ = reply.send(Err(err_str));
                 }
             }
+            NodeMsg::RegisterService {
+                reply,
+                service_name,
+            } => {
+                let _ = reply.send(
+                    self.register_service(&service_name)
+                        .await
+                        .map_err(|err| err.to_string()),
+                );
+            }
             NodeMsg::Shutdown => {
                 unreachable!("This node msg is handled in the wrapping handling code");
             }
@@ -465,6 +487,16 @@ impl Node {
                 Ok(receiver)
             }
         }
+    }
+
+    async fn register_service(
+        &mut self,
+        service_name: &str,
+    ) -> Result<mpsc::Receiver<ServiceCall>, Box<dyn std::error::Error>> {
+        let service_uri = String::new();
+        self.client
+            .register_service(service_name, service_uri)
+            .await?;
     }
 }
 
@@ -525,6 +557,14 @@ impl NodeHandle {
             .register_subscriber::<T>(topic_name, queue_size)
             .await?;
         Ok(Subscriber::new(receiver))
+    }
+
+    pub async fn advertise_service<T: roslibrust_codegen::RosServiceType>(
+        &self,
+        service_name: &str,
+    ) -> Result<ServiceServer<T>, Box<dyn std::error::Error>> {
+        let receiver = self.inner.register_service::<T>(service_name).await?;
+        Ok(ServiceServer::new(service_name, receiver))
     }
 }
 
