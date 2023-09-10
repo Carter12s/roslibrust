@@ -1,19 +1,22 @@
 use roslibrust::ClientHandle;
 
 // One way to import message definitions:
-roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
+roslibrust_codegen_macro::find_and_generate_ros_messages!(
+    "assets/ros1_common_interfaces",
+    "/opt/ros/humble/share/std_srvs"
+);
 
 // A basic service server exampple, that logs the request is recieves and returns
 // a canned response.
-fn my_service(
-    request: std_srvs::SetBoolRequest,
-) -> Result<std_srvs::SetBoolResponse, Box<dyn std::error::Error + Send + Sync>> {
-    log::info!("Got request to set bool: {request:?}");
-    Ok(std_srvs::SetBoolResponse {
-        success: true,
-        message: "You set my bool!".to_string(),
-    })
-}
+// fn my_service(
+//     request: std_srvs::SetBoolRequest,
+// ) -> Result<std_srvs::SetBoolResponse, Box<dyn std::error::Error + Send + Sync>> {
+//     log::info!("Got request to set bool: {request:?}");
+//     Ok(std_srvs::SetBoolResponse {
+//         success: true,
+//         message: "You set my bool!".to_string(),
+//     })
+// }
 
 /// This examples shows hosting a service server and calling it to confirm it is working
 ///
@@ -48,10 +51,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Create a new client
     let client = ClientHandle::new("ws://localhost:9090").await?;
 
+    let my_string = "Some string".to_string(); // The string you want to pass in
+
+    let my_service = move |request: std_srvs::SetBoolRequest| -> Result<std_srvs::SetBoolResponse, Box<dyn std::error::Error + Send + Sync>> {
+        log::info!("Got request to set bool: {:?}", request);
+        log::info!("Using my string: {}", my_string); // Use the string here
+
+        Ok(std_srvs::SetBoolResponse {
+            success: true,
+            message: "You set my bool!".to_string(),
+        })
+    };
+
     // Actually advertise our service
     // The handle returned here establishes the lifetime of our service and dropping it will unadvertise the service
     let _handle = client
-        .advertise_service::<std_srvs::SetBool>("/my_set_bool", my_service)
+        .advertise_service::<std_srvs::SetBool, _>("/my_set_bool", my_service)
         .await?;
 
     // Now try manually calling the service with the command line!
