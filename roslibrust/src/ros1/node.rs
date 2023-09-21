@@ -1,7 +1,10 @@
 //! This module contains the top level Node and NodeHandle classes.
 //! These wrap the lower level management of a ROS Node connection into a higher level and thread safe API.
 
-use super::publisher::{Publisher, PublishingChannel};
+use super::{
+    names::Name,
+    publisher::{Publisher, PublishingChannel},
+};
 use crate::{
     MasterClient, RosMasterError, ServiceCallback, Subscription, XmlRpcServer, XmlRpcServerHandle,
 };
@@ -219,6 +222,13 @@ impl Node {
         // Create our xmlrpc server and bind our socket so we know our port and can determine our local URI
         let xmlrpc_server = XmlRpcServer::new(addr, node_server_handle.clone());
         let client_uri = format!("http://{hostname}:{}", xmlrpc_server.port());
+
+        if let None = Name::new(node_name) {
+            log::error!("Node name {node_name} is not valid");
+            return Err(Box::new(std::io::Error::from(
+                std::io::ErrorKind::InvalidInput,
+            )));
+        }
 
         let rosmaster_client = MasterClient::new(master_uri, client_uri, node_name).await?;
         let mut node = Self {
