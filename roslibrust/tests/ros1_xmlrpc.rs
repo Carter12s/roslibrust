@@ -1,9 +1,5 @@
 #[cfg(all(feature = "ros1", feature = "ros1_test"))]
 mod tests {
-    roslibrust_codegen_macro::find_and_generate_ros_messages_relative_to_manifest_dir!(
-        "../assets/ros1_common_interfaces"
-    );
-
     use roslibrust_codegen::RosMessageType;
     use serde::de::DeserializeOwned;
     use serde_xmlrpc::Value;
