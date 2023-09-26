@@ -10,14 +10,14 @@ use tokio::{
 
 pub struct Subscriber<T> {
     receiver: broadcast::Receiver<Vec<u8>>,
-    phantom: PhantomData<T>,
+    _phantom: PhantomData<T>,
 }
 
 impl<T: RosMessageType> Subscriber<T> {
     pub(crate) fn new(receiver: broadcast::Receiver<Vec<u8>>) -> Self {
         Self {
             receiver,
-            phantom: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
@@ -152,7 +152,12 @@ async fn establish_publisher_connection(
             );
             Ok(stream)
         } else {
-            log::error!("Tried to subscribe to {topic_name}, but md5sums do not match");
+            log::error!(
+                "Tried to subscribe to {}, but md5sums do not match. Expected {}, received {}",
+                topic_name,
+                conn_header.md5sum,
+                responded_header.md5sum
+            );
             Err(std::io::ErrorKind::InvalidData)
         }
     } else {

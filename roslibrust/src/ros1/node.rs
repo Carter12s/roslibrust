@@ -3,12 +3,10 @@
 
 use super::{
     names::Name,
-    publisher::{Publisher, PublishingChannel},
+    publisher::{Publication, Publisher},
     subscriber::{Subscriber, Subscription},
 };
-use crate::{
-    MasterClient, RosMasterError, ServiceCallback, Subscription, XmlRpcServer, XmlRpcServerHandle,
-};
+use crate::{MasterClient, RosMasterError, ServiceCallback, XmlRpcServer, XmlRpcServerHandle};
 use dashmap::DashMap;
 use roslibrust_codegen::RosMessageType;
 use std::net::{IpAddr, Ipv4Addr, ToSocketAddrs};
@@ -474,7 +472,7 @@ impl Node {
         }) {
             Ok(handle?)
         } else {
-            let channel = PublishingChannel::new(
+            let channel = Publication::new(
                 &self.node_name,
                 false,
                 &topic,

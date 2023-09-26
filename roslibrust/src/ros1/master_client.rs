@@ -48,7 +48,9 @@ impl SystemState {
     /// Helper function for checking if a node is registered as a publisher of a given topic.
     /// Returns true iff the node is a publisher of that topic
     pub fn is_publishing(&self, topic: &str, node: &str) -> bool {
-        let Some(entry) = self.publishers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        let Some(entry) = self.publishers.iter().find(|entry| entry.topic.eq(topic)) else {
+            return false;
+        };
         entry
             .nodes
             .iter()
@@ -59,7 +61,9 @@ impl SystemState {
     /// Helper function for checking if a node is registered as a subscriber of a given topic.
     /// Returns true iff the node is a subscriber of that topic.
     pub fn is_subscribed(&self, topic: &str, node: &str) -> bool {
-        let Some(entry) = self.subscribers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        let Some(entry) = self.subscribers.iter().find(|entry| entry.topic.eq(topic)) else {
+            return false;
+        };
         entry
             .nodes
             .iter()
@@ -68,7 +72,13 @@ impl SystemState {
     }
 
     pub fn is_service_provider(&self, topic: &str, node: &str) -> bool {
-        let Some(entry) = self.service_providers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        let Some(entry) = self
+            .service_providers
+            .iter()
+            .find(|entry| entry.topic.eq(topic))
+        else {
+            return false;
+        };
         entry
             .nodes
             .iter()
