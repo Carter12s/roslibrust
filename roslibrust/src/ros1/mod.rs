@@ -15,4 +15,5 @@ mod node;
 pub use node::*;
 
 mod publisher;
+mod subscriber;
 mod tcpros;

@@ -7,22 +7,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
-        .without_timestamps() // required for running wsl2
+        .without_timestamps()
         .init()
         .unwrap();
 
-    let nh = NodeHandle::new("http://localhost:11311", "talker_rs")
-        .await
-        .map_err(|err| err)?;
-    let publisher = nh.advertise::<std_msgs::String>("/chatter", 1).await?;
+    let nh = NodeHandle::new("http://localhost:11311", "listener_rs").await?;
+    let mut subscriber = nh.subscribe::<std_msgs::String>("/chatter", 1).await?;
 
-    for count in 0..10 {
-        publisher
-            .publish(&std_msgs::String {
-                data: format!("hello world from rust {count}"),
-            })
-            .await?;
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    while let Ok(msg) = subscriber.next().await {
+        log::info!("[/listener_rs] Got message: {}", msg.data);
     }
 
     Ok(())

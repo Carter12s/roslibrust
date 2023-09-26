@@ -3,6 +3,7 @@ use std::io::{Cursor, Read, Write};
 
 // Implementation of ConnectionHeader is based off of ROS documentation here:
 // wiki.ros.org/ROS/Connection%20Header
+#[derive(Clone, Debug)]
 pub struct ConnectionHeader {
     pub caller_id: String,
     pub latching: bool,
@@ -79,7 +80,7 @@ impl ConnectionHeader {
         // Start by skipping the length header since we don't know yet
         header_data.write_u32::<LittleEndian>(0)?;
 
-        let caller_id_str = format!("caller_id={}", self.caller_id);
+        let caller_id_str = format!("callerid={}", self.caller_id);
         header_data.write_u32::<LittleEndian>(caller_id_str.len() as u32)?;
         header_data.write(caller_id_str.as_bytes())?;
 
