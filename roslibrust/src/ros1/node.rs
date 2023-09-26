@@ -2,10 +2,13 @@
 //! These wrap the lower level management of a ROS Node connection into a higher level and thread safe API.
 
 use super::{
-    publisher::{Publication, Publisher},
+    names::Name,
+    publisher::{Publisher, PublishingChannel},
     subscriber::{Subscriber, Subscription},
 };
-use crate::{MasterClient, RosMasterError, ServiceCallback, XmlRpcServer, XmlRpcServerHandle};
+use crate::{
+    MasterClient, RosMasterError, ServiceCallback, Subscription, XmlRpcServer, XmlRpcServerHandle,
+};
 use dashmap::DashMap;
 use roslibrust_codegen::RosMessageType;
 use std::net::{IpAddr, Ipv4Addr, ToSocketAddrs};
@@ -254,6 +257,13 @@ impl Node {
         let xmlrpc_server = XmlRpcServer::new(addr, node_server_handle.clone());
         let client_uri = format!("http://{hostname}:{}", xmlrpc_server.port());
 
+        if let None = Name::new(node_name) {
+            log::error!("Node name {node_name} is not valid");
+            return Err(Box::new(std::io::Error::from(
+                std::io::ErrorKind::InvalidInput,
+            )));
+        }
+
         let rosmaster_client = MasterClient::new(master_uri, client_uri, node_name).await?;
         let mut node = Self {
             client: rosmaster_client,
@@ -334,41 +344,14 @@ impl Node {
                 msg_definition,
                 md5sum,
             } => {
-                let channel = match Publication::new(
-                    &self.node_name,
-                    false,
-                    &topic,
-                    self.host_addr,
-                    queue_size,
-                    &msg_definition,
-                    &md5sum,
-                    &topic_type,
-                )
-                .await
+                match self
+                    .register_publisher(topic, &topic_type, queue_size, msg_definition, md5sum)
+                    .await
                 {
-                    Ok(channel) => channel,
-                    Err(err) => {
-                        let err_str = format!("Could not create publishing channel: {err:?}");
-                        log::error!("{err_str}");
-                        let _ = reply.send(Err(err_str));
-                        return;
-                    }
-                };
-                let pub_handle_sender = channel.get_sender();
-                self.publishers.insert(topic.clone(), channel);
-
-                if let Ok(_current_subscribers) =
-                    self.client.register_publisher(&topic, &topic_type).await
-                {
-                    reply
-                        .send(Ok(pub_handle_sender))
-                        .expect("Failed to reply on oneshot");
-                } else {
-                    let err_str =
-                        format!("Failed to register publisher on topic {topic} with the rosmaster");
-                    format!("{err_str}");
-                    let _ = reply.send(Err(err_str));
+                    Ok(handle) => reply.send(Ok(handle)),
+                    Err(err) => reply.send(Err(err.to_string())),
                 }
+                .expect("Failed to reply on oneshot");
             }
             NodeMsg::RegisterSubscriber {
                 reply,
@@ -396,6 +379,7 @@ impl Node {
                 protocols,
                 ..
             } => {
+                // TODO: Should move the actual implementation similar to RegisterPublisher
                 if protocols
                     .iter()
                     .find(|proto| proto.as_str() == "TCPROS")
@@ -464,6 +448,52 @@ impl Node {
                 self.subscriptions.insert(topic.to_owned(), subscription);
                 Ok(receiver)
             }
+        }
+    }
+
+    async fn register_publisher(
+        &mut self,
+        topic: String,
+        topic_type: &str,
+        queue_size: usize,
+        msg_definition: String,
+        md5sum: String,
+    ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(handle) = self.publishers.iter().find_map(|entry| {
+            if entry.key().as_str() == &topic {
+                if entry.topic_type() == topic_type {
+                    Some(Ok(entry.get_sender()))
+                } else {
+                    Some(Err(Box::new(std::io::Error::from(
+                        std::io::ErrorKind::AddrInUse,
+                    ))))
+                }
+            } else {
+                None
+            }
+        }) {
+            Ok(handle?)
+        } else {
+            let channel = PublishingChannel::new(
+                &self.node_name,
+                false,
+                &topic,
+                self.host_addr,
+                queue_size,
+                &msg_definition,
+                &md5sum,
+                topic_type,
+            )
+            .await
+            .map_err(|err| {
+                log::error!("Failed to create publishing channel: {err:?}");
+                err
+            })?;
+            let handle = channel.get_sender();
+            self.publishers.insert(topic.clone(), channel);
+
+            let _current_subscribers = self.client.register_publisher(topic, topic_type).await?;
+            Ok(handle)
         }
     }
 }

@@ -1,5 +1,10 @@
 #[cfg(all(feature = "ros1", feature = "ros1_test"))]
 mod tests {
+    roslibrust_codegen_macro::find_and_generate_ros_messages_relative_to_manifest_dir!(
+        "../assets/ros1_common_interfaces"
+    );
+
+    use roslibrust_codegen::RosMessageType;
     use serde::de::DeserializeOwned;
     use serde_xmlrpc::Value;
 
@@ -61,6 +66,22 @@ mod tests {
         )
         .await;
         assert_eq!(publications.len(), 0);
+
+        let _publisher = node
+            .advertise::<std_msgs::String>("/test_topic", 1)
+            .await
+            .unwrap();
+
+        let publications = call_node_api::<Vec<(String, String)>>(
+            &node_uri,
+            "getPublications",
+            vec!["/verify_get_publications".into()],
+        )
+        .await;
+        assert_eq!(publications.len(), 1);
+        let (topic, topic_type) = publications.iter().nth(0).unwrap();
+        assert_eq!(topic, "/test_topic");
+        assert_eq!(topic_type, std_msgs::String::ROS_TYPE_NAME);
     }
 
     #[tokio::test]
