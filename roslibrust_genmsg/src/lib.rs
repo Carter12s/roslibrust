@@ -87,7 +87,8 @@ impl<'a> CodeGeneratorBuilder<'a> {
     /// Performs discovery of ROS messages, services, and actions, resolves their
     /// dependency graph and builds a `CodeGenerator`.
     pub fn build(self) -> std::io::Result<CodeGenerator<'a>> {
-        let (messages, services) = roslibrust_codegen::find_and_parse_ros_messages(self.msg_paths)?;
+        let (messages, services) =
+            roslibrust_codegen::find_and_parse_ros_messages(&self.msg_paths)?;
         let (messages, services) =
             roslibrust_codegen::resolve_dependency_graph(messages, services).unwrap();
 

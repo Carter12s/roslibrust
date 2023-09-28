@@ -1256,6 +1256,7 @@ dependencies = [
  "quote",
  "serde",
  "serde_json",
+ "simple-error",
  "syn 1.0.109",
  "test-log",
  "tokio",
@@ -1473,6 +1474,12 @@ checksum = "d8229b473baa5980ac72ef434c4415e70c4b5e71b423043adb4ba059f89c99a1"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "simple-error"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8542b68b8800c3cda649d2c72d688b6907b30f1580043135d61669d4aad1c175"
 
 [[package]]
 name = "simple_logger"

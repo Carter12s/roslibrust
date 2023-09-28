@@ -3,6 +3,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use simple_error::{bail, SimpleError as Error};
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::{Debug, Display};
 use std::path::PathBuf;
@@ -338,7 +339,9 @@ impl PartialEq for ConstantInfo {
 ///
 /// * `additional_search_paths` - A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
-pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
+pub fn find_and_generate_ros_messages(
+    additional_search_paths: Vec<PathBuf>,
+) -> Result<TokenStream, Error> {
     let mut ros_package_paths = utils::get_search_paths();
     ros_package_paths.extend(additional_search_paths);
     find_and_generate_ros_messages_without_ros_package_path(ros_package_paths)
@@ -350,12 +353,19 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
 /// * `search_paths` - A list of paths to search for ROS packages.
 pub fn find_and_generate_ros_messages_without_ros_package_path(
     search_paths: Vec<PathBuf>,
-) -> TokenStream {
-    let (messages, services) = find_and_parse_ros_messages(search_paths).unwrap();
+) -> Result<TokenStream, Error> {
+    let (messages, services) = find_and_parse_ros_messages(&search_paths).unwrap();
+
+    if messages.is_empty() && services.is_empty() {
+        // I'm considering this an error for now, but I could see this one being debateable
+        // As it stands there is not good way for us to manually produce a warning, so I'd rather fail loud
+        bail!("Failed to find any services or messages while generating ROS message definitions, paths searched: {search_paths:?}");
+    }
     if let Some((messages, services)) = resolve_dependency_graph(messages, services) {
-        generate_rust_ros_message_definitions(messages, services)
+        Ok(generate_rust_ros_message_definitions(messages, services))
     } else {
-        TokenStream::default()
+        // TODO this should get a better message
+        bail!("Failed to resolve dependency graph while generating messages: {search_paths:?}");
     }
 }
 
@@ -367,7 +377,7 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
 /// * `search_paths` - A list of paths to search.
 ///
 pub fn find_and_parse_ros_messages(
-    search_paths: Vec<PathBuf>,
+    search_paths: &Vec<PathBuf>,
 ) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
     let search_paths = search_paths
         .into_iter()
@@ -377,7 +387,7 @@ pub fn find_and_parse_ros_messages(
                     .unwrap_or_else(|_| panic!("Unable to canonicalize path: {}", path.display()))
             } else {
                 log::error!("{} does not exist", path.display());
-                path
+                path.into()
             }
         })
         .collect::<Vec<_>>();
