@@ -17,6 +17,7 @@ jobs:
       run:
         shell: bash
     container: carter12s/roslibrust-ci-noetic:latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
