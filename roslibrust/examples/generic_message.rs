@@ -36,7 +36,7 @@ impl RosMessageType for GenericHeader {
     /// the same ROS type name.
     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
 
-    // TODO these fields should be removed and not required for this example see 
+    // TODO these fields should be removed and not required for this example see
     // https://github.com/Carter12s/roslibrust/issues/124
     const MD5SUM: &'static str = "";
     const DEFINITION: &'static str = "";
@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         match msg {
             GenericHeader::V1(ros1_header) => {
                 info!("Got ros1: {ros1_header:?}");
-            },
+            }
             GenericHeader::V2(ros2_header) => {
                 info!("Got ros2: {ros2_header:?}");
             }
