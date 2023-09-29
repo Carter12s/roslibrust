@@ -354,7 +354,7 @@ pub fn find_and_generate_ros_messages(
 pub fn find_and_generate_ros_messages_without_ros_package_path(
     search_paths: Vec<PathBuf>,
 ) -> Result<TokenStream, Error> {
-    let (messages, services) = find_and_parse_ros_messages(&search_paths).unwrap();
+    let (messages, services) = find_and_parse_ros_messages(&search_paths)?;
 
     if messages.is_empty() && services.is_empty() {
         // I'm considering this an error for now, but I could see this one being debateable
@@ -362,7 +362,7 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
         bail!("Failed to find any services or messages while generating ROS message definitions, paths searched: {search_paths:?}");
     }
     if let Some((messages, services)) = resolve_dependency_graph(messages, services) {
-        Ok(generate_rust_ros_message_definitions(messages, services))
+        generate_rust_ros_message_definitions(messages, services)
     } else {
         // TODO this should get a better message
         bail!("Failed to resolve dependency graph while generating messages: {search_paths:?}");
@@ -382,11 +382,7 @@ pub fn find_and_parse_ros_messages(
     let search_paths  = search_paths
         .into_iter()
         .map(|path| {
-            if path.exists() {
-                path.canonicalize().map_err(|e| Error::with(format!("Codegen was instructed to search a path that could not be canonicalized: {path:?}").as_str(), e))
-            } else {
-                bail!("Codegen was instructed to search a path which does not exist: {path:?}");
-            }
+                path.canonicalize().map_err(|e| Error::with(format!("Codegen was instructed to search a path that could not be canonicalized relative to {:?}: {path:?}", std::env::current_dir().unwrap()).as_str(), e))
         })
         .collect::<Result<Vec<_>, Error>>()?;
     debug!(
@@ -437,29 +433,37 @@ pub fn find_and_parse_ros_messages(
 pub fn generate_rust_ros_message_definitions(
     messages: Vec<MessageFile>,
     services: Vec<ServiceFile>,
-) -> TokenStream {
+) -> Result<TokenStream, Error> {
     let mut modules_to_struct_definitions: BTreeMap<String, Vec<TokenStream>> = BTreeMap::new();
 
     // Convert messages files into rust token streams and insert them into BTree organized by package
-    messages.into_iter().for_each(|message| {
-        let pkg_name = message.parsed.package.clone();
-        let definition = generate_struct(message);
-        if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
-            entry.push(definition);
-        } else {
-            modules_to_struct_definitions.insert(pkg_name, vec![definition]);
-        }
-    });
+    messages
+        .into_iter()
+        .map(|message| {
+            let pkg_name = message.parsed.package.clone();
+            let definition = generate_struct(message)?;
+            if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
+                entry.push(definition);
+            } else {
+                modules_to_struct_definitions.insert(pkg_name, vec![definition]);
+            }
+            Ok(())
+        })
+        .collect::<Result<_, Error>>()?;
     // Do the same for services
-    services.into_iter().for_each(|service| {
-        let pkg_name = service.parsed.package.clone();
-        let definition = generate_service(service);
-        if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
-            entry.push(definition);
-        } else {
-            modules_to_struct_definitions.insert(pkg_name, vec![definition]);
-        }
-    });
+    services
+        .into_iter()
+        .map(|service| {
+            let pkg_name = service.parsed.package.clone();
+            let definition = generate_service(service)?;
+            if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
+                entry.push(definition);
+            } else {
+                modules_to_struct_definitions.insert(pkg_name, vec![definition]);
+            }
+            Ok(())
+        })
+        .collect::<Result<_, Error>>()?;
     // Now generate modules to wrap all of the TokenStreams in a module for each package
     let all_pkgs = modules_to_struct_definitions
         .keys()
@@ -470,10 +474,10 @@ pub fn generate_rust_ros_message_definitions(
         .map(|(pkg, struct_defs)| generate_mod(pkg, struct_defs, &all_pkgs[..]))
         .collect::<Vec<_>>();
 
-    quote! {
+    Ok(quote! {
         #(#module_definitions)*
 
-    }
+    })
 }
 
 struct MessageMetadata {

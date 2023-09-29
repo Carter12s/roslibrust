@@ -6,6 +6,7 @@ use syn::parse_quote;
 
 use crate::parse::convert_ros_type_to_rust_type;
 use crate::utils::RosVersion;
+use crate::{bail, Error};
 use crate::{ConstantInfo, FieldInfo, MessageFile, RosLiteral, ServiceFile};
 
 fn derive_attrs() -> Vec<syn::Attribute> {
@@ -26,16 +27,16 @@ fn derive_attrs() -> Vec<syn::Attribute> {
 /// Generates the service for a given service file
 /// The service definition defines a struct representing the service an an implementation
 /// of the RosServiceType trait for that struct
-pub fn generate_service(service: ServiceFile) -> TokenStream {
+pub fn generate_service(service: ServiceFile) -> Result<TokenStream, Error> {
     let service_type_name = service.get_full_name();
     let service_md5sum = service.md5sum;
     let struct_name = format_ident!("{}", service.parsed.name);
     let request_name = format_ident!("{}", service.parsed.request_type.name);
     let response_name = format_ident!("{}", service.parsed.response_type.name);
 
-    let request_msg = generate_struct(service.request);
-    let response_msg = generate_struct(service.response);
-    quote! {
+    let request_msg = generate_struct(service.request)?;
+    let response_msg = generate_struct(service.response)?;
+    Ok(quote! {
 
         #request_msg
         #response_msg
@@ -49,10 +50,10 @@ pub fn generate_service(service: ServiceFile) -> TokenStream {
             type Request = #request_name;
             type Response = #response_name;
         }
-    }
+    })
 }
 
-pub fn generate_struct(msg: MessageFile) -> TokenStream {
+pub fn generate_struct(msg: MessageFile) -> Result<TokenStream, Error> {
     let ros_type_name = msg.get_full_name();
     let attrs = derive_attrs();
     let fields = msg
@@ -66,7 +67,7 @@ pub fn generate_struct(msg: MessageFile) -> TokenStream {
                 msg.parsed.version.unwrap_or(RosVersion::ROS1),
             )
         })
-        .collect::<Vec<TokenStream>>();
+        .collect::<Result<Vec<TokenStream>, _>>()?;
 
     let constants = msg
         .parsed
@@ -78,7 +79,7 @@ pub fn generate_struct(msg: MessageFile) -> TokenStream {
                 msg.parsed.version.unwrap_or(RosVersion::ROS1),
             )
         })
-        .collect::<Vec<TokenStream>>();
+        .collect::<Result<Vec<TokenStream>, _>>()?;
 
     let struct_name = format_ident!("{}", msg.parsed.name);
     let md5sum = msg.md5sum;
@@ -106,10 +107,14 @@ pub fn generate_struct(msg: MessageFile) -> TokenStream {
             }
         });
     }
-    base
+    Ok(base)
 }
 
-fn generate_field_definition(field: FieldInfo, msg_pkg: &str, version: RosVersion) -> TokenStream {
+fn generate_field_definition(
+    field: FieldInfo,
+    msg_pkg: &str,
+    version: RosVersion,
+) -> Result<TokenStream, Error> {
     let rust_field_type = match field.field_type.package_name {
         Some(ref pkg) => {
             if pkg.as_str() == msg_pkg {
@@ -134,26 +139,29 @@ fn generate_field_definition(field: FieldInfo, msg_pkg: &str, version: RosVersio
             &field.field_type.field_type,
             default_val,
             field.field_type.array_info,
-        );
+        )?;
         if field.field_type.array_info.is_some() {
             // For vectors use smart_defaults "dynamic" style
-            quote! {
+            Ok(quote! {
                 #[default(_code = #default_val)]
                 pub #field_name: #rust_field_type,
-            }
+            })
         } else {
             // For non vectors use smart_default's constant style
-            quote! {
+            Ok(quote! {
               #[default(#default_val)]
               pub #field_name: #rust_field_type,
-            }
+            })
         }
     } else {
-        quote! { pub #field_name: #rust_field_type, }
+        Ok(quote! { pub #field_name: #rust_field_type, })
     }
 }
 
-fn generate_constant_field_definition(constant: ConstantInfo, version: RosVersion) -> TokenStream {
+fn generate_constant_field_definition(
+    constant: ConstantInfo,
+    version: RosVersion,
+) -> Result<TokenStream, Error> {
     let constant_name = format_ident!("r#{}", constant.constant_name);
     let constant_rust_type =
         convert_ros_type_to_rust_type(version, &constant.constant_type).unwrap();
@@ -165,9 +173,9 @@ fn generate_constant_field_definition(constant: ConstantInfo, version: RosVersio
     };
     let constant_rust_type = TokenStream::from_str(constant_rust_type.as_str()).unwrap();
     let constant_value =
-        ros_literal_to_rust_literal(&constant.constant_type, &constant.constant_value, None);
+        ros_literal_to_rust_literal(&constant.constant_type, &constant.constant_value, None)?;
 
-    quote! { pub const #constant_name: #constant_rust_type = #constant_value; }
+    Ok(quote! { pub const #constant_name: #constant_rust_type = #constant_value; })
 }
 
 pub fn generate_mod(
@@ -196,7 +204,7 @@ fn ros_literal_to_rust_literal(
     ros_type: &str,
     literal: &RosLiteral,
     array_info: Option<Option<usize>>,
-) -> TokenStream {
+) -> Result<TokenStream, Error> {
     // TODO: The naming of all the functions under this tree seems inaccurate
     parse_ros_value(ros_type, &literal.inner, array_info)
 }
@@ -207,18 +215,18 @@ fn ros_literal_to_rust_literal(
 fn generic_parse_value<T: DeserializeOwned + ToTokens + std::fmt::Debug>(
     value: &str,
     is_vec: bool,
-) -> TokenStream {
+) -> Result<TokenStream, Error> {
     if is_vec {
-        let parsed: Vec<T> = serde_json::from_str(value).unwrap_or_else(|_|
-            panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
-        );
+        let parsed: Vec<T> = serde_json::from_str(value).map_err(|e|
+            Error::with(format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>()).as_str(), e)
+        )?;
         let vec_str = format!("vec!{parsed:?}");
-        quote! { #vec_str }
+        Ok(quote! { #vec_str })
     } else {
-        let parsed: T = serde_json::from_str(value).unwrap_or_else(|_|
-            panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>())
-        );
-        quote! { #parsed }
+        let parsed: T = serde_json::from_str(value).map_err(|e|
+            Error::with(format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to {}", std::any::type_name::<T>()).as_str(), e)
+        )?;
+        Ok(quote! { #parsed })
     }
 }
 
@@ -234,7 +242,11 @@ fn generic_parse_value<T: DeserializeOwned + ToTokens + std::fmt::Debug>(
 /// `value` -- Expects the trimmed string containing only the value expression
 /// `is_vec` -- True iff the type is an array type
 /// TODO I'd like this to take FieldType, but want it to also work with constants...
-fn parse_ros_value(ros_type: &str, value: &str, array_info: Option<Option<usize>>) -> TokenStream {
+fn parse_ros_value(
+    ros_type: &str,
+    value: &str,
+    array_info: Option<Option<usize>>,
+) -> Result<TokenStream, Error> {
     let is_vec = array_info.is_some();
     match ros_type {
         "bool" => generic_parse_value::<bool>(value, is_vec),
@@ -252,22 +264,23 @@ fn parse_ros_value(ros_type: &str, value: &str, array_info: Option<Option<usize>
             // String is a special case because of quotes and to_string()
             if is_vec {
                 // TODO there is a bug here, no idea how I should be attempting to convert / escape single quotes here...
-                let parsed: Vec<String> = serde_json::from_str(value).unwrap_or_else(|_|
-            panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to Vec<String>"));
+                let parsed: Vec<String> = serde_json::from_str(value).map_err(|e|
+                    Error::with(format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to Vec<String>").as_str(), e)
+                )?;
                 let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
-                quote! { #vec_str }
+                Ok(quote! { #vec_str })
             } else {
                 // Halfass attempt to deal with ROS's string escaping / quote bullshit
                 // TODO bug here: https://github.com/Carter12s/roslibrust/issues/129
                 let value = &value.replace('\'', "\"");
                 // TODO need to return result here
-                let parsed: String = serde_json::from_str(value).unwrap_or_else(|_| panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
-                quote! { #parsed }
+                let parsed: String = serde_json::from_str(value).map_err(|e|
+                    Error::with(format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String").as_str(), e))?;
+                Ok(quote! { #parsed })
             }
         }
         _ => {
-            // TODO need to return result here
-            panic!("Found default for type which does not support default: {ros_type}");
+            bail!("Found default for type which does not support default: {ros_type}");
         }
     }
 }
