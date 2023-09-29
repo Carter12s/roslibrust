@@ -491,7 +491,7 @@ struct MessageMetadata {
 pub fn resolve_dependency_graph(
     messages: Vec<ParsedMessageFile>,
     services: Vec<ParsedServiceFile>,
-) -> Option<(Vec<MessageFile>, Vec<ServiceFile>)> {
+) -> Result<(Vec<MessageFile>, Vec<ServiceFile>), Error> {
     const MAX_PARSE_ITER_LIMIT: u32 = 2048;
     let mut unresolved_messages = messages
         .into_iter()
