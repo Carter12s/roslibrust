@@ -382,7 +382,10 @@ pub fn find_and_parse_ros_messages(
     let search_paths  = search_paths
         .into_iter()
         .map(|path| {
-                path.canonicalize().map_err(|e| Error::with(format!("Codegen was instructed to search a path that could not be canonicalized relative to {:?}: {path:?}", std::env::current_dir().unwrap()).as_str(), e))
+            path.canonicalize().map_err(
+            |e| {
+                    Error::with(format!("Codegen was instructed to search a path that could not be canonicalized relative to {:?}: {path:?}", std::env::current_dir().unwrap()).as_str(), e)
+        })
         })
         .collect::<Result<Vec<_>, Error>>()?;
     debug!(
