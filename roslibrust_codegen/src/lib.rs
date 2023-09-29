@@ -378,19 +378,17 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
 ///
 pub fn find_and_parse_ros_messages(
     search_paths: &Vec<PathBuf>,
-) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
-    let search_paths = search_paths
+) -> Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>), Error> {
+    let search_paths  = search_paths
         .into_iter()
         .map(|path| {
             if path.exists() {
-                path.canonicalize()
-                    .unwrap_or_else(|_| panic!("Unable to canonicalize path: {}", path.display()))
+                path.canonicalize().map_err(|e| Error::with(format!("Codegen was instructed to search a path that could not be canonicalized: {path:?}").as_str(), e))
             } else {
-                log::error!("{} does not exist", path.display());
-                path.into()
+                bail!("Codegen was instructed to search a path which does not exist: {path:?}");
             }
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, Error>>()?;
     debug!(
         "Codegen is looking in following paths for files: {:?}",
         &search_paths
@@ -399,8 +397,8 @@ pub fn find_and_parse_ros_messages(
     // Check for duplicate package names
     let packages = utils::deduplicate_packages(packages);
     if packages.is_empty() {
-        log::warn!(
-            "No packages found while searching in: {search_paths:?}, relative to {:?}",
+        bail!(
+            "No ROS packages found while searching in: {search_paths:?}, relative to {:?}",
             std::env::current_dir().unwrap()
         );
     }
@@ -408,20 +406,22 @@ pub fn find_and_parse_ros_messages(
     let message_files = packages
         .iter()
         .flat_map(|pkg| {
-            utils::get_message_files(pkg)
-                .unwrap_or_else(|err| {
-                    log::error!(
-                        "Unable to get paths to message files for {}: {}",
-                        pkg.name,
-                        err
-                    );
-                    // Return an empty vec so that one package doesn't necessarily fail the process
-                    vec![]
-                })
-                .into_iter()
-                .map(|path| (pkg.clone(), path))
+            let files = utils::get_message_files(pkg).map_err(|err| {
+                Error::with(
+                    format!("Unable to get paths to message files for {pkg:?}:").as_str(),
+                    err,
+                )
+            });
+            // See https://stackoverflow.com/questions/59852161/how-to-handle-result-in-flat-map
+            match files {
+                Ok(files) => files
+                    .into_iter()
+                    .map(|path| Ok((pkg.clone(), path)))
+                    .collect(),
+                Err(e) => vec![Err(e)],
+            }
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<(Package, PathBuf)>, Error>>()?;
 
     parse_ros_files(message_files)
 }
@@ -543,11 +543,16 @@ pub fn resolve_dependency_graph(
 /// * `msg_paths` -- List of tuple (Package, Path to File) for each file to parse
 fn parse_ros_files(
     msg_paths: Vec<(Package, PathBuf)>,
-) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
+) -> Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>), Error> {
     let mut parsed_messages = Vec::new();
     let mut parsed_services = Vec::new();
     for (pkg, path) in msg_paths {
-        let contents = std::fs::read_to_string(&path)?;
+        let contents = std::fs::read_to_string(&path).map_err(|e| {
+            Error::with(
+                format!("Codgen failed while attempting to read file {path:?} from disk:").as_str(),
+                e,
+            )
+        })?;
         let name = path.file_stem().unwrap().to_str().unwrap();
         match path.extension().unwrap().to_str().unwrap() {
             "srv" => {
@@ -590,7 +595,7 @@ mod test {
 
         let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
         // Make sure something actually got generated
-        assert!(!gen.is_empty())
+        assert!(!gen.unwrap().is_empty())
     }
 
     /// Confirms we don't panic on ros2 parsing
@@ -603,7 +608,7 @@ mod test {
 
         let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
         // Make sure something actually got generated
-        assert!(!gen.is_empty())
+        assert!(!gen.unwrap().is_empty())
     }
 
     /// Confirms we don't panic on ros1_test_msgs parsing
@@ -618,7 +623,7 @@ mod test {
             "/../assets/ros1_common_interfaces/std_msgs"
         );
         let gen = find_and_generate_ros_messages(vec![assets_path.into(), std_msgs.into()]);
-        assert!(!gen.is_empty());
+        assert!(!gen.unwrap().is_empty());
     }
 
     /// Confirms we don't panic on ros2_test_msgs parsing
@@ -628,6 +633,6 @@ mod test {
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
 
         let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
-        assert!(!gen.is_empty());
+        assert!(!gen.unwrap().is_empty());
     }
 }

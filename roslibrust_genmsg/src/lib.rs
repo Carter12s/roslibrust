@@ -87,8 +87,10 @@ impl<'a> CodeGeneratorBuilder<'a> {
     /// Performs discovery of ROS messages, services, and actions, resolves their
     /// dependency graph and builds a `CodeGenerator`.
     pub fn build(self) -> std::io::Result<CodeGenerator<'a>> {
+        // Being lazy here and not infecting other error types to far
+        // Eventually I think we should move away from io::Result here and remove both of these unwraps
         let (messages, services) =
-            roslibrust_codegen::find_and_parse_ros_messages(&self.msg_paths)?;
+            roslibrust_codegen::find_and_parse_ros_messages(&self.msg_paths).unwrap();
         let (messages, services) =
             roslibrust_codegen::resolve_dependency_graph(messages, services).unwrap();
 

@@ -258,12 +258,15 @@ fn parse_ros_value(ros_type: &str, value: &str, array_info: Option<Option<usize>
                 quote! { #vec_str }
             } else {
                 // Halfass attempt to deal with ROS's string escaping / quote bullshit
+                // TODO bug here: https://github.com/Carter12s/roslibrust/issues/129
                 let value = &value.replace('\'', "\"");
+                // TODO need to return result here
                 let parsed: String = serde_json::from_str(value).unwrap_or_else(|_| panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
                 quote! { #parsed }
             }
         }
         _ => {
+            // TODO need to return result here
             panic!("Found default for type which does not support default: {ros_type}");
         }
     }
