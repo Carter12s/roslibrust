@@ -134,6 +134,7 @@ fn generate_field_definition(field: FieldInfo, msg_pkg: &str, version: RosVersio
             &field.field_type.field_type,
             default_val,
             field.field_type.array_info,
+            version,
         );
         if field.field_type.array_info.is_some() {
             // For vectors use smart_defaults "dynamic" style
@@ -164,8 +165,12 @@ fn generate_constant_field_definition(constant: ConstantInfo, version: RosVersio
         constant_rust_type.to_owned()
     };
     let constant_rust_type = TokenStream::from_str(constant_rust_type.as_str()).unwrap();
-    let constant_value =
-        ros_literal_to_rust_literal(&constant.constant_type, &constant.constant_value, None);
+    let constant_value = ros_literal_to_rust_literal(
+        &constant.constant_type,
+        &constant.constant_value,
+        None,
+        version,
+    );
 
     quote! { pub const #constant_name: #constant_rust_type = #constant_value; }
 }
@@ -196,9 +201,10 @@ fn ros_literal_to_rust_literal(
     ros_type: &str,
     literal: &RosLiteral,
     array_info: Option<Option<usize>>,
+    version: RosVersion,
 ) -> TokenStream {
     // TODO: The naming of all the functions under this tree seems inaccurate
-    parse_ros_value(ros_type, &literal.inner, array_info)
+    parse_ros_value(ros_type, &literal.inner, array_info, version)
 }
 
 // Converts a ROS string to a literal value
@@ -234,7 +240,12 @@ fn generic_parse_value<T: DeserializeOwned + ToTokens + std::fmt::Debug>(
 /// `value` -- Expects the trimmed string containing only the value expression
 /// `is_vec` -- True iff the type is an array type
 /// TODO I'd like this to take FieldType, but want it to also work with constants...
-fn parse_ros_value(ros_type: &str, value: &str, array_info: Option<Option<usize>>) -> TokenStream {
+fn parse_ros_value(
+    ros_type: &str,
+    value: &str,
+    array_info: Option<Option<usize>>,
+    version: RosVersion,
+) -> TokenStream {
     let is_vec = array_info.is_some();
     match ros_type {
         "bool" => generic_parse_value::<bool>(value, is_vec),
@@ -257,10 +268,19 @@ fn parse_ros_value(ros_type: &str, value: &str, array_info: Option<Option<usize>
                 let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
                 quote! { #vec_str }
             } else {
-                // Halfass attempt to deal with ROS's string escaping / quote bullshit
-                let value = &value.replace('\'', "\"");
-                let parsed: String = serde_json::from_str(value).unwrap_or_else(|_| panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
-                quote! { #parsed }
+                match version {
+                    RosVersion::ROS1 => {
+                        // For ROS1 then entire contents except for leading and trailing whitespace are used
+                        let value = value.trim();
+                        quote!{ #value }
+                    },
+                    RosVersion::ROS2 => {
+                        // For ROS2 value must be in quotes, and either single or double quotes are okay
+                        let value = &value.replace('\'', "\"");
+                        let parsed: String = serde_json::from_str(value).unwrap_or_else(|_| panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
+                        quote! { #parsed }
+                    },
+                }
             }
         }
         _ => {
