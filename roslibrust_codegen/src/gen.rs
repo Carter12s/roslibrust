@@ -272,14 +272,14 @@ fn parse_ros_value(
                     RosVersion::ROS1 => {
                         // For ROS1 then entire contents except for leading and trailing whitespace are used
                         let value = value.trim();
-                        quote!{ #value }
-                    },
+                        quote! { #value }
+                    }
                     RosVersion::ROS2 => {
                         // For ROS2 value must be in quotes, and either single or double quotes are okay
                         let value = &value.replace('\'', "\"");
                         let parsed: String = serde_json::from_str(value).unwrap_or_else(|_| panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
                         quote! { #parsed }
-                    },
+                    }
                 }
             }
         }
