@@ -1,5 +1,5 @@
 use crate::parse::{parse_constant_field, parse_field, strip_comments};
-use crate::{bail, Error};
+use crate::Error;
 use crate::{ConstantInfo, FieldInfo, Package, RosVersion};
 use std::path::{Path, PathBuf};
 

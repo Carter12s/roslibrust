@@ -1,5 +1,4 @@
 use crate::{
-    bail,
     parse::{parse_ros_message_file, ParsedMessageFile},
     Error, Package,
 };
