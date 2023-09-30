@@ -1,0 +1,22 @@
+[package]
+name = "example_package"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# This is what we need for using this package in our mono-repo
+roslibrust = { path = "../roslibrust" }
+# Normally you would have: roslibrust = "0.7"
+# TODO in the current state of this example, we don't actually need roslibrust
+# These dependencies are needed by the code that roslibrust_codegen autogenerates
+# They are silently "leaked dependencies of the crate"
+# See https://github.com/Carter12s/roslibrust/issues/72 for resolution path
+serde = "1.0"
+smart-default = "0.7"
+roslibrust_codegen = { path = "../roslibrust_codegen" }
+
+[build-dependencies]
+# We depend on codegen as a build dependency as we (should) only need it to generate our types
+roslibrust_codegen = { path = "../roslibrust_codegen" }
+# This crate is very helpful for build.rs files but not required
+cargo-emit = "0.2"
