@@ -124,14 +124,16 @@ fn generate_field_definition(
             }
         }
         None => convert_ros_type_to_rust_type(version, &field.field_type.field_type)
-            .unwrap_or_else(|| panic!("No Rust type for {}", field.field_type))
+            .ok_or(Error::new(format!("No Rust type for {}", field.field_type)))?
             .to_owned(),
     };
     let rust_field_type = match field.field_type.array_info {
         Some(_) => format!("::std::vec::Vec<{rust_field_type}>"),
         None => rust_field_type,
     };
-    let rust_field_type = TokenStream::from_str(rust_field_type.as_str()).unwrap();
+    let rust_field_type = TokenStream::from_str(rust_field_type.as_str()).expect(
+        "Somehow we generate a rust type that isn't valid rust syntax. This should not happen!",
+    );
 
     let field_name = format_ident!("r#{}", field.field_name);
     if let Some(ref default_val) = field.default {
@@ -163,15 +165,22 @@ fn generate_constant_field_definition(
     version: RosVersion,
 ) -> Result<TokenStream, Error> {
     let constant_name = format_ident!("r#{}", constant.constant_name);
-    let constant_rust_type =
-        convert_ros_type_to_rust_type(version, &constant.constant_type).unwrap();
+    let constant_rust_type = convert_ros_type_to_rust_type(version, &constant.constant_type)
+        .ok_or(Error::new(format!(
+            "A constant was detected {constant:?} for which no valid rust type was found."
+        )))?;
     let constant_rust_type = if constant_rust_type == "::std::string::String" {
         String::from("&'static str")
     } else {
         // Oof it's ugly in here
         constant_rust_type.to_owned()
     };
-    let constant_rust_type = TokenStream::from_str(constant_rust_type.as_str()).unwrap();
+    let constant_rust_type = TokenStream::from_str(constant_rust_type.as_str()).map_err(|err| {
+        Error::with(
+            format!("Failed to parse {constant_rust_type} into valid rust syntax").as_str(),
+            err,
+        )
+    })?;
     let constant_value =
         ros_literal_to_rust_literal(&constant.constant_type, &constant.constant_value, None)?;
 

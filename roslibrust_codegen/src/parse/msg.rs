@@ -61,10 +61,10 @@ pub fn parse_ros_message_file(
         let equal_after_sep = line[sep..].find('=');
         if equal_after_sep.is_some() {
             // Since we found an equal sign after a space, this must be a constant
-            constants.push(parse_constant_field(line, package))
+            constants.push(parse_constant_field(line, package)?)
         } else {
             // Is regular field
-            fields.push(parse_field(line, package, name));
+            fields.push(parse_field(line, package, name)?);
         }
     }
     Ok(ParsedMessageFile {

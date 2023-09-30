@@ -513,7 +513,10 @@ pub fn resolve_dependency_graph(
         });
 
         if fully_resolved {
-            let msg_file = MessageFile::resolve(msg, &resolved_messages).unwrap();
+            let debug_name = msg.get_full_name();
+            let msg_file = MessageFile::resolve(msg, &resolved_messages).ok_or(
+                Error::new(format!("Failed to correctly resolve message {debug_name:?}, either md5sum could not be calculated, or fixed length was indeterminate"))
+            )?;
             resolved_messages.insert(msg_file.get_full_name(), msg_file);
         } else {
             unresolved_messages.push_back(MessageMetadata {
@@ -544,9 +547,9 @@ pub fn resolve_dependency_graph(
 }
 
 /// Parses all ROS file types and returns a final expanded set
-/// Currently supports service files and message files, no planned support for actions
-/// The returned collection will contain all messages files including those buried within the service definitions
-/// and will have fully expanded and resolved referenced types in other packages.
+/// Currently supports service files, message files, and action files
+/// The returned collection will contain all messages files including those buried with the
+/// service or action files, and will have fully expanded and resolved referenced types in other packages.
 /// * `msg_paths` -- List of tuple (Package, Path to File) for each file to parse
 fn parse_ros_files(
     msg_paths: Vec<(Package, PathBuf)>,
@@ -560,7 +563,16 @@ fn parse_ros_files(
                 e,
             )
         })?;
-        let name = path.file_stem().unwrap().to_str().unwrap();
+        // Probably being overly aggressive with error shit here, but I'm on a kick
+        let name = path
+            .file_stem()
+            .ok_or(Error::new(format!(
+                "Failed to extract valid file stem for file at {path:?}"
+            )))?
+            .to_str()
+            .ok_or(Error::new(format!(
+                "File stem for file at path {path:?} was not valid unicode?"
+            )))?;
         match path.extension().unwrap().to_str().unwrap() {
             "srv" => {
                 let srv_file = parse_ros_service_file(&contents, name, &pkg, &path)?;
