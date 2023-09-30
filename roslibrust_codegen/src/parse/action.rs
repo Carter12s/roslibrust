@@ -1,5 +1,5 @@
 use crate::parse::ParsedMessageFile;
-use crate::Package;
+use crate::{bail, Error, Package};
 use std::path::{Path, PathBuf};
 
 use super::parse_ros_message_file;
@@ -26,7 +26,7 @@ pub fn parse_ros_action_file(
     name: &str,
     package: &Package,
     path: &Path,
-) -> ParsedActionFile {
+) -> Result<ParsedActionFile, Error> {
     let mut dash_line_number_1 = None;
     let mut dash_line_number_2 = None;
 
@@ -76,43 +76,47 @@ pub fn parse_ros_action_file(
             .skip(second_dash_line + 1)
             .fold(String::new(), str_accumulator);
 
-        ParsedActionFile {
+        Ok(ParsedActionFile {
             name: name.to_owned(),
             package: package.name.clone(),
-            action_type: generate_action_msg(name, package, path),
+            action_type: generate_action_msg(name, package, path)?,
             goal_type: parse_ros_message_file(
                 &goal_str,
                 format!("{name}Goal").as_str(),
                 package,
                 path,
-            ),
+            )?,
             result_type: parse_ros_message_file(
                 &result_str,
                 format!("{name}Result").as_str(),
                 package,
                 path,
-            ),
+            )?,
             feedback_type: parse_ros_message_file(
                 &feedback_str,
                 format!("{name}Feedback").as_str(),
                 package,
                 path,
-            ),
-            action_goal_type: generate_action_goal_msg(name, package, path),
-            action_result_type: generate_action_result_msg(name, package, path),
-            action_feedback_type: generate_action_feedback_msg(name, package, path),
+            )?,
+            action_goal_type: generate_action_goal_msg(name, package, path)?,
+            action_result_type: generate_action_result_msg(name, package, path)?,
+            action_feedback_type: generate_action_feedback_msg(name, package, path)?,
             source: data.to_owned(),
             path: path.to_owned(),
-        }
+        })
     } else {
-        panic!(
+        bail!(
             "Failed to find both expected delimiter lines '---' in {}/{name}",
             &package.name
         )
     }
 }
 
-fn generate_action_msg(name: &str, package: &Package, path: &Path) -> ParsedMessageFile {
+fn generate_action_msg(
+    name: &str,
+    package: &Package,
+    path: &Path,
+) -> Result<ParsedMessageFile, Error> {
     let source = format!(
         r#"
 {name}ActionGoal action_goal
@@ -124,7 +128,11 @@ fn generate_action_msg(name: &str, package: &Package, path: &Path) -> ParsedMess
     parse_ros_message_file(&source, format!("{name}Action").as_str(), package, path)
 }
 
-fn generate_action_goal_msg(name: &str, package: &Package, path: &Path) -> ParsedMessageFile {
+fn generate_action_goal_msg(
+    name: &str,
+    package: &Package,
+    path: &Path,
+) -> Result<ParsedMessageFile, Error> {
     let source = format!(
         r#"
 Header header
@@ -136,7 +144,11 @@ actionlib_msgs/GoalID goal_id
     parse_ros_message_file(&source, format!("{name}ActionGoal").as_str(), package, path)
 }
 
-fn generate_action_result_msg(name: &str, package: &Package, path: &Path) -> ParsedMessageFile {
+fn generate_action_result_msg(
+    name: &str,
+    package: &Package,
+    path: &Path,
+) -> Result<ParsedMessageFile, Error> {
     let source = format!(
         r#"
 Header header
@@ -153,7 +165,11 @@ actionlib_msgs/GoalStatus status
     )
 }
 
-fn generate_action_feedback_msg(name: &str, package: &Package, path: &Path) -> ParsedMessageFile {
+fn generate_action_feedback_msg(
+    name: &str,
+    package: &Package,
+    path: &Path,
+) -> Result<ParsedMessageFile, Error> {
     let source = format!(
         r#"
 Header header

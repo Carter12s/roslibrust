@@ -361,12 +361,8 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
         // As it stands there is not good way for us to manually produce a warning, so I'd rather fail loud
         bail!("Failed to find any services or messages while generating ROS message definitions, paths searched: {search_paths:?}");
     }
-    if let Some((messages, services)) = resolve_dependency_graph(messages, services) {
-        generate_rust_ros_message_definitions(messages, services)
-    } else {
-        // TODO this should get a better message
-        bail!("Failed to resolve dependency graph while generating messages: {search_paths:?}");
-    }
+    let (messages, services) = resolve_dependency_graph(messages, services)?;
+    generate_rust_ros_message_definitions(messages, services)
 }
 
 /// Searches a list of paths for ROS packages to find their associated message
@@ -501,12 +497,6 @@ pub fn resolve_dependency_graph(
     let mut resolved_messages = BTreeMap::new();
     // First resolve the message dependencies
     while let Some(MessageMetadata { msg, seen_count }) = unresolved_messages.pop_front() {
-        if seen_count > MAX_PARSE_ITER_LIMIT {
-            log::error!("Unable to resolve dependencies after reaching iteration limit ({MAX_PARSE_ITER_LIMIT}).\n\
-                    Message: {msg:#?}");
-            return None;
-        }
-
         // Check our resolved messages for each of the fields
         let fully_resolved = msg.fields.iter().all(|field| {
             let is_ros1_primitive =
@@ -531,6 +521,16 @@ pub fn resolve_dependency_graph(
                 msg,
             });
         }
+
+        if seen_count > MAX_PARSE_ITER_LIMIT {
+            let msg_names = unresolved_messages
+                .iter()
+                .map(|item| format!("{}/{}", item.msg.package, item.msg.name))
+                .collect::<Vec<_>>();
+            bail!("Unable to resolve dependencies after reaching search limit.\n\
+                   The following messages have unresolved dependencies: {msg_names:?}\n\
+                   These messages likely depend on packages not found in the provided search paths.");
+        }
     }
 
     // Now that all messages are parsed, we can parse and resolve services
@@ -540,7 +540,7 @@ pub fn resolve_dependency_graph(
         .collect();
     resolved_services.sort_by(|a, b| a.parsed.name.cmp(&b.parsed.name));
 
-    Some((resolved_messages.into_values().collect(), resolved_services))
+    Ok((resolved_messages.into_values().collect(), resolved_services))
 }
 
 /// Parses all ROS file types and returns a final expanded set
@@ -563,15 +563,15 @@ fn parse_ros_files(
         let name = path.file_stem().unwrap().to_str().unwrap();
         match path.extension().unwrap().to_str().unwrap() {
             "srv" => {
-                let srv_file = parse_ros_service_file(&contents, name, &pkg, &path);
+                let srv_file = parse_ros_service_file(&contents, name, &pkg, &path)?;
                 parsed_services.push(srv_file);
             }
             "msg" => {
-                let msg = parse_ros_message_file(&contents, name, &pkg, &path);
+                let msg = parse_ros_message_file(&contents, name, &pkg, &path)?;
                 parsed_messages.push(msg);
             }
             "action" => {
-                let action = parse_ros_action_file(&contents, name, &pkg, &path);
+                let action = parse_ros_action_file(&contents, name, &pkg, &path)?;
                 parsed_messages.push(action.action_type);
                 parsed_messages.push(action.action_goal_type);
                 parsed_messages.push(action.goal_type);

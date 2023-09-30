@@ -1,4 +1,5 @@
 use crate::parse::{parse_constant_field, parse_field, strip_comments};
+use crate::{bail, Error};
 use crate::{ConstantInfo, FieldInfo, Package, RosVersion};
 use std::path::{Path, PathBuf};
 
@@ -40,7 +41,7 @@ pub fn parse_ros_message_file(
     name: &str,
     package: &Package,
     path: &Path,
-) -> ParsedMessageFile {
+) -> Result<ParsedMessageFile, Error> {
     let mut fields = vec![];
     let mut constants = vec![];
 
@@ -51,12 +52,12 @@ pub fn parse_ros_message_file(
             continue;
         }
         // Determine if we're looking at a constant or a field
-        let sep = line.find(' ').unwrap_or_else(|| {
-            panic!(
-                "Found an invalid ros field line, no space delinting type from name: {line} in {}\n{data}",
-                path.display()
+        let sep = line.find(' ').ok_or(
+            Error::new(
+                format!("Found an invalid ros field line, no space delinting type from name: {line} in {}\n{data}",
+                path.display())
             )
-        });
+        )?;
         let equal_after_sep = line[sep..].find('=');
         if equal_after_sep.is_some() {
             // Since we found an equal sign after a space, this must be a constant
@@ -66,7 +67,7 @@ pub fn parse_ros_message_file(
             fields.push(parse_field(line, package, name));
         }
     }
-    ParsedMessageFile {
+    Ok(ParsedMessageFile {
         fields,
         constants,
         name: name.to_owned(),
@@ -74,5 +75,5 @@ pub fn parse_ros_message_file(
         version: package.version,
         source: data.to_owned(),
         path: path.to_owned(),
-    }
+    })
 }
