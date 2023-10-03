@@ -23,20 +23,22 @@ lazy_static! {
 }
 
 /// This main function is used to generate the contents of ros1.rs, ros2.rs
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
     let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(
         (*ROS_1_PATHS).clone(),
-    );
+    )?;
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
-    let _ = std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/src/ros1.rs"), source);
+    std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/src/ros1.rs"), source)?;
 
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(vec![
-        ROS_2_PATH.into(),
-        ROS_2_TEST_PATH.into(),
-    ]);
+    let tokens =
+        roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(vec![
+            ROS_2_PATH.into(),
+            ROS_2_TEST_PATH.into(),
+        ])?;
     let source = format_rust_source(tokens.to_string().as_str()).to_string();
-    let _ = std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/src/ros2.rs"), source);
+    std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/src/ros2.rs"), source)?;
+    Ok(())
 }
 
 fn format_rust_source(source: &str) -> Cow<'_, str> {
@@ -74,7 +76,7 @@ mod test {
         let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(
             (*ROS_1_PATHS).clone(),
         );
-        let source = format_rust_source(tokens.to_string().as_str()).to_string();
+        let source = format_rust_source(tokens.unwrap().to_string().as_str()).to_string();
         let lib_path = env!("CARGO_MANIFEST_DIR").to_string() + "/src/ros1.rs";
         let lib_contents =
             std::fs::read_to_string(lib_path).expect("Failed to load current ros1.rs contents");
@@ -94,7 +96,7 @@ mod test {
         let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(
             (*ROS_2_PATHS).clone(),
         );
-        let source = format_rust_source(tokens.to_string().as_str()).to_string();
+        let source = format_rust_source(tokens.unwrap().to_string().as_str()).to_string();
         let lib_path = env!("CARGO_MANIFEST_DIR").to_string() + "/src/ros2.rs";
         let lib_contents =
             std::fs::read_to_string(lib_path).expect("Failed to load current ros2.rs contents");

@@ -32,7 +32,13 @@ impl Parse for RosLibRustMessagePaths {
 pub fn find_and_generate_ros_messages(input_stream: TokenStream) -> TokenStream {
     let RosLibRustMessagePaths { paths } =
         parse_macro_input!(input_stream as RosLibRustMessagePaths);
-    roslibrust_codegen::find_and_generate_ros_messages(paths).into()
+    match roslibrust_codegen::find_and_generate_ros_messages(paths) {
+        Ok(t) => t.into(),
+        Err(e) => {
+            let error_msg = e.to_string();
+            quote::quote!(compile_error!(#error_msg);).into()
+        }
+    }
 }
 
 /// Does the same as find_and_generate_ros_messages, but interprets relative paths
@@ -51,7 +57,13 @@ pub fn find_and_generate_ros_messages_relative_to_manifest_dir(
         });
     }
 
-    roslibrust_codegen::find_and_generate_ros_messages(paths).into()
+    match roslibrust_codegen::find_and_generate_ros_messages(paths) {
+        Ok(t) => t.into(),
+        Err(e) => {
+            let error_msg = e.to_string();
+            quote::quote!(compile_error!(#error_msg);).into()
+        }
+    }
 }
 
 /// Similar to `find_and_generate_ros_messages`, but does not search the
@@ -62,5 +74,11 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
 ) -> TokenStream {
     let RosLibRustMessagePaths { paths } =
         parse_macro_input!(input_stream as RosLibRustMessagePaths);
-    roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(paths).into()
+    match roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(paths) {
+        Ok(t) => t.into(),
+        Err(e) => {
+            let error_msg = e.to_string();
+            quote::quote!( compile_error!(#error_msg); ).into()
+        }
+    }
 }
