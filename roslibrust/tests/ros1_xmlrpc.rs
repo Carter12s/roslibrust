@@ -3,6 +3,8 @@ mod tests {
     use roslibrust_codegen::RosMessageType;
     use serde::de::DeserializeOwned;
     use serde_xmlrpc::Value;
+    use tokio::time::timeout;
+    const TIMEOUT: tokio::time::Duration = tokio::time::Duration::from_millis(500);
 
     roslibrust_codegen_macro::find_and_generate_ros_messages_relative_to_manifest_dir!(
         "../assets/ros1_common_interfaces"
@@ -11,18 +13,15 @@ mod tests {
     async fn call_node_api_raw(uri: &str, endpoint: &str, args: Vec<Value>) -> String {
         let client = reqwest::Client::new();
         let body = serde_xmlrpc::request_to_string(endpoint, args).unwrap();
-        client
-            .post(uri)
-            .body(body)
-            .send()
+        let response = timeout(TIMEOUT, client.post(uri).body(body).send())
             .await
             .unwrap()
-            .text()
-            .await
-            .unwrap()
+            .unwrap();
+        timeout(TIMEOUT, response.text()).await.unwrap().unwrap()
     }
 
     async fn call_node_api<T: DeserializeOwned>(uri: &str, endpoint: &str, args: Vec<Value>) -> T {
+        // Note: don't need timeout here as all operations in side call_node_api_raw are timeout()'d
         let response = call_node_api_raw(uri, endpoint, args).await;
         let (error_code, error_description, value): (i8, String, T) =
             serde_xmlrpc::response_from_str(&response).unwrap();
@@ -34,11 +33,19 @@ mod tests {
 
     #[tokio::test]
     async fn verify_get_master_uri() {
-        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_master_uri")
+        let node = timeout(
+            TIMEOUT,
+            roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_master_uri"),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+        let node_uri = timeout(TIMEOUT, node.get_client_uri())
             .await
+            .unwrap()
             .unwrap();
-        let node_uri = node.get_client_uri().await.unwrap();
 
+        // Note: doesn't need timeout as it is internally timeout()'d
         let master_uri = call_node_api::<String>(
             &node_uri,
             "getMasterUri",
@@ -50,11 +57,20 @@ mod tests {
 
     #[tokio::test]
     async fn verify_get_publications() {
-        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_publications")
-            .await
-            .unwrap();
-        let node_uri = node.get_client_uri().await.unwrap();
+        let node = timeout(
+            TIMEOUT,
+            roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_publications"),
+        )
+        .await
+        .unwrap()
+        .unwrap();
 
+        let node_uri = timeout(TIMEOUT, node.get_client_uri())
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Note: timeout not needed as it is internally timeout'd
         let publications = call_node_api::<Vec<(String, String)>>(
             &node_uri,
             "getPublications",
@@ -63,11 +79,15 @@ mod tests {
         .await;
         assert_eq!(publications.len(), 0);
 
-        let _publisher = node
-            .advertise::<std_msgs::String>("/test_topic", 1)
-            .await
-            .unwrap();
+        let _publisher = timeout(
+            TIMEOUT,
+            node.advertise::<std_msgs::String>("/test_topic", 1),
+        )
+        .await
+        .unwrap()
+        .unwrap();
 
+        // Note: internally timeout()'d
         let publications = call_node_api::<Vec<(String, String)>>(
             &node_uri,
             "getPublications",
@@ -82,12 +102,20 @@ mod tests {
 
     #[tokio::test]
     async fn verify_shutdown() {
-        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_shutdown")
+        let node = timeout(
+            TIMEOUT,
+            roslibrust::NodeHandle::new("http://localhost:11311", "verify_shutdown"),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+        let node_uri = timeout(TIMEOUT, node.get_client_uri())
             .await
+            .unwrap()
             .unwrap();
-        let node_uri = node.get_client_uri().await.unwrap();
         assert!(node.is_ok());
 
+        // Note: internally timeout()'d
         call_node_api::<i32>(
             &node_uri,
             "shutdown",
@@ -100,16 +128,27 @@ mod tests {
 
     #[tokio::test]
     async fn verify_request_topic() {
-        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_request_topic")
+        let node = timeout(
+            TIMEOUT,
+            roslibrust::NodeHandle::new("http://localhost:11311", "verify_request_topic"),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+        let node_uri = timeout(TIMEOUT, node.get_client_uri())
             .await
-            .unwrap();
-        let node_uri = node.get_client_uri().await.unwrap();
-
-        let _publisher = node
-            .advertise::<std_msgs::String>("/test_topic", 1)
-            .await
+            .unwrap()
             .unwrap();
 
+        let _publisher = timeout(
+            TIMEOUT,
+            node.advertise::<std_msgs::String>("/test_topic", 1),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+
+        // Note: internally timeout()'d
         let response = call_node_api_raw(
             &node_uri,
             "requestTopic",
