@@ -282,13 +282,19 @@ fn parse_ros_value(
                         if value.len() < 2 {
                             panic!("String constant must at least include quotes, cannot be empty");
                         }
-                        let first = value.chars().nth(0).expect("Empty string constant without quotes even?");
-                        let last = value.chars().last().expect("Empty string cnstant without quotes even?");
+                        let first = value
+                            .chars()
+                            .nth(0)
+                            .expect("Empty string constant without quotes even?");
+                        let last = value
+                            .chars()
+                            .last()
+                            .expect("Empty string cnstant without quotes even?");
                         if first != last || !(first == '\'' || first == '\"') {
                             // If the string doesn't start and end with single quote or double quote characters reject it
                             panic!("ROS2 String constant was found that was not enclosed in single or double quotes");
                         }
-                        let parsed = value[1..value.len()-1].to_string();
+                        let parsed = value[1..value.len() - 1].to_string();
                         quote! { #parsed }
                     }
                 }
