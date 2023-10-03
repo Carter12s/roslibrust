@@ -276,8 +276,19 @@ fn parse_ros_value(
                     }
                     RosVersion::ROS2 => {
                         // For ROS2 value must be in quotes, and either single or double quotes are okay
-                        let value = &value.replace('\'', "\"");
-                        let parsed: String = serde_json::from_str(value).unwrap_or_else(|_| panic!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String"));
+                        // Strings are no escaped (we think)
+                        let value = value.trim();
+                        // These errors will be improved when merged with #127
+                        if value.len() < 2 {
+                            panic!("String constant must at least include quotes, cannot be empty");
+                        }
+                        let first = value.chars().nth(0).expect("Empty string constant without quotes even?");
+                        let last = value.chars().last().expect("Empty string cnstant without quotes even?");
+                        if first != last || !(first == '\'' || first == '\"') {
+                            // If the string doesn't start and end with single quote or double quote characters reject it
+                            panic!("ROS2 String constant was found that was not enclosed in single or double quotes");
+                        }
+                        let parsed = value[1..value.len()-1].to_string();
                         quote! { #parsed }
                     }
                 }
