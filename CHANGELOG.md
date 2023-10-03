@@ -19,19 +19,36 @@ Note: need to publish with `cargo publish --all-features`
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## Current - Unreleased
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## 0.8.0 - Coming Soon
+
+### Added
+
+ - Experimental support for ROS1 native communication behind the `ros1` feature flag
  - Generation of C++ source added via `roslibrust_genmsg` along with arbitrary languages via passed in templates
  - Generation of Rust source for actions
+ - Example for custom generic message usage with rosbridge
+ - Example for async native ROS1 listener
+ - Example for async native ROS1 publisher
+
 
 ### Fixed
 
+ - Incorrect handling of ROS1 message string constants
 
 ### Changed
 
  - `crawl` function in `roslibrust_codegen` updated to a more flexible API
+ - Overhaul of error handling in roslibrust_codegen to bubble errors up, and remove use of panic! and unwrap(). Significantly better error messages should be produced from proc_macros and build.rs files. Direct usages of the API will need to be updated to handle the returned error type.
+ - RosMessageType trait now has associated constants for MD5SUM and DEFINITION to enable ROS1 native support. These constants are optional at this time with a default value of "" provided.
 
 ## 0.7.0 - March 13, 2022
 
