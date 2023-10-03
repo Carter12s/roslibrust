@@ -28,10 +28,12 @@ pub trait RosMessageType:
     const ROS_TYPE_NAME: &'static str;
 
     /// The computed md5sum of the message file and its dependencies
-    const MD5SUM: &'static str;
+    /// This field is optional, and only needed when using ros1 native communication
+    const MD5SUM: &'static str = "";
 
     /// The definition from the msg, srv, or action file
-    const DEFINITION: &'static str;
+    /// This field is optional, and only needed when using ros1 native communication
+    const DEFINITION: &'static str = "";
 }
 
 // This special impl allows for services with no args / returns
