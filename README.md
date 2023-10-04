@@ -23,7 +23,9 @@ It's used like this:
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces/std_msgs");
 ```
 
-Code generation can also be done with a script using the same code generation backend called by the macro. See `roslibrust_test/src/main.rs` for a demonstration of how this can be done.
+Code generation can also be done with a script using the same code generation backend called by the macro. See the contents of `example_package` for a detailed example of how this can be done. While the proc_macros are extremely convenient for getting started
+there is currently no (good) way for a proc_macro to inform the compiler that it needs to be re-generated when an external file
+changes. Using a build script requires more setup, but can correctly handling re-building when message files are edited.
 
 ## Experimental Support for ROS1 Native
 

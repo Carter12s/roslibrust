@@ -179,6 +179,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "89b2fd2a0dcf38d7971e2194b6b6eebab45ae01067456a7fd93d5547a61b70be"
 
 [[package]]
+name = "cargo-emit"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1582e1c9e755dd6ad6b224dcffb135d199399a4568d454bd89fe515ca8425695"
+
+[[package]]
 name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -421,6 +427,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9435d864e017c3c6afeac1654189b06cdb491cf2ff73dbf0d73b0f292f42ff8"
 dependencies = [
  "backtrace",
+]
+
+[[package]]
+name = "example_package"
+version = "0.1.0"
+dependencies = [
+ "cargo-emit",
+ "roslibrust",
+ "roslibrust_codegen",
+ "serde",
+ "smart-default 0.7.1",
 ]
 
 [[package]]
@@ -1236,7 +1253,7 @@ dependencies = [
  "serde_rosmsg",
  "serde_xmlrpc",
  "simple_logger",
- "smart-default",
+ "smart-default 0.6.0",
  "test-log",
  "thiserror",
  "tokio",
@@ -1256,6 +1273,7 @@ dependencies = [
  "quote",
  "serde",
  "serde_json",
+ "simple-error",
  "syn 1.0.109",
  "test-log",
  "tokio",
@@ -1300,7 +1318,7 @@ dependencies = [
  "roslibrust_codegen",
  "serde",
  "serde_json",
- "smart-default",
+ "smart-default 0.6.0",
 ]
 
 [[package]]
@@ -1475,6 +1493,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "simple-error"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8542b68b8800c3cda649d2c72d688b6907b30f1580043135d61669d4aad1c175"
+
+[[package]]
 name = "simple_logger"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1511,6 +1535,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "smart-default"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0eb01866308440fc64d6c44d9e86c5cc17adfe33c4d6eed55da9145044d0ffc1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.15",
 ]
 
 [[package]]
