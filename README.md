@@ -59,6 +59,10 @@ Rough overview of the features planned to built for this crate in what order:
 
 Contribution through reporting of issues encountered and implementation in PRs is welcome! Before landing a large PR with lots of code implemented, please open an issue if there isn't a relevant one already available and chat with a maintainer to make sure the design fits well with all supported platforms and any in-progress implementation efforts.
 
+### Rust Version for Development
+
+Due to cargo 1.72 enabling "doctest-in-workspace" by default it is reccomended to use Rust 1.72+ for develop. Previous rust versions are support but will require some incantations when executing doctests.
+
 ### Running Tests
 
 There are various unit tests and integration tests behind feature flags. For tests with ROS1, both through rosbridge and native clients, you'll need a locally running `rosbridge_websocket` node and `rosmaster`. Then run with `cargo test --features "ros1_test ros1"`. For tests with ROS2, you'll need a running rosbridge server, then run with `cargo test --features "ros2_test"`. You can find relevant `Dockerfile`s and docker compose configurations udner the `docker` directory.
