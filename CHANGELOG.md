@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-## 0.8.0 - Coming Soon
+## 0.8.0 - October 4th, 2023
 
 ### Added
 

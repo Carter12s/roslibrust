@@ -4,6 +4,8 @@ use log::*;
 
 #[derive(thiserror::Error, Debug)]
 pub enum RosMasterError {
+    #[error("Incorrect number a fields is xmlrpc header: {0}")]
+    InvalidXmlRpcHeader(String),
     #[error("Failed to understand xmlrpc message: {0}")]
     InvalidXmlRpcMessage(#[from] serde_xmlrpc::Error),
     #[error("Failed to communicate with server: {0}")]
@@ -332,11 +334,9 @@ impl MasterClient {
         debug!("System State Body: {body}");
         let res: Vec<Vec<(String, Vec<String>)>> = self.post(body).await?;
         if res.len() != 3 {
-            return Err(RosMasterError::InvalidXmlRpcMessage(
-                serde_xmlrpc::Error::DecodeError(format!(
-                    "Incorrect number of fields returned by getSystemState: {res:?}"
-                )),
-            ));
+            return Err(RosMasterError::InvalidXmlRpcHeader(format!(
+                "Incorrect number of fields returned by getSystemState: {res:?}"
+            )));
         }
         let mut res: Vec<Vec<StateEntry>> = res
             .into_iter()

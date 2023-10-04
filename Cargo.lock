@@ -1227,7 +1227,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "abort-on-drop",
  "anyhow",
@@ -1263,7 +1263,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust_codegen"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "env_logger",
  "lazy_static",
@@ -1283,7 +1283,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust_codegen_macro"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1460,8 +1460,9 @@ dependencies = [
 
 [[package]]
 name = "serde_xmlrpc"
-version = "0.2.0-alpha.3"
-source = "git+https://github.com/belak/serde-xmlrpc.git?branch=main#fbd453e786ffe737e8ab7cf4b65801cf3818bf03"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2a32874416bed46dd6ddb823440c2854b06f413a6ba23db784f418db1e572381"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
