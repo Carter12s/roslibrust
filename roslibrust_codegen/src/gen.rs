@@ -141,6 +141,7 @@ fn generate_field_definition(
             &field.field_type.field_type,
             default_val,
             field.field_type.array_info,
+            version,
         )?;
         if field.field_type.array_info.is_some() {
             // For vectors use smart_defaults "dynamic" style
@@ -181,9 +182,12 @@ fn generate_constant_field_definition(
             err,
         )
     })?;
-    let constant_value =
-        ros_literal_to_rust_literal(&constant.constant_type, &constant.constant_value, None)?;
-
+    let constant_value = ros_literal_to_rust_literal(
+        &constant.constant_type,
+        &constant.constant_value,
+        None,
+        version,
+    )?;
     Ok(quote! { pub const #constant_name: #constant_rust_type = #constant_value; })
 }
 
@@ -213,9 +217,10 @@ fn ros_literal_to_rust_literal(
     ros_type: &str,
     literal: &RosLiteral,
     array_info: Option<Option<usize>>,
+    version: RosVersion,
 ) -> Result<TokenStream, Error> {
     // TODO: The naming of all the functions under this tree seems inaccurate
-    parse_ros_value(ros_type, &literal.inner, array_info)
+    parse_ros_value(ros_type, &literal.inner, array_info, version)
 }
 
 // Converts a ROS string to a literal value
@@ -255,6 +260,7 @@ fn parse_ros_value(
     ros_type: &str,
     value: &str,
     array_info: Option<Option<usize>>,
+    version: RosVersion,
 ) -> Result<TokenStream, Error> {
     let is_vec = array_info.is_some();
     match ros_type {
@@ -279,13 +285,30 @@ fn parse_ros_value(
                 let vec_str = format!("{parsed:?}.iter().map(|x| x.to_string()).collect()");
                 Ok(quote! { #vec_str })
             } else {
-                // Halfass attempt to deal with ROS's string escaping / quote bullshit
-                // TODO bug here: https://github.com/Carter12s/roslibrust/issues/129
-                let value = &value.replace('\'', "\"");
-                // TODO need to return result here
-                let parsed: String = serde_json::from_str(value).map_err(|e|
-                    Error::with(format!("Failed to parse a literal value in a message file to the corresponding rust type: {value} to String").as_str(), e))?;
-                Ok(quote! { #parsed })
+                match version {
+                    RosVersion::ROS1 => {
+                        // For ROS1 then entire contents except for leading and trailing whitespace are used
+                        let value = value.trim();
+                        Ok(quote! { #value })
+                    }
+                    RosVersion::ROS2 => {
+                        // For ROS2 value must be in quotes, and either single or double quotes are okay
+                        // Strings are no escaped (we think)
+                        let value = value.trim();
+                        if value.len() < 2 {
+                            // TODO would like to provide source file and callsite information for debug, but pretty hard to
+                            // Maybe we wrap that in calling function?
+                            bail!("String constant must at least include start and end quotes, cannot be empty: {value}");
+                        }
+                        let first = value.chars().nth(0).unwrap(); // Unwrap is okay due to previous length check
+                        let last = value.chars().last().unwrap(); // Unwrap is okay due to previous length check
+                        if first != last || !(first == '\'' || first == '\"') {
+                            bail!("ROS2 String constant was found that was not enclosed in single or double quotes: {value}");
+                        }
+                        let parsed = value[1..value.len() - 1].to_string();
+                        Ok(quote! { #parsed })
+                    }
+                }
             }
         }
         _ => {

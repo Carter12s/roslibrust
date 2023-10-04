@@ -3925,12 +3925,14 @@ pub mod test_msgs {
     pub struct Constants {}
     impl ::roslibrust_codegen::RosMessageType for Constants {
         const ROS_TYPE_NAME: &'static str = "test_msgs/Constants";
-        const MD5SUM: &'static str = "941e5be5614c8663086b50a15b29668b";
-        const DEFINITION : & 'static str = "string TEST_STR=\"/topic\"\nstring TEST_STR_2 = '/topic_2'\nfloat32 TEST_FLOAT=0 # testing" ;
+        const MD5SUM: &'static str = "027df5f26b72c57b1e40902038ca3eec";
+        const DEFINITION : & 'static str = "string TEST_STR=\"/topic\"\nstring TEST_STR_2 = '/topic_2'\n# Apparently unquoted strings are also valid?\n# Pulled from https://github.com/ros/bond_core/blob/kinetic-devel/bond/msg/Constants.msg\nstring DISABLE_HEARTBEAT_TIMEOUT_PARAM=/bond_disable_heartbeat_timeout\nfloat32 TEST_FLOAT=0 # testing" ;
     }
     impl Constants {
-        pub const r#TEST_STR: &'static str = "/topic";
-        pub const r#TEST_STR_2: &'static str = "/topic_2";
+        pub const r#TEST_STR: &'static str = "\"/topic\"";
+        pub const r#TEST_STR_2: &'static str = "'/topic_2'";
+        pub const r#DISABLE_HEARTBEAT_TIMEOUT_PARAM: &'static str =
+            "/bond_disable_heartbeat_timeout";
         pub const r#TEST_FLOAT: f32 = 0f32;
     }
     #[allow(non_snake_case)]

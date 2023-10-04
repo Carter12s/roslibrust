@@ -17,8 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Actually invoke code generation on our search paths.
     // What we get back is a TokenStream the type normally returned by a proc_macro in rust.
     // For a build.rs we typically want to serialize this data to a file for later import
-    // MAJOR TODO need to incorporate error handling here when that PR is merged
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(p);
+    let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(p)?;
 
     // It is important for build scripts to only output files to OUT_DIR.
     // This guidance can be ignored for end applications. However, crates published and downloaded with cargo
