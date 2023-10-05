@@ -324,9 +324,11 @@ mod integration_tests {
             ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
                 .await?;
 
-        let subscriber = client.subscribe::<std_msgs::Char>("/char_topic").await?;
-        tokio::time::sleep(TIMEOUT).await;
+        // Thing for us to figure out, and don't ask me why, but this test is WAY more reliable if you advertise first then subscribe
+        // Unclear if this is our fault or rosbridge's
         let publisher = client.advertise("/char_topic").await?;
+        tokio::time::sleep(TIMEOUT).await;
+        let subscriber = client.subscribe::<std_msgs::Char>("/char_topic").await?;
         tokio::time::sleep(TIMEOUT).await;
 
         // Note because C++ char != rust char some care has to be taken when converting
@@ -349,7 +351,7 @@ mod integration_tests {
     #[test_log::test(tokio::test)]
     async fn error_on_non_existent_service() -> TestResult {
         // This test is designed to catch a specific error raised in issue #88
-        // When roslibrust expereiences a server side error, it returns a string instead of our message
+        // When roslibrust experiences a server side error, it returns a string instead of our message
         // We are trying to force that here, and ensure we correctly report the error
 
         let client =

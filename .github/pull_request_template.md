@@ -2,7 +2,7 @@
 `Insert description`
 
 ## Fixes
-Issue Number: `number`
+Closes: `number`
 
 ## Checklist
 - [ ] Update CHANGELOG.md

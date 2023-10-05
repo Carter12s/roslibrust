@@ -88,12 +88,16 @@ mod tests {
         .unwrap();
 
         // Note: internally timeout()'d
-        let publications = call_node_api::<Vec<(String, String)>>(
-            &node_uri,
-            "getPublications",
-            vec!["/verify_get_publications".into()],
+        let publications = timeout(
+            TIMEOUT,
+            call_node_api::<Vec<(String, String)>>(
+                &node_uri,
+                "getPublications",
+                vec!["/verify_get_publications".into()],
+            ),
         )
-        .await;
+        .await
+        .unwrap();
         assert_eq!(publications.len(), 1);
         let (topic, topic_type) = publications.iter().nth(0).unwrap();
         assert_eq!(topic, "/test_topic");

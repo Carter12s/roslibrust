@@ -8,6 +8,8 @@ on:
 
 env:
   HOME: /root
+  # Coupled with our use of the test_log crate this should give us good CI output on failure
+  RUST_LOG: debug
 
 jobs:
   galactic:
