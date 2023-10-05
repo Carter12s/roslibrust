@@ -17,7 +17,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Actually invoke code generation on our search paths.
     // What we get back is a TokenStream the type normally returned by a proc_macro in rust.
     // For a build.rs we typically want to serialize this data to a file for later import
-    let tokens = roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(p)?;
+    let (source, dependent_paths) =
+        roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(p)?;
 
     // It is important for build scripts to only output files to OUT_DIR.
     // This guidance can be ignored for end applications. However, crates published and downloaded with cargo
@@ -26,14 +27,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dest_path = std::path::Path::new(&out_dir).join("messages.rs");
     // Write the generate code to disk
     // Note: it will not be nicely formatted at this point which can affect readability when debugging
-    std::fs::write(dest_path, tokens.to_string())?;
+    std::fs::write(dest_path, source.to_string())?;
     // Optionally rustfmt could be invoked to format the file at this point
     // Or https://github.com/dtolnay/prettyplease used on the TokenStream ahead of writing to disk
 
     // If we stopped at this point, our code would still work, but Cargo would not know to rebuild
     // our package when a message file changed.
-    // MAJOR TODO need to get codegen methods to return list of dependent files
-    // Also probably want to merge down function names to single function with more args / builder
+    for path in &dependent_paths {
+        let path_str = path
+            .as_os_str()
+            .to_str()
+            .expect(&format!("Failed to convert path into utf8: {path:?}"));
+        cargo_emit::rerun_if_changed!(path_str);
+    }
 
     Ok(())
 }

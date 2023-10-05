@@ -24,9 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The build.rs example in example_package now correctly informs cargo of filesystem dependencies
+
 ### Fixed
 
 ### Changed
+
+ - The function interface for top level generation functions in `roslibrust_codegen` have been changed to include the list of dependent
+filesystem paths that should trigger re-running code generation. Note: new files added to the search paths will not be automatically detected.
 
 ## 0.8.0 - October 4th, 2023
 
