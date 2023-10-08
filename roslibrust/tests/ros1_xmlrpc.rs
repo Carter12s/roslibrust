@@ -6,8 +6,8 @@ mod tests {
     use tokio::time::timeout;
     const TIMEOUT: tokio::time::Duration = tokio::time::Duration::from_millis(500);
 
-    roslibrust_codegen_macro::find_and_generate_ros_messages_relative_to_manifest_dir!(
-        "../assets/ros1_common_interfaces"
+    roslibrust_codegen_macro::find_and_generate_ros_messages!(
+        "assets/ros1_common_interfaces"
     );
 
     async fn call_node_api_raw(uri: &str, endpoint: &str, args: Vec<Value>) -> String {
