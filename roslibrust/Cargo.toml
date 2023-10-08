@@ -53,8 +53,6 @@ simple_logger = "2.1.0"
 
 [features]
 default = []
-# Provides a rosapi rust interface
-rosapi = []
 # Note: all does not include running_bridge as that is only intended for CI
 all = []
 # Intended for use with tests, includes tests that rely on a locally running rosbridge
