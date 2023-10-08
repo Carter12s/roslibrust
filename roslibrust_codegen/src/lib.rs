@@ -338,12 +338,14 @@ impl PartialEq for ConstantInfo {
 
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
-///
+/// Returns a tuple of the generated source code and list of file system paths that if
+/// modified would trigger re-generation of the source. This function is designed to
+/// be used either in a build.rs file or via the roslibrust_codegen_macro crate.
 /// * `additional_search_paths` - A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
 pub fn find_and_generate_ros_messages(
     additional_search_paths: Vec<PathBuf>,
-) -> Result<TokenStream, Error> {
+) -> Result<(TokenStream, Vec<PathBuf>), Error> {
     let mut ros_package_paths = utils::get_search_paths();
     ros_package_paths.extend(additional_search_paths);
     find_and_generate_ros_messages_without_ros_package_path(ros_package_paths)
@@ -351,12 +353,15 @@ pub fn find_and_generate_ros_messages(
 
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
+/// Returns a tuple of the generated source code and list of file system paths that if
+/// modified would trigger re-generation of the source. This function is designed to
+/// be used either in a build.rs file or via the roslibrust_codegen_macro crate.
 ///
 /// * `search_paths` - A list of paths to search for ROS packages.
 pub fn find_and_generate_ros_messages_without_ros_package_path(
     search_paths: Vec<PathBuf>,
-) -> Result<TokenStream, Error> {
-    let (messages, services) = find_and_parse_ros_messages(&search_paths)?;
+) -> Result<(TokenStream, Vec<PathBuf>), Error> {
+    let (messages, services, actions) = find_and_parse_ros_messages(&search_paths)?;
 
     if messages.is_empty() && services.is_empty() {
         // I'm considering this an error for now, but I could see this one being debateable
@@ -364,7 +369,12 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
         bail!("Failed to find any services or messages while generating ROS message definitions, paths searched: {search_paths:?}");
     }
     let (messages, services) = resolve_dependency_graph(messages, services)?;
-    generate_rust_ros_message_definitions(messages, services)
+    let msg_iter = messages.iter().map(|m| m.parsed.path.clone());
+    let srv_iter = services.iter().map(|s| s.parsed.path.clone());
+    let action_iter = actions.iter().map(|a| a.path.clone());
+    let dependent_paths = msg_iter.chain(srv_iter).chain(action_iter).collect();
+    let source = generate_rust_ros_message_definitions(messages, services)?;
+    Ok((source, dependent_paths))
 }
 
 /// Searches a list of paths for ROS packages to find their associated message
@@ -376,7 +386,14 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
 ///
 pub fn find_and_parse_ros_messages(
     search_paths: &Vec<PathBuf>,
-) -> Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>), Error> {
+) -> Result<
+    (
+        Vec<ParsedMessageFile>,
+        Vec<ParsedServiceFile>,
+        Vec<ParsedActionFile>,
+    ),
+    Error,
+> {
     let search_paths  = search_paths
         .into_iter()
         .map(|path| {
@@ -555,9 +572,17 @@ pub fn resolve_dependency_graph(
 /// * `msg_paths` -- List of tuple (Package, Path to File) for each file to parse
 fn parse_ros_files(
     msg_paths: Vec<(Package, PathBuf)>,
-) -> Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>), Error> {
+) -> Result<
+    (
+        Vec<ParsedMessageFile>,
+        Vec<ParsedServiceFile>,
+        Vec<ParsedActionFile>,
+    ),
+    Error,
+> {
     let mut parsed_messages = Vec::new();
     let mut parsed_services = Vec::new();
+    let mut parsed_actions = Vec::new();
     for (pkg, path) in msg_paths {
         let contents = std::fs::read_to_string(&path).map_err(|e| {
             Error::with(
@@ -579,6 +604,7 @@ fn parse_ros_files(
             "srv" => {
                 let srv_file = parse_ros_service_file(&contents, name, &pkg, &path)?;
                 parsed_services.push(srv_file);
+                // TODO ask shane, shouldn't we be pushing request and response to messages here?
             }
             "msg" => {
                 let msg = parse_ros_message_file(&contents, name, &pkg, &path)?;
@@ -586,6 +612,7 @@ fn parse_ros_files(
             }
             "action" => {
                 let action = parse_ros_action_file(&contents, name, &pkg, &path)?;
+                parsed_actions.push(action.clone());
                 parsed_messages.push(action.action_type);
                 parsed_messages.push(action.action_goal_type);
                 parsed_messages.push(action.goal_type);
@@ -599,7 +626,7 @@ fn parse_ros_files(
             }
         }
     }
-    Ok((parsed_messages, parsed_services))
+    Ok((parsed_messages, parsed_services, parsed_actions))
 }
 
 #[cfg(test)]
@@ -614,9 +641,11 @@ mod test {
             "/../assets/ros1_common_interfaces"
         );
 
-        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        let (source, paths) = find_and_generate_ros_messages(vec![assets_path.into()]).unwrap();
         // Make sure something actually got generated
-        assert!(!gen.unwrap().is_empty())
+        assert!(!source.is_empty());
+        // Make sure we have some paths
+        assert!(!paths.is_empty());
     }
 
     /// Confirms we don't panic on ros2 parsing
@@ -627,9 +656,11 @@ mod test {
             "/../assets/ros2_common_interfaces"
         );
 
-        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        let (source, paths) = find_and_generate_ros_messages(vec![assets_path.into()]).unwrap();
         // Make sure something actually got generated
-        assert!(!gen.unwrap().is_empty())
+        assert!(!source.is_empty());
+        // Make sure we have some paths
+        assert!(!paths.is_empty());
     }
 
     /// Confirms we don't panic on ros1_test_msgs parsing
@@ -643,8 +674,11 @@ mod test {
             env!("CARGO_MANIFEST_DIR"),
             "/../assets/ros1_common_interfaces/std_msgs"
         );
-        let gen = find_and_generate_ros_messages(vec![assets_path.into(), std_msgs.into()]);
-        assert!(!gen.unwrap().is_empty());
+        let (source, paths) =
+            find_and_generate_ros_messages(vec![assets_path.into(), std_msgs.into()]).unwrap();
+        assert!(!source.is_empty());
+        // Make sure we have some paths
+        assert!(!paths.is_empty());
     }
 
     /// Confirms we don't panic on ros2_test_msgs parsing
@@ -653,7 +687,8 @@ mod test {
     fn generate_ok_on_ros2_test_msgs() {
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
 
-        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
-        assert!(!gen.unwrap().is_empty());
+        let (source, paths) = find_and_generate_ros_messages(vec![assets_path.into()]).unwrap();
+        assert!(!source.is_empty());
+        assert!(!paths.is_empty());
     }
 }

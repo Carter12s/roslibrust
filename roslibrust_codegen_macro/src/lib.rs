@@ -30,10 +30,12 @@ impl Parse for RosLibRustMessagePaths {
 /// variable ROS_PACKAGE_PATH.
 #[proc_macro]
 pub fn find_and_generate_ros_messages(input_stream: TokenStream) -> TokenStream {
+    // Note: there is not currently a way for proc_macros to indicate that they need to be re-generated
+    // We discard the "dependent_paths" part of the response here...
     let RosLibRustMessagePaths { paths } =
         parse_macro_input!(input_stream as RosLibRustMessagePaths);
     match roslibrust_codegen::find_and_generate_ros_messages(paths) {
-        Ok(t) => t.into(),
+        Ok((source, _dependent_paths)) => source.into(),
         Err(e) => {
             let error_msg = e.to_string();
             quote::quote!(compile_error!(#error_msg);).into()
@@ -50,7 +52,9 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
     let RosLibRustMessagePaths { paths } =
         parse_macro_input!(input_stream as RosLibRustMessagePaths);
     match roslibrust_codegen::find_and_generate_ros_messages_without_ros_package_path(paths) {
-        Ok(t) => t.into(),
+        // Note: there is not currently a way for proc_macros to indicate that they need to be re-generated
+        // We discard the "dependent_paths" part of the response here...
+        Ok((source, _dependent_paths)) => source.into(),
         Err(e) => {
             let error_msg = e.to_string();
             quote::quote!( compile_error!(#error_msg); ).into()
