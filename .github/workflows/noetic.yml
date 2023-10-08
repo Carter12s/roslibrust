@@ -40,3 +40,5 @@ jobs:
         run: source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown; rosrun rosapi rosapi_node & sleep 1
       - name: Integration Tests
         run: source /root/.cargo/env; cargo test --features ros1_test,ros1,running_bridge -- --test-threads 1
+      - name: Ros1 Evil Integration Tests # Added because these specific tests were flaky in CI and trying to get more info
+        run: source /root/.cargo/env; cargo test --features ros1_test,ros1 -- --ignored

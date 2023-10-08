@@ -30,6 +30,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn verify_get_master_uri() {
         let node = timeout(
             TIMEOUT,
@@ -54,6 +55,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn verify_get_publications() {
         let node = timeout(
             TIMEOUT,
@@ -103,6 +105,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn verify_shutdown() {
         let node = timeout(
             TIMEOUT,
@@ -129,6 +132,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn verify_request_topic() {
         let node = timeout(
             TIMEOUT,
