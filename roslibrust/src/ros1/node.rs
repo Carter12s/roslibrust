@@ -587,7 +587,8 @@ async fn determine_addr() -> Result<(Ipv4Addr, String), RosMasterError> {
 /// Given a the name of a host use's std::net::ToSocketAddrs to perform a DNS lookup and return the resulting IP address.
 /// This function is intended to be used to determine the correct IP host the socket for the xmlrpc server on.
 async fn hostname_to_ipv4(name: &str) -> Result<Ipv4Addr, RosMasterError> {
-    let mut i = tokio::net::lookup_host(name).await.map_err(|e| {
+    let name_with_port = &format!("{name}:0");
+    let mut i = tokio::net::lookup_host(name_with_port).await.map_err(|e| {
         RosMasterError::HostIpResolutionFailure(format!(
             "Failure while attempting to lookup ROS_HOSTNAME: {e:?}"
         ))
