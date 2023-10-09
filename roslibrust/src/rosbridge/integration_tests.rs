@@ -168,62 +168,62 @@ mod integration_tests {
         });
     }
 
-    /// Tests that dropping a publisher correctly unadvertises
-    #[test_log::test(tokio::test)]
-    // This test is currently broken, it seems that rosbridge still sends the message regardless
-    // of advertise / unadvertise status. Unclear how to confirm whether unadvertise was sent or not
-    #[ignore]
-    async fn unadvertise() -> TestResult {
-        let _ = simple_logger::SimpleLogger::new()
-            .with_level(log::LevelFilter::Debug)
-            .without_timestamps()
-            .init();
+    // /// Tests that dropping a publisher correctly unadvertises
+    // #[test_log::test(tokio::test)]
+    // // This test is currently broken, it seems that rosbridge still sends the message regardless
+    // // of advertise / unadvertise status. Unclear how to confirm whether unadvertise was sent or not
+    // #[ignore]
+    // async fn unadvertise() -> TestResult {
+    //     let _ = simple_logger::SimpleLogger::new()
+    //         .with_level(log::LevelFilter::Debug)
+    //         .without_timestamps()
+    //         .init();
 
-        // Flow:
-        //  1. Create a publisher and subscriber
-        //  2. Send a message and confirm connection works (topic was advertised)
-        //  3. Drop the publisher, unadvertise should be sent
-        //  4. Manually send a message without a publisher it should fail since topic was unadvertised
-        const TOPIC: &str = "/unadvertise";
-        debug!("Start unadvertise test");
+    //     // Flow:
+    //     //  1. Create a publisher and subscriber
+    //     //  2. Send a message and confirm connection works (topic was advertised)
+    //     //  3. Drop the publisher, unadvertise should be sent
+    //     //  4. Manually send a message without a publisher it should fail since topic was unadvertised
+    //     const TOPIC: &str = "/unadvertise";
+    //     debug!("Start unadvertise test");
 
-        let opt = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
+    //     let opt = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
 
-        let client = ClientHandle::new_with_options(opt).await?;
-        let publisher = client.advertise(TOPIC).await?;
-        debug!("Got publisher");
+    //     let client = ClientHandle::new_with_options(opt).await?;
+    //     let publisher = client.advertise(TOPIC).await?;
+    //     debug!("Got publisher");
 
-        let sub = client.subscribe::<Header>(TOPIC).await?;
-        debug!("Got subscriber");
+    //     let sub = client.subscribe::<Header>(TOPIC).await?;
+    //     debug!("Got subscriber");
 
-        let msg = Header::default();
-        publisher.publish(msg).await?;
-        timeout(TIMEOUT, sub.next()).await?;
+    //     let msg = Header::default();
+    //     publisher.publish(msg).await?;
+    //     timeout(TIMEOUT, sub.next()).await?;
 
-        debug!("Dropping publisher");
-        // drop subscriber so it doesn't keep topic open
-        std::mem::drop(sub);
-        // unadvertise should happen here
-        std::mem::drop(publisher);
+    //     debug!("Dropping publisher");
+    //     // drop subscriber so it doesn't keep topic open
+    //     std::mem::drop(sub);
+    //     // unadvertise should happen here
+    //     std::mem::drop(publisher);
 
-        // Wait for drop to complete
-        tokio::time::sleep(TIMEOUT).await;
+    //     // Wait for drop to complete
+    //     tokio::time::sleep(TIMEOUT).await;
 
-        let sub = client.subscribe::<Header>(TOPIC).await?;
-        // manually publishing using private api
-        let msg = Header::default();
-        client.publish(TOPIC, msg).await?;
+    //     let sub = client.subscribe::<Header>(TOPIC).await?;
+    //     // manually publishing using private api
+    //     let msg = Header::default();
+    //     client.publish(TOPIC, msg).await?;
 
-        match timeout(TIMEOUT, sub.next()).await {
-            Ok(_msg) => {
-                anyhow::bail!("Received message after unadvertised!");
-            }
-            Err(_e) => {
-                // All good! Timeout should expire
-            }
-        }
-        Ok(())
-    }
+    //     match timeout(TIMEOUT, sub.next()).await {
+    //         Ok(_msg) => {
+    //             anyhow::bail!("Received message after unadvertised!");
+    //         }
+    //         Err(_e) => {
+    //             // All good! Timeout should expire
+    //         }
+    //     }
+    //     Ok(())
+    // }
 
     // This test currently doesn't work for ROS2, however all other service functionalities appear fine
     // It may be that ros2 prevents a "service_loop" where a node calls a service on itself?
