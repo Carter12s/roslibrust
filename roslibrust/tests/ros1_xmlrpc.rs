@@ -166,6 +166,8 @@ mod tests {
             .await;
             log::info!("shutdown?");
 
+            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+
             assert!(!node.is_ok());
         })
         .await;
