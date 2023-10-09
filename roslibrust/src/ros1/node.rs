@@ -252,7 +252,7 @@ impl Node {
             node_server_sender: node_sender,
         };
         // Create our xmlrpc server and bind our socket so we know our port and can determine our local URI
-        let xmlrpc_server = XmlRpcServer::new(addr, node_server_handle.clone());
+        let xmlrpc_server = XmlRpcServer::new(addr, node_server_handle.clone())?;
         let client_uri = format!("http://{hostname}:{}", xmlrpc_server.port());
 
         if let None = Name::new(node_name) {
