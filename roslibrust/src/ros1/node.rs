@@ -513,7 +513,7 @@ impl NodeHandle {
         name: &str,
     ) -> Result<NodeHandle, Box<dyn std::error::Error>> {
         // Follow ROS rules and determine our IP and hostname
-        let (addr, hostname) = determine_addr()?;
+        let (addr, hostname) = determine_addr().await?;
 
         let node = Node::new(master_uri, &hostname, name, addr).await?;
         let nh = NodeHandle { inner: node };
@@ -560,7 +560,7 @@ impl NodeHandle {
 /// Following ROS's idiomatic address rules uses ROS_HOSTNAME and ROS_IP to determine the address that server should be hosted at.
 /// Returns both the resolved IpAddress of the host (used for actually opening the socket), and the String "hostname" which should
 /// be used in the URI.
-fn determine_addr() -> Result<(Ipv4Addr, String), RosMasterError> {
+async fn determine_addr() -> Result<(Ipv4Addr, String), RosMasterError> {
     // If ROS_IP is set that trumps anything else
     if let Ok(ip_str) = std::env::var("ROS_IP") {
         let ip = ip_str.parse().map_err(|e| {
@@ -572,7 +572,7 @@ fn determine_addr() -> Result<(Ipv4Addr, String), RosMasterError> {
     }
     // If ROS_HOSTNAME is set that is next highest precedent
     if let Ok(name) = std::env::var("ROS_HOSTNAME") {
-        let ip = hostname_to_ipv4(&name)?;
+        let ip = hostname_to_ipv4(&name).await?;
         return Ok((ip, name));
     }
     // If neither env var is set, use the computers "hostname"
@@ -580,14 +580,14 @@ fn determine_addr() -> Result<(Ipv4Addr, String), RosMasterError> {
     let name = name.into_string().map_err(|e| {
             RosMasterError::HostIpResolutionFailure(format!("This host's hostname is a string that cannot be validly converted into a Rust type, and therefore we cannot convert it into an IpAddrv4: {e:?}"))
         })?;
-    let ip = hostname_to_ipv4(&name)?;
+    let ip = hostname_to_ipv4(&name).await?;
     return Ok((ip, name));
 }
 
 /// Given a the name of a host use's std::net::ToSocketAddrs to perform a DNS lookup and return the resulting IP address.
 /// This function is intended to be used to determine the correct IP host the socket for the xmlrpc server on.
-fn hostname_to_ipv4(name: &str) -> Result<Ipv4Addr, RosMasterError> {
-    let mut i = (name, 0).to_socket_addrs().map_err(|e| {
+async fn hostname_to_ipv4(name: &str) -> Result<Ipv4Addr, RosMasterError> {
+    let mut i = tokio::net::lookup_host(name).await.map_err(|e| {
         RosMasterError::HostIpResolutionFailure(format!(
             "Failure while attempting to lookup ROS_HOSTNAME: {e:?}"
         ))
