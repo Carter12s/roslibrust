@@ -47,7 +47,7 @@ mod tests {
         }
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread", worker_threads = 2))]
+    #[test_log::test(tokio::test)]
     #[ignore]
     async fn verify_get_master_uri() {
         test_with_watch_dog(async {
@@ -79,7 +79,7 @@ mod tests {
         .await;
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread", worker_threads = 2))]
+    #[test_log::test(tokio::test)]
     #[ignore]
     async fn verify_get_publications() {
         test_with_watch_dog(async {
@@ -138,7 +138,7 @@ mod tests {
         .await;
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread", worker_threads = 2))]
+    #[test_log::test(tokio::test)]
     #[ignore]
     async fn verify_shutdown() {
         test_with_watch_dog(async {
@@ -171,7 +171,7 @@ mod tests {
         .await;
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread", worker_threads = 2))]
+    #[test_log::test(tokio::test)]
     #[ignore]
     async fn verify_request_topic() {
         test_with_watch_dog(async {
