@@ -29,148 +29,197 @@ mod tests {
         value
     }
 
-    #[tokio::test]
-    #[ignore]
-    async fn verify_get_master_uri() {
-        let node = timeout(
-            TIMEOUT,
-            roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_master_uri"),
-        )
-        .await
-        .unwrap()
-        .unwrap();
-        let node_uri = timeout(TIMEOUT, node.get_client_uri())
-            .await
-            .unwrap()
-            .unwrap();
-
-        // Note: doesn't need timeout as it is internally timeout()'d
-        let master_uri = call_node_api::<String>(
-            &node_uri,
-            "getMasterUri",
-            vec!["/get_master_uri_test".into()],
-        )
-        .await;
-        assert_eq!(master_uri, "http://localhost:11311");
+    async fn test_with_watch_dog(test: impl std::future::Future<Output = ()>) {
+        // Overall watchdog since I can't get these tests to timeout, but they take 20min in CI
+        // Need the task to fail so I can get any debug information out
+        // Can't get the failure to repro locally
+        let watchdog = async {
+            tokio::time::sleep(TIMEOUT * 5).await;
+            log::error!("Test watchdog tripped!");
+        };
+        tokio::select! {
+            _ = watchdog => {
+                panic!("Test failed due to watchdog");
+            }
+            _ = test => {
+                // Happy days!
+            }
+        }
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     #[ignore]
-    async fn verify_get_publications() {
-        let node = timeout(
-            TIMEOUT,
-            roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_publications"),
-        )
-        .await
-        .unwrap()
-        .unwrap();
-
-        let node_uri = timeout(TIMEOUT, node.get_client_uri())
+    async fn verify_get_master_uri() {
+        test_with_watch_dog(async {
+            let node = timeout(
+                TIMEOUT,
+                roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_master_uri"),
+            )
             .await
             .unwrap()
             .unwrap();
+            log::info!("Got new handle");
 
-        // Note: timeout not needed as it is internally timeout'd
-        let publications = call_node_api::<Vec<(String, String)>>(
-            &node_uri,
-            "getPublications",
-            vec!["/verify_get_publications".into()],
-        )
+            let node_uri = timeout(TIMEOUT, node.get_client_uri())
+                .await
+                .unwrap()
+                .unwrap();
+            log::info!("Got uri");
+
+            // Note: doesn't need timeout as it is internally timeout()'d
+            let master_uri = call_node_api::<String>(
+                &node_uri,
+                "getMasterUri",
+                vec!["/get_master_uri_test".into()],
+            )
+            .await;
+            log::info!("Got master");
+            assert_eq!(master_uri, "http://localhost:11311");
+        })
         .await;
-        assert_eq!(publications.len(), 0);
+    }
 
-        let _publisher = timeout(
-            TIMEOUT,
-            node.advertise::<std_msgs::String>("/test_topic", 1),
-        )
-        .await
-        .unwrap()
-        .unwrap();
+    #[test_log::test(tokio::test)]
+    #[ignore]
+    async fn verify_get_publications() {
+        test_with_watch_dog(async {
+            let node = timeout(
+                TIMEOUT,
+                roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_publications"),
+            )
+            .await
+            .unwrap()
+            .unwrap();
+            log::info!("Got new handle");
 
-        // Note: internally timeout()'d
-        let publications = timeout(
-            TIMEOUT,
-            call_node_api::<Vec<(String, String)>>(
+            let node_uri = timeout(TIMEOUT, node.get_client_uri())
+                .await
+                .unwrap()
+                .unwrap();
+            log::info!("Got uri");
+
+            // Note: timeout not needed as it is internally timeout'd
+            let publications = call_node_api::<Vec<(String, String)>>(
                 &node_uri,
                 "getPublications",
                 vec!["/verify_get_publications".into()],
-            ),
-        )
-        .await
-        .unwrap();
-        assert_eq!(publications.len(), 1);
-        let (topic, topic_type) = publications.iter().nth(0).unwrap();
-        assert_eq!(topic, "/test_topic");
-        assert_eq!(topic_type, std_msgs::String::ROS_TYPE_NAME);
+            )
+            .await;
+            assert_eq!(publications.len(), 0);
+            log::info!("Got publications");
+
+            let _publisher = timeout(
+                TIMEOUT,
+                node.advertise::<std_msgs::String>("/test_topic", 1),
+            )
+            .await
+            .unwrap()
+            .unwrap();
+            log::info!("advertised");
+
+            // Note: internally timeout()'d
+            let publications = timeout(
+                TIMEOUT,
+                call_node_api::<Vec<(String, String)>>(
+                    &node_uri,
+                    "getPublications",
+                    vec!["/verify_get_publications".into()],
+                ),
+            )
+            .await
+            .unwrap();
+            log::info!("Got post advertise publications");
+
+            assert_eq!(publications.len(), 1);
+            let (topic, topic_type) = publications.iter().nth(0).unwrap();
+            assert_eq!(topic, "/test_topic");
+            assert_eq!(topic_type, std_msgs::String::ROS_TYPE_NAME);
+        })
+        .await;
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     #[ignore]
     async fn verify_shutdown() {
-        let node = timeout(
-            TIMEOUT,
-            roslibrust::NodeHandle::new("http://localhost:11311", "verify_shutdown"),
-        )
-        .await
-        .unwrap()
-        .unwrap();
-        let node_uri = timeout(TIMEOUT, node.get_client_uri())
+        test_with_watch_dog(async {
+            let node = timeout(
+                TIMEOUT,
+                roslibrust::NodeHandle::new("http://localhost:11311", "verify_shutdown"),
+            )
             .await
             .unwrap()
             .unwrap();
-        assert!(node.is_ok());
+            log::info!("Got handle");
+            let node_uri = timeout(TIMEOUT, node.get_client_uri())
+                .await
+                .unwrap()
+                .unwrap();
+            assert!(node.is_ok());
+            log::info!("Got uri");
 
-        // Note: internally timeout()'d
-        call_node_api::<i32>(
-            &node_uri,
-            "shutdown",
-            vec!["/verify_shutdown".into(), "".into()],
-        )
+            // Note: internally timeout()'d
+            call_node_api::<i32>(
+                &node_uri,
+                "shutdown",
+                vec!["/verify_shutdown".into(), "".into()],
+            )
+            .await;
+            log::info!("shutdown?");
+
+            assert!(!node.is_ok());
+        })
         .await;
-
-        assert!(!node.is_ok());
     }
 
-    #[tokio::test]
+    #[test_log::test(tokio::test)]
     #[ignore]
     async fn verify_request_topic() {
-        let node = timeout(
-            TIMEOUT,
-            roslibrust::NodeHandle::new("http://localhost:11311", "verify_request_topic"),
-        )
-        .await
-        .unwrap()
-        .unwrap();
-        let node_uri = timeout(TIMEOUT, node.get_client_uri())
+        test_with_watch_dog(async {
+            let node = timeout(
+                TIMEOUT,
+                roslibrust::NodeHandle::new("http://localhost:11311", "verify_request_topic"),
+            )
             .await
             .unwrap()
             .unwrap();
+            log::info!("Got handle");
+            let node_uri = timeout(TIMEOUT, node.get_client_uri())
+                .await
+                .unwrap()
+                .unwrap();
+            log::info!("Got uri {node_uri:?}");
 
-        let _publisher = timeout(
-            TIMEOUT,
-            node.advertise::<std_msgs::String>("/test_topic", 1),
-        )
-        .await
-        .unwrap()
-        .unwrap();
+            let _publisher = timeout(
+                TIMEOUT,
+                node.advertise::<std_msgs::String>("/test_topic", 1),
+            )
+            .await
+            .unwrap()
+            .unwrap();
+            log::info!("Got publisher");
 
-        // Note: internally timeout()'d
-        let response = call_node_api_raw(
-            &node_uri,
-            "requestTopic",
-            vec![
-                "verify_request_topic".into(),
-                "/test_topic".into(),
-                serde_xmlrpc::Value::Array(vec![serde_xmlrpc::Value::Array(vec!["TCPROS".into()])]),
-            ],
-        )
+            // Note: internally timeout()'d
+            let response = call_node_api_raw(
+                &node_uri,
+                "requestTopic",
+                vec![
+                    "verify_request_topic".into(),
+                    "/test_topic".into(),
+                    serde_xmlrpc::Value::Array(vec![serde_xmlrpc::Value::Array(vec![
+                        "TCPROS".into()
+                    ])]),
+                ],
+            )
+            .await;
+            log::info!("Got response");
+
+            let (code, _description, (protocol, host, port)): (i8, String, (String, String, u16)) =
+                serde_xmlrpc::response_from_str(&response).unwrap();
+            assert_eq!(code, 1);
+            assert_eq!(protocol, "TCPROS");
+            assert!(!host.is_empty());
+            assert!(port != 0);
+        })
         .await;
-
-        let (code, _description, (protocol, host, port)): (i8, String, (String, String, u16)) =
-            serde_xmlrpc::response_from_str(&response).unwrap();
-        assert_eq!(code, 1);
-        assert_eq!(protocol, "TCPROS");
-        assert!(!host.is_empty());
-        assert!(port != 0);
     }
 }
