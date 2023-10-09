@@ -135,9 +135,13 @@ mod integration_tests {
         // Intentionally a port where there won't be a server at
         let opts = ClientHandleOptions::new("ws://localhost:9091").timeout(TIMEOUT);
         assert!(ClientHandle::new_with_options(opts).await.is_err());
+
+        // This case sometimes actually passed in CI and caused test to fail
+        // Removed as flaky, but left here for posterity.
         // Impossibly short to actually work
-        let opts = ClientHandleOptions::new(LOCAL_WS).timeout(Duration::from_nanos(1));
-        assert!(ClientHandle::new_with_options(opts).await.is_err());
+        // let opts = ClientHandleOptions::new(LOCAL_WS).timeout(Duration::from_nanos(1));
+        // assert!(ClientHandle::new_with_options(opts).await.is_err());
+
         // Doesn't timeout if given enough time
         let opts = ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT);
         assert!(ClientHandle::new_with_options(opts).await.is_ok());
