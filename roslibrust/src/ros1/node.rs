@@ -275,7 +275,8 @@ impl Node {
             node_name: node_name.to_owned(),
         };
 
-        tokio::spawn(async move {
+        // MAJOR TODO THIS TASK MUST GET STOPPED
+        let t: abort_on_drop::ChildTask<_> = tokio::spawn(async move {
             loop {
                 match node.node_msg_rx.recv().await {
                     Some(NodeMsg::Shutdown) => {
