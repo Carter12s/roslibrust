@@ -53,7 +53,7 @@ impl ClientHandleOptions {
 /// ClientHandle is clone and multiple handles can be clone()'d from the original and passed throughout your application.
 /// ```no_run
 /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
-/// #    "../assets/ros1_common_interfaces/std_msgs"
+/// #    "assets/ros1_common_interfaces/std_msgs"
 /// # );
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -200,7 +200,7 @@ impl ClientHandle {
     /// Subscribe to a given topic expecting msgs of provided type.
     /// ```no_run
     /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
-    /// #    "../assets/ros1_common_interfaces/std_msgs"
+    /// #    "assets/ros1_common_interfaces/std_msgs"
     /// # );
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -227,12 +227,12 @@ impl ClientHandle {
     /// # // TODO figure out how to de-duplicate code here with this message definition...
     /// # mod ros1 {
     /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
-    /// #   "../assets/ros1_common_interfaces/std_msgs"
+    /// #   "assets/ros1_common_interfaces/std_msgs"
     /// # );
     /// # }
     /// # mod ros2 {
     /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
-    /// #   "../assets/ros1_common_interfaces/std_msgs"
+    /// #   "assets/ros1_common_interfaces/std_msgs"
     /// # );
     /// # }
     /// # #[tokio::main]
@@ -291,7 +291,7 @@ impl ClientHandle {
     ///
     /// ```no_run
     /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
-    /// #    "../assets/ros1_common_interfaces/std_msgs"
+    /// #    "assets/ros1_common_interfaces/std_msgs"
     /// # );
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -343,7 +343,7 @@ impl ClientHandle {
     ///
     /// ```no_run
     /// # roslibrust_codegen_macro::find_and_generate_ros_messages!(
-    /// #    "../assets/ros1_common_interfaces/rosapi"
+    /// #    "assets/ros1_common_interfaces/rosapi"
     /// # );
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

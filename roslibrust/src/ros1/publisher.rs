@@ -34,7 +34,7 @@ impl<T: RosMessageType> Publisher<T> {
     }
 }
 
-pub struct PublishingChannel {
+pub struct Publication {
     topic_type: String,
     listener_port: u16,
     _channel_task: ChildTask<()>,
@@ -42,7 +42,7 @@ pub struct PublishingChannel {
     publish_sender: mpsc::Sender<Vec<u8>>,
 }
 
-impl PublishingChannel {
+impl Publication {
     pub async fn new(
         node_name: &str,
         latching: bool,

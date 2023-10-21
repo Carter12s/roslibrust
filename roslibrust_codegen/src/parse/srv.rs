@@ -1,6 +1,6 @@
 use crate::{
     parse::{parse_ros_message_file, ParsedMessageFile},
-    Package,
+    Error, Package,
 };
 use std::path::{Path, PathBuf};
 
@@ -34,7 +34,7 @@ pub fn parse_ros_service_file(
     name: &str,
     package: &Package,
     path: &Path,
-) -> ParsedServiceFile {
+) -> Result<ParsedServiceFile, Error> {
     let mut dash_line_number = None;
     for (line_num, line) in data.lines().enumerate() {
         match (line.find("---"), line.find('#')) {
@@ -58,12 +58,10 @@ pub fn parse_ros_service_file(
         acc
     };
 
-    let dash_line_number = dash_line_number.unwrap_or_else(|| {
-        panic!(
-            "Failed to find delimiter line '---' in {}/{name}",
-            &package.name
-        )
-    });
+    let dash_line_number = dash_line_number.ok_or(Error::new(format!(
+        "Failed to find delimiter line '---' in {}/{name}",
+        &package.name
+    )))?;
     let request_str = data
         .lines()
         .take(dash_line_number)
@@ -73,7 +71,7 @@ pub fn parse_ros_service_file(
         .skip(dash_line_number + 1)
         .fold(String::new(), str_accumulator);
 
-    ParsedServiceFile {
+    Ok(ParsedServiceFile {
         name: name.to_owned(),
         package: package.name.clone(),
         request_type: parse_ros_message_file(
@@ -81,14 +79,14 @@ pub fn parse_ros_service_file(
             format!("{name}Request").as_str(),
             package,
             path,
-        ),
+        )?,
         response_type: parse_ros_message_file(
             &response_str,
             format!("{name}Response").as_str(),
             package,
             path,
-        ),
+        )?,
         source: data.to_owned(),
         path: path.to_owned(),
-    }
+    })
 }

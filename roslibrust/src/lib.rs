@@ -52,6 +52,11 @@
 //! let output = find_and_generate_ros_messages(vec!["/path/to/noetic/packages".into()]);
 //! ```
 //! An example of the output based on message and service files in this repo can be found under `roslibrust_test/src/lib.rs`.
+//!
+//! A full example of incorporating code generation into a project with a build.rs file can be found in example_project.
+//! This is the recommended method of incorporating code generation, as this allows automatic detection and re-building
+//! when message files are edited which is not possible with the proc_macro approach.
+//!
 //! ## How Does It Work?
 //! When you create a new client via ClientHandle::new() or ClientHandle::new_with_options() a new connection to rosbridge is created.
 //! This new connection is literally opening a new Websocket. A specific "stubborn spin" tokio task is created which handles reading

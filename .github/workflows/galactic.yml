@@ -15,7 +15,8 @@ jobs:
     defaults:
       run:
         shell: bash
-    container: carter12s/roslibrust-ci-galactic:latest
+    container: carter12s/roslibrust-ci-galactic:rust-1-72
+    timeout-minutes: 20
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3

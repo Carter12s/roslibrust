@@ -3,6 +3,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use simple_error::{bail, SimpleError as Error};
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::{Debug, Display};
 use std::path::PathBuf;
@@ -28,10 +29,12 @@ pub trait RosMessageType:
     const ROS_TYPE_NAME: &'static str;
 
     /// The computed md5sum of the message file and its dependencies
-    const MD5SUM: &'static str;
+    /// This field is optional, and only needed when using ros1 native communication
+    const MD5SUM: &'static str = "";
 
     /// The definition from the msg, srv, or action file
-    const DEFINITION: &'static str;
+    /// This field is optional, and only needed when using ros1 native communication
+    const DEFINITION: &'static str = "";
 }
 
 // This special impl allows for services with no args / returns
@@ -335,10 +338,14 @@ impl PartialEq for ConstantInfo {
 
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
-///
+/// Returns a tuple of the generated source code and list of file system paths that if
+/// modified would trigger re-generation of the source. This function is designed to
+/// be used either in a build.rs file or via the roslibrust_codegen_macro crate.
 /// * `additional_search_paths` - A list of additional paths to search beyond those
 /// found in ROS_PACKAGE_PATH environment variable.
-pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> TokenStream {
+pub fn find_and_generate_ros_messages(
+    additional_search_paths: Vec<PathBuf>,
+) -> Result<(TokenStream, Vec<PathBuf>), Error> {
     let mut ros_package_paths = utils::get_search_paths();
     ros_package_paths.extend(additional_search_paths);
     find_and_generate_ros_messages_without_ros_package_path(ros_package_paths)
@@ -346,17 +353,28 @@ pub fn find_and_generate_ros_messages(additional_search_paths: Vec<PathBuf>) -> 
 
 /// Searches a list of paths for ROS packages and generates struct definitions
 /// and implementations for message files and service files in packages it finds.
+/// Returns a tuple of the generated source code and list of file system paths that if
+/// modified would trigger re-generation of the source. This function is designed to
+/// be used either in a build.rs file or via the roslibrust_codegen_macro crate.
 ///
 /// * `search_paths` - A list of paths to search for ROS packages.
 pub fn find_and_generate_ros_messages_without_ros_package_path(
     search_paths: Vec<PathBuf>,
-) -> TokenStream {
-    let (messages, services) = find_and_parse_ros_messages(search_paths).unwrap();
-    if let Some((messages, services)) = resolve_dependency_graph(messages, services) {
-        generate_rust_ros_message_definitions(messages, services)
-    } else {
-        TokenStream::default()
+) -> Result<(TokenStream, Vec<PathBuf>), Error> {
+    let (messages, services, actions) = find_and_parse_ros_messages(&search_paths)?;
+
+    if messages.is_empty() && services.is_empty() {
+        // I'm considering this an error for now, but I could see this one being debateable
+        // As it stands there is not good way for us to manually produce a warning, so I'd rather fail loud
+        bail!("Failed to find any services or messages while generating ROS message definitions, paths searched: {search_paths:?}");
     }
+    let (messages, services) = resolve_dependency_graph(messages, services)?;
+    let msg_iter = messages.iter().map(|m| m.parsed.path.clone());
+    let srv_iter = services.iter().map(|s| s.parsed.path.clone());
+    let action_iter = actions.iter().map(|a| a.path.clone());
+    let dependent_paths = msg_iter.chain(srv_iter).chain(action_iter).collect();
+    let source = generate_rust_ros_message_definitions(messages, services)?;
+    Ok((source, dependent_paths))
 }
 
 /// Searches a list of paths for ROS packages to find their associated message
@@ -367,20 +385,24 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
 /// * `search_paths` - A list of paths to search.
 ///
 pub fn find_and_parse_ros_messages(
-    search_paths: Vec<PathBuf>,
-) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
-    let search_paths = search_paths
+    search_paths: &Vec<PathBuf>,
+) -> Result<
+    (
+        Vec<ParsedMessageFile>,
+        Vec<ParsedServiceFile>,
+        Vec<ParsedActionFile>,
+    ),
+    Error,
+> {
+    let search_paths  = search_paths
         .into_iter()
         .map(|path| {
-            if path.exists() {
-                path.canonicalize()
-                    .unwrap_or_else(|_| panic!("Unable to canonicalize path: {}", path.display()))
-            } else {
-                log::error!("{} does not exist", path.display());
-                path
-            }
+            path.canonicalize().map_err(
+            |e| {
+                    Error::with(format!("Codegen was instructed to search a path that could not be canonicalized relative to {:?}: {path:?}", std::env::current_dir().unwrap()).as_str(), e)
         })
-        .collect::<Vec<_>>();
+        })
+        .collect::<Result<Vec<_>, Error>>()?;
     debug!(
         "Codegen is looking in following paths for files: {:?}",
         &search_paths
@@ -389,8 +411,8 @@ pub fn find_and_parse_ros_messages(
     // Check for duplicate package names
     let packages = utils::deduplicate_packages(packages);
     if packages.is_empty() {
-        log::warn!(
-            "No packages found while searching in: {search_paths:?}, relative to {:?}",
+        bail!(
+            "No ROS packages found while searching in: {search_paths:?}, relative to {:?}",
             std::env::current_dir().unwrap()
         );
     }
@@ -398,20 +420,22 @@ pub fn find_and_parse_ros_messages(
     let message_files = packages
         .iter()
         .flat_map(|pkg| {
-            utils::get_message_files(pkg)
-                .unwrap_or_else(|err| {
-                    log::error!(
-                        "Unable to get paths to message files for {}: {}",
-                        pkg.name,
-                        err
-                    );
-                    // Return an empty vec so that one package doesn't necessarily fail the process
-                    vec![]
-                })
-                .into_iter()
-                .map(|path| (pkg.clone(), path))
+            let files = utils::get_message_files(pkg).map_err(|err| {
+                Error::with(
+                    format!("Unable to get paths to message files for {pkg:?}:").as_str(),
+                    err,
+                )
+            });
+            // See https://stackoverflow.com/questions/59852161/how-to-handle-result-in-flat-map
+            match files {
+                Ok(files) => files
+                    .into_iter()
+                    .map(|path| Ok((pkg.clone(), path)))
+                    .collect(),
+                Err(e) => vec![Err(e)],
+            }
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<(Package, PathBuf)>, Error>>()?;
 
     parse_ros_files(message_files)
 }
@@ -427,29 +451,37 @@ pub fn find_and_parse_ros_messages(
 pub fn generate_rust_ros_message_definitions(
     messages: Vec<MessageFile>,
     services: Vec<ServiceFile>,
-) -> TokenStream {
+) -> Result<TokenStream, Error> {
     let mut modules_to_struct_definitions: BTreeMap<String, Vec<TokenStream>> = BTreeMap::new();
 
     // Convert messages files into rust token streams and insert them into BTree organized by package
-    messages.into_iter().for_each(|message| {
-        let pkg_name = message.parsed.package.clone();
-        let definition = generate_struct(message);
-        if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
-            entry.push(definition);
-        } else {
-            modules_to_struct_definitions.insert(pkg_name, vec![definition]);
-        }
-    });
+    messages
+        .into_iter()
+        .map(|message| {
+            let pkg_name = message.parsed.package.clone();
+            let definition = generate_struct(message)?;
+            if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
+                entry.push(definition);
+            } else {
+                modules_to_struct_definitions.insert(pkg_name, vec![definition]);
+            }
+            Ok(())
+        })
+        .collect::<Result<_, Error>>()?;
     // Do the same for services
-    services.into_iter().for_each(|service| {
-        let pkg_name = service.parsed.package.clone();
-        let definition = generate_service(service);
-        if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
-            entry.push(definition);
-        } else {
-            modules_to_struct_definitions.insert(pkg_name, vec![definition]);
-        }
-    });
+    services
+        .into_iter()
+        .map(|service| {
+            let pkg_name = service.parsed.package.clone();
+            let definition = generate_service(service)?;
+            if let Some(entry) = modules_to_struct_definitions.get_mut(&pkg_name) {
+                entry.push(definition);
+            } else {
+                modules_to_struct_definitions.insert(pkg_name, vec![definition]);
+            }
+            Ok(())
+        })
+        .collect::<Result<_, Error>>()?;
     // Now generate modules to wrap all of the TokenStreams in a module for each package
     let all_pkgs = modules_to_struct_definitions
         .keys()
@@ -460,10 +492,10 @@ pub fn generate_rust_ros_message_definitions(
         .map(|(pkg, struct_defs)| generate_mod(pkg, struct_defs, &all_pkgs[..]))
         .collect::<Vec<_>>();
 
-    quote! {
+    Ok(quote! {
         #(#module_definitions)*
 
-    }
+    })
 }
 
 struct MessageMetadata {
@@ -474,7 +506,7 @@ struct MessageMetadata {
 pub fn resolve_dependency_graph(
     messages: Vec<ParsedMessageFile>,
     services: Vec<ParsedServiceFile>,
-) -> Option<(Vec<MessageFile>, Vec<ServiceFile>)> {
+) -> Result<(Vec<MessageFile>, Vec<ServiceFile>), Error> {
     const MAX_PARSE_ITER_LIMIT: u32 = 2048;
     let mut unresolved_messages = messages
         .into_iter()
@@ -484,12 +516,6 @@ pub fn resolve_dependency_graph(
     let mut resolved_messages = BTreeMap::new();
     // First resolve the message dependencies
     while let Some(MessageMetadata { msg, seen_count }) = unresolved_messages.pop_front() {
-        if seen_count > MAX_PARSE_ITER_LIMIT {
-            log::error!("Unable to resolve dependencies after reaching iteration limit ({MAX_PARSE_ITER_LIMIT}).\n\
-                    Message: {msg:#?}");
-            return None;
-        }
-
         // Check our resolved messages for each of the fields
         let fully_resolved = msg.fields.iter().all(|field| {
             let is_ros1_primitive =
@@ -506,13 +532,26 @@ pub fn resolve_dependency_graph(
         });
 
         if fully_resolved {
-            let msg_file = MessageFile::resolve(msg, &resolved_messages).unwrap();
+            let debug_name = msg.get_full_name();
+            let msg_file = MessageFile::resolve(msg, &resolved_messages).ok_or(
+                Error::new(format!("Failed to correctly resolve message {debug_name:?}, either md5sum could not be calculated, or fixed length was indeterminate"))
+            )?;
             resolved_messages.insert(msg_file.get_full_name(), msg_file);
         } else {
             unresolved_messages.push_back(MessageMetadata {
                 seen_count: seen_count + 1,
                 msg,
             });
+        }
+
+        if seen_count > MAX_PARSE_ITER_LIMIT {
+            let msg_names = unresolved_messages
+                .iter()
+                .map(|item| format!("{}/{}", item.msg.package, item.msg.name))
+                .collect::<Vec<_>>();
+            bail!("Unable to resolve dependencies after reaching search limit.\n\
+                   The following messages have unresolved dependencies: {msg_names:?}\n\
+                   These messages likely depend on packages not found in the provided search paths.");
         }
     }
 
@@ -523,33 +562,57 @@ pub fn resolve_dependency_graph(
         .collect();
     resolved_services.sort_by(|a, b| a.parsed.name.cmp(&b.parsed.name));
 
-    Some((resolved_messages.into_values().collect(), resolved_services))
+    Ok((resolved_messages.into_values().collect(), resolved_services))
 }
 
 /// Parses all ROS file types and returns a final expanded set
-/// Currently supports service files and message files, no planned support for actions
-/// The returned collection will contain all messages files including those buried within the service definitions
-/// and will have fully expanded and resolved referenced types in other packages.
+/// Currently supports service files, message files, and action files
+/// The returned collection will contain all messages files including those buried with the
+/// service or action files, and will have fully expanded and resolved referenced types in other packages.
 /// * `msg_paths` -- List of tuple (Package, Path to File) for each file to parse
 fn parse_ros_files(
     msg_paths: Vec<(Package, PathBuf)>,
-) -> std::io::Result<(Vec<ParsedMessageFile>, Vec<ParsedServiceFile>)> {
+) -> Result<
+    (
+        Vec<ParsedMessageFile>,
+        Vec<ParsedServiceFile>,
+        Vec<ParsedActionFile>,
+    ),
+    Error,
+> {
     let mut parsed_messages = Vec::new();
     let mut parsed_services = Vec::new();
+    let mut parsed_actions = Vec::new();
     for (pkg, path) in msg_paths {
-        let contents = std::fs::read_to_string(&path)?;
-        let name = path.file_stem().unwrap().to_str().unwrap();
+        let contents = std::fs::read_to_string(&path).map_err(|e| {
+            Error::with(
+                format!("Codgen failed while attempting to read file {path:?} from disk:").as_str(),
+                e,
+            )
+        })?;
+        // Probably being overly aggressive with error shit here, but I'm on a kick
+        let name = path
+            .file_stem()
+            .ok_or(Error::new(format!(
+                "Failed to extract valid file stem for file at {path:?}"
+            )))?
+            .to_str()
+            .ok_or(Error::new(format!(
+                "File stem for file at path {path:?} was not valid unicode?"
+            )))?;
         match path.extension().unwrap().to_str().unwrap() {
             "srv" => {
-                let srv_file = parse_ros_service_file(&contents, name, &pkg, &path);
+                let srv_file = parse_ros_service_file(&contents, name, &pkg, &path)?;
                 parsed_services.push(srv_file);
+                // TODO ask shane, shouldn't we be pushing request and response to messages here?
             }
             "msg" => {
-                let msg = parse_ros_message_file(&contents, name, &pkg, &path);
+                let msg = parse_ros_message_file(&contents, name, &pkg, &path)?;
                 parsed_messages.push(msg);
             }
             "action" => {
-                let action = parse_ros_action_file(&contents, name, &pkg, &path);
+                let action = parse_ros_action_file(&contents, name, &pkg, &path)?;
+                parsed_actions.push(action.clone());
                 parsed_messages.push(action.action_type);
                 parsed_messages.push(action.action_goal_type);
                 parsed_messages.push(action.goal_type);
@@ -563,7 +626,7 @@ fn parse_ros_files(
             }
         }
     }
-    Ok((parsed_messages, parsed_services))
+    Ok((parsed_messages, parsed_services, parsed_actions))
 }
 
 #[cfg(test)]
@@ -578,9 +641,11 @@ mod test {
             "/../assets/ros1_common_interfaces"
         );
 
-        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        let (source, paths) = find_and_generate_ros_messages(vec![assets_path.into()]).unwrap();
         // Make sure something actually got generated
-        assert!(!gen.is_empty())
+        assert!(!source.is_empty());
+        // Make sure we have some paths
+        assert!(!paths.is_empty());
     }
 
     /// Confirms we don't panic on ros2 parsing
@@ -591,9 +656,11 @@ mod test {
             "/../assets/ros2_common_interfaces"
         );
 
-        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
+        let (source, paths) = find_and_generate_ros_messages(vec![assets_path.into()]).unwrap();
         // Make sure something actually got generated
-        assert!(!gen.is_empty())
+        assert!(!source.is_empty());
+        // Make sure we have some paths
+        assert!(!paths.is_empty());
     }
 
     /// Confirms we don't panic on ros1_test_msgs parsing
@@ -607,8 +674,11 @@ mod test {
             env!("CARGO_MANIFEST_DIR"),
             "/../assets/ros1_common_interfaces/std_msgs"
         );
-        let gen = find_and_generate_ros_messages(vec![assets_path.into(), std_msgs.into()]);
-        assert!(!gen.is_empty());
+        let (source, paths) =
+            find_and_generate_ros_messages(vec![assets_path.into(), std_msgs.into()]).unwrap();
+        assert!(!source.is_empty());
+        // Make sure we have some paths
+        assert!(!paths.is_empty());
     }
 
     /// Confirms we don't panic on ros2_test_msgs parsing
@@ -617,7 +687,8 @@ mod test {
     fn generate_ok_on_ros2_test_msgs() {
         let assets_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/ros2_test_msgs");
 
-        let gen = find_and_generate_ros_messages(vec![assets_path.into()]);
-        assert!(!gen.is_empty());
+        let (source, paths) = find_and_generate_ros_messages(vec![assets_path.into()]).unwrap();
+        assert!(!source.is_empty());
+        assert!(!paths.is_empty());
     }
 }

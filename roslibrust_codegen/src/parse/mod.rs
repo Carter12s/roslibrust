@@ -1,4 +1,5 @@
 use crate::utils::{Package, RosVersion};
+use crate::{bail, Error};
 use crate::{ConstantInfo, FieldInfo, FieldType};
 use std::collections::HashMap;
 
@@ -64,16 +65,16 @@ pub fn convert_ros_type_to_rust_type(version: RosVersion, ros_type: &str) -> Opt
     }
 }
 
-fn parse_field(line: &str, pkg: &Package, msg_name: &str) -> FieldInfo {
+fn parse_field(line: &str, pkg: &Package, msg_name: &str) -> Result<FieldInfo, Error> {
     let mut splitter = line.split_whitespace();
     let pkg_name = pkg.name.as_str();
-    let field_type = splitter.next().unwrap_or_else(|| {
-        panic!("Did not find field_type on line: {line} while parsing {pkg_name}/{msg_name}")
-    });
-    let field_type = parse_type(field_type, pkg);
-    let field_name = splitter.next().unwrap_or_else(|| {
-        panic!("Did not find field_name on line: {line} while parsing {pkg_name}/{msg_name}")
-    });
+    let field_type = splitter.next().ok_or(Error::new(format!(
+        "Did not find field_type on line: {line} while parsing {pkg_name}/{msg_name}"
+    )))?;
+    let field_type = parse_type(field_type, pkg)?;
+    let field_name = splitter.next().ok_or(Error::new(format!(
+        "Did not find field_name on line: {line} while parsing {pkg_name}/{msg_name}"
+    )))?;
 
     let sep = line.find(' ').unwrap();
     // Determine if there is a default value for this field
@@ -98,17 +99,21 @@ fn parse_field(line: &str, pkg: &Package, msg_name: &str) -> FieldInfo {
         None
     };
 
-    FieldInfo {
+    Ok(FieldInfo {
         field_type,
         field_name: field_name.to_string(),
         default,
-    }
+    })
 }
 
-fn parse_constant_field(line: &str, pkg: &Package) -> ConstantInfo {
-    let sep = line.find(' ').unwrap();
-    let equal_after_sep = line[sep..].find('=').unwrap();
-    let mut constant_type = parse_type(line[..sep].trim(), pkg).field_type;
+fn parse_constant_field(line: &str, pkg: &Package) -> Result<ConstantInfo, Error> {
+    let sep = line.find(' ').ok_or(
+        Error::new(format!("Failed to find white space seperator ' ' while parsing constant information one line {line} for package {pkg:?}"))
+    )?;
+    let equal_after_sep = line[sep..].find('=').ok_or(
+        Error::new(format!("Failed to find expected '=' while parsing constant information on line {line} for package {pkg:?}"))
+    )?;
+    let mut constant_type = parse_type(line[..sep].trim(), pkg)?.field_type;
     let constant_name = line[sep + 1..(equal_after_sep + sep)].trim().to_string();
 
     // Handle the fact that string type should be different for constants than fields
@@ -117,11 +122,11 @@ fn parse_constant_field(line: &str, pkg: &Package) -> ConstantInfo {
     }
 
     let constant_value = line[sep + equal_after_sep + 1..].trim().to_string();
-    ConstantInfo {
+    Ok(ConstantInfo {
         constant_type,
         constant_name,
         constant_value: constant_value.into(),
-    }
+    })
 }
 
 /// Looks for # comment character and sub-slices for characters preceding it
@@ -132,6 +137,7 @@ fn strip_comments(line: &str) -> &str {
     line
 }
 
+//TODO it is a little scary that this function appears infallible?
 fn parse_field_type(type_str: &str, array_info: Option<Option<usize>>, pkg: &Package) -> FieldType {
     let items = type_str.split('/').collect::<Vec<&str>>();
 
@@ -176,7 +182,7 @@ fn parse_field_type(type_str: &str, array_info: Option<Option<usize>>, pkg: &Pac
 /// Determines the type of a field
 /// `type_str` -- Expects the part of the line containing all type information (up to the first space), e.g. "int32[3>=]"
 /// `pkg` -- Reference to package this type is within, used for version information and determining relative types
-fn parse_type(type_str: &str, pkg: &Package) -> FieldType {
+fn parse_type(type_str: &str, pkg: &Package) -> Result<FieldType, Error> {
     // Handle array logic
     let open_bracket_idx = type_str.find('[');
     let close_bracket_idx = type_str.find(']');
@@ -188,22 +194,25 @@ fn parse_type(type_str: &str, pkg: &Package) -> FieldType {
                 None
             } else {
                 let fixed_size_str = &type_str[(o + 1)..c];
-                let fixed_size = fixed_size_str.parse::<usize>().unwrap_or_else(|err| {
-                    log::warn!(
+                let fixed_size = fixed_size_str.parse::<usize>().map_err(|err| {
+                    Error::new(format!(
                         "Unable to parse size of the array: {type_str}, defaulting to 0: {err}"
-                    );
-                    0
+                    ))
                 });
+                // TODO we don't currently handle "array limits" in ROS2, so for now we're ejecting this error
+                // To make this function complete we need to handle clauses like '<=3'
+                // None of this really matters at current time, because we don't generate fixed size array types yet anyway
+                let fixed_size = fixed_size.unwrap_or(0);
                 Some(fixed_size)
             };
-            parse_field_type(&type_str[..o], Some(array_size), pkg)
+            Ok(parse_field_type(&type_str[..o], Some(array_size), pkg))
         }
         (None, None) => {
             // Not an array parse normally
-            parse_field_type(type_str, None, pkg)
+            Ok(parse_field_type(type_str, None, pkg))
         }
         _ => {
-            panic!("Found malformed type: {type_str}");
+            bail!("Found malformed type: {type_str} in package {pkg:?}. Likely file is invalid.");
         }
     }
 }

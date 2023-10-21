@@ -18,7 +18,7 @@ mod integration_tests {
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
     // Had 1 spurious github failure at 100
-    const TIMEOUT: Duration = Duration::from_millis(200);
+    const TIMEOUT: Duration = Duration::from_millis(500);
     const LOCAL_WS: &str = "ws://localhost:9090";
 
     #[cfg(feature = "ros1_test")]

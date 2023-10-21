@@ -4,6 +4,8 @@ use log::*;
 
 #[derive(thiserror::Error, Debug)]
 pub enum RosMasterError {
+    #[error("Incorrect number a fields is xmlrpc header: {0}")]
+    InvalidXmlRpcHeader(String),
     #[error("Failed to understand xmlrpc message: {0}")]
     InvalidXmlRpcMessage(#[from] serde_xmlrpc::Error),
     #[error("Failed to communicate with server: {0}")]
@@ -48,7 +50,9 @@ impl SystemState {
     /// Helper function for checking if a node is registered as a publisher of a given topic.
     /// Returns true iff the node is a publisher of that topic
     pub fn is_publishing(&self, topic: &str, node: &str) -> bool {
-        let Some(entry) = self.publishers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        let Some(entry) = self.publishers.iter().find(|entry| entry.topic.eq(topic)) else {
+            return false;
+        };
         entry
             .nodes
             .iter()
@@ -59,7 +63,9 @@ impl SystemState {
     /// Helper function for checking if a node is registered as a subscriber of a given topic.
     /// Returns true iff the node is a subscriber of that topic.
     pub fn is_subscribed(&self, topic: &str, node: &str) -> bool {
-        let Some(entry) = self.subscribers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        let Some(entry) = self.subscribers.iter().find(|entry| entry.topic.eq(topic)) else {
+            return false;
+        };
         entry
             .nodes
             .iter()
@@ -68,7 +74,13 @@ impl SystemState {
     }
 
     pub fn is_service_provider(&self, topic: &str, node: &str) -> bool {
-        let Some(entry) = self.service_providers.iter().find(|entry| entry.topic.eq(topic)) else { return false; };
+        let Some(entry) = self
+            .service_providers
+            .iter()
+            .find(|entry| entry.topic.eq(topic))
+        else {
+            return false;
+        };
         entry
             .nodes
             .iter()
@@ -147,7 +159,8 @@ impl MasterClient {
         self.post(body).await
     }
 
-    /// Hits the master's xmlrpc endpoint "registerService", does not actually begin hosting the service uri.
+    /// Hits the master's xmlrpc endpoint "registerService", does not actually begin hosting the
+    /// service uri.
     pub async fn register_service(
         &self,
         service: impl Into<String>,
@@ -167,8 +180,9 @@ impl MasterClient {
         Ok(())
     }
 
-    /// Hits the master's xmlrpc endpoint "unregisterService", returns true if the service was un-registered
-    /// and false if the master reports that the service was not registered as a provider
+    /// Hits the master's xmlrpc endpoint "unregisterService", returns true if the service was
+    /// un-registered and false if the master reports that the service was not registered as a
+    /// provider
     pub async fn unregister_service(
         &self,
         service: impl Into<String>,
@@ -186,7 +200,8 @@ impl MasterClient {
         Ok(x.eq(&1))
     }
 
-    /// Hits the master's xmlrpc endpoint "registerSubscriber", returns the list of publishers to that topic
+    /// Hits the master's xmlrpc endpoint "registerSubscriber", returns the list of publisher node
+    /// URIs for that topic
     pub async fn register_subscriber(
         &self,
         topic: impl Into<String>,
@@ -204,8 +219,8 @@ impl MasterClient {
         self.post(body).await
     }
 
-    /// Hits the master's xmlrpc endpoint "unregisterSubscriber", returns true if the subscriber was registered
-    /// for the topic and false if the server reported this operation as a no-op.
+    /// Hits the master's xmlrpc endpoint "unregisterSubscriber", returns true if the subscriber
+    /// was registered for the topic and false if the server reported this operation as a no-op.
     pub async fn unregister_subscriber(
         &self,
         topic: impl Into<String>,
@@ -223,7 +238,8 @@ impl MasterClient {
         Ok(x.eq(&1))
     }
 
-    /// Hits the master's xmlrpc endpoint "registerPublisher", returns the list of current subscribers to the topic
+    /// Hits the master's xmlrpc endpoint "registerPublisher", returns the list of current
+    /// subscriber node URIs to the topic
     pub async fn register_publisher(
         &self,
         topic: impl Into<String>,
@@ -241,8 +257,8 @@ impl MasterClient {
         self.post(body).await
     }
 
-    /// Hits the master's xmlrpc endpoint "unregisterPublisher", returns true if the subscriber was registered
-    /// for the topic and false if the server reported this operation as a no-op.
+    /// Hits the master's xmlrpc endpoint "unregisterPublisher", returns true if the subscriber was
+    /// registered for the topic and false if the server reported this operation as a no-op.
     pub async fn unregister_publisher(
         &self,
         topic: impl Into<String>,
@@ -260,7 +276,8 @@ impl MasterClient {
         Ok(x.eq(&1))
     }
 
-    /// Hits the master's xmlrpc endpoint "lookupNode" and returns the uri associated with the given node name
+    /// Hits the master's xmlrpc endpoint "lookupNode" and returns the uri associated with the
+    /// given node name
     pub async fn lookup_node(
         &self,
         node_name: impl Into<String>,
@@ -272,7 +289,8 @@ impl MasterClient {
         self.post(body).await
     }
 
-    /// Hits the master's xmlrpc endpoint "lookup_service" and returns the uri associated with the service
+    /// Hits the master's xmlrpc endpoint "lookup_service" and returns the uri associated with the
+    /// service
     pub async fn lookup_service(
         &self,
         service_name: impl Into<String>,
@@ -285,8 +303,8 @@ impl MasterClient {
     }
 
     /// Hits the master's xmlrpc endpoint "getPublishedTopics" and returns the corresponding list.
-    /// This does not include topics which have been subscribed to, but have no publisher according to ROS's
-    /// documentation.
+    /// This does not include topics which have been subscribed to, but have no publisher according
+    /// to ROS's documentation.
     /// - subgraph: Restrict topic names to match within the specified subgraph.
     ///             Subgraph namespace is resolved relative to the caller's namespace.
     ///             Use empty string to specify all names.
@@ -316,11 +334,9 @@ impl MasterClient {
         debug!("System State Body: {body}");
         let res: Vec<Vec<(String, Vec<String>)>> = self.post(body).await?;
         if res.len() != 3 {
-            return Err(RosMasterError::InvalidXmlRpcMessage(
-                serde_xmlrpc::Error::DecodeError(format!(
-                    "Incorrect number of fields returned by getSystemState: {res:?}"
-                )),
-            ));
+            return Err(RosMasterError::InvalidXmlRpcHeader(format!(
+                "Incorrect number of fields returned by getSystemState: {res:?}"
+            )));
         }
         let mut res: Vec<Vec<StateEntry>> = res
             .into_iter()

@@ -8,9 +8,12 @@ pub use master_client::*;
 mod xmlrpc_server;
 pub(crate) use xmlrpc_server::*;
 
+mod names;
+
 /// [node] module contains the central Node and NodeHandle APIs
 mod node;
 pub use node::*;
 
 mod publisher;
+mod subscriber;
 mod tcpros;
