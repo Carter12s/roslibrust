@@ -6,10 +6,11 @@
 use crate::{ClientHandle, RosLibRustResult};
 use async_trait::async_trait;
 
-// TODO Fix this... this sucks
-roslibrust_codegen_macro::find_and_generate_ros_messages_relative_to_manifest_dir!(
-    "../assets/ros1_common_interfaces/rosapi"
-);
+// TODO major issue here for folks who actually try to use rosapi in their project
+// This macro isn't going to expand correctly when not used from this crate's workspace
+// We almost certainly need to generate and commit the resulting messages, or
+// do some include_str!() hax to be able to ship these types with the crate...
+roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces/rosapi");
 
 /// Represents the ability to interact with the interfaces provided by the rosapi node.
 /// This trait is implemented for ClientHandle when the `rosapi` feature is enabled.
