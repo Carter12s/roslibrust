@@ -10,7 +10,10 @@ use crate::{MasterClient, RosMasterError, ServiceCallback, XmlRpcServer, XmlRpcS
 use abort_on_drop::ChildTask;
 use dashmap::DashMap;
 use roslibrust_codegen::RosMessageType;
-use std::{net::{IpAddr, Ipv4Addr, ToSocketAddrs}, sync::Arc};
+use std::{
+    net::{IpAddr, Ipv4Addr, ToSocketAddrs},
+    sync::Arc,
+};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
 #[derive(Debug)]
@@ -124,7 +127,8 @@ impl NodeServerHandle {
         {
             Ok(()) => {
                 log::debug!("Awaiting receiver");
-                Ok(receiver.await.map_err(|err| Box::new(err))?)},
+                Ok(receiver.await.map_err(|err| Box::new(err))?)
+            }
             Err(e) => Err(Box::new(e)),
         }
     }
@@ -165,7 +169,9 @@ impl NodeServerHandle {
             md5sum: T::MD5SUM.to_owned(),
         }) {
             Ok(()) => {
+                log::trace!("Recieved okay from node_server_send.");
                 let received = receiver.await.map_err(|err| Box::new(err))?;
+                log::trace!("Awaiting receiver produced: {received:?}");
                 Ok(received.map_err(|err| {
                     log::error!("Failed to register publisher: {err}");
                     Box::new(std::io::Error::from(std::io::ErrorKind::ConnectionAborted))
@@ -179,7 +185,7 @@ impl NodeServerHandle {
         &self,
         topic: &str,
         queue_size: usize,
-    ) -> Result<broadcast::Receiver<Vec<u8>>, Box<dyn std::error::Error>> {
+    ) -> Result<broadcast::Receiver<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
         let (sender, receiver) = oneshot::channel();
         match self.node_server_sender.send(NodeMsg::RegisterSubscriber {
             reply: sender,
@@ -259,7 +265,7 @@ impl Node {
         let xml_server_handle = NodeServerHandle {
             node_server_sender: node_sender.clone(),
             // None here because this handle should not keep task alive
-            _node_task: None, 
+            _node_task: None,
         };
         // Create our xmlrpc server and bind our socket so we know our port and can determine our local URI
         let xmlrpc_server = XmlRpcServer::new(addr, xml_server_handle)?;
@@ -285,22 +291,25 @@ impl Node {
             node_name: node_name.to_owned(),
         };
 
-        let t = Arc::new(tokio::spawn(async move {
-            loop {
-                match node.node_msg_rx.recv().await {
-                    Some(NodeMsg::Shutdown) => {
-                        log::info!("Shutdown requested, shutting down node");
-                        break;
-                    }
-                    Some(node_msg) => {
-                        node.handle_msg(node_msg).await;
-                    }
-                    None => {
-                        break;
+        let t = Arc::new(
+            tokio::spawn(async move {
+                loop {
+                    match node.node_msg_rx.recv().await {
+                        Some(NodeMsg::Shutdown) => {
+                            log::info!("Shutdown requested, shutting down node");
+                            break;
+                        }
+                        Some(node_msg) => {
+                            node.handle_msg(node_msg).await;
+                        }
+                        None => {
+                            break;
+                        }
                     }
                 }
-            }
-        }).into());
+            })
+            .into(),
+        );
 
         let node_server_handle = NodeServerHandle {
             node_server_sender: node_sender,
@@ -356,10 +365,12 @@ impl Node {
                 msg_definition,
                 md5sum,
             } => {
-                match self
+                log::trace!("Got register publisher command from mpsc for {topic:?}");
+                let res = self
                     .register_publisher(topic, &topic_type, queue_size, msg_definition, md5sum)
-                    .await
-                {
+                    .await;
+                log::trace!("Result of register_publisher: {res:?}");
+                match res {
                     Ok(handle) => reply.send(Ok(handle)),
                     Err(err) => reply.send(Err(err.to_string())),
                 }
@@ -471,7 +482,9 @@ impl Node {
         msg_definition: String,
         md5sum: String,
     ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error>> {
+        log::trace!("Registering publisher for: {topic:?}");
         if let Some(handle) = self.publishers.iter().find_map(|entry| {
+            log::trace!("Found existing entry for: {topic:?}");
             if entry.key().as_str() == &topic {
                 if entry.topic_type() == topic_type {
                     Some(Ok(entry.get_sender()))
@@ -486,6 +499,7 @@ impl Node {
         }) {
             Ok(handle?)
         } else {
+            log::trace!("Creating new entry for {topic:?}");
             let channel = Publication::new(
                 &self.node_name,
                 false,
@@ -501,10 +515,12 @@ impl Node {
                 log::error!("Failed to create publishing channel: {err:?}");
                 err
             })?;
+            log::trace!("Created new publication for {topic:?}");
             let handle = channel.get_sender();
             self.publishers.insert(topic.clone(), channel);
-
-            let _current_subscribers = self.client.register_publisher(topic, topic_type).await?;
+            log::trace!("Inserted new publsiher into dashmap");
+            let _current_subscribers = self.client.register_publisher(&topic, topic_type).await?;
+            log::trace!("Registered new publication for {topic:?}");
             Ok(handle)
         }
     }
@@ -518,7 +534,7 @@ pub struct NodeHandle {
 }
 
 impl NodeHandle {
-    // TODO builder, async, result, better error type
+    // TODO builder, result, better error type
     /// Creates a new node connect and returns a handle to it
     /// It is idiomatic to call this once per process and treat the created node as singleton.
     /// The returned handle can be freely clone'd to create additional handles without creating additional connections.
@@ -531,8 +547,6 @@ impl NodeHandle {
 
         let node = Node::new(master_uri, &hostname, name, addr).await?;
         let nh = NodeHandle { inner: node };
-
-        // TODO spawn our TcpManager here for TCPROS
 
         Ok(nh)
     }
@@ -550,11 +564,12 @@ impl NodeHandle {
         topic_name: &str,
         queue_size: usize,
     ) -> Result<Publisher<T>, Box<dyn std::error::Error + Send + Sync>> {
-        log::trace!("Advertising ");
+        log::trace!("Advertising: {topic_name:?}");
         let sender = self
             .inner
             .register_publisher::<T>(topic_name, T::ROS_TYPE_NAME, queue_size)
             .await?;
+        log::trace!("Advertised: {topic_name:?}");
         Ok(Publisher::new(topic_name, sender))
     }
 
@@ -562,7 +577,7 @@ impl NodeHandle {
         &self,
         topic_name: &str,
         queue_size: usize,
-    ) -> Result<Subscriber<T>, Box<dyn std::error::Error>> {
+    ) -> Result<Subscriber<T>, Box<dyn std::error::Error + Send + Sync>> {
         let receiver = self
             .inner
             .register_subscriber::<T>(topic_name, queue_size)

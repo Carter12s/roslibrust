@@ -83,9 +83,8 @@ mod tests {
         .await
     }
 
-    #[tokio::test(flavor = "multi_thread")]
+    #[test_log::test(tokio::test(flavor = "multi_thread"))]
     async fn verify_get_publications() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // let _ = simple_logger::init_with_level(log::Level::Trace);
         test_with_watch_dog(async {
             let node = timeout(
                 TIMEOUT,
