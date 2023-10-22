@@ -33,12 +33,12 @@
 //!
 //! ## Message Generation
 //! Message generation is provided in two APIs. The first, which is visible in `roslibrust/examples`, is a proc-macro which can be invoked to generate ROS message structs in place:
-//! ```compile_fail
+//! ```ignore
 //! use roslibrust_codegen_macro::find_and_generate_ros_messages;
 //! find_and_generate_ros_messages!();
 //! ```
 //! If you have ROS installed, this macro will search for message files under paths in the `ROS_PACKAGE_PATH`. If you do not have ROS installed in your environment, you can specify search paths explicitly:
-//! ```compile_fail
+//! ```ignore
 //! use roslibrust_codegen_macro::find_and_generate_ros_messages;
 //! find_and_generate_ros_messages!("/path/to/noetic/packages", "/path/to/my/packages");
 //! ```
@@ -100,6 +100,9 @@
 
 mod rosbridge;
 pub use rosbridge::*;
+
+#[cfg(feature = "rosapi")]
+pub mod rosapi;
 
 #[cfg(feature = "ros1")]
 mod ros1;

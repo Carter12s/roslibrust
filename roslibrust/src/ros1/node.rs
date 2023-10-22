@@ -345,7 +345,7 @@ impl Node {
                 );
             }
             NodeMsg::SetPeerPublishers { topic, publishers } => {
-                if let Some(mut subscription) = self.subscriptions.get_mut(&topic) {
+                if let Some(subscription) = self.subscriptions.get_mut(&topic) {
                     for publisher_uri in publishers {
                         if let Err(err) = subscription.add_publisher_source(&publisher_uri).await {
                             log::error!(
