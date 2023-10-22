@@ -8,10 +8,10 @@ use super::{
 };
 use crate::{MasterClient, RosMasterError, ServiceCallback, XmlRpcServer, XmlRpcServerHandle};
 use abort_on_drop::ChildTask;
-use dashmap::DashMap;
 use roslibrust_codegen::RosMessageType;
 use std::{
-    net::{IpAddr, Ipv4Addr, ToSocketAddrs},
+    collections::HashMap,
+    net::{IpAddr, Ipv4Addr},
     sync::Arc,
 };
 use tokio::sync::{broadcast, mpsc, oneshot};
@@ -243,11 +243,11 @@ pub struct Node {
     // Receiver for requests to the Node actor
     node_msg_rx: mpsc::UnboundedReceiver<NodeMsg>,
     // Map of topic names to the publishing channels associated with the topic
-    publishers: tokio::sync::RwLock<std::collections::HashMap<String, Publication>>,
+    publishers: HashMap<String, Publication>,
     // Record of subscriptions this node has
-    subscriptions: DashMap<String, Subscription>,
+    subscriptions: HashMap<String, Subscription>,
     // Record of what services this node is serving
-    services: DashMap<String, ServiceCallback>,
+    services: HashMap<String, ServiceCallback>,
     // TODO need signal to shutdown xmlrpc server when node is dropped
     host_addr: Ipv4Addr,
     hostname: String,
@@ -283,9 +283,9 @@ impl Node {
             client: rosmaster_client,
             _xmlrpc_server: xmlrpc_server,
             node_msg_rx: node_receiver,
-            publishers: tokio::sync::RwLock::new(std::collections::HashMap::new()),
-            subscriptions: DashMap::new(),
-            services: DashMap::new(),
+            publishers: std::collections::HashMap::new(),
+            subscriptions: std::collections::HashMap::new(),
+            services: std::collections::HashMap::new(),
             host_addr: addr,
             hostname: hostname.to_owned(),
             node_name: node_name.to_owned(),
@@ -330,15 +330,15 @@ impl Node {
                 let _ = reply.send(
                     self.subscriptions
                         .iter()
-                        .map(|entry| (entry.key().clone(), entry.topic_type().to_owned()))
+                        .map(|(topic_name, subscription)| {
+                            (topic_name.clone(), subscription.topic_type().to_owned())
+                        })
                         .collect(),
                 );
             }
             NodeMsg::GetPublications { reply } => {
                 let _ = reply.send(
                     self.publishers
-                        .read()
-                        .await
                         .iter()
                         .map(|(key, entry)| (key.clone(), entry.topic_type().to_owned()))
                         .collect(),
@@ -410,12 +410,8 @@ impl Node {
                     .find(|proto| proto.as_str() == "TCPROS")
                     .is_some()
                 {
-                    if let Some((_key, publishing_channel)) = self
-                        .publishers
-                        .read()
-                        .await
-                        .iter()
-                        .find(|(key, _pub)| *key == &topic)
+                    if let Some((_key, publishing_channel)) =
+                        self.publishers.iter().find(|(key, _pub)| *key == &topic)
                     {
                         let protocol_params = ProtocolParams {
                             hostname: self.hostname.clone(),
@@ -450,12 +446,8 @@ impl Node {
         msg_definition: &str,
         md5sum: &str,
     ) -> Result<broadcast::Receiver<Vec<u8>>, Box<dyn std::error::Error>> {
-        match self
-            .subscriptions
-            .iter()
-            .find(|subscription| subscription.key() == topic)
-        {
-            Some(subscription) => Ok(subscription.get_receiver()),
+        match self.subscriptions.iter().find(|(key, _)| *key == topic) {
+            Some((_topic, subscription)) => Ok(subscription.get_receiver()),
             None => {
                 let mut subscription = Subscription::new(
                     &self.node_name,
@@ -489,8 +481,7 @@ impl Node {
         log::trace!("Registering publisher for: {topic:?}");
 
         let existing_entry = {
-            let read_lock = self.publishers.read().await;
-            read_lock.iter().find_map(|(key, value)| {
+            self.publishers.iter().find_map(|(key, value)| {
                 log::trace!("Found existing entry for: {topic:?}");
                 if key.as_str() == &topic {
                     if value.topic_type() == topic_type {
@@ -527,10 +518,7 @@ impl Node {
             })?;
             log::trace!("Created new publication for {topic:?}");
             let handle = channel.get_sender();
-            {
-                let mut write_lock = self.publishers.write().await;
-                write_lock.insert(topic.clone(), channel);
-            }
+            self.publishers.insert(topic.clone(), channel);
             log::trace!("Inserted new publsiher into dashmap");
             let _current_subscribers = self.client.register_publisher(&topic, topic_type).await?;
             log::trace!("Registered new publication for {topic:?}");
