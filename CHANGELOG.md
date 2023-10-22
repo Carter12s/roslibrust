@@ -30,7 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
- - Removed `rosapi` module and functionality. Will likely return in a separate crate in the future.
  - Removed `find_and_generate_ros_messages_relative_to_manifest_dir!` this proc_macro was changing the current working directory of the compilation job resulting in a variety of strange compilation behaviors. Build.rs scripts are recommended for use cases requiring fine
  grained control of message generation.
  - The function interface for top level generation functions in `roslibrust_codegen` have been changed to include the list of dependent
