@@ -7,9 +7,10 @@ use super::{
     subscriber::{Subscriber, Subscription},
 };
 use crate::{MasterClient, RosMasterError, ServiceCallback, XmlRpcServer, XmlRpcServerHandle};
+use abort_on_drop::ChildTask;
 use dashmap::DashMap;
 use roslibrust_codegen::RosMessageType;
-use std::net::{IpAddr, Ipv4Addr, ToSocketAddrs};
+use std::{net::{IpAddr, Ipv4Addr, ToSocketAddrs}, sync::Arc};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
 #[derive(Debug)]
@@ -65,6 +66,10 @@ pub enum NodeMsg {
 #[derive(Clone)]
 pub(crate) struct NodeServerHandle {
     node_server_sender: mpsc::UnboundedSender<NodeMsg>,
+    // If this handle should keep the underlying node task alive it will hold an
+    // Arc to the underlying node task. This is an option because internal handles
+    // within the node shouldn't keep it alive (e.g. what we hand to xml server)
+    _node_task: Option<Arc<ChildTask<()>>>,
 }
 
 impl NodeServerHandle {
@@ -80,7 +85,7 @@ impl NodeServerHandle {
         }
     }
 
-    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let (sender, receiver) = oneshot::channel();
         match self
             .node_server_sender
@@ -111,12 +116,15 @@ impl NodeServerHandle {
     pub async fn get_publications(
         &self,
     ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
+        log::debug!("get_publications reached");
         let (sender, receiver) = oneshot::channel();
         match self
             .node_server_sender
             .send(NodeMsg::GetPublications { reply: sender })
         {
-            Ok(()) => Ok(receiver.await.map_err(|err| Box::new(err))?),
+            Ok(()) => {
+                log::debug!("Awaiting receiver");
+                Ok(receiver.await.map_err(|err| Box::new(err))?)},
             Err(e) => Err(Box::new(e)),
         }
     }
@@ -146,7 +154,7 @@ impl NodeServerHandle {
         topic: &str,
         topic_type: &str,
         queue_size: usize,
-    ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error>> {
+    ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
         let (sender, receiver) = oneshot::channel();
         match self.node_server_sender.send(NodeMsg::RegisterPublisher {
             reply: sender,
@@ -246,13 +254,15 @@ impl Node {
         hostname: &str,
         node_name: &str,
         addr: Ipv4Addr,
-    ) -> Result<NodeServerHandle, Box<dyn std::error::Error>> {
+    ) -> Result<NodeServerHandle, Box<dyn std::error::Error + Send + Sync>> {
         let (node_sender, node_receiver) = mpsc::unbounded_channel();
-        let node_server_handle = NodeServerHandle {
-            node_server_sender: node_sender,
+        let xml_server_handle = NodeServerHandle {
+            node_server_sender: node_sender.clone(),
+            // None here because this handle should not keep task alive
+            _node_task: None, 
         };
         // Create our xmlrpc server and bind our socket so we know our port and can determine our local URI
-        let xmlrpc_server = XmlRpcServer::new(addr, node_server_handle.clone())?;
+        let xmlrpc_server = XmlRpcServer::new(addr, xml_server_handle)?;
         let client_uri = format!("http://{hostname}:{}", xmlrpc_server.port());
 
         if let None = Name::new(node_name) {
@@ -275,8 +285,7 @@ impl Node {
             node_name: node_name.to_owned(),
         };
 
-        // MAJOR TODO THIS TASK MUST GET STOPPED
-        let t: abort_on_drop::ChildTask<_> = tokio::spawn(async move {
+        let t = Arc::new(tokio::spawn(async move {
             loop {
                 match node.node_msg_rx.recv().await {
                     Some(NodeMsg::Shutdown) => {
@@ -291,8 +300,12 @@ impl Node {
                     }
                 }
             }
-        });
+        }).into());
 
+        let node_server_handle = NodeServerHandle {
+            node_server_sender: node_sender,
+            _node_task: Some(t),
+        };
         Ok(node_server_handle)
     }
 
@@ -512,7 +525,7 @@ impl NodeHandle {
     pub async fn new(
         master_uri: &str,
         name: &str,
-    ) -> Result<NodeHandle, Box<dyn std::error::Error>> {
+    ) -> Result<NodeHandle, Box<dyn std::error::Error + Send + Sync>> {
         // Follow ROS rules and determine our IP and hostname
         let (addr, hostname) = determine_addr().await?;
 
@@ -528,7 +541,7 @@ impl NodeHandle {
         !self.inner.node_server_sender.is_closed()
     }
 
-    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         self.inner.get_client_uri().await
     }
 
@@ -536,7 +549,8 @@ impl NodeHandle {
         &self,
         topic_name: &str,
         queue_size: usize,
-    ) -> Result<Publisher<T>, Box<dyn std::error::Error>> {
+    ) -> Result<Publisher<T>, Box<dyn std::error::Error + Send + Sync>> {
+        log::trace!("Advertising ");
         let sender = self
             .inner
             .register_publisher::<T>(topic_name, T::ROS_TYPE_NAME, queue_size)

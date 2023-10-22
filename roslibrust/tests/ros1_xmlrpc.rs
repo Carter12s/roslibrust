@@ -19,8 +19,10 @@ mod tests {
     }
 
     async fn call_node_api<T: DeserializeOwned>(uri: &str, endpoint: &str, args: Vec<Value>) -> T {
+        log::debug!("Start call api: {uri:?}, {endpoint:?}, {args:?}");
         // Note: don't need timeout here as all operations in side call_node_api_raw are timeout()'d
         let response = call_node_api_raw(uri, endpoint, args).await;
+        log::debug!("Got api raw response");
         let (error_code, error_description, value): (i8, String, T) =
             serde_xmlrpc::response_from_str(&response).unwrap();
 
@@ -29,7 +31,9 @@ mod tests {
         value
     }
 
-    async fn test_with_watch_dog(test: impl std::future::Future<Output = ()>) {
+    async fn test_with_watch_dog(
+        test: impl std::future::Future<Output = Result<(), Box<dyn std::error::Error + Send + Sync>>>,
+    ) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
         // Overall watchdog since I can't get these tests to timeout, but they take 20min in CI
         // Need the task to fail so I can get any debug information out
         // Can't get the failure to repro locally
@@ -39,17 +43,16 @@ mod tests {
         };
         tokio::select! {
             _ = watchdog => {
-                panic!("Test failed due to watchdog");
+                simple_error::bail!("Bark!");
             }
             _ = test => {
-                // Happy days!
+                Ok(())
             }
         }
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread", worker_threads = 2))]
-    #[ignore]
-    async fn verify_get_master_uri() {
+    #[test_log::test(tokio::test)]
+    async fn verify_get_master_uri() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         test_with_watch_dog(async {
             let node = timeout(
                 TIMEOUT,
@@ -75,27 +78,23 @@ mod tests {
             .await;
             log::info!("Got master");
             assert_eq!(master_uri, "http://localhost:11311");
+            Ok(())
         })
-        .await;
+        .await
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread", worker_threads = 2))]
-    #[ignore]
-    async fn verify_get_publications() {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn verify_get_publications() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        // let _ = simple_logger::init_with_level(log::Level::Trace);
         test_with_watch_dog(async {
             let node = timeout(
                 TIMEOUT,
                 roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_publications"),
             )
-            .await
-            .unwrap()
-            .unwrap();
+            .await??;
             log::info!("Got new handle");
 
-            let node_uri = timeout(TIMEOUT, node.get_client_uri())
-                .await
-                .unwrap()
-                .unwrap();
+            let node_uri = timeout(TIMEOUT, node.get_client_uri()).await??;
             log::info!("Got uri");
 
             // Note: timeout not needed as it is internally timeout'd
@@ -112,9 +111,7 @@ mod tests {
                 TIMEOUT,
                 node.advertise::<std_msgs::String>("/test_topic", 1),
             )
-            .await
-            .unwrap()
-            .unwrap();
+            .await??;
             log::info!("advertised");
 
             // Note: internally timeout()'d
@@ -126,34 +123,31 @@ mod tests {
                     vec!["/verify_get_publications".into()],
                 ),
             )
-            .await
-            .unwrap();
+            .await?;
             log::info!("Got post advertise publications");
 
             assert_eq!(publications.len(), 1);
-            let (topic, topic_type) = publications.iter().nth(0).unwrap();
+            let (topic, topic_type) = publications
+                .iter()
+                .nth(0)
+                .ok_or(simple_error::SimpleError::new("wtf"))?;
             assert_eq!(topic, "/test_topic");
             assert_eq!(topic_type, std_msgs::String::ROS_TYPE_NAME);
+            Ok(())
         })
-        .await;
+        .await
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread", worker_threads = 2))]
-    #[ignore]
+    #[test_log::test(tokio::test)]
     async fn verify_shutdown() {
         test_with_watch_dog(async {
             let node = timeout(
                 TIMEOUT,
                 roslibrust::NodeHandle::new("http://localhost:11311", "verify_shutdown"),
             )
-            .await
-            .unwrap()
-            .unwrap();
+            .await??;
             log::info!("Got handle");
-            let node_uri = timeout(TIMEOUT, node.get_client_uri())
-                .await
-                .unwrap()
-                .unwrap();
+            let node_uri = timeout(TIMEOUT, node.get_client_uri()).await??;
             assert!(node.is_ok());
             log::info!("Got uri");
 
@@ -169,12 +163,12 @@ mod tests {
             tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
 
             assert!(!node.is_ok());
+            Ok(())
         })
         .await;
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread", worker_threads = 2))]
-    #[ignore]
+    #[test_log::test(tokio::test)]
     async fn verify_request_topic() {
         test_with_watch_dog(async {
             let node = timeout(
@@ -221,6 +215,7 @@ mod tests {
             assert_eq!(protocol, "TCPROS");
             assert!(!host.is_empty());
             assert!(port != 0);
+            Ok(())
         })
         .await;
     }

@@ -47,7 +47,7 @@ impl XmlRpcServer {
     pub fn new(
         host_addr: Ipv4Addr,
         node_server: NodeServerHandle,
-    ) -> Result<XmlRpcServerHandle, Box<dyn std::error::Error>> {
+    ) -> Result<XmlRpcServerHandle, Box<dyn std::error::Error + Send + Sync>> {
         let make_svc = hyper::service::make_service_fn(move |connection| {
             debug!("New node xmlrpc connection {connection:?}");
             let node_server = node_server.clone();
