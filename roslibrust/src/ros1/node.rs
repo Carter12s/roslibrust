@@ -243,7 +243,7 @@ pub struct Node {
     // Receiver for requests to the Node actor
     node_msg_rx: mpsc::UnboundedReceiver<NodeMsg>,
     // Map of topic names to the publishing channels associated with the topic
-    publishers: DashMap<String, Publication>,
+    publishers: tokio::sync::RwLock<std::collections::HashMap<String, Publication>>,
     // Record of subscriptions this node has
     subscriptions: DashMap<String, Subscription>,
     // Record of what services this node is serving
@@ -283,7 +283,7 @@ impl Node {
             client: rosmaster_client,
             _xmlrpc_server: xmlrpc_server,
             node_msg_rx: node_receiver,
-            publishers: DashMap::new(),
+            publishers: tokio::sync::RwLock::new(std::collections::HashMap::new()),
             subscriptions: DashMap::new(),
             services: DashMap::new(),
             host_addr: addr,
@@ -337,8 +337,10 @@ impl Node {
             NodeMsg::GetPublications { reply } => {
                 let _ = reply.send(
                     self.publishers
+                        .read()
+                        .await
                         .iter()
-                        .map(|entry| (entry.key().clone(), entry.topic_type().to_owned()))
+                        .map(|(key, entry)| (key.clone(), entry.topic_type().to_owned()))
                         .collect(),
                 );
             }
@@ -408,10 +410,12 @@ impl Node {
                     .find(|proto| proto.as_str() == "TCPROS")
                     .is_some()
                 {
-                    if let Some(publishing_channel) = self
+                    if let Some((_key, publishing_channel)) = self
                         .publishers
+                        .read()
+                        .await
                         .iter()
-                        .find(|publisher| publisher.key() == &topic)
+                        .find(|(key, _pub)| *key == &topic)
                     {
                         let protocol_params = ProtocolParams {
                             hostname: self.hostname.clone(),
@@ -483,20 +487,26 @@ impl Node {
         md5sum: String,
     ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error>> {
         log::trace!("Registering publisher for: {topic:?}");
-        if let Some(handle) = self.publishers.iter().find_map(|entry| {
-            log::trace!("Found existing entry for: {topic:?}");
-            if entry.key().as_str() == &topic {
-                if entry.topic_type() == topic_type {
-                    Some(Ok(entry.get_sender()))
+
+        let existing_entry = {
+            let read_lock = self.publishers.read().await;
+            read_lock.iter().find_map(|(key, value)| {
+                log::trace!("Found existing entry for: {topic:?}");
+                if key.as_str() == &topic {
+                    if value.topic_type() == topic_type {
+                        Some(Ok(value.get_sender()))
+                    } else {
+                        Some(Err(Box::new(std::io::Error::from(
+                            std::io::ErrorKind::AddrInUse,
+                        ))))
+                    }
                 } else {
-                    Some(Err(Box::new(std::io::Error::from(
-                        std::io::ErrorKind::AddrInUse,
-                    ))))
+                    None
                 }
-            } else {
-                None
-            }
-        }) {
+            })
+        };
+
+        if let Some(handle) = existing_entry {
             Ok(handle?)
         } else {
             log::trace!("Creating new entry for {topic:?}");
@@ -517,7 +527,10 @@ impl Node {
             })?;
             log::trace!("Created new publication for {topic:?}");
             let handle = channel.get_sender();
-            self.publishers.insert(topic.clone(), channel);
+            {
+                let mut write_lock = self.publishers.write().await;
+                write_lock.insert(topic.clone(), channel);
+            }
             log::trace!("Inserted new publsiher into dashmap");
             let _current_subscribers = self.client.register_publisher(&topic, topic_type).await?;
             log::trace!("Registered new publication for {topic:?}");
