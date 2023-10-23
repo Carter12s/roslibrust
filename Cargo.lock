@@ -1252,7 +1252,6 @@ dependencies = [
  "serde_json",
  "serde_rosmsg",
  "serde_xmlrpc",
- "simple-error",
  "simple_logger",
  "smart-default 0.6.0",
  "test-log",

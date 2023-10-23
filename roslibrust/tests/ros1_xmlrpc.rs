@@ -3,16 +3,13 @@ mod tests {
     use roslibrust_codegen::RosMessageType;
     use serde::de::DeserializeOwned;
     use serde_xmlrpc::Value;
-    use tokio::time::timeout;
-    const TIMEOUT: tokio::time::Duration = tokio::time::Duration::from_millis(500);
-
     roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
 
     async fn call_node_api_raw(uri: &str, endpoint: &str, args: Vec<Value>) -> String {
         let client = reqwest::Client::new();
         let body = serde_xmlrpc::request_to_string(endpoint, args).unwrap();
         let response = client.post(uri).body(body).send().await.unwrap();
-        timeout(TIMEOUT, response.text()).await.unwrap().unwrap()
+        response.text().await.unwrap()
     }
 
     async fn call_node_api<T: DeserializeOwned>(uri: &str, endpoint: &str, args: Vec<Value>) -> T {
@@ -49,7 +46,7 @@ mod tests {
         Ok(())
     }
 
-    #[test_log::test(tokio::test(flavor = "multi_thread"))]
+    #[test_log::test(tokio::test)]
     async fn verify_get_publications() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_publications")
             .await?;
@@ -81,10 +78,7 @@ mod tests {
         log::info!("Got post advertise publications");
 
         assert_eq!(publications.len(), 1);
-        let (topic, topic_type) = publications
-            .iter()
-            .nth(0)
-            .ok_or(simple_error::SimpleError::new("wtf"))?;
+        let (topic, topic_type) = publications.iter().nth(0).unwrap();
         assert_eq!(topic, "/test_topic");
         assert_eq!(topic_type, std_msgs::String::ROS_TYPE_NAME);
         Ok(())

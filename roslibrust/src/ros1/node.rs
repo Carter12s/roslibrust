@@ -119,16 +119,12 @@ impl NodeServerHandle {
     pub async fn get_publications(
         &self,
     ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
-        log::debug!("get_publications reached");
         let (sender, receiver) = oneshot::channel();
         match self
             .node_server_sender
             .send(NodeMsg::GetPublications { reply: sender })
         {
-            Ok(()) => {
-                log::debug!("Awaiting receiver");
-                Ok(receiver.await.map_err(|err| Box::new(err))?)
-            }
+            Ok(()) => Ok(receiver.await.map_err(|err| Box::new(err))?),
             Err(e) => Err(Box::new(e)),
         }
     }
@@ -169,11 +165,8 @@ impl NodeServerHandle {
             md5sum: T::MD5SUM.to_owned(),
         }) {
             Ok(()) => {
-                log::trace!("Recieved okay from node_server_send.");
                 let received = receiver.await.map_err(|err| Box::new(err))?;
-                log::trace!("Awaiting receiver produced: {received:?}");
-                Ok(received.map_err(|err| {
-                    log::error!("Failed to register publisher: {err}");
+                Ok(received.map_err(|_err| {
                     Box::new(std::io::Error::from(std::io::ErrorKind::ConnectionAborted))
                 })?)
             }
@@ -367,11 +360,9 @@ impl Node {
                 msg_definition,
                 md5sum,
             } => {
-                log::trace!("Got register publisher command from mpsc for {topic:?}");
                 let res = self
                     .register_publisher(topic, &topic_type, queue_size, msg_definition, md5sum)
                     .await;
-                log::trace!("Result of register_publisher: {res:?}");
                 match res {
                     Ok(handle) => reply.send(Ok(handle)),
                     Err(err) => reply.send(Err(err.to_string())),
@@ -478,11 +469,8 @@ impl Node {
         msg_definition: String,
         md5sum: String,
     ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error>> {
-        log::trace!("Registering publisher for: {topic:?}");
-
         let existing_entry = {
             self.publishers.iter().find_map(|(key, value)| {
-                log::trace!("Found existing entry for: {topic:?}");
                 if key.as_str() == &topic {
                     if value.topic_type() == topic_type {
                         Some(Ok(value.get_sender()))
@@ -500,7 +488,6 @@ impl Node {
         if let Some(handle) = existing_entry {
             Ok(handle?)
         } else {
-            log::trace!("Creating new entry for {topic:?}");
             let channel = Publication::new(
                 &self.node_name,
                 false,
@@ -516,12 +503,9 @@ impl Node {
                 log::error!("Failed to create publishing channel: {err:?}");
                 err
             })?;
-            log::trace!("Created new publication for {topic:?}");
             let handle = channel.get_sender();
             self.publishers.insert(topic.clone(), channel);
-            log::trace!("Inserted new publsiher into dashmap");
             let _current_subscribers = self.client.register_publisher(&topic, topic_type).await?;
-            log::trace!("Registered new publication for {topic:?}");
             Ok(handle)
         }
     }
@@ -565,12 +549,10 @@ impl NodeHandle {
         topic_name: &str,
         queue_size: usize,
     ) -> Result<Publisher<T>, Box<dyn std::error::Error + Send + Sync>> {
-        log::trace!("Advertising: {topic_name:?}");
         let sender = self
             .inner
             .register_publisher::<T>(topic_name, T::ROS_TYPE_NAME, queue_size)
             .await?;
-        log::trace!("Advertised: {topic_name:?}");
         Ok(Publisher::new(topic_name, sender))
     }
 
