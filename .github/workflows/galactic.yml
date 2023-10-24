@@ -8,6 +8,8 @@ on:
 
 env:
   HOME: /root
+  # Coupled with our use of the test_log crate this should give us good CI output on failure
+  RUST_LOG: debug
 
 jobs:
   galactic:
@@ -22,6 +24,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: 'true'
+      - name: Verify rust version
+        run: source /root/.cargo/env; rustc --version
       - name: Lint
         run: source /root/.cargo/env; cargo fmt --all -- --check
       - name: Build Main Lib

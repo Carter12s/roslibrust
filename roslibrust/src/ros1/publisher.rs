@@ -1,3 +1,5 @@
+use crate::RosLibRustError;
+
 use super::tcpros::ConnectionHeader;
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
@@ -26,8 +28,10 @@ impl<T: RosMessageType> Publisher<T> {
         }
     }
 
-    pub async fn publish(&self, data: &T) -> Result<(), Box<dyn std::error::Error>> {
-        let data = serde_rosmsg::to_vec(&data)?;
+    pub async fn publish(&self, data: &T) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let data = serde_rosmsg::to_vec(&data)
+            // Gotta do some funny error mapping here as serde_rosmsg's error type is not sync
+            .map_err(|e| RosLibRustError::Unexpected(anyhow::anyhow!("{e:?}")))?;
         self.sender.send(data).await?;
         log::debug!("Publishing data on topic {}", self.topic_name);
         Ok(())

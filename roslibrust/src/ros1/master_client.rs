@@ -254,6 +254,7 @@ impl MasterClient {
                 self.client_uri.clone().into(),
             ],
         )?;
+        log::trace!("Posting {body:?} to register publisher");
         self.post(body).await
     }
 

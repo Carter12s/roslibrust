@@ -44,7 +44,10 @@ impl XmlRpcServerHandle {
 }
 
 impl XmlRpcServer {
-    pub fn new(host_addr: Ipv4Addr, node_server: NodeServerHandle) -> XmlRpcServerHandle {
+    pub fn new(
+        host_addr: Ipv4Addr,
+        node_server: NodeServerHandle,
+    ) -> Result<XmlRpcServerHandle, Box<dyn std::error::Error + Send + Sync>> {
         let make_svc = hyper::service::make_service_fn(move |connection| {
             debug!("New node xmlrpc connection {connection:?}");
             let node_server = node_server.clone();
@@ -55,7 +58,7 @@ impl XmlRpcServer {
             }
         });
         let host_addr = SocketAddr::from((host_addr, 0));
-        let server = hyper::server::Server::bind(&host_addr.into());
+        let server = hyper::server::Server::try_bind(&host_addr.into())?;
         let server = server.serve(make_svc);
         let addr = server.local_addr();
 
@@ -65,10 +68,10 @@ impl XmlRpcServer {
             }
         });
 
-        XmlRpcServerHandle {
+        Ok(XmlRpcServerHandle {
             port: addr.port(),
             _handle: handle.into(),
-        }
+        })
     }
 
     // Our actual service handler with our error type
