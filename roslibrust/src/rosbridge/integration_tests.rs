@@ -245,7 +245,7 @@ mod integration_tests {
         let topic = "/self_service_call";
 
         let handle = client
-            .advertise_service::<SetBool>(topic, cb)
+            .advertise_service::<SetBool, _>(topic, cb)
             .await
             .expect("Failed to advertise service");
 
