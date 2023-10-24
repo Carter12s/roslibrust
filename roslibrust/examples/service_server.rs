@@ -58,14 +58,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // The handle returned here establishes the lifetime of our service and dropping it will unadvertise the service
     let _handle = client
         .advertise_service::<std_srvs::SetBool, _>(
-            "/my_set_bool", 
-            move | request: std_srvs::SetBoolRequest | -> Result<
-                std_srvs::SetBoolResponse,  
+            "/my_set_bool",
+            move |request: std_srvs::SetBoolRequest| -> Result<
+                std_srvs::SetBoolResponse,
                 Box<dyn std::error::Error + Send + Sync>,
-            > {
-                my_service(request, my_string)
-            },
-        ).await?;
+            > { my_service(request, my_string) },
+        )
+        .await?;
 
     // Now try manually calling the service with the command line!
 

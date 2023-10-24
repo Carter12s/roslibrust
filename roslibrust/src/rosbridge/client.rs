@@ -429,7 +429,8 @@ impl ClientHandle {
         T: RosServiceType,
         F: Fn(
                 T::Request,
-            ) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+            )
+                -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
             + Send
             + Sync
             + 'static,
