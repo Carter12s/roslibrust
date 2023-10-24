@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  rosbridge:
+    image: carter12s/roslibrust-ci-iron:latest
+    ports:
+      - "9090:9090"
+    command: bash -c "source /opt/ros/humble/setup.bash; ros2 launch rosbridge_server rosbridge_websocket_launch.xml & disown; ros2 run rosapi rosapi_node --ros-args --log-level debug"

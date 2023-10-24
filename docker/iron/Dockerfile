@@ -1,10 +1,10 @@
-FROM ros:humble-ros-core
+FROM ros:iron-ros-core
 LABEL maintainer="Carter Schultz <carterjschultz@gmail.com>"
 
 # Required by github CI for submodule support
 RUN apt update && apt install -y git
 
-RUN apt update && apt install -y ros-humble-rosbridge-suite
+RUN apt update && apt install -y ros-iron-rosbridge-suite
 
 # Curl required to install rust, build-essential required to build quote & proc-macro2
 RUN apt update && apt install -y --fix-missing curl build-essential
