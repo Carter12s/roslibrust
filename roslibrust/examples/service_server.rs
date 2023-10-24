@@ -7,8 +7,11 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 // a canned response.
 fn my_service(
     request: std_srvs::SetBoolRequest,
+    my_string: &str,
 ) -> Result<std_srvs::SetBoolResponse, Box<dyn std::error::Error + Send + Sync>> {
     log::info!("Got request to set bool: {request:?}");
+    log::info!("Using my string: {}", my_string); // Use the string here
+
     Ok(std_srvs::SetBoolResponse {
         success: true,
         message: "You set my bool!".to_string(),
@@ -48,10 +51,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Create a new client
     let client = ClientHandle::new("ws://localhost:9090").await?;
 
+    // The string you want to pass in to the closure
+    let my_string = "Some string";
+
     // Actually advertise our service
     // The handle returned here establishes the lifetime of our service and dropping it will unadvertise the service
     let _handle = client
-        .advertise_service::<std_srvs::SetBool>("/my_set_bool", my_service)
+        .advertise_service::<std_srvs::SetBool, _>(
+            "/my_set_bool",
+            move |request: std_srvs::SetBoolRequest| -> Result<
+                std_srvs::SetBoolResponse,
+                Box<dyn std::error::Error + Send + Sync>,
+            > { my_service(request, my_string) },
+        )
         .await?;
 
     // Now try manually calling the service with the command line!

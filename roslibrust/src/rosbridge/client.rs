@@ -420,14 +420,21 @@ impl ClientHandle {
     /// Service will be active until the handle is dropped!
     ///
     /// See examples/service_server.rs for usage.
-    pub async fn advertise_service<T: RosServiceType>(
+    pub async fn advertise_service<T, F>(
         &self,
         topic: &str,
-        server: fn(
-            T::Request,
-        )
-            -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
-    ) -> RosLibRustResult<ServiceHandle> {
+        server: F,
+    ) -> RosLibRustResult<ServiceHandle>
+    where
+        T: RosServiceType,
+        F: Fn(
+                T::Request,
+            )
+                -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+            + Send
+            + Sync
+            + 'static,
+    {
         self.check_for_disconnect()?;
         {
             let client = self.inner.read().await;
