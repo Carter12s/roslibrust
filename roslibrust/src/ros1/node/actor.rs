@@ -1,27 +1,17 @@
-//! This module contains the top level Node and NodeHandle classes.
-//! These wrap the lower level management of a ROS Node connection into a higher level and thread safe API.
-
-use super::{
-    names::Name,
-    publisher::{Publication, Publisher},
-    subscriber::{Subscriber, Subscription},
+use super::ProtocolParams;
+use crate::{
+    ros1::{
+        names::Name,
+        node::{XmlRpcServer, XmlRpcServerHandle},
+        publisher::Publication,
+        subscriber::Subscription,
+    },
+    MasterClient, ServiceCallback,
 };
-use crate::{MasterClient, RosMasterError, ServiceCallback, XmlRpcServer, XmlRpcServerHandle};
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
-use std::{
-    collections::HashMap,
-    net::{IpAddr, Ipv4Addr},
-    sync::Arc,
-};
+use std::{collections::HashMap, net::Ipv4Addr, sync::Arc};
 use tokio::sync::{broadcast, mpsc, oneshot};
-
-#[derive(Debug)]
-pub struct ProtocolParams {
-    pub hostname: String,
-    pub protocol: String,
-    pub port: u16,
-}
 
 #[derive(Debug)]
 pub enum NodeMsg {
@@ -68,7 +58,7 @@ pub enum NodeMsg {
 
 #[derive(Clone)]
 pub(crate) struct NodeServerHandle {
-    node_server_sender: mpsc::UnboundedSender<NodeMsg>,
+    pub(crate) node_server_sender: mpsc::UnboundedSender<NodeMsg>,
     // If this handle should keep the underlying node task alive it will hold an
     // Arc to the underlying node task. This is an option because internal handles
     // within the node shouldn't keep it alive (e.g. what we hand to xml server)
@@ -228,7 +218,7 @@ impl NodeServerHandle {
 
 /// Represents a single "real" node, typically only one of these is expected per process
 /// but nothing should specifically prevent that.
-pub struct Node {
+pub(crate) struct Node {
     // The xmlrpc client this node uses to make requests to master
     client: MasterClient,
     // Server which handles updates from the rosmaster and other ROS nodes
@@ -248,7 +238,7 @@ pub struct Node {
 }
 
 impl Node {
-    async fn new(
+    pub(crate) async fn new(
         master_uri: &str,
         hostname: &str,
         node_name: &str,
@@ -508,114 +498,5 @@ impl Node {
             let _current_subscribers = self.client.register_publisher(&topic, topic_type).await?;
             Ok(handle)
         }
-    }
-}
-
-/// Represents a handle to an underlying [Node]. NodeHandle's can be freely cloned, moved, copied, etc.
-/// This class provides the user facing API for interacting with ROS.
-#[derive(Clone)]
-pub struct NodeHandle {
-    inner: NodeServerHandle,
-}
-
-impl NodeHandle {
-    // TODO builder, result, better error type
-    /// Creates a new node connect and returns a handle to it
-    /// It is idiomatic to call this once per process and treat the created node as singleton.
-    /// The returned handle can be freely clone'd to create additional handles without creating additional connections.
-    pub async fn new(
-        master_uri: &str,
-        name: &str,
-    ) -> Result<NodeHandle, Box<dyn std::error::Error + Send + Sync>> {
-        // Follow ROS rules and determine our IP and hostname
-        let (addr, hostname) = determine_addr().await?;
-
-        let node = Node::new(master_uri, &hostname, name, addr).await?;
-        let nh = NodeHandle { inner: node };
-
-        Ok(nh)
-    }
-
-    pub fn is_ok(&self) -> bool {
-        !self.inner.node_server_sender.is_closed()
-    }
-
-    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        self.inner.get_client_uri().await
-    }
-
-    pub async fn advertise<T: roslibrust_codegen::RosMessageType>(
-        &self,
-        topic_name: &str,
-        queue_size: usize,
-    ) -> Result<Publisher<T>, Box<dyn std::error::Error + Send + Sync>> {
-        let sender = self
-            .inner
-            .register_publisher::<T>(topic_name, T::ROS_TYPE_NAME, queue_size)
-            .await?;
-        Ok(Publisher::new(topic_name, sender))
-    }
-
-    pub async fn subscribe<T: roslibrust_codegen::RosMessageType>(
-        &self,
-        topic_name: &str,
-        queue_size: usize,
-    ) -> Result<Subscriber<T>, Box<dyn std::error::Error + Send + Sync>> {
-        let receiver = self
-            .inner
-            .register_subscriber::<T>(topic_name, queue_size)
-            .await?;
-        Ok(Subscriber::new(receiver))
-    }
-}
-
-// TODO at the end of the day I'd like to offer a builder pattern for configuration that allow manual setting of this or "ros idiomatic" behavior - Carter
-/// Following ROS's idiomatic address rules uses ROS_HOSTNAME and ROS_IP to determine the address that server should be hosted at.
-/// Returns both the resolved IpAddress of the host (used for actually opening the socket), and the String "hostname" which should
-/// be used in the URI.
-async fn determine_addr() -> Result<(Ipv4Addr, String), RosMasterError> {
-    // If ROS_IP is set that trumps anything else
-    if let Ok(ip_str) = std::env::var("ROS_IP") {
-        let ip = ip_str.parse().map_err(|e| {
-            RosMasterError::HostIpResolutionFailure(format!(
-                "ROS_IP environment variable did not parse to a valid IpAddr::V4: {e:?}"
-            ))
-        })?;
-        return Ok((ip, ip_str));
-    }
-    // If ROS_HOSTNAME is set that is next highest precedent
-    if let Ok(name) = std::env::var("ROS_HOSTNAME") {
-        let ip = hostname_to_ipv4(&name).await?;
-        return Ok((ip, name));
-    }
-    // If neither env var is set, use the computers "hostname"
-    let name = gethostname::gethostname();
-    let name = name.into_string().map_err(|e| {
-            RosMasterError::HostIpResolutionFailure(format!("This host's hostname is a string that cannot be validly converted into a Rust type, and therefore we cannot convert it into an IpAddrv4: {e:?}"))
-        })?;
-    let ip = hostname_to_ipv4(&name).await?;
-    return Ok((ip, name));
-}
-
-/// Given a the name of a host use's std::net::ToSocketAddrs to perform a DNS lookup and return the resulting IP address.
-/// This function is intended to be used to determine the correct IP host the socket for the xmlrpc server on.
-async fn hostname_to_ipv4(name: &str) -> Result<Ipv4Addr, RosMasterError> {
-    let name_with_port = &format!("{name}:0");
-    let mut i = tokio::net::lookup_host(name_with_port).await.map_err(|e| {
-        RosMasterError::HostIpResolutionFailure(format!(
-            "Failure while attempting to lookup ROS_HOSTNAME: {e:?}"
-        ))
-    })?;
-    if let Some(addr) = i.next() {
-        match addr.ip() {
-                IpAddr::V4(ip) => Ok(ip),
-                IpAddr::V6(ip) => {
-                    Err(RosMasterError::HostIpResolutionFailure(format!("ROS_HOSTNAME resolved to an IPv6 address which is not support by ROS/roslibrust: {ip:?}")))
-                }
-            }
-    } else {
-        Err(RosMasterError::HostIpResolutionFailure(format!(
-            "ROS_HOSTNAME did not resolve any address: {name:?}"
-        )))
     }
 }

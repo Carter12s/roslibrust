@@ -1,4 +1,4 @@
-use super::node::NodeServerHandle;
+use super::NodeServerHandle;
 use abort_on_drop::ChildTask;
 use hyper::{Body, Response, StatusCode};
 use log::*;
