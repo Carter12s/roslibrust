@@ -142,7 +142,11 @@ async fn establish_publisher_connection(
     let conn_header_bytes = conn_header.to_bytes(true)?;
     stream.write_all(&conn_header_bytes[..]).await?;
 
-    let mut responded_header_bytes = Vec::with_capacity(16 * 1024);
+    let mut header_len_bytes = [0u8; 4];
+    let _header_bytes = stream.read_exact(&mut header_len_bytes).await?;
+    let header_len = u32::from_le_bytes(header_len_bytes) as usize;
+
+    let mut responded_header_bytes = Vec::with_capacity(header_len);
     let bytes = stream.read_buf(&mut responded_header_bytes).await?;
     if let Ok(responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
         if conn_header.md5sum == responded_header.md5sum {

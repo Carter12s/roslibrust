@@ -1,13 +1,10 @@
-use super::ProtocolParams;
-use crate::{
-    ros1::{
-        names::Name,
-        node::{XmlRpcServer, XmlRpcServerHandle},
-        publisher::Publication,
-        subscriber::Subscription,
-        MasterClient,
-    },
-    ServiceCallback,
+use crate::ros1::{
+    names::Name,
+    node::{XmlRpcServer, XmlRpcServerHandle},
+    publisher::Publication,
+    service_client::ServiceServerLink,
+    subscriber::Subscription,
+    MasterClient, ProtocolParams,
 };
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
@@ -229,8 +226,8 @@ pub(crate) struct Node {
     publishers: HashMap<String, Publication>,
     // Record of subscriptions this node has
     subscriptions: HashMap<String, Subscription>,
-    // Record of what services this node is serving
-    services: HashMap<String, ServiceCallback>,
+    // Map of topic names to the service client handles for each topic
+    service_clients: HashMap<String, ServiceServerLink>,
     // TODO need signal to shutdown xmlrpc server when node is dropped
     host_addr: Ipv4Addr,
     hostname: String,
@@ -263,7 +260,7 @@ impl Node {
             node_msg_rx: node_receiver,
             publishers: std::collections::HashMap::new(),
             subscriptions: std::collections::HashMap::new(),
-            services: std::collections::HashMap::new(),
+            service_clients: std::collections::HashMap::new(),
             host_addr: addr,
             hostname: hostname.to_owned(),
             node_name: node_name.to_owned(),

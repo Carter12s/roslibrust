@@ -1,5 +1,6 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::{Cursor, Read, Write};
+use tokio::net::TcpStream;
 
 // Implementation of ConnectionHeader is based off of ROS documentation here:
 // wiki.ros.org/ROS/Connection%20Header
@@ -17,10 +18,6 @@ pub struct ConnectionHeader {
 impl ConnectionHeader {
     pub fn from_bytes(header_data: &[u8]) -> std::io::Result<ConnectionHeader> {
         let mut cursor = Cursor::new(header_data);
-        let header_length = cursor.read_u32::<LittleEndian>()?;
-        if header_length as usize > header_data.len() {
-            return Err(std::io::ErrorKind::InvalidInput.into());
-        }
 
         let mut msg_definition = String::new();
         let mut caller_id = String::new();
@@ -117,4 +114,45 @@ impl ConnectionHeader {
 
         Ok(header_data)
     }
+}
+
+pub async fn establish_connection(
+    node_name: &str,
+    topic_name: &str,
+    server_uri: &str,
+    conn_header: ConnectionHeader,
+) -> Result<TcpStream, std::io::Error> {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    let mut stream = TcpStream::connect(server_uri).await?;
+
+    let conn_header_bytes = conn_header.to_bytes(true)?;
+    stream.write_all(&conn_header_bytes[..]).await?;
+
+    let mut header_len_bytes = [0u8; 4];
+    let _header_bytes = stream.read_exact(&mut header_len_bytes).await?;
+    let header_len = u32::from_le_bytes(header_len_bytes) as usize;
+
+    let mut responded_header_bytes = Vec::with_capacity(header_len);
+    let bytes = stream.read_buf(&mut responded_header_bytes).await?;
+    if let Ok(responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
+        if conn_header.md5sum == responded_header.md5sum {
+            log::debug!(
+                "Established connection with node {node_name} for {}",
+                conn_header.topic
+            );
+            Ok(stream)
+        } else {
+            log::error!(
+                "Tried to connect to {node_name} for {topic_name}, but md5sums do not match. Expected {}, received {}",
+                conn_header.md5sum,
+                responded_header.md5sum
+            );
+            Err(std::io::ErrorKind::InvalidData)
+        }
+    } else {
+        log::error!("Could not parse connection header data sent by server");
+        Err(std::io::ErrorKind::InvalidData)
+    }
+    .map_err(std::io::Error::from)
 }
