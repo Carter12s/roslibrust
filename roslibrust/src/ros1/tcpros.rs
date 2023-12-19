@@ -2,6 +2,8 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::{Cursor, Read, Write};
 use tokio::net::TcpStream;
 
+use super::names::Name;
+
 // Implementation of ConnectionHeader is based off of ROS documentation here:
 // wiki.ros.org/ROS/Connection%20Header
 #[derive(Clone, Debug)]
@@ -117,7 +119,7 @@ impl ConnectionHeader {
 }
 
 pub async fn establish_connection(
-    node_name: &str,
+    node_name: &Name,
     topic_name: &str,
     server_uri: &str,
     conn_header: ConnectionHeader,

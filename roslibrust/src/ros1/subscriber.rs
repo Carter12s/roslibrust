@@ -1,4 +1,4 @@
-use crate::ros1::tcpros::ConnectionHeader;
+use crate::ros1::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{marker::PhantomData, sync::Arc};
@@ -37,7 +37,7 @@ pub struct Subscription {
 
 impl Subscription {
     pub fn new(
-        node_name: &str,
+        node_name: &Name,
         topic_name: &str,
         topic_type: &str,
         queue_size: usize,
@@ -46,7 +46,7 @@ impl Subscription {
     ) -> Self {
         let (sender, receiver) = broadcast::channel(queue_size);
         let connection_header = ConnectionHeader {
-            caller_id: node_name.to_owned(),
+            caller_id: node_name.to_string(),
             latching: false,
             msg_definition,
             md5sum,

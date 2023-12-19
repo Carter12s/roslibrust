@@ -1,13 +1,16 @@
-use crate::ros1::{
-    names::Name,
-    node::{XmlRpcServer, XmlRpcServerHandle},
-    publisher::Publication,
-    service_client::ServiceServerLink,
-    subscriber::Subscription,
-    MasterClient, ProtocolParams,
+use crate::{
+    ros1::{
+        names::Name,
+        node::{XmlRpcServer, XmlRpcServerHandle},
+        publisher::Publication,
+        service_client::{CallServiceRequest, ServiceServerLink},
+        subscriber::Subscription,
+        MasterClient, ProtocolParams,
+    },
+    RosLibRustError, RosLibRustResult,
 };
 use abort_on_drop::ChildTask;
-use roslibrust_codegen::RosMessageType;
+use roslibrust_codegen::{RosMessageType, RosServiceType};
 use std::{collections::HashMap, net::Ipv4Addr, sync::Arc};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
@@ -44,6 +47,13 @@ pub enum NodeMsg {
         topic_type: String,
         queue_size: usize,
         msg_definition: String,
+        md5sum: String,
+    },
+    RegisterServiceClient {
+        reply: oneshot::Sender<Result<mpsc::UnboundedSender<CallServiceRequest>, String>>,
+        service: Name,
+        service_type: String,
+        srv_definition: String,
         md5sum: String,
     },
     RequestTopic {
@@ -161,6 +171,33 @@ impl NodeServerHandle {
         }
     }
 
+    pub async fn register_service_client<T: RosServiceType>(
+        &self,
+        service_name: &Name,
+    ) -> RosLibRustResult<mpsc::UnboundedSender<CallServiceRequest>> {
+        let (sender, receiver) = oneshot::channel();
+        match self
+            .node_server_sender
+            .send(NodeMsg::RegisterServiceClient {
+                reply: sender,
+                service: service_name.to_owned(),
+                service_type: T::ROS_SERVICE_NAME.to_owned(),
+                srv_definition: String::from_iter(
+                    [T::Request::DEFINITION, "\n", T::Response::DEFINITION].into_iter(),
+                ),
+                md5sum: T::MD5SUM.to_owned(),
+            }) {
+            Ok(()) => Ok(receiver
+                .await
+                .map_err(|_err| RosLibRustError::Disconnected)?
+                .map_err(|err| {
+                    log::error!("Unable to register service client: {err}");
+                    RosLibRustError::Disconnected
+                })?),
+            Err(_err) => Err(RosLibRustError::Disconnected),
+        }
+    }
+
     pub async fn register_subscriber<T: RosMessageType>(
         &self,
         topic: &str,
@@ -231,14 +268,14 @@ pub(crate) struct Node {
     // TODO need signal to shutdown xmlrpc server when node is dropped
     host_addr: Ipv4Addr,
     hostname: String,
-    node_name: String,
+    node_name: Name,
 }
 
 impl Node {
     pub(crate) async fn new(
         master_uri: &str,
         hostname: &str,
-        node_name: &str,
+        node_name: &Name,
         addr: Ipv4Addr,
     ) -> Result<NodeServerHandle, Box<dyn std::error::Error + Send + Sync>> {
         let (node_sender, node_receiver) = mpsc::unbounded_channel();
@@ -251,9 +288,8 @@ impl Node {
         let xmlrpc_server = XmlRpcServer::new(addr, xml_server_handle)?;
         let client_uri = format!("http://{hostname}:{}", xmlrpc_server.port());
 
-        let _ = Name::new(node_name)?;
-
-        let rosmaster_client = MasterClient::new(master_uri, client_uri, node_name).await?;
+        let rosmaster_client =
+            MasterClient::new(master_uri, client_uri, node_name.to_string()).await?;
         let mut node = Self {
             client: rosmaster_client,
             _xmlrpc_server: xmlrpc_server,
@@ -369,6 +405,19 @@ impl Node {
                     )
                     .await
                     .map_err(|err| err.to_string()),
+                );
+            }
+            NodeMsg::RegisterServiceClient {
+                reply,
+                service,
+                service_type,
+                srv_definition,
+                md5sum,
+            } => {
+                let _ = reply.send(
+                    self.register_service_client(&service, &service_type, &srv_definition, &md5sum)
+                        .await
+                        .map_err(|err| err.to_string()),
                 );
             }
             NodeMsg::RequestTopic {
@@ -488,6 +537,49 @@ impl Node {
             let handle = channel.get_sender();
             self.publishers.insert(topic.clone(), channel);
             let _current_subscribers = self.client.register_publisher(&topic, topic_type).await?;
+            Ok(handle)
+        }
+    }
+
+    async fn register_service_client(
+        &mut self,
+        service: &Name,
+        service_type: &str,
+        srv_definition: &str,
+        md5sum: &str,
+    ) -> Result<mpsc::UnboundedSender<CallServiceRequest>, Box<dyn std::error::Error>> {
+        let service_name = service.resolve_to_global(&self.node_name).to_string();
+        let existing_entry = {
+            self.service_clients.iter().find_map(|(key, value)| {
+                if key.as_str() == &service_name {
+                    if value.service_type() == service_type {
+                        Some(Ok(value.get_sender()))
+                    } else {
+                        Some(Err(Box::new(std::io::Error::from(
+                            std::io::ErrorKind::AddrInUse,
+                        ))))
+                    }
+                } else {
+                    None
+                }
+            })
+        };
+
+        if let Some(handle) = existing_entry {
+            Ok(handle?)
+        } else {
+            let service_uri = self.client.lookup_service(&service_name).await?;
+            let server_link = ServiceServerLink::new(
+                &self.node_name,
+                &service_name,
+                service_type,
+                &service_uri,
+                srv_definition,
+                md5sum,
+            )
+            .await?;
+            let handle = server_link.get_sender();
+            self.service_clients.insert(service_name, server_link);
             Ok(handle)
         }
     }
