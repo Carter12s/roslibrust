@@ -1,14 +1,12 @@
-use std::{fmt::Display, str::FromStr, string::ToString};
-
+use crate::{rosbridge::Writer, RosLibRustResult};
 use anyhow::bail;
 use async_trait::async_trait;
 use futures_util::SinkExt;
 use log::debug;
-use serde_json::json;
-use tokio_tungstenite::tungstenite::Message;
-
-use crate::{rosbridge::RosLibRustResult, rosbridge::Writer};
 use roslibrust_codegen::RosMessageType;
+use serde_json::json;
+use std::{fmt::Display, str::FromStr, string::ToString};
+use tokio_tungstenite::tungstenite::Message;
 
 /// Describes all documented rosbridge server operations
 pub(crate) enum Ops {

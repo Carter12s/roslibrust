@@ -53,14 +53,14 @@ impl Name {
     }
 }
 
-fn is_valid(name: &str) -> bool {
-    GRAPH_NAME_REGEX.is_match(name)
-}
-
 impl Display for Name {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
+}
+
+fn is_valid(name: &str) -> bool {
+    GRAPH_NAME_REGEX.is_match(name)
 }
 
 #[cfg(test)]

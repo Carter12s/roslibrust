@@ -1,4 +1,7 @@
-use crate::{ros1::tcpros::ConnectionHeader, RosLibRustError};
+use crate::{
+    ros1::{names::Name, tcpros::ConnectionHeader},
+    RosLibRustError,
+};
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{
@@ -46,7 +49,7 @@ pub struct Publication {
 
 impl Publication {
     pub async fn new(
-        node_name: &str,
+        node_name: &Name,
         latching: bool,
         topic_name: &str,
         host_addr: Ipv4Addr,
@@ -62,7 +65,7 @@ impl Publication {
         let (sender, mut receiver) = mpsc::channel::<Vec<u8>>(queue_size);
 
         let responding_conn_header = ConnectionHeader {
-            caller_id: node_name.to_owned(),
+            caller_id: node_name.to_string(),
             latching,
             msg_definition: msg_definition.to_owned(),
             md5sum: md5sum.to_owned(),

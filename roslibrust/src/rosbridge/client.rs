@@ -1,6 +1,7 @@
-use crate::rosbridge::comm;
-use crate::{rosbridge::comm::RosBridgeComm, RosLibRustError};
-use crate::{Publisher, ServiceHandle, Subscriber};
+use crate::{
+    rosbridge::comm::{self, RosBridgeComm},
+    Publisher, RosLibRustError, RosLibRustResult, ServiceHandle, Subscriber,
+};
 use anyhow::anyhow;
 use dashmap::DashMap;
 use futures::StreamExt;
@@ -16,8 +17,8 @@ use tokio::time::Duration;
 use tokio_tungstenite::tungstenite::Message;
 
 use super::{
-    MessageQueue, PublisherHandle, Reader, RosLibRustResult, ServiceCallback, Socket, Subscription,
-    Writer, QUEUE_SIZE,
+    MessageQueue, PublisherHandle, Reader, ServiceCallback, Socket, Subscription, Writer,
+    QUEUE_SIZE,
 };
 
 /// Builder options for creating a client

@@ -1,5 +1,10 @@
 use super::actor::{Node, NodeServerHandle};
-use crate::ros1::{publisher::Publisher, subscriber::Subscriber};
+use crate::{
+    ros1::{
+        names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
+    },
+    RosLibRustResult,
+};
 
 /// Represents a handle to an underlying [Node]. NodeHandle's can be freely cloned, moved, copied, etc.
 /// This class provides the user facing API for interacting with ROS.
@@ -17,10 +22,11 @@ impl NodeHandle {
         master_uri: &str,
         name: &str,
     ) -> Result<NodeHandle, Box<dyn std::error::Error + Send + Sync>> {
+        let name = Name::new(name)?;
         // Follow ROS rules and determine our IP and hostname
         let (addr, hostname) = super::determine_addr().await?;
 
-        let node = Node::new(master_uri, &hostname, name, addr).await?;
+        let node = Node::new(master_uri, &hostname, &name, addr).await?;
         let nh = NodeHandle { inner: node };
 
         Ok(nh)
@@ -56,5 +62,17 @@ impl NodeHandle {
             .register_subscriber::<T>(topic_name, queue_size)
             .await?;
         Ok(Subscriber::new(receiver))
+    }
+
+    pub async fn service_client<T: roslibrust_codegen::RosServiceType>(
+        &self,
+        service_name: &str,
+    ) -> RosLibRustResult<ServiceClient<T>> {
+        let service_name = Name::new(service_name)?;
+        let sender = self
+            .inner
+            .register_service_client::<T>(&service_name)
+            .await?;
+        Ok(ServiceClient::new(&service_name, sender))
     }
 }
