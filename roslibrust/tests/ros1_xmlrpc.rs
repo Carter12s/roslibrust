@@ -1,5 +1,6 @@
 #[cfg(all(feature = "ros1", feature = "ros1_test"))]
 mod tests {
+    use roslibrust::ros1::NodeHandle;
     use roslibrust_codegen::RosMessageType;
     use serde::de::DeserializeOwned;
     use serde_xmlrpc::Value;
@@ -27,8 +28,7 @@ mod tests {
 
     #[test_log::test(tokio::test)]
     async fn verify_get_master_uri() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let node =
-            roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_master_uri").await?;
+        let node = NodeHandle::new("http://localhost:11311", "verify_get_master_uri").await?;
         log::info!("Got new handle");
 
         let node_uri = node.get_client_uri().await?;
@@ -48,8 +48,7 @@ mod tests {
 
     #[test_log::test(tokio::test)]
     async fn verify_get_publications() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_get_publications")
-            .await?;
+        let node = NodeHandle::new("http://localhost:11311", "verify_get_publications").await?;
         log::info!("Got new handle");
 
         let node_uri = node.get_client_uri().await?;
@@ -86,7 +85,7 @@ mod tests {
 
     #[test_log::test(tokio::test)]
     async fn verify_shutdown() {
-        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_shutdown")
+        let node = NodeHandle::new("http://localhost:11311", "verify_shutdown")
             .await
             .unwrap();
         log::info!("Got handle");
@@ -110,7 +109,7 @@ mod tests {
 
     #[test_log::test(tokio::test)]
     async fn verify_request_topic() {
-        let node = roslibrust::NodeHandle::new("http://localhost:11311", "verify_request_topic")
+        let node = NodeHandle::new("http://localhost:11311", "verify_request_topic")
             .await
             .unwrap();
         log::info!("Got handle");
