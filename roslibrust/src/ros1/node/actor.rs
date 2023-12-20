@@ -5,8 +5,9 @@ use crate::{
         node::{XmlRpcServer, XmlRpcServerHandle},
         publisher::Publication,
         subscriber::Subscription,
+        MasterClient,
     },
-    MasterClient, ServiceCallback,
+    ServiceCallback,
 };
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
@@ -142,14 +143,13 @@ impl NodeServerHandle {
     pub async fn register_publisher<T: RosMessageType>(
         &self,
         topic: &str,
-        topic_type: &str,
         queue_size: usize,
     ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
         let (sender, receiver) = oneshot::channel();
         match self.node_server_sender.send(NodeMsg::RegisterPublisher {
             reply: sender,
             topic: topic.to_owned(),
-            topic_type: topic_type.to_owned(),
+            topic_type: T::ROS_TYPE_NAME.to_owned(),
             queue_size,
             msg_definition: T::DEFINITION.to_owned(),
             md5sum: T::MD5SUM.to_owned(),
@@ -254,12 +254,7 @@ impl Node {
         let xmlrpc_server = XmlRpcServer::new(addr, xml_server_handle)?;
         let client_uri = format!("http://{hostname}:{}", xmlrpc_server.port());
 
-        if let None = Name::new(node_name) {
-            log::error!("Node name {node_name} is not valid");
-            return Err(Box::new(std::io::Error::from(
-                std::io::ErrorKind::InvalidInput,
-            )));
-        }
+        let _ = Name::new(node_name)?;
 
         let rosmaster_client = MasterClient::new(master_uri, client_uri, node_name).await?;
         let mut node = Self {

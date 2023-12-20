@@ -1,4 +1,4 @@
-use super::tcpros::ConnectionHeader;
+use crate::ros1::tcpros::ConnectionHeader;
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{marker::PhantomData, sync::Arc};

@@ -1,6 +1,4 @@
-use crate::RosLibRustError;
-
-use super::tcpros::ConnectionHeader;
+use crate::{ros1::tcpros::ConnectionHeader, RosLibRustError};
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{

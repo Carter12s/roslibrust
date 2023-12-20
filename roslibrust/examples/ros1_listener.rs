@@ -3,7 +3,7 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 #[cfg(feature = "ros1")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    use roslibrust::NodeHandle;
+    use roslibrust::ros1::NodeHandle;
 
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)

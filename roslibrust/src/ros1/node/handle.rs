@@ -41,7 +41,7 @@ impl NodeHandle {
     ) -> Result<Publisher<T>, Box<dyn std::error::Error + Send + Sync>> {
         let sender = self
             .inner
-            .register_publisher::<T>(topic_name, T::ROS_TYPE_NAME, queue_size)
+            .register_publisher::<T>(topic_name, queue_size)
             .await?;
         Ok(Publisher::new(topic_name, sender))
     }
