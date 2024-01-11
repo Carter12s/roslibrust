@@ -1,3 +1,6 @@
+use crate::{RosLibRustError, RosLibRustResult};
+use std::fmt::Display;
+
 lazy_static::lazy_static! {
     static ref GRAPH_NAME_REGEX: regex::Regex = regex::Regex::new(r"^([/~a-zA-Z]){1}([a-zA-Z0-9_/])*([A-z0-9_])$").unwrap();
 }
@@ -8,12 +11,12 @@ pub struct Name {
 }
 
 impl Name {
-    pub fn new(name: impl Into<String>) -> Option<Self> {
+    pub fn new(name: impl Into<String>) -> RosLibRustResult<Self> {
         let name: String = name.into();
         if is_valid(&name) {
-            Some(Self { inner: name })
+            Ok(Self { inner: name })
         } else {
-            None
+            Err(RosLibRustError::InvalidName(name))
         }
     }
 
@@ -52,6 +55,12 @@ impl Name {
 
 fn is_valid(name: &str) -> bool {
     GRAPH_NAME_REGEX.is_match(name)
+}
+
+impl Display for Name {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
 }
 
 #[cfg(test)]
