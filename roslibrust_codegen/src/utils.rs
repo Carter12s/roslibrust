@@ -63,7 +63,7 @@ pub fn crawl<P: AsRef<Path>>(search_paths: &[P]) -> Vec<Package> {
     packages
 }
 
-fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>> {
+pub fn packages_from_path(mut path: PathBuf, depth: u16) -> io::Result<Vec<Package>> {
     let mut found_packages = vec![];
 
     if depth == 0 {
