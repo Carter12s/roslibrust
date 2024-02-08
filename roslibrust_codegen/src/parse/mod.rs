@@ -216,3 +216,24 @@ fn parse_type(type_str: &str, pkg: &Package) -> Result<FieldType, Error> {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        parse::parse_type,
+        utils::{Package, RosVersion},
+    };
+
+    // Simple test to just confirm fixed size logic is working correctly on the parse side
+    #[test_log::test]
+    fn parse_type_handles_fixed_size_correctly() {
+        let line = "int32[9]";
+        let pkg = Package {
+            name: "test_pkg".to_string(),
+            path: "./not_a_path".into(),
+            version: Some(RosVersion::ROS1),
+        };
+        let parsed = parse_type(line, &pkg).unwrap();
+        assert_eq!(parsed.array_info, Some(Some(9)));
+    }
+}

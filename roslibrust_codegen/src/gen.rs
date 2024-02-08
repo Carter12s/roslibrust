@@ -128,7 +128,8 @@ fn generate_field_definition(
             .to_owned(),
     };
     let rust_field_type = match field.field_type.array_info {
-        Some(_) => format!("::std::vec::Vec<{rust_field_type}>"),
+        Some(None) => format!("::std::vec::Vec<{rust_field_type}>"),
+        Some(Some(fixed_length)) => format!("[{rust_field_type}; {fixed_length}]"),
         None => rust_field_type,
     };
     let rust_field_type = TokenStream::from_str(rust_field_type.as_str()).expect(

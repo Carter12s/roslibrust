@@ -299,7 +299,7 @@ pub mod geometry_msgs {
     )]
     pub struct AccelWithCovariance {
         pub r#accel: self::Accel,
-        pub r#covariance: ::std::vec::Vec<f64>,
+        pub r#covariance: [f64; 36],
     }
     impl ::roslibrust_codegen::RosMessageType for AccelWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/AccelWithCovariance";
@@ -541,7 +541,7 @@ pub mod geometry_msgs {
     )]
     pub struct PoseWithCovariance {
         pub r#pose: self::Pose,
-        pub r#covariance: ::std::vec::Vec<f64>,
+        pub r#covariance: [f64; 36],
     }
     impl ::roslibrust_codegen::RosMessageType for PoseWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/PoseWithCovariance";
@@ -692,7 +692,7 @@ pub mod geometry_msgs {
     )]
     pub struct TwistWithCovariance {
         pub r#twist: self::Twist,
-        pub r#covariance: ::std::vec::Vec<f64>,
+        pub r#covariance: [f64; 36],
     }
     impl ::roslibrust_codegen::RosMessageType for TwistWithCovariance {
         const ROS_TYPE_NAME: &'static str = "geometry_msgs/TwistWithCovariance";
@@ -1162,9 +1162,9 @@ pub mod sensor_msgs {
         pub r#width: u32,
         pub r#distortion_model: ::std::string::String,
         pub r#d: ::std::vec::Vec<f64>,
-        pub r#k: ::std::vec::Vec<f64>,
-        pub r#r: ::std::vec::Vec<f64>,
-        pub r#p: ::std::vec::Vec<f64>,
+        pub r#k: [f64; 9],
+        pub r#r: [f64; 9],
+        pub r#p: [f64; 12],
         pub r#binning_x: u32,
         pub r#binning_y: u32,
         pub r#roi: self::RegionOfInterest,
@@ -1284,11 +1284,11 @@ pub mod sensor_msgs {
     pub struct Imu {
         pub r#header: std_msgs::Header,
         pub r#orientation: geometry_msgs::Quaternion,
-        pub r#orientation_covariance: ::std::vec::Vec<f64>,
+        pub r#orientation_covariance: [f64; 9],
         pub r#angular_velocity: geometry_msgs::Vector3,
-        pub r#angular_velocity_covariance: ::std::vec::Vec<f64>,
+        pub r#angular_velocity_covariance: [f64; 9],
         pub r#linear_acceleration: geometry_msgs::Vector3,
-        pub r#linear_acceleration_covariance: ::std::vec::Vec<f64>,
+        pub r#linear_acceleration_covariance: [f64; 9],
     }
     impl ::roslibrust_codegen::RosMessageType for Imu {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/Imu";
@@ -1432,7 +1432,7 @@ pub mod sensor_msgs {
     pub struct MagneticField {
         pub r#header: std_msgs::Header,
         pub r#magnetic_field: geometry_msgs::Vector3,
-        pub r#magnetic_field_covariance: ::std::vec::Vec<f64>,
+        pub r#magnetic_field_covariance: [f64; 9],
     }
     impl ::roslibrust_codegen::RosMessageType for MagneticField {
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/MagneticField";
@@ -1501,7 +1501,7 @@ pub mod sensor_msgs {
         pub r#latitude: f64,
         pub r#longitude: f64,
         pub r#altitude: f64,
-        pub r#position_covariance: ::std::vec::Vec<f64>,
+        pub r#position_covariance: [f64; 9],
         pub r#position_covariance_type: u8,
     }
     impl ::roslibrust_codegen::RosMessageType for NavSatFix {
@@ -1805,7 +1805,7 @@ pub mod shape_msgs {
         PartialEq,
     )]
     pub struct MeshTriangle {
-        pub r#vertex_indices: ::std::vec::Vec<u32>,
+        pub r#vertex_indices: [u32; 3],
     }
     impl ::roslibrust_codegen::RosMessageType for MeshTriangle {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/MeshTriangle";
@@ -1823,7 +1823,7 @@ pub mod shape_msgs {
         PartialEq,
     )]
     pub struct Plane {
-        pub r#coef: ::std::vec::Vec<f64>,
+        pub r#coef: [f64; 4],
     }
     impl ::roslibrust_codegen::RosMessageType for Plane {
         const ROS_TYPE_NAME: &'static str = "shape_msgs/Plane";
@@ -1841,7 +1841,7 @@ pub mod shape_msgs {
     )]
     pub struct SolidPrimitive {
         pub r#type: u8,
-        pub r#dimensions: ::std::vec::Vec<f64>,
+        pub r#dimensions: [f64; 0],
         pub r#polygon: geometry_msgs::Polygon,
     }
     impl ::roslibrust_codegen::RosMessageType for SolidPrimitive {
