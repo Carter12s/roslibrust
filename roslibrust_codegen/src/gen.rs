@@ -161,7 +161,9 @@ fn generate_field_definition(
         // so we have to manually provide a default if one isn't provided for arrays that large
         if let Some(Some(fixed_array_length)) = field.field_type.array_info {
             if fixed_array_length > 32 {
-                // Okay so this is broken cause 0 isn't always a valid value... so what is?
+                // Doing some evil indirection here with the _code directive and Deafult::default()
+                // to generate the default value for a single member of the array type, and then
+                // broadcasting that with an array constant. I can't believe this works...
                 let default_str = format!("[Default::default(); {fixed_array_length}]");
                 quote! { #[default(_code = #default_str)]}
             } else {
