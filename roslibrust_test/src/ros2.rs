@@ -299,6 +299,8 @@ pub mod geometry_msgs {
     )]
     pub struct AccelWithCovariance {
         pub r#accel: self::Accel,
+        #[default(_code = "[Default::default(); 36]")]
+        #[serde(with = "::serde_big_array::BigArray")]
         pub r#covariance: [f64; 36],
     }
     impl ::roslibrust_codegen::RosMessageType for AccelWithCovariance {
@@ -541,6 +543,8 @@ pub mod geometry_msgs {
     )]
     pub struct PoseWithCovariance {
         pub r#pose: self::Pose,
+        #[default(_code = "[Default::default(); 36]")]
+        #[serde(with = "::serde_big_array::BigArray")]
         pub r#covariance: [f64; 36],
     }
     impl ::roslibrust_codegen::RosMessageType for PoseWithCovariance {
@@ -692,6 +696,8 @@ pub mod geometry_msgs {
     )]
     pub struct TwistWithCovariance {
         pub r#twist: self::Twist,
+        #[default(_code = "[Default::default(); 36]")]
+        #[serde(with = "::serde_big_array::BigArray")]
         pub r#covariance: [f64; 36],
     }
     impl ::roslibrust_codegen::RosMessageType for TwistWithCovariance {

@@ -137,7 +137,8 @@ fn generate_field_definition(
     );
 
     let field_name = format_ident!("r#{}", field.field_name);
-    if let Some(ref default_val) = field.default {
+    let property_line = quote! { pub #field_name: #rust_field_type, };
+    let default_line = if let Some(ref default_val) = field.default {
         let default_val = ros_literal_to_rust_literal(
             &field.field_type.field_type,
             default_val,
@@ -146,20 +147,46 @@ fn generate_field_definition(
         )?;
         if field.field_type.array_info.is_some() {
             // For vectors use smart_defaults "dynamic" style
-            Ok(quote! {
+            quote! {
                 #[default(_code = #default_val)]
-                pub #field_name: #rust_field_type,
-            })
+            }
         } else {
             // For non vectors use smart_default's constant style
-            Ok(quote! {
+            quote! {
               #[default(#default_val)]
-              pub #field_name: #rust_field_type,
-            })
+            }
         }
     } else {
-        Ok(quote! { pub #field_name: #rust_field_type, })
-    }
+        // Okay this is messy, so default isn't defined for fixed sized arrays > 32 in length
+        // so we have to manually provide a default if one isn't provided for arrays that large
+        if let Some(Some(fixed_array_length)) = field.field_type.array_info {
+            if fixed_array_length > 32 {
+                // Okay so this is broken cause 0 isn't always a valid value... so what is?
+                let default_str = format!("[Default::default(); {fixed_array_length}]");
+                quote! { #[default(_code = #default_str)]}
+            } else {
+                quote! {}
+            }
+        } else {
+            quote! {}
+        }
+    };
+    let serde_line = if let Some(Some(fixed_array_length)) = field.field_type.array_info {
+        if fixed_array_length > 32 {
+            quote! { #[serde(with = "::serde_big_array::BigArray")] }
+        } else {
+            // Nothing
+            quote! {}
+        }
+    } else {
+        // Nothing
+        quote! {}
+    };
+    Ok(quote! {
+        #default_line
+        #serde_line
+        #property_line
+    })
 }
 
 fn generate_constant_field_definition(
