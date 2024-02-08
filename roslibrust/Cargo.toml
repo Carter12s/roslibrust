@@ -54,10 +54,10 @@ serde-big-array = "0.5"
 
 [features]
 default = []
-# Provides a rosapi rust interface
-rosapi = []
 # Note: all does not include running_bridge as that is only intended for CI
 all = []
+# Provides a rosapi rust interface
+rosapi = []
 # Intended for use with tests, includes tests that rely on a locally running rosbridge
 running_bridge = []
 # For use with integration tests, indicating we are testing integration with a ros1 bridge

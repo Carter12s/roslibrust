@@ -2,6 +2,7 @@
 [![Noetic](https://github.com/Carter12s/roslibrust/actions/workflows/noetic.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/noetic.yml)
 [![Galactic](https://github.com/Carter12s/roslibrust/actions/workflows/galactic.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/galactic.yml)
 [![Humble](https://github.com/Carter12s/roslibrust/actions/workflows/humble.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/humble.yml)
+[![Iron](https://github.com/Carter12s/roslibrust/actions/workflows/iron.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/iron.yml)
 [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 This package aims to provide a convenient intermediary between ROS1's rosbridge and Rust similar to roslibpy and roslibjs.

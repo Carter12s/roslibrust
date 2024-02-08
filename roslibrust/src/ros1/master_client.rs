@@ -254,6 +254,7 @@ impl MasterClient {
                 self.client_uri.clone().into(),
             ],
         )?;
+        log::trace!("Posting {body:?} to register publisher");
         self.post(body).await
     }
 
@@ -360,7 +361,7 @@ impl MasterClient {
 #[cfg(test)]
 mod test {
 
-    use crate::{MasterClient, RosMasterError};
+    use super::{MasterClient, RosMasterError};
 
     const TEST_NODE_ID: &str = "/native_ros1_test";
 

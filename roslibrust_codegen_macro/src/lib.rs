@@ -43,33 +43,6 @@ pub fn find_and_generate_ros_messages(input_stream: TokenStream) -> TokenStream 
     }
 }
 
-/// Does the same as find_and_generate_ros_messages, but interprets relative paths
-/// as relative to the root of this crate. No idea if this is useful, but I needed it!
-#[proc_macro]
-pub fn find_and_generate_ros_messages_relative_to_manifest_dir(
-    input_stream: TokenStream,
-) -> TokenStream {
-    let RosLibRustMessagePaths { mut paths } =
-        parse_macro_input!(input_stream as RosLibRustMessagePaths);
-
-    std::env::set_current_dir(env!("CARGO_MANIFEST_DIR")).expect("Failed to set working dir");
-    for path in &mut paths {
-        *path = path.canonicalize().unwrap_or_else(|err| {
-            panic!("Failed to canonicalize path {path:?}: {}", err.to_string())
-        });
-    }
-
-    match roslibrust_codegen::find_and_generate_ros_messages(paths) {
-        // Note: there is not currently a way for proc_macros to indicate that they need to be re-generated
-        // We discard the "dependent_paths" part of the response here...
-        Ok((source, _dependent_paths)) => source.into(),
-        Err(e) => {
-            let error_msg = e.to_string();
-            quote::quote!(compile_error!(#error_msg);).into()
-        }
-    }
-}
-
 /// Similar to `find_and_generate_ros_messages`, but does not search the
 /// `ROS_PACKAGE_PATH` environment variable paths (useful in some situations).
 #[proc_macro]

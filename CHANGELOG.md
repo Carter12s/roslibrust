@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - The function interface for top level generation functions in `roslibrust_codegen` have been changed to include the list of dependent
 filesystem paths that should trigger re-running code generation. Note: new files added to the search paths will not be automatically detected.
 - [Breaking Change] Codegen now generates fixed sized arrays as arrays [T; N] instead of Vec<T>
+ - Removed `find_and_generate_ros_messages_relative_to_manifest_dir!` this proc_macro was changing the current working directory of the compilation job resulting in a variety of strange compilation behaviors. Build.rs scripts are recommended for use cases requiring fine grained control of message generation.
+ - The function interface for top level generation functions in `roslibrust_codegen` have been changed to include the list of dependent filesystem paths that should trigger re-running code generation. Note: new files added to the search paths will not be automatically detected.
+ - Refactor the `ros1::node` module into separate smaller pieces. This should be invisible externally (and no changes to examples were required).
 
 ## 0.8.0 - October 4th, 2023
 
