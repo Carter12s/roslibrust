@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The build.rs example in example_package now correctly informs cargo of filesystem dependencies
-- The `advertise_serveice` method in `rosbridge/client.rs` now accepts closures 
+- The `advertise_serveice` method in `rosbridge/client.rs` now accepts closures
+- Expose additional methods useful for custom cases not using package manifests or standard ROS2 setups
 
 ### Fixed
 
