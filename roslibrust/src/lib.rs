@@ -105,6 +105,33 @@ pub use rosbridge::*;
 pub mod rosapi;
 
 #[cfg(feature = "ros1")]
-mod ros1;
-#[cfg(feature = "ros1")]
-pub use ros1::*;
+pub mod ros1;
+
+/// For now starting with a central error type, may break this up more in future
+#[derive(thiserror::Error, Debug)]
+pub enum RosLibRustError {
+    #[error("Not currently connected to ros master / bridge")]
+    Disconnected,
+    // TODO we probably want to eliminate tungstenite from this and hide our
+    // underlying websocket implementation from the API
+    // currently we "technically" break the API when we change tungstenite verisons
+    #[error("Websocket communication error: {0}")]
+    CommFailure(#[from] tokio_tungstenite::tungstenite::Error),
+    #[error("Operation timed out: {0}")]
+    Timeout(#[from] tokio::time::error::Elapsed),
+    #[error("Failed to parse message from JSON: {0}")]
+    InvalidMessage(#[from] serde_json::Error),
+    #[error("Rosbridge server reported an error: {0}")]
+    ServerError(String),
+    #[error("Name does not meet ROS requirements: {0}")]
+    InvalidName(String),
+    // Generic catch-all error type for not-yet-handled errors
+    // TODO ultimately this type will be removed from API of library
+    #[error(transparent)]
+    Unexpected(#[from] anyhow::Error),
+}
+
+/// Generic result type used as standard throughout library.
+/// Note: many functions which currently return this will be updated to provide specific error
+/// types in the future instead of the generic error here.
+pub type RosLibRustResult<T> = Result<T, RosLibRustError>;
