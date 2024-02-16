@@ -631,7 +631,7 @@ fn parse_ros_files(
 
 #[cfg(test)]
 mod test {
-    use crate::{find_and_generate_ros_messages, FieldInfo};
+    use crate::find_and_generate_ros_messages;
 
     /// Confirms we don't panic on ros1 parsing
     #[test_log::test]

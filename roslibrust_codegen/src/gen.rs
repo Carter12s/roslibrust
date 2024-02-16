@@ -173,16 +173,15 @@ fn generate_field_definition(
             quote! {}
         }
     };
-    let serde_line = if let Some(Some(fixed_array_length)) = field.field_type.array_info {
-        if fixed_array_length > 32 {
+    // This is the largest size of fixed sized array for which macros automatically implement traits
+    // Until serde supports const generics we need to use serde_big_array for fixed size arrays
+    // Larger than 32.
+    const MAX_FIXED_ARRAY_LEN: usize = 32;
+    let serde_line = match field.field_type.array_info {
+        Some(Some(fixed_array_len)) if fixed_array_len > MAX_FIXED_ARRAY_LEN => {
             quote! { #[serde(with = "::serde_big_array::BigArray")] }
-        } else {
-            // Nothing
-            quote! {}
         }
-    } else {
-        // Nothing
-        quote! {}
+        _ => quote! {},
     };
     Ok(quote! {
         #default_line
