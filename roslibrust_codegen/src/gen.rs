@@ -128,7 +128,8 @@ fn generate_field_definition(
             .to_owned(),
     };
     let rust_field_type = match field.field_type.array_info {
-        Some(_) => format!("::std::vec::Vec<{rust_field_type}>"),
+        Some(None) => format!("::std::vec::Vec<{rust_field_type}>"),
+        Some(Some(fixed_length)) => format!("[{rust_field_type}; {fixed_length}]"),
         None => rust_field_type,
     };
     let rust_field_type = TokenStream::from_str(rust_field_type.as_str()).expect(
@@ -136,7 +137,8 @@ fn generate_field_definition(
     );
 
     let field_name = format_ident!("r#{}", field.field_name);
-    if let Some(ref default_val) = field.default {
+    let property_line = quote! { pub #field_name: #rust_field_type, };
+    let default_line = if let Some(ref default_val) = field.default {
         let default_val = ros_literal_to_rust_literal(
             &field.field_type.field_type,
             default_val,
@@ -145,20 +147,47 @@ fn generate_field_definition(
         )?;
         if field.field_type.array_info.is_some() {
             // For vectors use smart_defaults "dynamic" style
-            Ok(quote! {
+            quote! {
                 #[default(_code = #default_val)]
-                pub #field_name: #rust_field_type,
-            })
+            }
         } else {
             // For non vectors use smart_default's constant style
-            Ok(quote! {
+            quote! {
               #[default(#default_val)]
-              pub #field_name: #rust_field_type,
-            })
+            }
         }
     } else {
-        Ok(quote! { pub #field_name: #rust_field_type, })
-    }
+        // Okay this is messy, so default isn't defined for fixed sized arrays > 32 in length
+        // so we have to manually provide a default if one isn't provided for arrays that large
+        if let Some(Some(fixed_array_length)) = field.field_type.array_info {
+            if fixed_array_length > 32 {
+                // Doing some evil indirection here with the _code directive and Deafult::default()
+                // to generate the default value for a single member of the array type, and then
+                // broadcasting that with an array constant. I can't believe this works...
+                let default_str = format!("[Default::default(); {fixed_array_length}]");
+                quote! { #[default(_code = #default_str)]}
+            } else {
+                quote! {}
+            }
+        } else {
+            quote! {}
+        }
+    };
+    // This is the largest size of fixed sized array for which macros automatically implement traits
+    // Until serde supports const generics we need to use serde_big_array for fixed size arrays
+    // Larger than 32.
+    const MAX_FIXED_ARRAY_LEN: usize = 32;
+    let serde_line = match field.field_type.array_info {
+        Some(Some(fixed_array_len)) if fixed_array_len > MAX_FIXED_ARRAY_LEN => {
+            quote! { #[serde(with = "::serde_big_array::BigArray")] }
+        }
+        _ => quote! {},
+    };
+    Ok(quote! {
+        #default_line
+        #serde_line
+        #property_line
+    })
 }
 
 fn generate_constant_field_definition(
