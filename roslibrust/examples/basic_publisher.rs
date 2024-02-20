@@ -8,7 +8,7 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 /// pass messages between each other.
 /// To run this example a rosbridge websocket server should be running at the deafult port (9090).
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), anyhow::Error> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
         .without_timestamps() // required for running wsl2

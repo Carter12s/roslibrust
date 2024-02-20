@@ -8,7 +8,7 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 /// As well as the rosapi node.
 /// This node calls a service on the rosapi node to get the current ros time.
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), anyhow::Error> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
         .without_timestamps() // Required for running in wsl2

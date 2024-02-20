@@ -5,7 +5,10 @@ use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
-    sync::{broadcast, RwLock},
+    sync::{
+        broadcast::{self, error::RecvError},
+        RwLock,
+    },
 };
 
 pub struct Subscriber<T> {
@@ -21,9 +24,13 @@ impl<T: RosMessageType> Subscriber<T> {
         }
     }
 
-    pub async fn next(&mut self) -> Result<T, Box<dyn std::error::Error>> {
-        let data = self.receiver.recv().await.map_err(|err| Box::new(err))?;
-        Ok(serde_rosmsg::from_slice(&data[..]).map_err(|err| Box::new(err))?)
+    pub async fn next(&mut self) -> Result<Option<T>, SubscriberError> {
+        let data = match self.receiver.recv().await {
+            Ok(v) => v,
+            Err(RecvError::Closed) => return Ok(None),
+            Err(RecvError::Lagged(n)) => return Err(SubscriberError::Lagged(n)),
+        };
+        Ok(serde_rosmsg::from_slice(&data[..])?)
     }
 }
 
@@ -220,5 +227,20 @@ async fn send_topic_request(
             "Failed to request topic data from the publisher's XMLRPC server for {publisher_uri}: {response:#?}"
         );
         Err(std::io::ErrorKind::ConnectionRefused.into())
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum SubscriberError {
+    /// Deserialize Error from `serde_rosmsg::Error` (stored as String because of dyn Error)
+    #[error("serde_rosmsg Error: {0}")]
+    DeserializeError(String),
+    #[error("you are too slow, {0} messages were skipped")]
+    Lagged(u64),
+}
+
+impl From<serde_rosmsg::Error> for SubscriberError {
+    fn from(value: serde_rosmsg::Error) -> Self {
+        Self::DeserializeError(value.to_string())
     }
 }

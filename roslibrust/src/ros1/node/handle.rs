@@ -1,4 +1,7 @@
-use super::actor::{Node, NodeServerHandle};
+use super::{
+    actor::{Node, NodeServerHandle},
+    NodeError,
+};
 use crate::ros1::{publisher::Publisher, subscriber::Subscriber};
 
 /// Represents a handle to an underlying [Node]. NodeHandle's can be freely cloned, moved, copied, etc.
@@ -13,10 +16,7 @@ impl NodeHandle {
     /// Creates a new node connect and returns a handle to it
     /// It is idiomatic to call this once per process and treat the created node as singleton.
     /// The returned handle can be freely clone'd to create additional handles without creating additional connections.
-    pub async fn new(
-        master_uri: &str,
-        name: &str,
-    ) -> Result<NodeHandle, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn new(master_uri: &str, name: &str) -> Result<NodeHandle, NodeError> {
         // Follow ROS rules and determine our IP and hostname
         let (addr, hostname) = super::determine_addr().await?;
 
@@ -30,7 +30,7 @@ impl NodeHandle {
         !self.inner.node_server_sender.is_closed()
     }
 
-    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn get_client_uri(&self) -> Result<String, NodeError> {
         self.inner.get_client_uri().await
     }
 
@@ -38,7 +38,7 @@ impl NodeHandle {
         &self,
         topic_name: &str,
         queue_size: usize,
-    ) -> Result<Publisher<T>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<Publisher<T>, NodeError> {
         let sender = self
             .inner
             .register_publisher::<T>(topic_name, queue_size)
@@ -50,7 +50,7 @@ impl NodeHandle {
         &self,
         topic_name: &str,
         queue_size: usize,
-    ) -> Result<Subscriber<T>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<Subscriber<T>, NodeError> {
         let receiver = self
             .inner
             .register_subscriber::<T>(topic_name, queue_size)
