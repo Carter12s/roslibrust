@@ -14,7 +14,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let nh = NodeHandle::new("http://localhost:11311", "listener_rs").await?;
     let mut subscriber = nh.subscribe::<std_msgs::String>("/chatter", 1).await?;
 
-    while let Some(msg) = subscriber.next().await.transpose() {
+    while let Some(msg) = subscriber.next().await {
         if let Ok(msg) = msg {
             log::info!("[/listener_rs] Got message: {}", msg.data);
         }
