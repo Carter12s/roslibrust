@@ -4,7 +4,7 @@
 
 #[cfg(feature = "ros1")]
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), anyhow::Error> {
     use roslibrust::ros1::NodeHandle;
 
     simple_logger::SimpleLogger::new()

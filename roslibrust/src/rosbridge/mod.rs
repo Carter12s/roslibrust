@@ -36,6 +36,7 @@ use tokio_tungstenite::*;
 use tungstenite::Message;
 
 // Doing this to maintain backwards compatibilities like `use roslibrust::rosbridge::RosLibRustError`
+#[allow(unused)]
 pub use super::{RosLibRustError, RosLibRustResult};
 
 /// Used for type erasure of message type so that we can store arbitrary handles

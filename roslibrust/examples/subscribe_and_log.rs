@@ -7,7 +7,7 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 /// This example will log received messages if run at the same time as "basic_publisher".
 /// A running rosbridge websocket server at the default port (9090) is required to run this example.
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), anyhow::Error> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
         .without_timestamps() // required for running in wsl2

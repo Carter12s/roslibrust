@@ -53,7 +53,7 @@ mod ros2 {
 /// With this example running you should then be able to use the ros1 command line tools to publish a message,
 /// and see them appear in ros2 with its command line tools
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), anyhow::Error> {
     // Initialize a basic logger useful if anything goes wrong while running the example
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
