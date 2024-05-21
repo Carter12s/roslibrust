@@ -38,4 +38,4 @@ jobs:
       - name: Start rosbridge
         run: source /opt/ros/galactic/setup.bash; ros2 launch rosbridge_server rosbridge_websocket_launch.xml & disown; ros2 run rosapi rosapi_node & sleep 1
       - name: Integration Tests
-        run: source /root/.cargo/env; cargo test --features ros2_test -- --test-threads 1
+        run: source /opt/ros/galactic/setup.bash; source /root/.cargo/env; cargo test --features ros2_test -- --test-threads 1
