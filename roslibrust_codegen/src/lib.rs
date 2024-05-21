@@ -21,10 +21,10 @@ pub use integral_types::*;
 // so that crates using this crate don't need to add these dependencies themselves.
 // Our generated code should find these exports.
 // Modeled from: https://users.rust-lang.org/t/proc-macros-using-third-party-crate/42465/4
-pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
 pub use ::serde;
-pub use smart_default::SmartDefault;
+pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
 pub use serde_big_array::BigArray;
+pub use smart_default::SmartDefault;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
