@@ -87,7 +87,7 @@ impl FromStr for Ops {
 
 /// Describes the low level comm capabilities of talking to a rosbridge server
 /// This trait exists because we haven't wrapped Writer in our own type
-/// So we're defining this trait on a foregin type, since we didn't end up
+/// So we're defining this trait on a foreign type, since we didn't end up
 /// using this trait for mocking. I'm inclined to replace it, and move the
 /// impls directly into some wrapper around [Writer]
 #[async_trait]
@@ -96,6 +96,7 @@ pub(crate) trait RosBridgeComm {
     async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()>;
     async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosLibRustResult<()>;
+    async fn advertise_str(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
     async fn call_service<Req: RosMessageType>(
         &mut self,
         service: &str,
@@ -159,11 +160,18 @@ impl RosBridgeComm for Writer {
     }
 
     async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosLibRustResult<()> {
+        self.advertise_str(topic, T::ROS_TYPE_NAME).await
+    }
+
+    // Identical to advertise, but allows providing a string argument for the topic type
+    // This is important as the type is erased in our list of publishers, and not available
+    // when we try to reconnect
+    async fn advertise_str(&mut self, topic: &str, topic_type: &str) -> RosLibRustResult<()> {
         let msg = json!(
             {
                 "op": Ops::Advertise.to_string(),
                 "topic": topic.to_string(),
-                "type": T::ROS_TYPE_NAME,
+                "type": topic_type,
             }
         );
         let msg = Message::Text(msg.to_string());

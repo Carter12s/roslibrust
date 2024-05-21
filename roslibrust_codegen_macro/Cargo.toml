@@ -2,7 +2,7 @@
 name = "roslibrust_codegen_macro"
 edition = "2021"
 description = "Provides macro-based message generation for roslibrust"
-version = "0.8.0"
+version = "0.9.0"
 repository = "https://github.com/Carter12s/roslibrust"
 license = "MIT"
 readme = "README.md"
@@ -16,5 +16,5 @@ proc-macro2 = "1.0"
 quote = "1.0"
 # Note: finds path version when building locally, and crates.io version when publishing
 # https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#multiple-locations
-roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.8.0" }
+roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.9.0" }
 syn = "1.0"
