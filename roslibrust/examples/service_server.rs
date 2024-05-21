@@ -40,7 +40,7 @@ fn my_service(
 /// To actually exercise our service we need to call it with something.
 /// One option would be to use a ros commaline tool: `rosservice call /my_set_bool "data: false"` or `ros2 service call /my_set_bool std_srvs/srv/SetBool data:\ false\ `.
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), anyhow::Error> {
     // Initialize a basic logger useful if anything goes wrong while running the example
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)

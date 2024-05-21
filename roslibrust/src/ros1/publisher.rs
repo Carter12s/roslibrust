@@ -1,4 +1,4 @@
-use crate::{ros1::tcpros::ConnectionHeader, RosLibRustError};
+use crate::ros1::tcpros::ConnectionHeader;
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{
@@ -26,11 +26,12 @@ impl<T: RosMessageType> Publisher<T> {
         }
     }
 
-    pub async fn publish(&self, data: &T) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let data = serde_rosmsg::to_vec(&data)
-            // Gotta do some funny error mapping here as serde_rosmsg's error type is not sync
-            .map_err(|e| RosLibRustError::Unexpected(anyhow::anyhow!("{e:?}")))?;
-        self.sender.send(data).await?;
+    pub async fn publish(&self, data: &T) -> Result<(), PublisherError> {
+        let data = serde_rosmsg::to_vec(&data)?;
+        self.sender
+            .send(data)
+            .await
+            .map_err(|_| PublisherError::StreamClosed)?;
         log::debug!("Publishing data on topic {}", self.topic_name);
         Ok(())
     }
@@ -171,5 +172,20 @@ impl Publication {
 
     pub fn topic_type(&self) -> &str {
         &self.topic_type
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum PublisherError {
+    /// Serialize Error from `serde_rosmsg::Error` (stored as String because of dyn Error)
+    #[error("serde_rosmsg Error: {0}")]
+    SerializingError(String),
+    #[error("connection closed, no further messages can be sent")]
+    StreamClosed,
+}
+
+impl From<serde_rosmsg::Error> for PublisherError {
+    fn from(value: serde_rosmsg::Error) -> Self {
+        Self::SerializingError(value.to_string())
     }
 }

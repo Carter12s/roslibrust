@@ -1,4 +1,3 @@
-use crate::{RosLibRustError, RosLibRustResult};
 use std::fmt::Display;
 
 lazy_static::lazy_static! {
@@ -11,12 +10,12 @@ pub struct Name {
 }
 
 impl Name {
-    pub fn new(name: impl Into<String>) -> RosLibRustResult<Self> {
+    pub fn new(name: impl Into<String>) -> Result<Name, InvalidNameError> {
         let name: String = name.into();
         if is_valid(&name) {
             Ok(Self { inner: name })
         } else {
-            Err(RosLibRustError::InvalidName(name))
+            Err(InvalidNameError(name))
         }
     }
 
@@ -126,3 +125,7 @@ mod tests {
         );
     }
 }
+
+#[derive(thiserror::Error, Debug)]
+#[error("Invalid Name: {0}")]
+pub struct InvalidNameError(String);

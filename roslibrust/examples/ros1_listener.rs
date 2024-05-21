@@ -2,7 +2,7 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 
 #[cfg(feature = "ros1")]
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), anyhow::Error> {
     use roslibrust::ros1::NodeHandle;
 
     simple_logger::SimpleLogger::new()
@@ -14,8 +14,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let nh = NodeHandle::new("http://localhost:11311", "listener_rs").await?;
     let mut subscriber = nh.subscribe::<std_msgs::String>("/chatter", 1).await?;
 
-    while let Ok(msg) = subscriber.next().await {
-        log::info!("[/listener_rs] Got message: {}", msg.data);
+    while let Some(msg) = subscriber.next().await {
+        if let Ok(msg) = msg {
+            log::info!("[/listener_rs] Got message: {}", msg.data);
+        }
     }
 
     Ok(())
