@@ -481,10 +481,15 @@ name = "example_package"
 version = "0.1.0"
 dependencies = [
  "cargo-emit",
- "roslibrust",
  "roslibrust_codegen",
- "serde",
- "smart-default 0.7.1",
+]
+
+[[package]]
+name = "example_package_macro"
+version = "0.1.0"
+dependencies = [
+ "roslibrust_codegen",
+ "roslibrust_codegen_macro",
 ]
 
 [[package]]
@@ -1317,8 +1322,10 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
+ "serde-big-array",
  "serde_json",
  "simple-error",
+ "smart-default 0.7.1",
  "syn 1.0.109",
  "test-log",
  "tokio",
@@ -1361,10 +1368,6 @@ dependencies = [
  "lazy_static",
  "roslibrust",
  "roslibrust_codegen",
- "serde",
- "serde-big-array",
- "serde_json",
- "smart-default 0.6.0",
 ]
 
 [[package]]

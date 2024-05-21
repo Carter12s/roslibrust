@@ -8,11 +8,6 @@ env_logger = "0.10"
 roslibrust = { path = "../roslibrust" }
 roslibrust_codegen = { path = "../roslibrust_codegen" }
 lazy_static = "1.4"
-# None of these three dependencies should have to be in here, they are leaking from generated code...
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-smart-default = "0.6"
-serde-big-array = "0.5"
 
 [dev-dependencies]
 diffy = "0.3.0"

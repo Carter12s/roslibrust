@@ -10,17 +10,14 @@ use crate::{bail, Error};
 use crate::{ConstantInfo, FieldInfo, MessageFile, RosLiteral, ServiceFile};
 
 fn derive_attrs() -> Vec<syn::Attribute> {
-    // TODO we should look into using $crate here...
-    // The way we're currently doing it leaks a dependency on these crates to users...
-    // However using $crate breaks the generated code in non-macro usage
-    // Pass a flag in "if_macro"?
     vec![
-        parse_quote! { #[derive(::serde::Deserialize)] },
-        parse_quote! { #[derive(::serde::Serialize)] },
-        parse_quote! { #[derive(::smart_default::SmartDefault)] },
+        parse_quote! { #[derive(::roslibrust_codegen::Deserialize)] },
+        parse_quote! { #[derive(::roslibrust_codegen::Serialize)] },
+        parse_quote! { #[derive(::roslibrust_codegen::SmartDefault)] },
         parse_quote! { #[derive(Debug)] },
         parse_quote! { #[derive(Clone)] },
         parse_quote! { #[derive(PartialEq)] },
+        parse_quote! { #[serde(crate = "::roslibrust_codegen::serde")] },
     ]
 }
 
@@ -179,7 +176,7 @@ fn generate_field_definition(
     const MAX_FIXED_ARRAY_LEN: usize = 32;
     let serde_line = match field.field_type.array_info {
         Some(Some(fixed_array_len)) if fixed_array_len > MAX_FIXED_ARRAY_LEN => {
-            quote! { #[serde(with = "::serde_big_array::BigArray")] }
+            quote! { #[serde(with = "::roslibrust_codegen::BigArray")] }
         }
         _ => quote! {},
     };
