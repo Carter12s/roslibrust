@@ -21,8 +21,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     loop {
         let msg = std_msgs::Header::default();
         info!("About to publish");
-        publisher.publish(msg).await.unwrap();
-        info!("Published msg...");
+        let result = publisher.publish(msg).await;
+        match result {
+            Ok(()) => {
+                info!("Published msg!");
+            }
+            Err(e) => {
+                error!("Failed to publish msg: {e}");
+            }
+        }
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     }
 }

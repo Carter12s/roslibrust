@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   rosbridge:
     image: carter12s/roslibrust-ci-humble:latest

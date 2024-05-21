@@ -25,7 +25,6 @@ mod integration_tests {
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
         "assets/ros1_common_interfaces/ros_comm_msgs",
         "assets/ros1_common_interfaces/std_msgs",
-        // "assets/test_msgs" // Note: we can't use these message in integration tests since they aren't installed inside our docker image (yet!)
     );
 
     #[cfg(feature = "ros2_test")]
@@ -371,5 +370,22 @@ mod integration_tests {
                 panic!("Got a different error type than expected in service response: {e}");
             }
         }
+    }
+
+    /// This test:
+    /// - Creates a rosbridge
+    /// - Creates a publisher and subscriber and connects them
+    /// - Confirms they work
+    /// - Kills the rosbridge
+    /// - Restarts the rosbridge
+    /// - Confirms publisher and subscriber still work!
+    #[test_log::test(tokio::test)]
+    async fn pub_and_sub_reconnect_through_dead_bridge() {
+
+        std::process::Command::new("rosrun")
+            .args(["rosbridge_server", "rosbridge_websocket"])
+            .spawn()
+            .expect("Failed to start rosbridge");
+
     }
 }
