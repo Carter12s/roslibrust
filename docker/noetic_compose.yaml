@@ -1,7 +1,6 @@
-version: "3.9"
 services:
   rosbridge:
-    image: joaquingimenez1/noetic-rosbridge:1.1.2
+    image: carter12s/roslibrust-ci-noetic:rust-1-72
     ports:
       - "9090:9090"
       # Pass through the ros master port for native ros1 testing

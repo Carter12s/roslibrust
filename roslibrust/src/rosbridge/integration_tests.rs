@@ -25,7 +25,6 @@ mod integration_tests {
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
         "assets/ros1_common_interfaces/ros_comm_msgs",
         "assets/ros1_common_interfaces/std_msgs",
-        // "assets/test_msgs" // Note: we can't use these message in integration tests since they aren't installed inside our docker image (yet!)
     );
 
     #[cfg(feature = "ros2_test")]
@@ -371,5 +370,123 @@ mod integration_tests {
                 panic!("Got a different error type than expected in service response: {e}");
             }
         }
+    }
+
+    /// This test is a big one:
+    /// - Creates a rosbridge
+    /// - Creates a publisher and subscriber and connects them
+    /// - Confirms they work
+    /// - Kills the rosbridge
+    /// - While the bridge is down, publishes a message, and confirms we report disconnected
+    /// - Restarts the rosbridge
+    /// - Confirms publisher and subscriber still work!
+    #[test_log::test(tokio::test)]
+    // Note: only have a ros1 version of this test for now, as this is specialized in how we launch rosbridge
+    #[cfg(feature = "ros1_test")]
+    async fn pub_and_sub_reconnect_through_dead_bridge() {
+        // Have to do a timeout to confirm the bridge is up / down
+        const WAIT_FOR_ROSBRIDGE: tokio::time::Duration = tokio::time::Duration::from_millis(2000);
+
+        // Child process not automatically killed on drop
+        // Wrapping in a guard
+        struct ChildGuard(std::process::Child);
+        impl Drop for ChildGuard {
+            fn drop(&mut self) {
+                // rosbridge doesn't have a clean shutdown, so we're doing some shit here...
+                for _ in 0..5 {
+                    let mut kill = std::process::Command::new("kill")
+                        .args(["-s", "TERM", &self.0.id().to_string()])
+                        .spawn()
+                        .expect("Failed to kill rosbridge");
+                    kill.wait().expect("Failed to kill rosbridge");
+                }
+                // Fun fact even after roslaunch has returned we can't be sure rosbridge has exited...
+                self.0.wait().expect("Failed to kill rosbridge");
+            }
+        }
+
+        // For now picking 9095 as a custom port for this test and hoping there are no collisions
+        let bridge = ChildGuard(
+            std::process::Command::new("rosrun")
+                .args([
+                    "rosbridge_server",
+                    "rosbridge_websocket",
+                    // Note: important to not have same name as main rosbridge server the rest of the tests use
+                    "__name:=rosbridge_websocket_pub_and_sub_integration_test",
+                    "_port:=9095",
+                ])
+                .spawn()
+                .expect("Failed to start rosbridge"),
+        );
+
+        // Note longer timeout here to allow for bridge to come up
+        let client = ClientHandle::new_with_options(
+            ClientHandleOptions::new("ws://localhost:9095").timeout(WAIT_FOR_ROSBRIDGE),
+        )
+        .await
+        .expect("Failed to construct client");
+
+        let publisher = client
+            .advertise("/test_reconnect")
+            .await
+            .expect("Failed to advertise");
+        let subscriber = client
+            .subscribe::<Header>("/test_reconnect")
+            .await
+            .expect("Failed to subscribe");
+
+        // Confirm we can send and receive messages
+        publisher
+            .publish(Header::default())
+            .await
+            .expect("Failed to publish");
+
+        let received = subscriber.next().await;
+        assert_eq!(received, Header::default());
+
+        // kill rosbridge
+        std::mem::drop(bridge);
+        // Wait for bridge to go down
+        tokio::time::sleep(WAIT_FOR_ROSBRIDGE).await;
+
+        // Try to publish and confirm we get an error
+        let res = publisher.publish(Header::default()).await;
+        match res {
+            Ok(_) => {
+                panic!("Should have failed to publish after rosbridge died");
+            }
+            Err(RosLibRustError::Disconnected) => {
+                // All good!
+            }
+            Err(e) => {
+                panic!("Got unexpected error: {e}");
+            }
+        }
+
+        // Start the bridge back up!
+        let _bridge = ChildGuard(
+            std::process::Command::new("rosrun")
+                .args([
+                    "rosbridge_server",
+                    "rosbridge_websocket",
+                    // Note: important to not have same name as main rosbridge server the rest of the tests use
+                    "__name:=rosbridge_websocket_pub_and_sub_integration_test",
+                    "_port:=9095",
+                ])
+                .spawn()
+                .expect("Failed to start rosbridge"),
+        );
+
+        // Wait for bridge to come up
+        tokio::time::sleep(WAIT_FOR_ROSBRIDGE).await;
+
+        // Try to publish and confirm we reconnect automatically
+        publisher
+            .publish(Header::default())
+            .await
+            .expect("Failed to publish after rosbridge died");
+
+        let received = subscriber.next().await;
+        assert_eq!(received, Header::default());
     }
 }
