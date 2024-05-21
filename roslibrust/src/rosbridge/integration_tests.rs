@@ -372,15 +372,21 @@ mod integration_tests {
         }
     }
 
-    /// This test:
+    /// This test is a big one:
     /// - Creates a rosbridge
     /// - Creates a publisher and subscriber and connects them
     /// - Confirms they work
     /// - Kills the rosbridge
+    /// - While the bridge is down, publishes a message, and confirms we report disconnected
     /// - Restarts the rosbridge
     /// - Confirms publisher and subscriber still work!
     #[test_log::test(tokio::test)]
+    // Note: only have a ros1 version of this test for now, as this is specialized in how we launch rosbridge
+    #[cfg(feature = "ros1_test")]
     async fn pub_and_sub_reconnect_through_dead_bridge() {
+        // Have to do a much longer timeout to confirm the bridge is up / down
+        const WAIT_FOR_ROSBRIDGE: tokio::time::Duration = tokio::time::Duration::from_secs(5);
+
         // Child process not automatically killed on drop
         // Wrapping in a guard
         struct ChildGuard(std::process::Child);
@@ -389,14 +395,22 @@ mod integration_tests {
                 // Roslaunch and rosbridge don't have a clean shutdown, so we're doing some shit here...
                 for _ in 0..5 {
                     // WHY DO YOU SUCK ROSBRIDGE
+                    // Maybe this is roslaunch's fault, but if you kill() it, it kills roslaunch which doesn't clean up its child processes
+                    // and it swallows a few SIGTERMs, so you have to send multiple to get it to cleanup nicely!
                     let mut kill = std::process::Command::new("kill")
                         .args(["-s", "TERM", &self.0.id().to_string()])
                         .spawn()
                         .expect("Failed to kill rosbridge");
                     kill.wait().expect("Failed to kill rosbridge");
                 }
+                // Fun fact even after roslaunch has returned we can't be sure rosbridge has exited...
+                self.0.wait().expect("Failed to kill rosbridge");
             }
         }
+
+        // TODO I wrote this initially with roslaunch to avoid having to start / stop roscore
+        // but roslaunch has been such a PITA with shutdown we might want to directly invoke rosbridge_server, and manually manage
+        // roscore...
 
         // For now picking 9095 as a custom port for this test and hoping there are no collisions
         let bridge = ChildGuard(
@@ -412,8 +426,7 @@ mod integration_tests {
 
         // Note longer timeout here to allow for bridge to come up
         let client = ClientHandle::new_with_options(
-            ClientHandleOptions::new("ws://localhost:9095")
-                .timeout(tokio::time::Duration::from_secs(5)),
+            ClientHandleOptions::new("ws://localhost:9095").timeout(WAIT_FOR_ROSBRIDGE),
         )
         .await
         .expect("Failed to construct client");
@@ -438,9 +451,8 @@ mod integration_tests {
 
         // kill rosbridge
         std::mem::drop(bridge);
-
-        // Wait for rosbridge to die fully
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        // Wait for bridge to go down
+        tokio::time::sleep(WAIT_FOR_ROSBRIDGE).await;
 
         // Try to publish and confirm we get an error
         let res = publisher.publish(Header::default()).await;
@@ -457,7 +469,7 @@ mod integration_tests {
         }
 
         // Start the bridge back up!
-        let bridge = ChildGuard(
+        let _bridge = ChildGuard(
             std::process::Command::new("roslaunch")
                 .args([
                     "rosbridge_server",
@@ -469,7 +481,7 @@ mod integration_tests {
         );
 
         // Wait for bridge to come up
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        tokio::time::sleep(WAIT_FOR_ROSBRIDGE).await;
 
         // Try to publish and confirm we reconnect automatically
         publisher
