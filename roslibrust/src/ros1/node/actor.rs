@@ -5,13 +5,13 @@ use crate::{
         publisher::Publication,
         service_client::{CallServiceRequest, ServiceServerLink},
         subscriber::Subscription,
-        MasterClient, ProtocolParams,
+        MasterClient, NodeError, ProtocolParams,
     },
     RosLibRustError, RosLibRustResult,
 };
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::{RosMessageType, RosServiceType};
-use std::{collections::HashMap, net::Ipv4Addr, sync::Arc};
+use std::{collections::HashMap, io, net::Ipv4Addr, sync::Arc};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
 #[derive(Debug)]
@@ -75,56 +75,37 @@ pub(crate) struct NodeServerHandle {
 
 impl NodeServerHandle {
     /// Get the URI of the master node.
-    pub async fn get_master_uri(&self) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn get_master_uri(&self) -> Result<String, NodeError> {
         let (sender, receiver) = oneshot::channel();
-        match self
-            .node_server_sender
-            .send(NodeMsg::GetMasterUri { reply: sender })
-        {
-            Ok(()) => Ok(receiver.await.map_err(|err| Box::new(err))?),
-            Err(e) => Err(Box::new(e)),
-        }
+        self.node_server_sender
+            .send(NodeMsg::GetMasterUri { reply: sender })?;
+        Ok(receiver.await?)
     }
 
-    pub async fn get_client_uri(&self) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    /// Get the URI of the client node.
+    pub async fn get_client_uri(&self) -> Result<String, NodeError> {
         let (sender, receiver) = oneshot::channel();
-        match self
-            .node_server_sender
-            .send(NodeMsg::GetClientUri { reply: sender })
-        {
-            Ok(()) => Ok(receiver.await.map_err(|err| Box::new(err))?),
-            Err(e) => Err(Box::new(e)),
-        }
+        self.node_server_sender
+            .send(NodeMsg::GetClientUri { reply: sender })?;
+        Ok(receiver.await?)
     }
 
     /// Gets the list of topics the node is currently subscribed to.
     /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
-    pub async fn get_subscriptions(
-        &self,
-    ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
+    pub async fn get_subscriptions(&self) -> Result<Vec<(String, String)>, NodeError> {
         let (sender, receiver) = oneshot::channel();
-        match self
-            .node_server_sender
-            .send(NodeMsg::GetSubscriptions { reply: sender })
-        {
-            Ok(()) => Ok(receiver.await.map_err(|err| Box::new(err))?),
-            Err(e) => Err(Box::new(e)),
-        }
+        self.node_server_sender
+            .send(NodeMsg::GetSubscriptions { reply: sender })?;
+        Ok(receiver.await?)
     }
 
     /// Gets the list of topic the node is currently publishing to.
     /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
-    pub async fn get_publications(
-        &self,
-    ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
+    pub async fn get_publications(&self) -> Result<Vec<(String, String)>, NodeError> {
         let (sender, receiver) = oneshot::channel();
-        match self
-            .node_server_sender
-            .send(NodeMsg::GetPublications { reply: sender })
-        {
-            Ok(()) => Ok(receiver.await.map_err(|err| Box::new(err))?),
-            Err(e) => Err(Box::new(e)),
-        }
+        self.node_server_sender
+            .send(NodeMsg::GetPublications { reply: sender })?;
+        Ok(receiver.await?)
     }
 
     /// Updates the list of know publishers for a given topic
@@ -133,17 +114,14 @@ impl NodeServerHandle {
         &self,
         topic: String,
         publishers: Vec<String>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), NodeError> {
         Ok(self
             .node_server_sender
-            .send(NodeMsg::SetPeerPublishers { topic, publishers })
-            .map_err(|err| Box::new(err))?)
+            .send(NodeMsg::SetPeerPublishers { topic, publishers })?)
     }
 
-    pub fn shutdown(&self) -> Result<(), Box<dyn std::error::Error>> {
-        self.node_server_sender
-            .send(NodeMsg::Shutdown)
-            .map_err(|err| Box::new(err))?;
+    pub fn shutdown(&self) -> Result<(), NodeError> {
+        self.node_server_sender.send(NodeMsg::Shutdown)?;
         Ok(())
     }
 
@@ -151,24 +129,20 @@ impl NodeServerHandle {
         &self,
         topic: &str,
         queue_size: usize,
-    ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<mpsc::Sender<Vec<u8>>, NodeError> {
         let (sender, receiver) = oneshot::channel();
-        match self.node_server_sender.send(NodeMsg::RegisterPublisher {
+        self.node_server_sender.send(NodeMsg::RegisterPublisher {
             reply: sender,
             topic: topic.to_owned(),
             topic_type: T::ROS_TYPE_NAME.to_owned(),
             queue_size,
             msg_definition: T::DEFINITION.to_owned(),
             md5sum: T::MD5SUM.to_owned(),
-        }) {
-            Ok(()) => {
-                let received = receiver.await.map_err(|err| Box::new(err))?;
-                Ok(received.map_err(|_err| {
-                    Box::new(std::io::Error::from(std::io::ErrorKind::ConnectionAborted))
-                })?)
-            }
-            Err(err) => Err(Box::new(err)),
-        }
+        })?;
+        let received = receiver.await?;
+        Ok(received.map_err(|_err| {
+            NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
+        })?)
     }
 
     pub async fn register_service_client<T: RosServiceType>(
@@ -202,25 +176,21 @@ impl NodeServerHandle {
         &self,
         topic: &str,
         queue_size: usize,
-    ) -> Result<broadcast::Receiver<Vec<u8>>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<broadcast::Receiver<Vec<u8>>, NodeError> {
         let (sender, receiver) = oneshot::channel();
-        match self.node_server_sender.send(NodeMsg::RegisterSubscriber {
+        self.node_server_sender.send(NodeMsg::RegisterSubscriber {
             reply: sender,
             topic: topic.to_owned(),
             topic_type: T::ROS_TYPE_NAME.to_owned(),
             queue_size,
             msg_definition: T::DEFINITION.to_owned(),
             md5sum: T::MD5SUM.to_owned(),
-        }) {
-            Ok(()) => {
-                let received = receiver.await.map_err(|err| Box::new(err))?;
-                Ok(received.map_err(|err| {
-                    log::error!("Failed to register subscriber: {err}");
-                    Box::new(std::io::Error::from(std::io::ErrorKind::ConnectionAborted))
-                })?)
-            }
-            Err(err) => Err(Box::new(err)),
-        }
+        })?;
+        let received = receiver.await?;
+        Ok(received.map_err(|err| {
+            log::error!("Failed to register subscriber: {err}");
+            NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
+        })?)
     }
 
     pub async fn request_topic(
@@ -228,25 +198,19 @@ impl NodeServerHandle {
         caller_id: &str,
         topic: &str,
         protocols: &[String],
-    ) -> Result<ProtocolParams, Box<dyn std::error::Error>> {
+    ) -> Result<ProtocolParams, NodeError> {
         let (sender, receiver) = oneshot::channel();
-        match self.node_server_sender.send(NodeMsg::RequestTopic {
+        self.node_server_sender.send(NodeMsg::RequestTopic {
             caller_id: caller_id.to_owned(),
             topic: topic.to_owned(),
             protocols: protocols.into(),
             reply: sender,
-        }) {
-            Ok(()) => {
-                let received = receiver.await.map_err(|err| Box::new(err))?;
-                Ok(received.map_err(|err| {
-                    log::error!(
-                        "Fail to coordinate channel between publisher and subscriber: {err}"
-                    );
-                    Box::new(std::io::Error::from(std::io::ErrorKind::AddrNotAvailable))
-                })?)
-            }
-            Err(e) => Err(Box::new(e)),
-        }
+        })?;
+        let received = receiver.await?;
+        Ok(received.map_err(|err| {
+            log::error!("Fail to coordinate channel between publisher and subscriber: {err}");
+            NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
+        })?)
     }
 }
 
@@ -277,7 +241,7 @@ impl Node {
         hostname: &str,
         node_name: &Name,
         addr: Ipv4Addr,
-    ) -> Result<NodeServerHandle, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<NodeServerHandle, NodeError> {
         let (node_sender, node_receiver) = mpsc::unbounded_channel();
         let xml_server_handle = NodeServerHandle {
             node_server_sender: node_sender.clone(),
@@ -467,7 +431,7 @@ impl Node {
         queue_size: usize,
         msg_definition: &str,
         md5sum: &str,
-    ) -> Result<broadcast::Receiver<Vec<u8>>, Box<dyn std::error::Error>> {
+    ) -> Result<broadcast::Receiver<Vec<u8>>, NodeError> {
         match self.subscriptions.iter().find(|(key, _)| *key == topic) {
             Some((_topic, subscription)) => Ok(subscription.get_receiver()),
             None => {
@@ -499,14 +463,14 @@ impl Node {
         queue_size: usize,
         msg_definition: String,
         md5sum: String,
-    ) -> Result<mpsc::Sender<Vec<u8>>, Box<dyn std::error::Error>> {
+    ) -> Result<mpsc::Sender<Vec<u8>>, NodeError> {
         let existing_entry = {
             self.publishers.iter().find_map(|(key, value)| {
                 if key.as_str() == &topic {
                     if value.topic_type() == topic_type {
                         Some(Ok(value.get_sender()))
                     } else {
-                        Some(Err(Box::new(std::io::Error::from(
+                        Some(Err(NodeError::IoError(std::io::Error::from(
                             std::io::ErrorKind::AddrInUse,
                         ))))
                     }

@@ -1,8 +1,6 @@
 use log::*;
 use proc_macro2::TokenStream;
 use quote::quote;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use simple_error::{bail, SimpleError as Error};
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::{Debug, Display};
@@ -18,6 +16,15 @@ use utils::RosVersion;
 
 pub mod integral_types;
 pub use integral_types::*;
+
+// These pub use statements are here to be able to export the dependencies of the generated code
+// so that crates using this crate don't need to add these dependencies themselves.
+// Our generated code should find these exports.
+// Modeled from: https://users.rust-lang.org/t/proc-macros-using-third-party-crate/42465/4
+pub use ::serde;
+pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
+pub use serde_big_array::BigArray;
+pub use smart_default::SmartDefault;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
@@ -362,12 +369,20 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
     search_paths: Vec<PathBuf>,
 ) -> Result<(TokenStream, Vec<PathBuf>), Error> {
     let (messages, services, actions) = find_and_parse_ros_messages(&search_paths)?;
-
     if messages.is_empty() && services.is_empty() {
         // I'm considering this an error for now, but I could see this one being debateable
         // As it stands there is not good way for us to manually produce a warning, so I'd rather fail loud
         bail!("Failed to find any services or messages while generating ROS message definitions, paths searched: {search_paths:?}");
     }
+    tokenize_messages_and_services(messages, services, actions)
+}
+
+/// Generates source code and list of depnendent file system paths
+fn tokenize_messages_and_services(
+    messages: Vec<ParsedMessageFile>,
+    services: Vec<ParsedServiceFile>,
+    actions: Vec<ParsedActionFile>,
+) -> Result<(TokenStream, Vec<PathBuf>), Error> {
     let (messages, services) = resolve_dependency_graph(messages, services)?;
     let msg_iter = messages.iter().map(|m| m.parsed.path.clone());
     let srv_iter = services.iter().map(|s| s.parsed.path.clone());
@@ -375,6 +390,29 @@ pub fn find_and_generate_ros_messages_without_ros_package_path(
     let dependent_paths = msg_iter.chain(srv_iter).chain(action_iter).collect();
     let source = generate_rust_ros_message_definitions(messages, services)?;
     Ok((source, dependent_paths))
+}
+
+/// Generates struct definitions and implementations for message and service files
+/// in the given packages.
+pub fn generate_ros_messages_for_packages(
+    packages: Vec<Package>,
+) -> Result<(TokenStream, Vec<PathBuf>), Error> {
+    let msg_paths = packages
+        .iter()
+        .flat_map(|package| {
+            utils::get_message_files(&package).map(|msgs| {
+                msgs.into_iter()
+                    .map(|msg| (package.clone(), msg))
+                    .collect::<Vec<_>>()
+            })
+        })
+        .flatten()
+        .collect();
+    let (messages, services, actions) = parse_ros_files(msg_paths)?;
+    if messages.is_empty() && services.is_empty() {
+        bail!("Failed to find any services or messages while generating ROS message definitions, packages searched: {packages:?}")
+    }
+    tokenize_messages_and_services(messages, services, actions)
 }
 
 /// Searches a list of paths for ROS packages to find their associated message

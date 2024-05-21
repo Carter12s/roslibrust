@@ -736,7 +736,16 @@ impl Client {
         self.reader = RwLock::new(reader);
         self.writer = RwLock::new(writer);
 
-        // TODO re-advertise!
+        // TODO re-establish service servers?
+
+        // Re-advertise all publishers
+        for publisher in self.publishers.iter() {
+            let topic = publisher.key();
+            let topic_type = &publisher.value().topic_type;
+            let mut lock = self.writer.write().await;
+            lock.advertise_str(topic, topic_type).await?;
+        }
+
         // Resend rosbridge our subscription requests to re-establish inflight subscriptions
         // Clone here is dumb, but required due to async
         let mut subs: Vec<(String, String)> = vec![];
@@ -763,7 +772,11 @@ async fn stubborn_spin(
     while let Some(client) = client.upgrade() {
         const SPIN_DURATION: Duration = Duration::from_millis(10);
 
-        match tokio::time::timeout(SPIN_DURATION, client.read().await.spin_once()).await {
+        // Do a spin, important to not do this in the match or it keeps the lock alive in the branch arms
+        let spin_result =
+            tokio::time::timeout(SPIN_DURATION, client.read().await.spin_once()).await;
+
+        match spin_result {
             Ok(Ok(())) => {}
             Ok(Err(err)) => {
                 is_disconnected.store(true, Ordering::Relaxed);
@@ -797,6 +810,7 @@ where
 // Connects to websocket at specified URL, retries indefinitely
 async fn stubborn_connect(url: &str) -> (Writer, Reader) {
     loop {
+        debug!("Starting a stubborn_connect attempt to {url}");
         match connect(url).await {
             Err(e) => {
                 warn!("Failed to reconnect: {:?}", e);

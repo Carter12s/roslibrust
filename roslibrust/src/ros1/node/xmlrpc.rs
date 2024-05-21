@@ -47,7 +47,7 @@ impl XmlRpcServer {
     pub fn new(
         host_addr: Ipv4Addr,
         node_server: NodeServerHandle,
-    ) -> Result<XmlRpcServerHandle, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<XmlRpcServerHandle, XmlRpcError> {
         let make_svc = hyper::service::make_service_fn(move |connection| {
             debug!("New node xmlrpc connection {connection:?}");
             let node_server = node_server.clone();
@@ -112,7 +112,7 @@ impl XmlRpcServer {
                 debug!("getMasterUri called by {args:?}");
                 match node_server.get_master_uri().await {
                     Ok(uri) => Self::to_response(uri),
-                    Err(e) => Err(Self::make_response_from_boxed_error(
+                    Err(e) => Err(Self::make_error_response(
                         e,
                         "Unable to retrieve master URI",
                         StatusCode::INTERNAL_SERVER_ERROR,
@@ -140,7 +140,7 @@ impl XmlRpcServer {
                                 StatusCode::INTERNAL_SERVER_ERROR))
                         }
                     },
-                    Err(e) => Err(Self::make_response_from_boxed_error(e, "Unable to get subscriptions", StatusCode::INTERNAL_SERVER_ERROR))
+                    Err(e) => Err(Self::make_error_response(e, "Unable to get subscriptions", StatusCode::INTERNAL_SERVER_ERROR))
                 }
             }
             "getPublications" => {
@@ -153,7 +153,7 @@ impl XmlRpcServer {
                             "Publications contained names which could not be validly serialized to xmlrpc",
                             StatusCode::INTERNAL_SERVER_ERROR))
                     },
-                    Err(e) => Err(Self::make_response_from_boxed_error(e, "Unable to get publications", StatusCode::INTERNAL_SERVER_ERROR))
+                    Err(e) => Err(Self::make_error_response(e, "Unable to get publications", StatusCode::INTERNAL_SERVER_ERROR))
                 }
             }
             "paramUpdate" => {
@@ -174,7 +174,7 @@ impl XmlRpcServer {
                 node_server
                     .set_peer_publishers(topic, publishers)
                     .map_err(|e| {
-                        Self::make_response_from_boxed_error(
+                        Self::make_error_response(
                             e,
                             "Unable to set peer publishers",
                             StatusCode::INTERNAL_SERVER_ERROR,
@@ -200,7 +200,7 @@ impl XmlRpcServer {
                     .request_topic(&caller_id, &topic, &protocols)
                     .await
                     .map_err(|e| {
-                        Self::make_response_from_boxed_error(
+                        Self::make_error_response(
                             e,
                             "Unable to get parameters for requested topic",
                             StatusCode::INTERNAL_SERVER_ERROR,
@@ -229,7 +229,7 @@ impl XmlRpcServer {
                     })?;
                 debug!("Received request for shutdown from {caller_id}: {msg}");
                 node_server.shutdown().map_err(|e| {
-                    Self::make_response_from_boxed_error(
+                    Self::make_error_response(
                         e,
                         "Unable to shutdown",
                         StatusCode::INTERNAL_SERVER_ERROR,
@@ -314,19 +314,6 @@ impl XmlRpcServer {
             .unwrap()
     }
 
-    fn make_response_from_boxed_error(
-        e: Box<dyn std::error::Error>,
-        msg: &str,
-        code: hyper::http::StatusCode,
-    ) -> Response<Body> {
-        let error_msg = format!("{msg}: {e:?}");
-        warn!("{error_msg}");
-        Response::builder()
-            .status(code)
-            .body(Body::from(error_msg))
-            .unwrap()
-    }
-
     // Is the actual function we hand to hyper
     async fn respond(
         node_server: NodeServerHandle,
@@ -338,4 +325,10 @@ impl XmlRpcServer {
             Err(body) => Ok(body),
         }
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum XmlRpcError {
+    #[error(transparent)]
+    HyperError(#[from] hyper::Error),
 }

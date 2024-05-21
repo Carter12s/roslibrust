@@ -1,14 +1,18 @@
 //! This module contains the top level Node and NodeHandle classes.
 //! These wrap the lower level management of a ROS Node connection into a higher level and thread safe API.
 
-use super::RosMasterError;
-use std::net::{IpAddr, Ipv4Addr};
+use super::{names::InvalidNameError, RosMasterError};
+use std::{
+    io,
+    net::{IpAddr, Ipv4Addr},
+};
 
 mod actor;
 mod handle;
 mod xmlrpc;
 use actor::*;
 pub use handle::NodeHandle;
+use tokio::sync::{mpsc, oneshot};
 use xmlrpc::*;
 
 #[derive(Debug)]
@@ -66,5 +70,31 @@ async fn hostname_to_ipv4(name: &str) -> Result<Ipv4Addr, RosMasterError> {
         Err(RosMasterError::HostIpResolutionFailure(format!(
             "ROS_HOSTNAME did not resolve any address: {name:?}"
         )))
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum NodeError {
+    #[error(transparent)]
+    RosMasterError(#[from] RosMasterError),
+    #[error("connection closed")]
+    ChannelClosedError,
+    #[error(transparent)]
+    InvalidName(#[from] InvalidNameError),
+    #[error(transparent)]
+    XmlRpcError(#[from] XmlRpcError),
+    #[error(transparent)]
+    IoError(#[from] io::Error),
+}
+
+impl From<oneshot::error::RecvError> for NodeError {
+    fn from(_value: oneshot::error::RecvError) -> Self {
+        NodeError::ChannelClosedError
+    }
+}
+
+impl<T> From<mpsc::error::SendError<T>> for NodeError {
+    fn from(_value: mpsc::error::SendError<T>) -> Self {
+        Self::ChannelClosedError
     }
 }

@@ -44,7 +44,7 @@ impl RosMessageType for GenericHeader {
 
 /// Sets up a subscriber that could get either of two versions of a message
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), anyhow::Error> {
     simple_logger::SimpleLogger::new()
         .with_level(log::LevelFilter::Debug)
         .without_timestamps() // required for running in wsl2

@@ -22,7 +22,7 @@ pub fn prepare_environment<'a>(
                 Some(native_type) => native_type.clone(),
                 None => ros_type.to_string(),
             };
-            Value::from_serializable(&typename)
+            Value::from_serialize(&typename)
         });
     }
     env.add_template("message", message_template).unwrap();
@@ -104,5 +104,5 @@ pub fn fixed_size_array_size(value: Value) -> Value {
     } else {
         0
     };
-    Value::from_serializable(&fixed_size)
+    Value::from_serialize(&fixed_size)
 }
