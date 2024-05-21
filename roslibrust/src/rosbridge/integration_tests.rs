@@ -384,19 +384,16 @@ mod integration_tests {
     // Note: only have a ros1 version of this test for now, as this is specialized in how we launch rosbridge
     #[cfg(feature = "ros1_test")]
     async fn pub_and_sub_reconnect_through_dead_bridge() {
-        // Have to do a much longer timeout to confirm the bridge is up / down
-        const WAIT_FOR_ROSBRIDGE: tokio::time::Duration = tokio::time::Duration::from_secs(5);
+        // Have to do a timeout to confirm the bridge is up / down
+        const WAIT_FOR_ROSBRIDGE: tokio::time::Duration = tokio::time::Duration::from_millis(2000);
 
         // Child process not automatically killed on drop
         // Wrapping in a guard
         struct ChildGuard(std::process::Child);
         impl Drop for ChildGuard {
             fn drop(&mut self) {
-                // Roslaunch and rosbridge don't have a clean shutdown, so we're doing some shit here...
+                // rosbridge doesn't have a clean shutdown, so we're doing some shit here...
                 for _ in 0..5 {
-                    // WHY DO YOU SUCK ROSBRIDGE
-                    // Maybe this is roslaunch's fault, but if you kill() it, it kills roslaunch which doesn't clean up its child processes
-                    // and it swallows a few SIGTERMs, so you have to send multiple to get it to cleanup nicely!
                     let mut kill = std::process::Command::new("kill")
                         .args(["-s", "TERM", &self.0.id().to_string()])
                         .spawn()
@@ -408,17 +405,15 @@ mod integration_tests {
             }
         }
 
-        // TODO I wrote this initially with roslaunch to avoid having to start / stop roscore
-        // but roslaunch has been such a PITA with shutdown we might want to directly invoke rosbridge_server, and manually manage
-        // roscore...
-
         // For now picking 9095 as a custom port for this test and hoping there are no collisions
         let bridge = ChildGuard(
-            std::process::Command::new("roslaunch")
+            std::process::Command::new("rosrun")
                 .args([
                     "rosbridge_server",
-                    "rosbridge_websocket.launch",
-                    "port:=9095",
+                    "rosbridge_websocket",
+                    // Note: important to not have same name as main rosbridge server the rest of the tests use
+                    "__name:=rosbridge_websocket_pub_and_sub_integration_test",
+                    "_port:=9095",
                 ])
                 .spawn()
                 .expect("Failed to start rosbridge"),
@@ -470,11 +465,13 @@ mod integration_tests {
 
         // Start the bridge back up!
         let _bridge = ChildGuard(
-            std::process::Command::new("roslaunch")
+            std::process::Command::new("rosrun")
                 .args([
                     "rosbridge_server",
-                    "rosbridge_websocket.launch",
-                    "port:=9095",
+                    "rosbridge_websocket",
+                    // Note: important to not have same name as main rosbridge server the rest of the tests use
+                    "__name:=rosbridge_websocket_pub_and_sub_integration_test",
+                    "_port:=9095",
                 ])
                 .spawn()
                 .expect("Failed to start rosbridge"),
