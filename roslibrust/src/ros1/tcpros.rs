@@ -5,14 +5,19 @@ use tokio::net::TcpStream;
 use super::names::Name;
 
 // Implementation of ConnectionHeader is based off of ROS documentation here:
-// wiki.ros.org/ROS/Connection%20Header
+// https://wiki.ros.org/ROS/Connection%20Header
+// and here:
+// https://wiki.ros.org/ROS/TCPROS
 #[derive(Clone, Debug)]
+
 pub struct ConnectionHeader {
     pub caller_id: String,
     pub latching: bool,
     pub msg_definition: String,
     pub md5sum: String,
-    pub topic: String,
+    // TODO we may want to distinguish between service and topic headers with different types?
+    pub service: Option<String>,
+    pub topic: Option<String>,
     pub topic_type: String,
     pub tcp_nodelay: bool,
 }
@@ -25,7 +30,8 @@ impl ConnectionHeader {
         let mut caller_id = String::new();
         let mut latching = false;
         let mut md5sum = String::new();
-        let mut topic = String::new();
+        let mut topic = None;
+        let mut service = None;
         let mut topic_type = String::new();
         let mut tcp_nodelay = false;
 
@@ -51,13 +57,21 @@ impl ConnectionHeader {
             } else if field.starts_with("md5sum=") {
                 field[equals_pos + 1..].clone_into(&mut md5sum);
             } else if field.starts_with("topic=") {
-                field[equals_pos + 1..].clone_into(&mut topic);
+                let mut topic_str = String::new();
+                field[equals_pos + 1..].clone_into(&mut topic_str);
+                topic = Some(topic_str);
+            } else if field.starts_with("service=") {
+                let mut service_str = String::new();
+                field[equals_pos + 1..].clone_into(&mut service_str);
+                service = Some(service_str);
             } else if field.starts_with("type=") {
                 field[equals_pos + 1..].clone_into(&mut topic_type);
             } else if field.starts_with("tcp_nodelay=") {
                 let mut tcp_nodelay_str = String::new();
                 field[equals_pos + 1..].clone_into(&mut tcp_nodelay_str);
                 tcp_nodelay = &tcp_nodelay_str != "0";
+            } else if field.starts_with("error=") {
+                log::error!("Error reported in TCPROS connection header: {field}");
             } else {
                 log::warn!("Encountered unhandled field in connection header: {field}");
             }
@@ -69,6 +83,7 @@ impl ConnectionHeader {
             msg_definition,
             md5sum,
             topic,
+            service,
             topic_type,
             tcp_nodelay,
         })
@@ -101,9 +116,17 @@ impl ConnectionHeader {
             header_data.write(tcp_nodelay.as_bytes())?;
         }
 
-        let topic = format!("topic={}", self.topic);
-        header_data.write_u32::<LittleEndian>(topic.len() as u32)?;
-        header_data.write(topic.as_bytes())?;
+        if let Some(topic) = self.topic.as_ref() {
+            let topic = format!("topic={}", topic);
+            header_data.write_u32::<LittleEndian>(topic.len() as u32)?;
+            header_data.write(topic.as_bytes())?;
+        }
+
+        if let Some(service) = self.service.as_ref() {
+            let service = format!("service={}", service);
+            header_data.write_u32::<LittleEndian>(service.len() as u32)?;
+            header_data.write(service.as_bytes())?;
+        }
 
         let topic_type = format!("type={}", self.topic_type);
         header_data.write_u32::<LittleEndian>(topic_type.len() as u32)?;
@@ -118,6 +141,8 @@ impl ConnectionHeader {
     }
 }
 
+/// Creates a new TCP connection to the given server URI and sends the connection header.
+/// The only current user of this is service clients.
 pub async fn establish_connection(
     node_name: &Name,
     topic_name: &str,
@@ -126,7 +151,21 @@ pub async fn establish_connection(
 ) -> Result<TcpStream, std::io::Error> {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-    let mut stream = TcpStream::connect(server_uri).await?;
+    // Okay in Shane's version of this the server_uri is coming in as "rosrpc://localhost:41105"
+    // which is causing this to break...
+    // Not sure what that is the fault of, but I'm going to try to clean up the address here
+    // I think the correct way of doing this would be with some king of URI parsing library, for now being very lazy
+    // TODO confirm if all libs respond with rosrpc:// or not...
+    let server_uri = &server_uri.replace("rosrpc://", "");
+
+    let mut stream = TcpStream::connect(server_uri).await.map_err(
+        |err| {
+            log::error!(
+                "Failed to establish TCP connection to server {server_uri} for topic {topic_name}: {err}"
+            );
+            err
+        },
+    )?;
 
     let conn_header_bytes = conn_header.to_bytes(true)?;
     stream.write_all(&conn_header_bytes[..]).await?;
@@ -140,7 +179,7 @@ pub async fn establish_connection(
     if let Ok(responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
         if conn_header.md5sum == responded_header.md5sum {
             log::debug!(
-                "Established connection with node {node_name} for {}",
+                "Established connection with node {node_name} for topic {:?}",
                 conn_header.topic
             );
             Ok(stream)

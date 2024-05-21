@@ -60,9 +60,10 @@ impl Subscription {
             latching: false,
             msg_definition,
             md5sum,
-            topic: topic_name.to_owned(),
+            topic: Some(topic_name.to_owned()),
             topic_type: topic_type.to_owned(),
             tcp_nodelay: false,
+            service: None,
         };
 
         Self {
@@ -97,7 +98,7 @@ impl Subscription {
 
         if is_new_connection {
             let node_name = self.connection_header.caller_id.clone();
-            let topic_name = self.connection_header.topic.clone();
+            let topic_name = self.connection_header.topic.as_ref().unwrap().clone();
             let connection_header = self.connection_header.clone();
             let sender = self.msg_sender.clone();
             let publisher_list = self.known_publishers.clone();
@@ -128,7 +129,7 @@ impl Subscription {
                             }
                             read_buffer.clear();
                         } else {
-                            log::warn!("Got an error reading from the publisher connection on topic {topic_name}, closing");
+                            log::warn!("Got an error reading from the publisher connection on topic {topic_name:?}, closing");
                         }
                     }
                 }
@@ -161,7 +162,7 @@ async fn establish_publisher_connection(
     if let Ok(responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
         if conn_header.md5sum == responded_header.md5sum {
             log::debug!(
-                "Established connection with publisher for {}",
+                "Established connection with publisher for {:?}",
                 conn_header.topic
             );
             Ok(stream)

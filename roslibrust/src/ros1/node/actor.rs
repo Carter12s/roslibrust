@@ -148,10 +148,12 @@ impl NodeServerHandle {
     pub async fn register_service_client<T: RosServiceType>(
         &self,
         service_name: &Name,
-    ) -> RosLibRustResult<mpsc::UnboundedSender<CallServiceRequest>> {
+    ) -> Result<mpsc::UnboundedSender<CallServiceRequest>, NodeError> {
+        // Create a channel for hooking into the node server
         let (sender, receiver) = oneshot::channel();
-        match self
-            .node_server_sender
+
+        // Send the request to the node server and see if it accepts it
+        self.node_server_sender
             .send(NodeMsg::RegisterServiceClient {
                 reply: sender,
                 service: service_name.to_owned(),
@@ -160,16 +162,12 @@ impl NodeServerHandle {
                     [T::Request::DEFINITION, "\n", T::Response::DEFINITION].into_iter(),
                 ),
                 md5sum: T::MD5SUM.to_owned(),
-            }) {
-            Ok(()) => Ok(receiver
-                .await
-                .map_err(|_err| RosLibRustError::Disconnected)?
-                .map_err(|err| {
-                    log::error!("Unable to register service client: {err}");
-                    RosLibRustError::Disconnected
-                })?),
-            Err(_err) => Err(RosLibRustError::Disconnected),
-        }
+            })?;
+        let received = receiver.await?;
+        Ok(received.map_err(|err| {
+            log::error!("Failed to register service client: {err}");
+            NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
+        })?)
     }
 
     pub async fn register_subscriber<T: RosMessageType>(
@@ -512,7 +510,9 @@ impl Node {
         srv_definition: &str,
         md5sum: &str,
     ) -> Result<mpsc::UnboundedSender<CallServiceRequest>, Box<dyn std::error::Error>> {
+        log::debug!("Registering service client for {service}");
         let service_name = service.resolve_to_global(&self.node_name).to_string();
+
         let existing_entry = {
             self.service_clients.iter().find_map(|(key, value)| {
                 if key.as_str() == &service_name {
@@ -530,9 +530,12 @@ impl Node {
         };
 
         if let Some(handle) = existing_entry {
+            log::debug!("Found existing service client for {service}, returning existing handle");
             Ok(handle?)
         } else {
+            log::debug!("Creating new service client for {service}");
             let service_uri = self.client.lookup_service(&service_name).await?;
+            log::debug!("Found service at {service_uri}");
             let server_link = ServiceServerLink::new(
                 &self.node_name,
                 &service_name,
@@ -542,6 +545,7 @@ impl Node {
                 md5sum,
             )
             .await?;
+
             let handle = server_link.get_sender();
             self.service_clients.insert(service_name, server_link);
             Ok(handle)

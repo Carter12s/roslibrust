@@ -53,7 +53,18 @@ impl<T: RosServiceType> ServiceClient<T> {
 
         match response_rx.await {
             Ok(Ok(result_payload)) => {
-                let response: T::Response = serde_rosmsg::from_slice(&result_payload[..])
+                log::debug!(
+                    "Service client for {} got response: {:?}",
+                    self.service_name,
+                    result_payload
+                );
+
+                // Okay the 1.. is funky and needs to be addressed
+                // This is a little buried in the ROS documentation by the first byte is the "success" byte
+                // if it is 1 then the rest of the payload is the response
+                // Otherwise ros silently swaps the payload out for an error message
+                // We need to parse that error message and display somewhere
+                let response: T::Response = serde_rosmsg::from_slice(&result_payload[1..])
                     .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
                 return Ok(response);
             }
@@ -87,7 +98,10 @@ impl ServiceServerLink {
             latching: false,
             msg_definition: srv_definition.to_owned(),
             md5sum: md5sum.to_owned(),
-            topic: service_name.to_owned(),
+            // Note: using "topic" indicates a subscription
+            // using "service" indicates a service client
+            topic: None,
+            service: Some(service_name.to_owned()),
             topic_type: service_type.to_owned(),
             tcp_nodelay: false,
         };

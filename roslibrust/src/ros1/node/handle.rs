@@ -65,7 +65,7 @@ impl NodeHandle {
     pub async fn service_client<T: roslibrust_codegen::RosServiceType>(
         &self,
         service_name: &str,
-    ) -> RosLibRustResult<ServiceClient<T>> {
+    ) -> Result<ServiceClient<T>, NodeError> {
         let service_name = Name::new(service_name)?;
         let sender = self
             .inner
