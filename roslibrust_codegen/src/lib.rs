@@ -1,8 +1,6 @@
 use log::*;
 use proc_macro2::TokenStream;
 use quote::quote;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use simple_error::{bail, SimpleError as Error};
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::{Debug, Display};
@@ -18,6 +16,15 @@ use utils::RosVersion;
 
 pub mod integral_types;
 pub use integral_types::*;
+
+// These pub use statements are here to be able to export the dependencies of the generated code
+// so that crates using this crate don't need to add these dependencies themselves.
+// Our generated code should find these exports.
+// Modeled from: https://users.rust-lang.org/t/proc-macros-using-third-party-crate/42465/4
+pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
+pub use ::serde;
+pub use smart_default::SmartDefault;
+pub use serde_big_array::BigArray;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
