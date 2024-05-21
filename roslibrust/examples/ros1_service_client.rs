@@ -11,6 +11,9 @@ async fn main() -> Result<(), anyhow::Error> {
         .init()
         .unwrap();
 
+    // TODO: for some reason the preceding slash is required for service client (on ros1 native)
+    // but not for publishers/subscribers
+    // Not sure exactly why it got built that way and we we should clean it up
     let nh = NodeHandle::new("http://localhost:11311", "/service_client_rs").await?;
     log::info!("Connected!");
 
