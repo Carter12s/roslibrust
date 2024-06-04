@@ -20,8 +20,6 @@ async fn main() -> Result<(), anyhow::Error> {
         .call(&rosapi::GetTimeRequest {})
         .await?;
 
-    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-
     log::info!("Got time: {:?}", response);
 
     Ok(())
