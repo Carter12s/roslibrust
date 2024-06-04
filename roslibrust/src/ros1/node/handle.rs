@@ -16,11 +16,22 @@ pub struct NodeHandle {
 
 impl NodeHandle {
     // TODO builder, result, better error type
-    /// Creates a new node connect and returns a handle to it
+    /// Creates a new node, connects, and returns a handle to it
     /// It is idiomatic to call this once per process and treat the created node as singleton.
     /// The returned handle can be freely clone'd to create additional handles without creating additional connections.
+    ///   - master_uri: Expects a fully resolved http uri for the master e.g. "http://my_host_name:11311"
+    ///   - name: The name of the node, expected to be a valid ros name, all names are interpreted as 'global' in
+    ///     ROS's namespace system. e.g. "my_node" -> "/my_node". "~my_node" is not supported
     pub async fn new(master_uri: &str, name: &str) -> Result<NodeHandle, NodeError> {
-        let name = Name::new(name)?;
+        let name = if name.starts_with("/") {
+            Name::new(name)?
+        } else {
+            Name::new(&format!("/{}", name))?
+        };
+
+        // Extra safety check that our name resolves now
+        let _ = Name::new("test").unwrap().resolve_to_global(&name);
+
         // Follow ROS rules and determine our IP and hostname
         let (addr, hostname) = super::determine_addr().await?;
 

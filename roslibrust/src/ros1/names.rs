@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 lazy_static::lazy_static! {
+    // See: https://wiki.ros.org/Names
     static ref GRAPH_NAME_REGEX: regex::Regex = regex::Regex::new(r"^([/~a-zA-Z]){1}([a-zA-Z0-9_/])*([A-z0-9_])$").unwrap();
 }
 

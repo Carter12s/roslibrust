@@ -11,10 +11,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .init()
         .unwrap();
 
-    // TODO: for some reason the preceding slash is required for service client (on ros1 native)
-    // but not for publishers/subscribers
-    // Not sure exactly why it got built that way and we we should clean it up
-    let nh = NodeHandle::new("http://localhost:11311", "/service_client_rs").await?;
+    let nh = NodeHandle::new("http://localhost:11311", "service_client_rs").await?;
     log::info!("Connected!");
 
     let response: rosapi::GetTimeResponse = nh
@@ -22,6 +19,8 @@ async fn main() -> Result<(), anyhow::Error> {
         .await?
         .call(&rosapi::GetTimeRequest {})
         .await?;
+
+    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
     log::info!("Got time: {:?}", response);
 
