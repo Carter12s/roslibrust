@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The reconnection logic for rosbridge clients was fundamentally broken and failing to reconnect. This has been fixed.
+- Generic subscriptions coming from rospy that specified "*" as the md5sum were not properly handled. This has been fixed.
 
 ### Changed
 

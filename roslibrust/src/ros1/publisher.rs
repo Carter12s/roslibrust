@@ -92,27 +92,45 @@ impl Publication {
                         if let Ok(connection_header) =
                             ConnectionHeader::from_bytes(&connection_header[..bytes])
                         {
-                            if connection_header.md5sum == responding_conn_header.md5sum {
-                                log::debug!(
-                                    "Received subscribe request for {:?}",
-                                    connection_header.topic
-                                );
-                                // Write our own connection header in response
-                                let response_header_bytes = responding_conn_header
-                                    .to_bytes(false)
-                                    .expect("Couldn't serialize connection header");
-                                stream
-                                    .write(&response_header_bytes[..])
-                                    .await
-                                    .expect("Unable to respond on tcpstream");
-                                let mut wlock = subscriber_streams.write().await;
-                                wlock.push(stream);
-                                log::debug!(
-                                    "Added stream for topic {:?} to subscriber {:?}",
-                                    connection_header.topic,
-                                    peer_addr
-                                );
+                            log::debug!(
+                                "Received subscribe request for {:?} with md5sum {}",
+                                connection_header.topic,
+                                connection_header.md5sum
+                            );
+                            // I can't find documentation for this anywhere, but when using
+                            // `rostopic hz` with one of our publishers I discovered that the rospy code sent "*" as the md5sum
+                            // To indicate a "generic subscription"...
+                            if connection_header.md5sum != "*" {
+                                if connection_header.md5sum != responding_conn_header.md5sum {
+                                    log::warn!(
+                                    "Got subscribe request for {}, but md5sums do not match. Expected {}, received {}",
+                                    topic_name,
+                                    responding_conn_header.md5sum,
+                                    connection_header.md5sum,
+                                    );
+                                    // Close the TCP connection
+                                    stream
+                                        .shutdown()
+                                        .await
+                                        .expect("Unable to shutdown tcpstream");
+                                    continue;
+                                }
                             }
+                            // Write our own connection header in response
+                            let response_header_bytes = responding_conn_header
+                                .to_bytes(false)
+                                .expect("Couldn't serialize connection header");
+                            stream
+                                .write(&response_header_bytes[..])
+                                .await
+                                .expect("Unable to respond on tcpstream");
+                            let mut wlock = subscriber_streams.write().await;
+                            wlock.push(stream);
+                            log::debug!(
+                                "Added stream for topic {:?} to subscriber {}",
+                                connection_header.topic,
+                                peer_addr
+                            );
                         } else {
                             let header_str = connection_header[..bytes]
                                 .into_iter()
