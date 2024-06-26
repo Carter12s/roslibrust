@@ -78,13 +78,13 @@ impl<T: RosServiceType> ServiceClient<T> {
     }
 }
 
-pub struct ServiceServerLink {
+pub struct ServiceClientLink {
     service_type: String,
     call_sender: mpsc::UnboundedSender<CallServiceRequest>,
     _actor_task: ChildTask<()>,
 }
 
-impl ServiceServerLink {
+impl ServiceClientLink {
     pub async fn new(
         node_name: &Name,
         service_name: &str,
@@ -181,6 +181,63 @@ impl ServiceServerLink {
                     log::error!("Service client requesting call hung up");
                 }
             }
+        }
+    }
+}
+
+#[cfg(feature = "ros1_test")]
+#[cfg(test)]
+mod test {
+    use log::info;
+
+    use crate::{
+        ros1::{NodeError, NodeHandle},
+        RosLibRustError,
+    };
+
+    roslibrust_codegen_macro::find_and_generate_ros_messages!(
+        "assets/ros1_test_msgs",
+        "assets/ros1_common_interfaces"
+    );
+
+    // Some logic in the service client specifically for handling large payloads
+    // trying to intentionally exercise that path
+    #[test_log::test(tokio::test)]
+    async fn test_large_service_payload_client() {
+        let nh = NodeHandle::new(
+            "http://localhost:11311",
+            "test_large_service_payload_client",
+        )
+        .await
+        .unwrap();
+
+        info!("Starting service call");
+        let response = nh
+            .service_client::<test_msgs::RoundTripArray>("large_service_payload")
+            .await
+            .unwrap()
+            .call(&test_msgs::RoundTripArrayRequest {
+                bytes: vec![0; 1000000],
+            })
+            .await
+            .unwrap();
+        info!("Service call complete");
+    }
+
+    #[test_log::test(tokio::test)]
+    async fn error_on_unprovided_service() {
+        let nh = NodeHandle::new("http://localhost:11311", "error_on_unprovided_service")
+            .await
+            .unwrap();
+
+        let client = nh
+            .service_client::<test_msgs::RoundTripArray>("unprovided_service")
+            .await;
+        assert!(client.is_err());
+        // Note / TODO: this currently returns an IoError(Kind(ConnectionAborted))
+        // which is better than hanging, but not a good error type to return
+        if !matches!(client, Err(NodeError::IoError(_))) {
+            panic!("Unexpected error type");
         }
     }
 }

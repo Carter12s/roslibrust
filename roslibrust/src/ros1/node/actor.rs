@@ -3,7 +3,7 @@ use crate::{
         names::Name,
         node::{XmlRpcServer, XmlRpcServerHandle},
         publisher::Publication,
-        service_client::{CallServiceRequest, ServiceServerLink},
+        service_client::{CallServiceRequest, ServiceClientLink},
         subscriber::Subscription,
         MasterClient, NodeError, ProtocolParams,
     },
@@ -14,6 +14,12 @@ use roslibrust_codegen::{RosMessageType, RosServiceType};
 use std::{collections::HashMap, io, net::Ipv4Addr, sync::Arc};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
+// Carter TODO:
+// I kinda hate this entire Msg based abstraction internal to the server
+// Why isn't this just a regular async function call?
+// I feel like someone was afraid of deadlocks or didn't know how to mutex safely?
+// We should be able to just call the function and get a result back instead of doing
+// this odd message passing indirection?
 #[derive(Debug)]
 pub enum NodeMsg {
     GetMasterUri {
@@ -51,6 +57,13 @@ pub enum NodeMsg {
     },
     RegisterServiceClient {
         reply: oneshot::Sender<Result<mpsc::UnboundedSender<CallServiceRequest>, String>>,
+        service: Name,
+        service_type: String,
+        srv_definition: String,
+        md5sum: String,
+    },
+    RegisterServiceServer {
+        reply: oneshot::Sender<Result<(), String>>,
         service: Name,
         service_type: String,
         srv_definition: String,
@@ -120,11 +133,17 @@ impl NodeServerHandle {
             .send(NodeMsg::SetPeerPublishers { topic, publishers })?)
     }
 
+    /// Informs the underlying node server to shutdown
+    /// This will stop all ROS functionality and poison all NodeHandles connected
+    /// to the underlying node server.
+    // TODO this function should probably be pub(crate) and not pub?
     pub fn shutdown(&self) -> Result<(), NodeError> {
         self.node_server_sender.send(NodeMsg::Shutdown)?;
         Ok(())
     }
 
+    /// Registers a publisher with the underlying node server
+    /// Returns a channel that the raw bytes of a publish can be shoved into to queue the publish
     pub async fn register_publisher<T: RosMessageType>(
         &self,
         topic: &str,
@@ -145,6 +164,9 @@ impl NodeServerHandle {
         })?)
     }
 
+    /// Registers a service client with the underlying node server
+    /// This returns a channel that can be used for making service calls
+    /// service calls will be queued in the channel and resolved when able.
     pub async fn register_service_client<T: RosServiceType>(
         &self,
         service_name: &Name,
@@ -163,6 +185,7 @@ impl NodeServerHandle {
                 ),
                 md5sum: T::MD5SUM.to_owned(),
             })?;
+        // Get a channel back from the node server for pushing requests into
         let received = receiver.await?;
         Ok(received.map_err(|err| {
             log::error!("Failed to register service client: {err}");
@@ -170,11 +193,47 @@ impl NodeServerHandle {
         })?)
     }
 
+    pub async fn register_service_server<T, F>(
+        &self,
+        service_name: &Name,
+        server: F,
+    ) -> Result<(), NodeError>
+    where
+        T: RosServiceType,
+        F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + Send + Sync>>
+            + Send
+            + Sync
+            + 'static,
+    {
+        let (sender, receiver) = oneshot::channel();
+        self.node_server_sender
+            .send(NodeMsg::RegisterServiceServer {
+                reply: sender,
+                service: service_name.to_owned(),
+                service_type: T::ROS_SERVICE_NAME.to_owned(),
+                srv_definition: String::from_iter(
+                    [T::Request::DEFINITION, "\n", T::Response::DEFINITION].into_iter(),
+                ),
+                md5sum: T::MD5SUM.to_owned(),
+            })?;
+        let received = receiver.await?;
+        Ok(received.map_err(|err| {
+            log::error!("Failed to register service server: {err}");
+            NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
+        })?)
+    }
+
+    /// Registers a subscription with the underlying node server
+    /// If this is the first time the given topic has been subscribed to (by this node)
+    /// rosmaster will be informed.
+    /// Otherwise, a new rx handle will simply be returned to the existing channel.
     pub async fn register_subscriber<T: RosMessageType>(
         &self,
         topic: &str,
         queue_size: usize,
     ) -> Result<broadcast::Receiver<Vec<u8>>, NodeError> {
+        // Type here is complicated, this is a channel that we're sending a channel receiver over
+        // This channel is used to fire back the receiver of the underlying subscription
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender.send(NodeMsg::RegisterSubscriber {
             reply: sender,
@@ -191,6 +250,11 @@ impl NodeServerHandle {
         })?)
     }
 
+    // This function provides functionality for the Node's XmlRPC server
+    // When an XmlRpc request for "requestTopic" comes in the xmlrpc server for the node calls this function
+    // to marshal the response.
+    // Users can call this function, but it really doesn't serve much of a purpose outside ROS Pub/Sub communication
+    // negotiation
     pub async fn request_topic(
         &self,
         caller_id: &str,
@@ -214,6 +278,7 @@ impl NodeServerHandle {
 
 /// Represents a single "real" node, typically only one of these is expected per process
 /// but nothing should specifically prevent that.
+/// This is sometimes referred to as the NodeServer in the documentation, many NodeHandles can point to one NodeServer
 pub(crate) struct Node {
     // The xmlrpc client this node uses to make requests to master
     client: MasterClient,
@@ -226,7 +291,9 @@ pub(crate) struct Node {
     // Record of subscriptions this node has
     subscriptions: HashMap<String, Subscription>,
     // Map of topic names to the service client handles for each topic
-    service_clients: HashMap<String, ServiceServerLink>,
+    service_clients: HashMap<String, ServiceClientLink>,
+    // Map of topic names to service server handles for each topic
+    service_servers: HashMap<String, ServiceServerLink>,
     // TODO need signal to shutdown xmlrpc server when node is dropped
     host_addr: Ipv4Addr,
     hostname: String,
@@ -382,6 +449,19 @@ impl Node {
                         .map_err(|err| err.to_string()),
                 );
             }
+            NodeMsg::RegisterServiceServer {
+                reply,
+                service,
+                service_type,
+                srv_definition,
+                md5sum,
+            } => {
+                let _ = reply.send(
+                    self.register_service_server(&service, &service_type, &srv_definition, &md5sum)
+                        .await
+                        .map_err(|err| err.to_string()),
+                );
+            }
             NodeMsg::RequestTopic {
                 reply,
                 topic,
@@ -503,6 +583,9 @@ impl Node {
         }
     }
 
+    /// Checks the internal state of the NodeServer to see if it has a service client registered for this service already
+    /// If it does, it returns a Sender to the existing service client
+    /// Otherwise, it creates a new service client and returns a Sender to the new service client
     async fn register_service_client(
         &mut self,
         service: &Name,
@@ -536,7 +619,7 @@ impl Node {
             log::debug!("Creating new service client for {service}");
             let service_uri = self.client.lookup_service(&service_name).await?;
             log::debug!("Found service at {service_uri}");
-            let server_link = ServiceServerLink::new(
+            let server_link = ServiceClientLink::new(
                 &self.node_name,
                 &service_name,
                 service_type,
@@ -550,5 +633,21 @@ impl Node {
             self.service_clients.insert(service_name, server_link);
             Ok(handle)
         }
+    }
+
+    async fn register_service_server<F>(
+        &mut self,
+        service: &Name,
+        service_type: &str,
+        srv_definition: &str,
+        md5sum: &str,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        T: RosServiceType,
+        F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + Send + Sync>>
+            + Send
+            + Sync
+            + 'static,
+    {
     }
 }

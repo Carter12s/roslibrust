@@ -2,7 +2,7 @@ use super::actor::{Node, NodeServerHandle};
 use crate::{
     ros1::{
         names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
-        NodeError,
+        NodeError, ServiceServer,
     },
     RosLibRustResult,
 };
@@ -83,5 +83,25 @@ impl NodeHandle {
             .register_service_client::<T>(&service_name)
             .await?;
         Ok(ServiceClient::new(&service_name, sender))
+    }
+
+    pub async fn advertise_service<T, F>(
+        &self,
+        service_name: &str,
+        server: F,
+    ) -> Result<ServiceServer, NodeError>
+    where
+        T: roslibrust_codegen::RosServiceType,
+        F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + Send + Sync>>
+            + Send
+            + Sync
+            + 'static,
+    {
+        let service_name = Name::new(service_name)?;
+        let _response = self
+            .inner
+            .register_service_server::<T, F>(&service_name, server)
+            .await?;
+        Ok(ServiceServer::new(service_name, self.clone()))
     }
 }

@@ -596,9 +596,15 @@ pub fn resolve_dependency_graph(
     // Now that all messages are parsed, we can parse and resolve services
     let mut resolved_services: Vec<_> = services
         .into_iter()
-        .filter_map(|srv| ServiceFile::resolve(srv, &resolved_messages))
-        .collect();
-    resolved_services.sort_by(|a, b| a.parsed.name.cmp(&b.parsed.name));
+        .map(|srv| {
+            let name = srv.path.clone();
+            ServiceFile::resolve(srv, &resolved_messages).ok_or(Error::new(format!(
+                "Failed to correctly resolve service: {:?}",
+                &name
+            )))
+        })
+        .collect::<Result<Vec<_>, Error>>()?;
+    resolved_services.sort_by(|a: &ServiceFile, b: &ServiceFile| a.parsed.name.cmp(&b.parsed.name));
 
     Ok((resolved_messages.into_values().collect(), resolved_services))
 }
