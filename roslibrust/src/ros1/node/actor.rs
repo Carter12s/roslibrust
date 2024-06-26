@@ -4,6 +4,7 @@ use crate::{
         node::{XmlRpcServer, XmlRpcServerHandle},
         publisher::Publication,
         service_client::{CallServiceRequest, ServiceClientLink},
+        service_server::ServiceServerLink,
         subscriber::Subscription,
         MasterClient, NodeError, ProtocolParams,
     },
@@ -326,6 +327,7 @@ impl Node {
             publishers: std::collections::HashMap::new(),
             subscriptions: std::collections::HashMap::new(),
             service_clients: std::collections::HashMap::new(),
+            service_servers: std::collections::HashMap::new(),
             host_addr: addr,
             hostname: hostname.to_owned(),
             node_name: node_name.to_owned(),
@@ -456,11 +458,13 @@ impl Node {
                 srv_definition,
                 md5sum,
             } => {
-                let _ = reply.send(
-                    self.register_service_server(&service, &service_type, &srv_definition, &md5sum)
-                        .await
-                        .map_err(|err| err.to_string()),
-                );
+                unimplemented!()
+                // TODO need to call the actual service server registration function
+                // let _ = reply.send(
+                //     self.register_service_server(&service, &service_type, &srv_definition, &md5sum)
+                //         .await
+                //         .map_err(|err| err.to_string()),
+                // );
             }
             NodeMsg::RequestTopic {
                 reply,
@@ -635,7 +639,7 @@ impl Node {
         }
     }
 
-    async fn register_service_server<F>(
+    async fn register_service_server<T, F>(
         &mut self,
         service: &Name,
         service_type: &str,
@@ -649,5 +653,9 @@ impl Node {
             + Sync
             + 'static,
     {
+        // TODO: Somewhere? Maybe here we need to execute the type erasure
+        // and go from Fn(Req) -> Res to Fn([u8]) -> [u8]
+        // Can't hold the abstract types in the server
+        unimplemented!()
     }
 }

@@ -8,6 +8,8 @@ use super::{names::Name, NodeHandle};
 /// ServiceServer is simply a lifetime control
 /// The underlying ServiceServer is kept alive while object is kept alive.
 /// Dropping this object, un-advertises the underlying service with rosmaster
+// TODO: is this actually the API we want to provide?
+// Maybe we should just let people manually call an unadvertise_service method?
 pub struct ServiceServer {
     service_name: Name,
     node_handle: NodeHandle,
@@ -24,7 +26,17 @@ impl ServiceServer {
 
 impl Drop for ServiceServer {
     fn drop(&mut self) {
-        self.node_handle
-            .unadvertise_service(&self.service_name.to_string());
+        unimplemented!()
+        // Need to eventually define and call this:
+        // self.node_handle
+        //     .unadvertise_service(&self.service_name.to_string());
     }
+}
+
+/// Internal type held by the NodeServer to keep track of a given service server
+pub(crate) struct ServiceServerLink {
+    service_name: String,
+    // Internal handle to the type erased version of the server function passed in to advertise_service
+    method:
+        Box<dyn Fn(Vec<u8>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> + Send + Sync>,
 }
