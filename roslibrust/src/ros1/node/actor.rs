@@ -11,6 +11,7 @@ use crate::{
     RosLibRustError, RosLibRustResult,
 };
 use abort_on_drop::ChildTask;
+use log::warn;
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 use std::{collections::HashMap, io, net::Ipv4Addr, sync::Arc};
 use tokio::sync::{broadcast, mpsc, oneshot};
@@ -21,7 +22,6 @@ use tokio::sync::{broadcast, mpsc, oneshot};
 // I feel like someone was afraid of deadlocks or didn't know how to mutex safely?
 // We should be able to just call the function and get a result back instead of doing
 // this odd message passing indirection?
-#[derive(Debug)]
 pub enum NodeMsg {
     GetMasterUri {
         reply: oneshot::Sender<String>,
@@ -68,6 +68,11 @@ pub enum NodeMsg {
         service: Name,
         service_type: String,
         srv_definition: String,
+        server: Box<
+            dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
+                + Send
+                + Sync,
+        >,
         md5sum: String,
     },
     RequestTopic {
@@ -207,6 +212,20 @@ impl NodeServerHandle {
             + 'static,
     {
         let (sender, receiver) = oneshot::channel();
+
+        // Type erase the server function here
+        // Here we encode the type information of the service type passed in as T into the closure
+        // This gives a generic closure that operates on byte arrays that we can then store and use freely
+        let server_typeless =
+            move |message: Vec<u8>| -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
+                let request = serde_rosmsg::from_slice::<T::Request>(&message)
+                    .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
+                let response = server(request)?;
+                Ok(serde_rosmsg::to_vec(&response)
+                    .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?)
+            };
+        let server_typeless = Box::new(server_typeless);
+
         self.node_server_sender
             .send(NodeMsg::RegisterServiceServer {
                 reply: sender,
@@ -215,6 +234,7 @@ impl NodeServerHandle {
                 srv_definition: String::from_iter(
                     [T::Request::DEFINITION, "\n", T::Response::DEFINITION].into_iter(),
                 ),
+                server: server_typeless,
                 md5sum: T::MD5SUM.to_owned(),
             })?;
         let received = receiver.await?;
@@ -456,15 +476,20 @@ impl Node {
                 service,
                 service_type,
                 srv_definition,
+                server,
                 md5sum,
             } => {
-                unimplemented!()
-                // TODO need to call the actual service server registration function
-                // let _ = reply.send(
-                //     self.register_service_server(&service, &service_type, &srv_definition, &md5sum)
-                //         .await
-                //         .map_err(|err| err.to_string()),
-                // );
+                let _ = reply.send(
+                    self.register_service_server(
+                        &service,
+                        &service_type,
+                        &srv_definition,
+                        server,
+                        &md5sum,
+                    )
+                    .await
+                    .map_err(|err| err.to_string()),
+                );
             }
             NodeMsg::RequestTopic {
                 reply,
@@ -606,6 +631,9 @@ impl Node {
                     if value.service_type() == service_type {
                         Some(Ok(value.get_sender()))
                     } else {
+                        // TODO: Why is this AddrInUse?
+                        // Is it in-use because we're double registering?
+                        // Need better error message here
                         Some(Err(Box::new(std::io::Error::from(
                             std::io::ErrorKind::AddrInUse,
                         ))))
@@ -639,23 +667,47 @@ impl Node {
         }
     }
 
-    async fn register_service_server<T, F>(
+    /// Registers a type-erased server function with the NodeServer
+    async fn register_service_server(
         &mut self,
         service: &Name,
         service_type: &str,
         srv_definition: &str,
+        server: Box<
+            dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
+                + Send
+                + Sync,
+        >,
         md5sum: &str,
-    ) -> Result<(), Box<dyn std::error::Error>>
-    where
-        T: RosServiceType,
-        F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + Send + Sync>>
-            + Send
-            + Sync
-            + 'static,
-    {
-        // TODO: Somewhere? Maybe here we need to execute the type erasure
-        // and go from Fn(Req) -> Res to Fn([u8]) -> [u8]
-        // Can't hold the abstract types in the server
-        unimplemented!()
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let found = self.service_servers.get_mut(service_type);
+
+        // Create a new service server link
+        // This actually hosts the TCP socket and responds to incoming requests
+        let link = ServiceServerLink::new(
+            server,
+            self.host_addr,
+            service.clone(),
+            self.node_name.clone(),
+        )
+        .await?;
+        let port = link.port();
+
+        // Replace the existing entry or create a new one
+        if let Some(server_in_map) = found {
+            warn!("Existing service implementation for {service_type} found while registering service server. Previous implementation will be ejected");
+            *server_in_map = link;
+        } else {
+            self.service_servers.insert(service_type.to_owned(), link);
+            // This is the address that ros will find this specific service server link
+            let service_uri = format!("rosrpc://{}:{}", self.host_addr, port);
+
+            // Inform ROS master we provide this service
+            self.client
+                .register_service(service.to_string(), service_uri)
+                .await?;
+        }
+
+        Ok(())
     }
 }

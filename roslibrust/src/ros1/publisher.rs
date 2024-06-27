@@ -29,8 +29,15 @@ impl<T: RosMessageType> Publisher<T> {
         }
     }
 
+    /// Queues a message to be send on the related topic.
+    /// Returns when the data has been queued not when data is actually sent.
     pub async fn publish(&self, data: &T) -> Result<(), PublisherError> {
         let data = serde_rosmsg::to_vec(&data)?;
+        // TODO this is a pretty dumb...
+        // because of the internal channel used for re-direction this future doesn't
+        // actually complete when the data is sent, but merely when it is queued to be sent
+        // This function could probably be non-async
+        // Or we should do some significant re-work to have it only yield when the data is sent.
         self.sender
             .send(data)
             .await

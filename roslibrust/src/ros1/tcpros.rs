@@ -1,4 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use log::*;
 use std::io::{Cursor, Read, Write};
 use tokio::net::TcpStream;
 
@@ -20,9 +21,23 @@ pub struct ConnectionHeader {
     pub topic: Option<String>,
     pub topic_type: String,
     pub tcp_nodelay: bool,
+    // TODO service client may include "persistent" here
+    // TODO service server only has to respond with caller_id (all other fields optional)
 }
 
 impl ConnectionHeader {
+    /// First reads a length field for overall length of the header
+    /// Then reads the header from the following bytes
+    pub fn from_bytes_with_length(header_data: &[u8]) -> std::io::Result<ConnectionHeader> {
+        let mut cursor = Cursor::new(header_data);
+        let header_len = cursor.read_u32::<LittleEndian>()? as usize;
+        ConnectionHeader::from_bytes(&header_data[4..header_len + 4])
+    }
+
+    /// Parses a connection header from a byte array
+    /// This specifically expects to start at the first byte of the first field
+    /// of the header and bypass the bytes representing the length of the header
+    /// if present
     pub fn from_bytes(header_data: &[u8]) -> std::io::Result<ConnectionHeader> {
         let mut cursor = Cursor::new(header_data);
 
@@ -37,11 +52,19 @@ impl ConnectionHeader {
 
         // TODO: Unhandled: error, persistent
 
+        debug!("got here");
         while cursor.position() < header_data.len() as u64 {
+            debug!(
+                "cursor top: {cursor:#?}, {}",
+                header_data[cursor.position() as usize]
+            );
             let field_length = cursor.read_u32::<LittleEndian>()? as usize;
             let mut field = vec![0u8; field_length];
             cursor.read_exact(&mut field)?;
-            let field = String::from_utf8(field).unwrap();
+            let field = String::from_utf8(field).map_err(|e| {
+                warn!("Failed to parse field in connection header as valid utf8: {e:#?}");
+                std::io::ErrorKind::InvalidData
+            })?;
             let equals_pos = match field.find('=') {
                 Some(pos) => pos,
                 None => continue,
@@ -89,6 +112,9 @@ impl ConnectionHeader {
         })
     }
 
+    /// Serializes the connection header to a byte array
+    /// to_publisher (currently) controls whether or not tcp_nodelay is included
+    /// we should probably change that
     pub fn to_bytes(&self, to_publisher: bool) -> std::io::Result<Vec<u8>> {
         let mut header_data = Vec::with_capacity(1024);
         // Start by skipping the length header since we don't know yet
@@ -177,23 +203,59 @@ pub async fn establish_connection(
     let mut responded_header_bytes = Vec::with_capacity(header_len);
     let bytes = stream.read_buf(&mut responded_header_bytes).await?;
     if let Ok(responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
-        if conn_header.md5sum == responded_header.md5sum {
-            log::debug!(
-                "Established connection with node {node_name} for topic {:?}",
-                conn_header.topic
-            );
-            Ok(stream)
-        } else {
-            log::error!(
-                "Tried to connect to {node_name} for {topic_name}, but md5sums do not match. Expected {}, received {}",
-                conn_header.md5sum,
-                responded_header.md5sum
-            );
-            Err(std::io::ErrorKind::InvalidData)
-        }
+        // TODO we should really examine this md5sum logic...
+        // according to the ROS documentation, the service isn't required to respond
+        // with anything other than caller_id
+        // if conn_header.md5sum != responded_header.md5sum {
+        //     log::error!(
+        //         "Tried to connect to {node_name} for {topic_name}, but md5sums do not match. Expected {}, received {}",
+        //         conn_header.md5sum,
+        //         responded_header.md5sum
+        //     );
+        //     return Err(std::io::ErrorKind::InvalidData.into());
+        // }
+
+        log::debug!(
+            "Established connection with node {node_name} for topic {:?}",
+            conn_header.topic
+        );
+        Ok(stream)
     } else {
         log::error!("Could not parse connection header data sent by server");
         Err(std::io::ErrorKind::InvalidData)
     }
     .map_err(std::io::Error::from)
+}
+
+#[cfg(test)]
+mod test {
+    use super::ConnectionHeader;
+
+    // From ROS website: http://wiki.ros.org/ROS/Connection%20Header
+    #[test_log::test]
+    fn ros_example_header() {
+        let bytes: Vec<u8> = vec![
+            0xb0, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
+            0x65, 0x5f, 0x64, 0x65, 0x66, 0x69, 0x6e, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x3d, 0x73,
+            0x74, 0x72, 0x69, 0x6e, 0x67, 0x20, 0x64, 0x61, 0x74, 0x61, 0x0a, 0x0a, 0x25, 0x00,
+            0x00, 0x00, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x69, 0x64, 0x3d, 0x2f, 0x72, 0x6f,
+            0x73, 0x74, 0x6f, 0x70, 0x69, 0x63, 0x5f, 0x34, 0x37, 0x36, 0x37, 0x5f, 0x31, 0x33,
+            0x31, 0x36, 0x39, 0x31, 0x32, 0x37, 0x34, 0x31, 0x35, 0x35, 0x37, 0x0a, 0x00, 0x00,
+            0x00, 0x6c, 0x61, 0x74, 0x63, 0x68, 0x69, 0x6e, 0x67, 0x3d, 0x31, 0x27, 0x00, 0x00,
+            0x00, 0x6d, 0x64, 0x35, 0x73, 0x75, 0x6d, 0x3d, 0x39, 0x39, 0x32, 0x63, 0x65, 0x38,
+            0x61, 0x31, 0x36, 0x38, 0x37, 0x63, 0x65, 0x63, 0x38, 0x63, 0x38, 0x62, 0x64, 0x38,
+            0x38, 0x33, 0x65, 0x63, 0x37, 0x33, 0x63, 0x61, 0x34, 0x31, 0x64, 0x31, 0x0e, 0x00,
+            0x00, 0x00, 0x74, 0x6f, 0x70, 0x69, 0x63, 0x3d, 0x2f, 0x63, 0x68, 0x61, 0x74, 0x74,
+            0x65, 0x72, 0x14, 0x00, 0x00, 0x00, 0x74, 0x79, 0x70, 0x65, 0x3d, 0x73, 0x74, 0x64,
+            0x5f, 0x6d, 0x73, 0x67, 0x73, 0x2f, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x09, 0x00,
+            0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x68, 0x65, 0x6c, 0x6c, 0x6f,
+        ];
+
+        let header = ConnectionHeader::from_bytes_with_length(&bytes).unwrap();
+        assert_eq!(header.msg_definition, "string data\n\n");
+        assert_eq!(header.caller_id, "/rostopic_4767_1316912741557");
+        assert_eq!(header.latching, true);
+        assert_eq!(header.topic, Some("/chatter".to_owned()));
+        assert_eq!(header.topic_type, "std_msgs/String");
+    }
 }

@@ -160,8 +160,13 @@ impl ServiceClientLink {
             Ok(()) => {
                 // Wait for the result
                 let mut read_buffer = vec![];
+                // TODO: We may not get the full payload back in the call and need to check the length bytes
+                // MAJOR TODO:
+                // Here we need to read first byte, determine if success (else warn!)
+                // Then read length
+                // Then read full contents of message
+                // Then pass along
                 let read_result = match stream.read_buf(&mut read_buffer).await {
-                    // TODO: We may not get the full payload back in the call and need to check the length bytes
                     Ok(_nbytes) => Ok(read_buffer),
                     Err(err) => Err(RosLibRustError::from(err)),
                 };
