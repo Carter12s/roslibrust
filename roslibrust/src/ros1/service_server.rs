@@ -1,4 +1,7 @@
-use std::net::{Ipv4Addr, SocketAddr};
+use std::{
+    net::{Ipv4Addr, SocketAddr},
+    sync::Arc,
+};
 
 use abort_on_drop::ChildTask;
 use log::*;
@@ -12,6 +15,11 @@ use super::{names::Name, NodeHandle};
 // Currently unstable:
 // https://doc.rust-lang.org/beta/unstable-book/language-features/trait-alias.html
 // trait ServerFunction<T> = Fn(T::Request) -> Err(T::Response, Box<dyn std::error::Error + Send + Sync>) + Send + Sync + 'static;
+
+type TypeErasedCallback = dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
+    + Send
+    + Sync
+    + 'static;
 
 /// ServiceServer is simply a lifetime control
 /// The underlying ServiceServer is kept alive while object is kept alive.
@@ -52,12 +60,7 @@ pub(crate) struct ServiceServerLink {
 
 impl ServiceServerLink {
     pub(crate) async fn new(
-        method: Box<
-            dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
-                + Send
-                + Sync
-                + 'static,
-        >,
+        method: Box<TypeErasedCallback>,
         host_addr: Ipv4Addr,
         service_name: Name,
         node_name: Name,
@@ -81,6 +84,8 @@ impl ServiceServerLink {
         })
     }
 
+    /// Need to provide the port the server is listening on to the rest of the application
+    /// so we can inform rosmaster of the full URI of where this service is located
     pub(crate) fn port(&self) -> u16 {
         self.port
     }
@@ -91,109 +96,135 @@ impl ServiceServerLink {
         listener: tokio::net::TcpListener,
         service_name: Name, // Service path of the this service
         node_name: Name,    // Name of node we're running on
-        method: Box<
-            dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
-                + Send
-                + Sync
-                + 'static,
-        >,
+        method: Box<TypeErasedCallback>,
     ) {
+        // We have to move our callback into an Arc so the separately spawned tasks for each service connection
+        // can access it in parrallel and not worry about the lifetime.
+        // TODO: it may be better to Arc it upfront?
+        let arc_method = Arc::new(method);
         loop {
             // Accept new TCP connections
             match listener.accept().await {
-                Ok((mut stream, peer_addr)) => {
-                    // TODO for a bunch of the error branches in this handling
-                    // it is unclear whether we should respond over the socket
-                    // with an error or not?
-                    // Probably it is better to try to send an error back?
-                    debug!(
-                        "Received service_request connection from {peer_addr} for {service_name}"
-                    );
-
-                    // Get the header from the stream:
-                    let mut header_len_bytes = [0u8; 4];
-                    if let Err(e) = stream.read_exact(&mut header_len_bytes).await {
-                        warn!("Communication error while handling service request connection for {service_name}, could not get header length: {e:?}");
-                        continue;
-                    }
-                    let header_len = u32::from_le_bytes(header_len_bytes) as usize;
-
-                    let mut connection_header = vec![0u8; header_len];
-                    if let Err(e) = stream.read_exact(&mut connection_header).await {
-                        warn!("Communication error while handling service request connection for {service_name}, could not get header body: {e:?}");
-                        continue;
-                    }
-                    let connection_header = match ConnectionHeader::from_bytes(&connection_header) {
-                        Ok(header) => header,
-                        Err(e) => {
-                            warn!("Communication error while handling service request connection for {service_name}, could not parse header: {e:?}");
-                            continue;
-                        }
-                    };
-                    trace!(
-                        "Got connection header: {connection_header:#?} for service {service_name}"
-                    );
-
-                    // Respond with our header
-                    // TODO this is pretty cursed, may want a better version
-                    let response_header = ConnectionHeader {
-                        caller_id: node_name.to_string(),
-                        latching: false,
-                        msg_definition: "".to_string(),
-                        md5sum: "".to_string(),
-                        service: None,
-                        topic: None,
-                        topic_type: "".to_string(),
-                        tcp_nodelay: false,
-                    };
-                    let bytes = response_header.to_bytes(false).unwrap();
-                    if let Err(e) = stream.write_all(&bytes).await {
-                        warn!("Communication error while handling service request connection for {service_name}, could not write response header: {e:?}");
-                        continue;
-                    }
-
-                    let mut body_len_bytes = [0u8; 4];
-                    if let Err(e) = stream.read_exact(&mut body_len_bytes).await {
-                        warn!("Communication error while handling service request connection for {service_name}, could not get body length: {e:?}");
-                        continue;
-                    }
-                    let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-                    trace!("Got body length {body_len} for service {service_name}");
-
-                    let mut body = vec![0u8; body_len];
-                    if let Err(e) = stream.read_exact(&mut body).await {
-                        warn!("Communication error while handling service request connection for {service_name}, could not get body: {e:?}");
-                        continue;
-                    }
-                    trace!("Got body for service {service_name}: {body:#?}");
-
-                    // Okay this is funky and I should be able to do better here
-                    // serde_rosmsg expects the length at the front
-                    let full_body = [body_len_bytes.to_vec(), body].concat();
-
-                    let response = (method)(full_body);
-
-                    match response {
-                        Ok(response) => {
-                            // MAJOR TODO: handle error here
-
-                            // Another funky thing here
-                            // services have to respond with one extra byte at the front
-                            // to indicate success
-                            let full_response = [vec![1u8], response].concat();
-
-                            stream.write_all(&full_response).await.unwrap();
-                        }
-                        Err(e) => {
-                            warn!("Error from user service method for {service_name}: {e:?}");
-                            // MAJOR TODO: respond with error
-                        }
-                    }
+                Ok((stream, peer_addr)) => {
+                    tokio::spawn(Self::handle_tcp_connection(
+                        stream,
+                        peer_addr,
+                        service_name.clone(),
+                        node_name.clone(),
+                        arc_method.clone(),
+                    ));
                 }
                 Err(e) => {
+                    // Not entirely sure what circumstances can cause this?
+                    // Loss of networking functionality on the host?
                     warn!("Error accepting TCP connection for service {service_name}: {e:?}");
                 }
             };
+        }
+    }
+
+    /// Each TCP connection made to the service server is processed in a separate task
+    /// This function handles a single TCP connection
+    async fn handle_tcp_connection(
+        mut stream: tokio::net::TcpStream,
+        peer_addr: SocketAddr,
+        service_name: Name,
+        node_name: Name,
+        method: Arc<Box<TypeErasedCallback>>,
+    ) {
+        // TODO for a bunch of the error branches in this handling
+        // it is unclear whether we should respond over the socket
+        // with an error or not?
+        // Probably it is better to try to send an error back?
+        debug!("Received service_request connection from {peer_addr} for {service_name}");
+
+        // Get the header from the stream:
+        let mut header_len_bytes = [0u8; 4];
+        if let Err(e) = stream.read_exact(&mut header_len_bytes).await {
+            warn!("Communication error while handling service request connection for {service_name}, could not get header length: {e:?}");
+            // TODO returning here simply closes the socket? Should we respond with an error instead?
+            return;
+        }
+        let header_len = u32::from_le_bytes(header_len_bytes) as usize;
+
+        let mut connection_header = vec![0u8; header_len];
+        if let Err(e) = stream.read_exact(&mut connection_header).await {
+            warn!("Communication error while handling service request connection for {service_name}, could not get header body: {e:?}");
+            // TODO returning here simply closes the socket? Should we respond with an error instead?
+            return;
+        }
+        let connection_header = match ConnectionHeader::from_bytes(&connection_header) {
+            Ok(header) => header,
+            Err(e) => {
+                warn!("Communication error while handling service request connection for {service_name}, could not parse header: {e:?}");
+                // TODO returning here simply closes the socket? Should we respond with an error instead?
+                return;
+            }
+        };
+        trace!("Got connection header: {connection_header:#?} for service {service_name}");
+
+        // Respond with our header
+        // TODO this is pretty cursed, may want a better version
+        let response_header = ConnectionHeader {
+            caller_id: node_name.to_string(),
+            latching: false,
+            msg_definition: "".to_string(),
+            md5sum: "".to_string(),
+            service: None,
+            topic: None,
+            topic_type: "".to_string(),
+            tcp_nodelay: false,
+        };
+        let bytes = response_header.to_bytes(false).unwrap();
+        if let Err(e) = stream.write_all(&bytes).await {
+            warn!("Communication error while handling service request connection for {service_name}, could not write response header: {e:?}");
+            // TODO returning here simply closes the socket? Should we respond with an error instead?
+            return;
+        }
+
+        // TODO we're not currently reading the persistent flag out of the connection header and treating
+        // all connections as persistent
+        // TODO: NEED TO VERIFY THIS WITH ROSPY / ROSCPP
+        // That means we expect one header exchange, and then multiple body exchanges
+
+        let mut body_len_bytes = [0u8; 4];
+        if let Err(e) = stream.read_exact(&mut body_len_bytes).await {
+            warn!("Communication error while handling service request connection for {service_name}, could not get body length: {e:?}");
+            // TODO returning here simply closes the socket? Should we respond with an error instead?
+            return;
+        }
+        let body_len = u32::from_le_bytes(body_len_bytes) as usize;
+        trace!("Got body length {body_len} for service {service_name}");
+
+        let mut body = vec![0u8; body_len];
+        if let Err(e) = stream.read_exact(&mut body).await {
+            warn!("Communication error while handling service request connection for {service_name}, could not get body: {e:?}");
+            // TODO returning here simply closes the socket? Should we respond with an error instead?
+            return;
+        }
+        trace!("Got body for service {service_name}: {body:#?}");
+
+        // Okay this is funky and I should be able to do better here
+        // serde_rosmsg expects the length at the front
+        let full_body = [body_len_bytes.to_vec(), body].concat();
+
+        let response = (method)(full_body);
+
+        match response {
+            Ok(response) => {
+                // MAJOR TODO: handle error here
+
+                // Another funky thing here
+                // services have to respond with one extra byte at the front
+                // to indicate success
+                let full_response = [vec![1u8], response].concat();
+
+                stream.write_all(&full_response).await.unwrap();
+            }
+            Err(e) => {
+                warn!("Error from user service method for {service_name}: {e:?}");
+                // MAJOR TODO: respond with error
+            }
         }
     }
 }
