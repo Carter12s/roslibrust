@@ -184,46 +184,47 @@ impl ServiceServerLink {
 
         // TODO we're not currently reading the persistent flag out of the connection header and treating
         // all connections as persistent
-        // TODO: NEED TO VERIFY THIS WITH ROSPY / ROSCPP
         // That means we expect one header exchange, and then multiple body exchanges
-
-        let mut body_len_bytes = [0u8; 4];
-        if let Err(e) = stream.read_exact(&mut body_len_bytes).await {
-            warn!("Communication error while handling service request connection for {service_name}, could not get body length: {e:?}");
-            // TODO returning here simply closes the socket? Should we respond with an error instead?
-            return;
-        }
-        let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-        trace!("Got body length {body_len} for service {service_name}");
-
-        let mut body = vec![0u8; body_len];
-        if let Err(e) = stream.read_exact(&mut body).await {
-            warn!("Communication error while handling service request connection for {service_name}, could not get body: {e:?}");
-            // TODO returning here simply closes the socket? Should we respond with an error instead?
-            return;
-        }
-        trace!("Got body for service {service_name}: {body:#?}");
-
-        // Okay this is funky and I should be able to do better here
-        // serde_rosmsg expects the length at the front
-        let full_body = [body_len_bytes.to_vec(), body].concat();
-
-        let response = (method)(full_body);
-
-        match response {
-            Ok(response) => {
-                // MAJOR TODO: handle error here
-
-                // Another funky thing here
-                // services have to respond with one extra byte at the front
-                // to indicate success
-                let full_response = [vec![1u8], response].concat();
-
-                stream.write_all(&full_response).await.unwrap();
+        // Each loop is one body:
+        loop {
+            let mut body_len_bytes = [0u8; 4];
+            if let Err(e) = stream.read_exact(&mut body_len_bytes).await {
+                warn!("Communication error while handling service request connection for {service_name}, could not get body length: {e:?}");
+                // TODO returning here simply closes the socket? Should we respond with an error instead?
+                return;
             }
-            Err(e) => {
-                warn!("Error from user service method for {service_name}: {e:?}");
-                // MAJOR TODO: respond with error
+            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
+            trace!("Got body length {body_len} for service {service_name}");
+
+            let mut body = vec![0u8; body_len];
+            if let Err(e) = stream.read_exact(&mut body).await {
+                warn!("Communication error while handling service request connection for {service_name}, could not get body: {e:?}");
+                // TODO returning here simply closes the socket? Should we respond with an error instead?
+                return;
+            }
+            trace!("Got body for service {service_name}: {body:#?}");
+
+            // Okay this is funky and I should be able to do better here
+            // serde_rosmsg expects the length at the front
+            let full_body = [body_len_bytes.to_vec(), body].concat();
+
+            let response = (method)(full_body);
+
+            match response {
+                Ok(response) => {
+                    // MAJOR TODO: handle error here
+
+                    // Another funky thing here
+                    // services have to respond with one extra byte at the front
+                    // to indicate success
+                    let full_response = [vec![1u8], response].concat();
+
+                    stream.write_all(&full_response).await.unwrap();
+                }
+                Err(e) => {
+                    warn!("Error from user service method for {service_name}: {e:?}");
+                    // MAJOR TODO: respond with error
+                }
             }
         }
     }

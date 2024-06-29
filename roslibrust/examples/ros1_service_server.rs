@@ -50,9 +50,8 @@ async fn main() -> Result<(), anyhow::Error> {
     // As long as _handle is kept alive our service will continue to run
 
     // For funsies we can also spawn a task to periodically call our service
-    // TODO something broken with naming here
     let service_client = nh
-        .service_client::<std_srvs::SetBool>("~my_set_bool")
+        .service_client::<std_srvs::SetBool>("~/my_set_bool")
         .await?;
     tokio::spawn(async move {
         let mut bool = false;
