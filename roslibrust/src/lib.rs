@@ -121,8 +121,12 @@ pub enum RosLibRustError {
     Timeout(#[from] tokio::time::error::Elapsed),
     #[error("Failed to parse message from JSON: {0}")]
     InvalidMessage(#[from] serde_json::Error),
+    #[error("TCPROS serialization error: {0}")]
+    SerializationError(String),
     #[error("Rosbridge server reported an error: {0}")]
     ServerError(String),
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
     #[error("Name does not meet ROS requirements: {0}")]
     InvalidName(String),
     // Generic catch-all error type for not-yet-handled errors

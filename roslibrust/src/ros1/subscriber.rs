@@ -1,4 +1,4 @@
-use crate::ros1::tcpros::ConnectionHeader;
+use crate::ros1::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{marker::PhantomData, sync::Arc};
@@ -47,7 +47,7 @@ pub struct Subscription {
 
 impl Subscription {
     pub fn new(
-        node_name: &str,
+        node_name: &Name,
         topic_name: &str,
         topic_type: &str,
         queue_size: usize,
@@ -56,13 +56,14 @@ impl Subscription {
     ) -> Self {
         let (sender, receiver) = broadcast::channel(queue_size);
         let connection_header = ConnectionHeader {
-            caller_id: node_name.to_owned(),
+            caller_id: node_name.to_string(),
             latching: false,
             msg_definition,
             md5sum,
-            topic: topic_name.to_owned(),
+            topic: Some(topic_name.to_owned()),
             topic_type: topic_type.to_owned(),
             tcp_nodelay: false,
+            service: None,
         };
 
         Self {
@@ -97,7 +98,7 @@ impl Subscription {
 
         if is_new_connection {
             let node_name = self.connection_header.caller_id.clone();
-            let topic_name = self.connection_header.topic.clone();
+            let topic_name = self.connection_header.topic.as_ref().unwrap().clone();
             let connection_header = self.connection_header.clone();
             let sender = self.msg_sender.clone();
             let publisher_list = self.known_publishers.clone();
@@ -128,7 +129,7 @@ impl Subscription {
                             }
                             read_buffer.clear();
                         } else {
-                            log::warn!("Got an error reading from the publisher connection on topic {topic_name}, closing");
+                            log::warn!("Got an error reading from the publisher connection on topic {topic_name:?}, closing");
                         }
                     }
                 }
@@ -152,12 +153,16 @@ async fn establish_publisher_connection(
     let conn_header_bytes = conn_header.to_bytes(true)?;
     stream.write_all(&conn_header_bytes[..]).await?;
 
-    let mut responded_header_bytes = Vec::with_capacity(16 * 1024);
-    let bytes = stream.read_buf(&mut responded_header_bytes).await?;
+    let mut header_len_bytes = [0u8; 4];
+    let _header_bytes = stream.read_exact(&mut header_len_bytes).await?;
+    let header_len = u32::from_le_bytes(header_len_bytes) as usize;
+
+    let mut responded_header_bytes = vec![0u8; header_len];
+    let bytes = stream.read_exact(&mut responded_header_bytes).await?;
     if let Ok(responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
         if conn_header.md5sum == responded_header.md5sum {
             log::debug!(
-                "Established connection with publisher for {}",
+                "Established connection with publisher for {:?}",
                 conn_header.topic
             );
             Ok(stream)

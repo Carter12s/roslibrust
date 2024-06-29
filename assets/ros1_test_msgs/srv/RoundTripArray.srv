@@ -1,0 +1,4 @@
+# Purpose of this array is send and receive a large payload 
+uint8[] bytes
+---
+uint8[] bytes

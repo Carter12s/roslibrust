@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 lazy_static::lazy_static! {
+    // See: https://wiki.ros.org/Names
     static ref GRAPH_NAME_REGEX: regex::Regex = regex::Regex::new(r"^([/~a-zA-Z]){1}([a-zA-Z0-9_/])*([A-z0-9_])$").unwrap();
 }
 
@@ -52,14 +53,14 @@ impl Name {
     }
 }
 
-fn is_valid(name: &str) -> bool {
-    GRAPH_NAME_REGEX.is_match(name)
-}
-
 impl Display for Name {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
+}
+
+fn is_valid(name: &str) -> bool {
+    GRAPH_NAME_REGEX.is_match(name)
 }
 
 #[cfg(test)]

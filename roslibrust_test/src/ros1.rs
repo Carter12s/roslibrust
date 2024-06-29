@@ -4275,6 +4275,50 @@ pub mod test_msgs {
         type Request = AddTwoIntsRequest;
         type Response = AddTwoIntsResponse;
     }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
+        :: roslibrust_codegen :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
+    pub struct RoundTripArrayRequest {
+        pub r#bytes: ::std::vec::Vec<u8>,
+    }
+    impl ::roslibrust_codegen::RosMessageType for RoundTripArrayRequest {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/RoundTripArrayRequest";
+        const MD5SUM: &'static str = "d159f2bd8169d3b3339e6f1fce045c6d";
+        const DEFINITION: &'static str =
+            "# Purpose of this array is send and receive a large payload \nuint8[] bytes";
+    }
+    #[allow(non_snake_case)]
+    #[derive(
+        :: roslibrust_codegen :: Deserialize,
+        :: roslibrust_codegen :: Serialize,
+        :: roslibrust_codegen :: SmartDefault,
+        Debug,
+        Clone,
+        PartialEq,
+    )]
+    #[serde(crate = "::roslibrust_codegen::serde")]
+    pub struct RoundTripArrayResponse {
+        pub r#bytes: ::std::vec::Vec<u8>,
+    }
+    impl ::roslibrust_codegen::RosMessageType for RoundTripArrayResponse {
+        const ROS_TYPE_NAME: &'static str = "test_msgs/RoundTripArrayResponse";
+        const MD5SUM: &'static str = "d159f2bd8169d3b3339e6f1fce045c6d";
+        const DEFINITION: &'static str = "uint8[] bytes";
+    }
+    pub struct RoundTripArray {}
+    impl ::roslibrust_codegen::RosServiceType for RoundTripArray {
+        const ROS_SERVICE_NAME: &'static str = "test_msgs/RoundTripArray";
+        const MD5SUM: &'static str = "6a66b36cb6abf834a48739776dfbe789";
+        type Request = RoundTripArrayRequest;
+        type Response = RoundTripArrayResponse;
+    }
 }
 #[allow(unused_imports)]
 pub mod trajectory_msgs {

@@ -1,4 +1,7 @@
-use crate::ros1::tcpros::ConnectionHeader;
+use crate::{
+    ros1::{names::Name, tcpros::ConnectionHeader},
+    RosLibRustError,
+};
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{
@@ -26,8 +29,15 @@ impl<T: RosMessageType> Publisher<T> {
         }
     }
 
+    /// Queues a message to be send on the related topic.
+    /// Returns when the data has been queued not when data is actually sent.
     pub async fn publish(&self, data: &T) -> Result<(), PublisherError> {
         let data = serde_rosmsg::to_vec(&data)?;
+        // TODO this is a pretty dumb...
+        // because of the internal channel used for re-direction this future doesn't
+        // actually complete when the data is sent, but merely when it is queued to be sent
+        // This function could probably be non-async
+        // Or we should do some significant re-work to have it only yield when the data is sent.
         self.sender
             .send(data)
             .await
@@ -47,7 +57,7 @@ pub struct Publication {
 
 impl Publication {
     pub async fn new(
-        node_name: &str,
+        node_name: &Name,
         latching: bool,
         topic_name: &str,
         host_addr: Ipv4Addr,
@@ -63,23 +73,24 @@ impl Publication {
         let (sender, mut receiver) = mpsc::channel::<Vec<u8>>(queue_size);
 
         let responding_conn_header = ConnectionHeader {
-            caller_id: node_name.to_owned(),
+            caller_id: node_name.to_string(),
             latching,
             msg_definition: msg_definition.to_owned(),
             md5sum: md5sum.to_owned(),
-            topic: topic_name.to_owned(),
+            topic: Some(topic_name.to_owned()),
             topic_type: topic_type.to_owned(),
             tcp_nodelay: false,
+            service: None,
         };
 
         let subscriber_streams = Arc::new(RwLock::new(Vec::new()));
 
         let subscriber_streams_copy = subscriber_streams.clone();
+        let topic_name = topic_name.to_owned();
         let listener_handle = tokio::spawn(async move {
             let subscriber_streams = subscriber_streams_copy;
             loop {
                 if let Ok((mut stream, peer_addr)) = tcp_listener.accept().await {
-                    let topic_name = responding_conn_header.topic.as_str();
                     log::info!(
                         "Received connection from subscriber at {peer_addr} for topic {topic_name}"
                     );
@@ -89,7 +100,7 @@ impl Publication {
                             ConnectionHeader::from_bytes(&connection_header[..bytes])
                         {
                             log::debug!(
-                                "Received subscribe request for {} with md5sum {}",
+                                "Received subscribe request for {:?} with md5sum {}",
                                 connection_header.topic,
                                 connection_header.md5sum
                             );
@@ -123,7 +134,7 @@ impl Publication {
                             let mut wlock = subscriber_streams.write().await;
                             wlock.push(stream);
                             log::debug!(
-                                "Added stream for topic {} to subscriber {}",
+                                "Added stream for topic {:?} to subscriber {}",
                                 connection_header.topic,
                                 peer_addr
                             );
