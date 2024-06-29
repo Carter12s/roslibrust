@@ -76,7 +76,7 @@ impl Publication {
             caller_id: node_name.to_string(),
             latching,
             msg_definition: msg_definition.to_owned(),
-            md5sum: md5sum.to_owned(),
+            md5sum: Some(md5sum.to_owned()),
             topic: Some(topic_name.to_owned()),
             topic_type: topic_type.to_owned(),
             tcp_nodelay: false,
@@ -100,27 +100,32 @@ impl Publication {
                             ConnectionHeader::from_bytes(&connection_header[..bytes])
                         {
                             log::debug!(
-                                "Received subscribe request for {:?} with md5sum {}",
+                                "Received subscribe request for {:?} with md5sum {:?}",
                                 connection_header.topic,
                                 connection_header.md5sum
                             );
                             // I can't find documentation for this anywhere, but when using
                             // `rostopic hz` with one of our publishers I discovered that the rospy code sent "*" as the md5sum
                             // To indicate a "generic subscription"...
-                            if connection_header.md5sum != "*" {
-                                if connection_header.md5sum != responding_conn_header.md5sum {
-                                    log::warn!(
-                                    "Got subscribe request for {}, but md5sums do not match. Expected {}, received {}",
+                            // I also discovered that `rostopic echo` does not send a md5sum (even thou ros documentation says its required)
+                            if let Some(connection_md5sum) = connection_header.md5sum {
+                                if connection_md5sum != "*" {
+                                    if let Some(local_md5sum) = &responding_conn_header.md5sum {
+                                        if connection_md5sum != *local_md5sum {
+                                            log::warn!(
+                                    "Got subscribe request for {}, but md5sums do not match. Expected {:?}, received {:?}",
                                     topic_name,
-                                    responding_conn_header.md5sum,
-                                    connection_header.md5sum,
+                                    local_md5sum,
+                                    connection_md5sum,
                                     );
-                                    // Close the TCP connection
-                                    stream
-                                        .shutdown()
-                                        .await
-                                        .expect("Unable to shutdown tcpstream");
-                                    continue;
+                                            // Close the TCP connection
+                                            stream
+                                                .shutdown()
+                                                .await
+                                                .expect("Unable to shutdown tcpstream");
+                                            continue;
+                                        }
+                                    }
                                 }
                             }
                             // Write our own connection header in response

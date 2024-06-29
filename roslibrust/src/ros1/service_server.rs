@@ -169,7 +169,7 @@ impl ServiceServerLink {
             caller_id: node_name.to_string(),
             latching: false,
             msg_definition: "".to_string(),
-            md5sum: "".to_string(),
+            md5sum: None,
             service: None,
             topic: None,
             topic_type: "".to_string(),

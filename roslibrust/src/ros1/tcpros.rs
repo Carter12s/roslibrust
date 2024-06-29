@@ -15,7 +15,7 @@ pub struct ConnectionHeader {
     pub caller_id: String,
     pub latching: bool,
     pub msg_definition: String,
-    pub md5sum: String,
+    pub md5sum: Option<String>,
     // TODO we may want to distinguish between service and topic headers with different types?
     pub service: Option<String>,
     pub topic: Option<String>,
@@ -44,7 +44,7 @@ impl ConnectionHeader {
         let mut msg_definition = String::new();
         let mut caller_id = String::new();
         let mut latching = false;
-        let mut md5sum = String::new();
+        let mut md5sum = None;
         let mut topic = None;
         let mut service = None;
         let mut topic_type = String::new();
@@ -72,7 +72,9 @@ impl ConnectionHeader {
                 field[equals_pos + 1..].clone_into(&mut latching_str);
                 latching = &latching_str != "0";
             } else if field.starts_with("md5sum=") {
-                field[equals_pos + 1..].clone_into(&mut md5sum);
+                let mut md5sum_str = String::new();
+                field[equals_pos + 1..].clone_into(&mut md5sum_str);
+                md5sum = Some(md5sum_str);
             } else if field.starts_with("topic=") {
                 let mut topic_str = String::new();
                 field[equals_pos + 1..].clone_into(&mut topic_str);
@@ -122,9 +124,11 @@ impl ConnectionHeader {
         header_data.write_u32::<LittleEndian>(latching_str.len() as u32)?;
         header_data.write(latching_str.as_bytes())?;
 
-        let md5sum = format!("md5sum={}", self.md5sum);
-        header_data.write_u32::<LittleEndian>(md5sum.len() as u32)?;
-        header_data.write(md5sum.as_bytes())?;
+        if let Some(md5sum) = self.md5sum.as_ref() {
+            let md5sum = format!("md5sum={}", md5sum);
+            header_data.write_u32::<LittleEndian>(md5sum.len() as u32)?;
+            header_data.write(md5sum.as_bytes())?;
+        }
 
         let msg_definition = format!("message_definition={}", self.msg_definition);
         header_data.write_u32::<LittleEndian>(msg_definition.len() as u32)?;

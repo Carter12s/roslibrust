@@ -59,7 +59,7 @@ impl Subscription {
             caller_id: node_name.to_string(),
             latching: false,
             msg_definition,
-            md5sum,
+            md5sum: Some(md5sum),
             topic: Some(topic_name.to_owned()),
             topic_type: topic_type.to_owned(),
             tcp_nodelay: false,
@@ -168,7 +168,7 @@ async fn establish_publisher_connection(
             Ok(stream)
         } else {
             log::error!(
-                "Tried to subscribe to {}, but md5sums do not match. Expected {}, received {}",
+                "Tried to subscribe to {}, but md5sums do not match. Expected {:?}, received {:?}",
                 topic_name,
                 conn_header.md5sum,
                 responded_header.md5sum

@@ -97,7 +97,7 @@ impl ServiceClientLink {
             caller_id: node_name.to_string(),
             latching: false,
             msg_definition: srv_definition.to_owned(),
-            md5sum: md5sum.to_owned(),
+            md5sum: Some(md5sum.to_owned()),
             // Note: using "topic" indicates a subscription
             // using "service" indicates a service client
             topic: None,
