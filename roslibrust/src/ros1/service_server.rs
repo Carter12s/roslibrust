@@ -130,7 +130,7 @@ impl ServiceServerLink {
                             continue;
                         }
                     };
-                    debug!(
+                    trace!(
                         "Got connection header: {connection_header:#?} for service {service_name}"
                     );
 
@@ -158,14 +158,14 @@ impl ServiceServerLink {
                         continue;
                     }
                     let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-                    debug!("Got body length {body_len} for service {service_name}");
+                    trace!("Got body length {body_len} for service {service_name}");
 
                     let mut body = vec![0u8; body_len];
                     if let Err(e) = stream.read_exact(&mut body).await {
                         warn!("Communication error while handling service request connection for {service_name}, could not get body: {e:?}");
                         continue;
                     }
-                    debug!("Got body for service {service_name}: {body:#?}");
+                    trace!("Got body for service {service_name}: {body:#?}");
 
                     // Okay this is funky and I should be able to do better here
                     // serde_rosmsg expects the length at the front

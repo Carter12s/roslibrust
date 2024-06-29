@@ -53,7 +53,7 @@ impl<T: RosServiceType> ServiceClient<T> {
 
         match response_rx.await {
             Ok(Ok(result_payload)) => {
-                log::debug!(
+                log::trace!(
                     "Service client for {} got response: {:?}",
                     self.service_name,
                     result_payload
@@ -151,41 +151,71 @@ impl ServiceClientLink {
         }
     }
 
+    /// Infallible version of handle_service_call that regardless of what occurs
+    /// Sends the response back on the response channel, delegates work to handle_service_call_fallible
     async fn handle_service_call(
         stream: &mut TcpStream,
         service_name: &str,
         (request, response_sender): CallServiceRequest,
     ) {
-        match stream.write_all(&request).await {
-            Ok(()) => {
-                // Wait for the result
-                let mut read_buffer = vec![];
-                // TODO: We may not get the full payload back in the call and need to check the length bytes
-                // MAJOR TODO:
-                // Here we need to read first byte, determine if success (else warn!)
-                // Then read length
-                // Then read full contents of message
-                // Then pass along
-                let read_result = match stream.read_buf(&mut read_buffer).await {
-                    Ok(_nbytes) => Ok(read_buffer),
-                    Err(err) => Err(RosLibRustError::from(err)),
-                };
-                if response_sender.send(read_result).is_err() {
-                    log::warn!(
-                        "Failed to send service call result back to handle for service {}",
-                        &service_name
-                    );
-                }
-            }
-            Err(err) => {
-                log::error!("Failed to send service call request: {err:?}");
-                if response_sender
-                    .send(Err(RosLibRustError::from(err)))
-                    .is_err()
-                {
-                    log::error!("Service client requesting call hung up");
-                }
-            }
+        let response = Self::handle_service_call_fallible(stream, request).await;
+        let response = response.map_err(|err| {
+            log::error!(
+                "Failed to send and receive service call for service {service_name}: {err:?}"
+            );
+            RosLibRustError::from(err)
+        });
+        let send_result = response_sender.send(response);
+        if let Err(_err) = send_result {
+            log::error!("Failed to send service call result back to handle for service {service_name}, channel closed");
+        }
+    }
+
+    /// Helper function for calling a service
+    /// Send the raw bytes of the request out
+    /// Receives the full raw bytes of the response and returns them if nothing goes wrong
+    async fn handle_service_call_fallible(
+        stream: &mut TcpStream,
+        request: Vec<u8>,
+    ) -> Result<Vec<u8>, std::io::Error> {
+        // Send the bytes of the request to the service
+        stream.write_all(&request).await?;
+
+        // Service calls magically have an extra byte in the TCPROS spec that indicates success/failure
+        let mut success_byte = [0u8; 1];
+        let _success_byte_read = stream.read_exact(&mut success_byte).await?;
+        if success_byte[0] != 1 && success_byte[0] != 0 {
+            log::error!(
+                "Invalid service call success byte {}, value should be 1 or 0",
+                success_byte[0]
+            );
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid service call success byte",
+            ));
+        }
+        let success = success_byte[0] == 1;
+
+        if success {
+            // Parse length of the payload body
+            let mut body_len_bytes = [0u8; 4];
+            let _body_bytes_read = stream.read_exact(&mut body_len_bytes).await?;
+            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
+
+            let mut body = vec![0u8; body_len];
+            stream.read_exact(&mut body).await?;
+
+            // Dumb mangling here, our implementation expects the length and success at the front
+            // got to be a better way than this
+            let full_body = [success_byte.to_vec(), body_len_bytes.to_vec(), body].concat();
+
+            Ok(full_body)
+        } else {
+            // MAJOR TODO: need to parse error from stream here!
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Failure response from service:",
+            ))
         }
     }
 }
@@ -207,6 +237,7 @@ mod test {
 
     // Some logic in the service client specifically for handling large payloads
     // trying to intentionally exercise that path
+    // TODO this could probably be moved to integration tests or own file
     #[test_log::test(tokio::test)]
     async fn test_large_service_payload_client() {
         let nh = NodeHandle::new(
@@ -216,17 +247,34 @@ mod test {
         .await
         .unwrap();
 
+        // Advertise a service that just echo's the bytes back
+        let _handle = nh
+            .advertise_service::<test_msgs::RoundTripArray, _>("large_service_payload", |request| {
+                Ok(test_msgs::RoundTripArrayResponse {
+                    bytes: request.bytes,
+                })
+            })
+            .await
+            .unwrap();
+
+        // Picking random value that should be larger than MTU
+        // Making sure the ROS message gets split over multiple TCP transactions
+        // and that we correctly re-assemble it on the other end
+        let bytes = vec![0; 10_000];
+
         info!("Starting service call");
         let response = nh
             .service_client::<test_msgs::RoundTripArray>("large_service_payload")
             .await
             .unwrap()
             .call(&test_msgs::RoundTripArrayRequest {
-                bytes: vec![0; 1000000],
+                bytes: bytes.clone(),
             })
             .await
             .unwrap();
         info!("Service call complete");
+
+        assert_eq!(response.bytes, bytes);
     }
 
     #[test_log::test(tokio::test)]

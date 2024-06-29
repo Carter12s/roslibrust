@@ -51,13 +51,7 @@ impl ConnectionHeader {
         let mut tcp_nodelay = false;
 
         // TODO: Unhandled: error, persistent
-
-        debug!("got here");
         while cursor.position() < header_data.len() as u64 {
-            debug!(
-                "cursor top: {cursor:#?}, {}",
-                header_data[cursor.position() as usize]
-            );
             let field_length = cursor.read_u32::<LittleEndian>()? as usize;
             let mut field = vec![0u8; field_length];
             cursor.read_exact(&mut field)?;

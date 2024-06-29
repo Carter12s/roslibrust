@@ -41,14 +41,22 @@ impl NodeHandle {
         Ok(nh)
     }
 
+    /// This function may be removed...
+    /// All node handles connect to a backend node server that actually handles the communication with ROS
+    /// If this function returns false, the backend node server has shut down and this handle is invalid.
+    /// This state should be unreachable by normal usage of the library.
     pub fn is_ok(&self) -> bool {
         !self.inner.node_server_sender.is_closed()
     }
 
+    /// Returns the network uri of XMLRPC server for the underlying node.
+    /// This is address where ROS master communicates with the node.
     pub async fn get_client_uri(&self) -> Result<String, NodeError> {
         self.inner.get_client_uri().await
     }
 
+    /// Create a new publisher for the given type.
+    ///
     pub async fn advertise<T: roslibrust_codegen::RosMessageType>(
         &self,
         topic_name: &str,
