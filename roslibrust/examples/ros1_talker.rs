@@ -16,7 +16,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .map_err(|err| err)?;
     let publisher = nh.advertise::<std_msgs::String>("/chatter", 1).await?;
 
-    for count in 0..10 {
+    for count in 0..50 {
         publisher
             .publish(&std_msgs::String {
                 data: format!("hello world from rust {count}"),
