@@ -293,4 +293,44 @@ mod test {
             panic!("Unexpected error type");
         }
     }
+
+    #[test_log::test(tokio::test)]
+    async fn persistent_client_can_be_called_multiple_times() {
+        let nh = NodeHandle::new(
+            "http://localhost:11311",
+            "/persistent_client_can_be_called_multiple_times",
+        )
+        .await
+        .unwrap();
+
+        let server_fn = |request: test_msgs::AddTwoIntsRequest| {
+            Ok(test_msgs::AddTwoIntsResponse {
+                sum: request.a + request.b,
+            })
+        };
+
+        let _handle = nh
+            .advertise_service::<test_msgs::AddTwoInts, _>(
+                "/persistent_client_can_be_called_multiple_times/add_two",
+                server_fn,
+            )
+            .await
+            .unwrap();
+
+        let client = nh
+            .service_client::<test_msgs::AddTwoInts>(
+                "/persistent_client_can_be_called_multiple_times/add_two",
+            )
+            .await
+            .unwrap();
+
+        for i in 0..10 {
+            let call: test_msgs::AddTwoIntsResponse = client
+                .call(&test_msgs::AddTwoIntsRequest { a: 1, b: i })
+                .await
+                .unwrap();
+
+            assert_eq!(call.sum, 1 + i);
+        }
+    }
 }

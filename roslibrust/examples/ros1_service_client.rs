@@ -14,13 +14,17 @@ async fn main() -> Result<(), anyhow::Error> {
     let nh = NodeHandle::new("http://localhost:11311", "service_client_rs").await?;
     log::info!("Connected!");
 
-    let response: rosapi::GetTimeResponse = nh
+    let client = nh
         .service_client::<rosapi::GetTime>("rosapi/get_time")
-        .await?
-        .call(&rosapi::GetTimeRequest {})
         .await?;
 
+    let response = client.call(&rosapi::GetTimeRequest {}).await?;
+
     log::info!("Got time: {:?}", response);
+
+    let response2 = client.call(&rosapi::GetTimeRequest {}).await?;
+
+    log::info!("Got time: {:?}", response2);
 
     Ok(())
 }
