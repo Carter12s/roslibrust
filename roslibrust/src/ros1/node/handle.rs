@@ -112,4 +112,26 @@ impl NodeHandle {
             .await?;
         Ok(ServiceServer::new(service_name, self.clone()))
     }
+
+    /// Not intended to be called manually
+    /// Stops hosting the specified server.
+    /// This is automatically called when dropping the ServiceServer returned by [advertise_service]
+    pub(crate) fn unadvertise_service_server(&self, service_name: &str) -> Result<(), NodeError> {
+        // TODO should we be using Name as the type of service_name here?
+        // I don't love Name's API at the moment
+        // This function is intended to be called in a "Drop impl" which is non-async
+        // so we're wrapping in a task here.
+        // This should be fine due to the "cmd dispatch" that is the current communication mechanism with NodeServer
+        let copy = self.clone();
+        let name_copy = service_name.to_string();
+        tokio::spawn(async move {
+          let result = copy.inner.unadvertise_service(&name_copy).await;
+          if let Err(e) = result{
+            log::error!("Failed to undvertise service: {e:?}");
+          }
+        });
+        Ok(())
+    }
+
+    pub(crate) fn unadvertise_service_client(&self, )
 }

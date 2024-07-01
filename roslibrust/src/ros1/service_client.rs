@@ -17,6 +17,8 @@ use tokio::{
     },
 };
 
+use super::NodeHandle;
+
 pub type CallServiceRequest = (Vec<u8>, oneshot::Sender<CallServiceResponse>);
 pub type CallServiceResponse = RosLibRustResult<Vec<u8>>;
 
@@ -24,17 +26,22 @@ pub struct ServiceClient<T: RosServiceType> {
     service_name: Name,
     sender: mpsc::UnboundedSender<CallServiceRequest>,
     _phantom: PhantomData<T>,
+    node_handle: NodeHandle,
 }
 
 impl<T: RosServiceType> ServiceClient<T> {
     pub fn new(
         service_name: &Name,
         sender: mpsc::UnboundedSender<CallServiceRequest>,
+        // Need a node handle to underlying server so we can clean up
+        // after ourselves when dropped
+        node_handle: NodeHandle
     ) -> ServiceClient<T> {
         Self {
             service_name: service_name.to_owned(),
             sender,
             _phantom: PhantomData,
+            node_handle,
         }
     }
 
@@ -75,6 +82,13 @@ impl<T: RosServiceType> ServiceClient<T> {
                 return Err(RosLibRustError::Disconnected);
             }
         }
+    }
+}
+
+impl<T: RosServiceType> Drop for ServiceClient<T> {
+    fn drop(&mut self) {
+        // TODO Major, dropping ServiceClient needs to clean up link from NodeServer
+        self.node_handle.unadvertise_service_client();
     }
 }
 
