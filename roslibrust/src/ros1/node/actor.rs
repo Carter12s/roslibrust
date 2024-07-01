@@ -75,6 +75,10 @@ pub enum NodeMsg {
         >,
         md5sum: String,
     },
+    UnregisterServiceServer {
+        reply: oneshot::Sender<Result<(), String>>,
+        service_name: String,
+    },
     RequestTopic {
         reply: oneshot::Sender<Result<ProtocolParams, String>>,
         caller_id: String,
@@ -242,6 +246,22 @@ impl NodeServerHandle {
             log::error!("Failed to register service server: {err}");
             NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
         })?)
+    }
+
+    /// Called to remove a service server
+    /// Delegates to the NodeServer via channel
+    pub async fn unadvertise_service(&self, service_name: &str) -> Result<(), NodeError> {
+        let (tx, rx) = oneshot::channel();
+        log::debug!("Queuing unregister service server command for: {service_name:?}");
+        self.node_server_sender
+            .send(NodeMsg::UnregisterServiceServer {
+                reply: tx,
+                service_name: service_name.to_string(),
+            })?;
+        rx.await?.map_err(|e| {
+            log::error!("Failed to unadvertise service server {service_name:?}: {e:?}");
+            NodeError::IoError(io::Error::from(io::ErrorKind::InvalidData))
+        })
     }
 
     /// Registers a subscription with the underlying node server
@@ -491,6 +511,16 @@ impl Node {
                     .map_err(|err| err.to_string()),
                 );
             }
+            NodeMsg::UnregisterServiceServer {
+                reply,
+                service_name,
+            } => {
+                let _ = reply.send(
+                    self.unregister_service_server(&service_name)
+                        .await
+                        .map_err(|err| err.to_string()),
+                );
+            }
             NodeMsg::RequestTopic {
                 reply,
                 topic,
@@ -625,6 +655,15 @@ impl Node {
         log::debug!("Registering service client for {service}");
         let service_name = service.resolve_to_global(&self.node_name).to_string();
 
+        //TODO MAJOR:
+        // Okay design problem here
+        // Shane decided to hand out multiple copies of a tx to the same underlying ServiceLink
+        // when duplicate service clients are created.
+        // 1. That is just a design choice and its equally valid to A) make the ServiceClient Clone instead
+        // 2. We're not counting the # of handles that exist for a given link now, which means we don't know
+        // when we should shut down the service link
+        // What to do...
+
         let existing_entry = {
             self.service_clients.iter().find_map(|(key, value)| {
                 if key.as_str() == &service_name {
@@ -634,6 +673,7 @@ impl Node {
                         // TODO: Why is this AddrInUse?
                         // Is it in-use because we're double registering?
                         // Need better error message here
+                        log::error!("Attempt to create two service clients to same service with two different types");
                         Some(Err(Box::new(std::io::Error::from(
                             std::io::ErrorKind::AddrInUse,
                         ))))
@@ -698,7 +738,7 @@ impl Node {
             warn!("Existing service implementation for {service_type} found while registering service server. Previous implementation will be ejected");
             *server_in_map = link;
         } else {
-            self.service_servers.insert(service_type.to_owned(), link);
+            self.service_servers.insert(service.to_string(), link);
             // This is the address that ros will find this specific service server link
             let service_uri = format!("rosrpc://{}:{}", self.host_addr, port);
 
@@ -709,5 +749,23 @@ impl Node {
         }
 
         Ok(())
+    }
+
+    async fn unregister_service_server(
+        &mut self,
+        service_name: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(service_link) = self.service_servers.remove(service_name) {
+            log::debug!("Removing service_link for: {service_name:?}");
+            // Inform rosmaster that we no longer provide this service
+            let uri = format!("rosrpc://{}:{}", self.host_addr, service_link.port());
+            self.client.unregister_service(service_name, uri).await?;
+            Ok(())
+        } else {
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Attempt to unregister service that is not currently registered",
+            )));
+        }
     }
 }
