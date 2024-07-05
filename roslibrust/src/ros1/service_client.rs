@@ -214,10 +214,23 @@ impl ServiceClientLink {
 
             Ok(full_body)
         } else {
-            // MAJOR TODO: need to parse error from stream here!
+            let mut body_len_bytes = [0u8; 4];
+            let _body_bytes_read = stream.read_exact(&mut body_len_bytes).await?;
+            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
+            let mut body = vec![0u8; body_len];
+            stream.read_exact(&mut body).await?;
+            let full_body = [body_len_bytes.to_vec(), body].concat();
+            let err_msg: String = serde_rosmsg::from_slice(&full_body).map_err(|err| {
+                log::error!("Failed to parse service call error message: {err}");
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Failed to parse service call error message",
+                )
+            })?;
+            // TODO probably specific error type for this
             Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "Failure response from service:",
+                std::io::ErrorKind::Other,
+                format!("Failure response from service server: {err_msg}"),
             ))
         }
     }

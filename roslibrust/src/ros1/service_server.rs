@@ -235,7 +235,12 @@ impl ServiceServerLink {
                 }
                 Err(e) => {
                     warn!("Error from user service method for {service_name}: {e:?}");
-                    // MAJOR TODO: respond with error
+
+                    let error_string = format!("{:?}", e);
+                    let error_bytes = serde_rosmsg::to_vec(&error_string).unwrap();
+                    let full_response = [vec![0u8], error_bytes].concat();
+
+                    stream.write_all(&full_response).await.unwrap();
                 }
             }
         }
@@ -371,5 +376,42 @@ mod test {
         assert!(!service_list
             .services
             .contains(&"/dropping_service_node/add_two".to_string()));
+    }
+
+    #[test_log::test(tokio::test)]
+    async fn service_error_behavior() {
+        debug!("Getting node handle");
+        let nh = NodeHandle::new("http://localhost:11311", "/service_error_behavior")
+            .await
+            .unwrap();
+
+        let server_fn = |request: test_msgs::AddTwoIntsRequest| -> Result<
+            test_msgs::AddTwoIntsResponse,
+            Box<dyn std::error::Error + Send + Sync>,
+        > {
+            info!("Got request: {request:?}");
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "test message",
+            )));
+        };
+
+        // Create the server
+        let _handle = nh
+            .advertise_service::<test_msgs::AddTwoInts, _>("~/add_two", server_fn)
+            .await
+            .unwrap();
+
+        // Make the request (should fail)
+        let client = nh
+            .service_client::<test_msgs::AddTwoInts>("~/add_two")
+            .await
+            .unwrap();
+        let call = client
+            .call(&test_msgs::AddTwoIntsRequest { a: 1, b: 2 })
+            .await;
+        debug!("Got call: {call:?}");
+        assert!(call.is_err());
+        panic!()
     }
 }
