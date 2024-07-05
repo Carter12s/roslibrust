@@ -80,6 +80,12 @@ impl ConnectionHeader {
                 let mut tcp_nodelay_str = String::new();
                 field[equals_pos + 1..].clone_into(&mut tcp_nodelay_str);
                 tcp_nodelay = &tcp_nodelay_str != "0";
+            } else if field.starts_with("probe=") {
+                // probe is apprantly an undocumented header field that is sent
+                // by certain ros tools when they initiate a service_client connection to a service server
+                // for the purpose of discovering the service type
+                // If you do `rosservice call /my_service` and hit TAB you'll see this field in the connection header
+                // we can ignore it
             } else if field.starts_with("error=") {
                 log::error!("Error reported in TCPROS connection header: {field}");
             } else {
@@ -87,7 +93,7 @@ impl ConnectionHeader {
             }
         }
 
-        Ok(ConnectionHeader {
+        let header = ConnectionHeader {
             caller_id,
             latching,
             msg_definition,
@@ -96,7 +102,12 @@ impl ConnectionHeader {
             service,
             topic_type,
             tcp_nodelay,
-        })
+        };
+        trace!(
+            "Got connection header: {header:?} for topic {:?}",
+            header.topic
+        );
+        Ok(header)
     }
 
     /// Serializes the connection header to a byte array

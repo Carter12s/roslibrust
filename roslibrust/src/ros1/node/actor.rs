@@ -701,6 +701,9 @@ impl Node {
             self.host_addr,
             service.clone(),
             self.node_name.clone(),
+            service_type.to_string(),
+            md5sum.to_string(),
+            srv_definition.to_string(),
         )
         .await?;
         let port = link.port();

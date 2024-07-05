@@ -70,6 +70,9 @@ impl ServiceServerLink {
         host_addr: Ipv4Addr,
         service_name: Name,
         node_name: Name,
+        service_type: String, // name of the message type e.g. "std_srvs/Trigger"
+        md5sum: String,       // md5sum of the service message type
+        srv_definition: String, // Full text of the service message type definition
     ) -> Result<Self, std::io::Error> {
         // TODO A lot of this is duplicated with publisher
         // We could probably move chunks into tcpros.rs and re-use
@@ -83,7 +86,15 @@ impl ServiceServerLink {
             .port();
         let service_name_copy = service_name.to_string();
 
-        let task = tokio::spawn(Self::actor(tcp_listener, service_name, node_name, method));
+        let task = tokio::spawn(Self::actor(
+            tcp_listener,
+            service_name,
+            node_name,
+            method,
+            service_type,
+            md5sum,
+            srv_definition,
+        ));
 
         Ok(Self {
             _child_task: task.into(),
@@ -105,6 +116,9 @@ impl ServiceServerLink {
         service_name: Name, // Service path of the this service
         node_name: Name,    // Name of node we're running on
         method: Box<TypeErasedCallback>,
+        service_type: String,
+        md5sum: String,
+        srv_definition: String,
     ) {
         // We have to move our callback into an Arc so the separately spawned tasks for each service connection
         // can access it in parrallel and not worry about the lifetime.
@@ -122,6 +136,9 @@ impl ServiceServerLink {
                         service_name.clone(),
                         node_name.clone(),
                         arc_method.clone(),
+                        service_type.clone(),
+                        md5sum.clone(),
+                        srv_definition.clone(),
                     ));
                     // Add spawned task to child task list to ensure dropping shuts down server
                     tasks.push(task.into());
@@ -143,6 +160,9 @@ impl ServiceServerLink {
         service_name: Name,
         node_name: Name,
         method: Arc<Box<TypeErasedCallback>>,
+        service_type: String,
+        md5sum: String,
+        srv_definition: String,
     ) {
         // TODO for a bunch of the error branches in this handling
         // it is unclear whether we should respond over the socket
@@ -176,15 +196,14 @@ impl ServiceServerLink {
         trace!("Got connection header: {connection_header:#?} for service {service_name}");
 
         // Respond with our header
-        // TODO this is pretty cursed, may want a better version
         let response_header = ConnectionHeader {
             caller_id: node_name.to_string(),
             latching: false,
-            msg_definition: "".to_string(),
-            md5sum: None,
-            service: None,
+            msg_definition: srv_definition,
+            md5sum: Some(md5sum),
+            service: Some(service_name.to_string()),
             topic: None,
-            topic_type: "".to_string(),
+            topic_type: service_type.to_string(),
             tcp_nodelay: false,
         };
         let bytes = response_header.to_bytes(false).unwrap();
@@ -201,7 +220,8 @@ impl ServiceServerLink {
         loop {
             let mut body_len_bytes = [0u8; 4];
             if let Err(e) = stream.read_exact(&mut body_len_bytes).await {
-                warn!("Communication error while handling service request connection for {service_name}, could not get body length: {e:?}");
+                // Note: this was lowered to debug! from warn! because this is intentionally done by tools like `rosservice` to discover service type
+                debug!("Communication error while handling service request connection for {service_name}, could not get body length: {e:?}");
                 // TODO returning here simply closes the socket? Should we respond with an error instead?
                 return;
             }
