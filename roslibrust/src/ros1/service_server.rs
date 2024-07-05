@@ -7,7 +7,7 @@ use abort_on_drop::ChildTask;
 use log::*;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-use crate::ros1::tcpros::ConnectionHeader;
+use crate::ros1::tcpros::{self, ConnectionHeader};
 
 use super::{names::Name, NodeHandle};
 
@@ -170,22 +170,7 @@ impl ServiceServerLink {
         // Probably it is better to try to send an error back?
         debug!("Received service_request connection from {peer_addr} for {service_name}");
 
-        // Get the header from the stream:
-        let mut header_len_bytes = [0u8; 4];
-        if let Err(e) = stream.read_exact(&mut header_len_bytes).await {
-            warn!("Communication error while handling service request connection for {service_name}, could not get header length: {e:?}");
-            // TODO returning here simply closes the socket? Should we respond with an error instead?
-            return;
-        }
-        let header_len = u32::from_le_bytes(header_len_bytes) as usize;
-
-        let mut connection_header = vec![0u8; header_len];
-        if let Err(e) = stream.read_exact(&mut connection_header).await {
-            warn!("Communication error while handling service request connection for {service_name}, could not get header body: {e:?}");
-            // TODO returning here simply closes the socket? Should we respond with an error instead?
-            return;
-        }
-        let connection_header = match ConnectionHeader::from_bytes(&connection_header) {
+        let connection_header = match tcpros::recieve_header(&mut stream).await {
             Ok(header) => header,
             Err(e) => {
                 warn!("Communication error while handling service request connection for {service_name}, could not parse header: {e:?}");
