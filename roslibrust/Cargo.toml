@@ -1,6 +1,6 @@
 [package]
 name = "roslibrust"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["carter <carterjschultz@gmail.com>", "ssnover <ssnover95@gmail.com>"]
 edition = "2021"
 license = "MIT"
