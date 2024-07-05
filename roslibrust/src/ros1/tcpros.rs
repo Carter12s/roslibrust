@@ -192,7 +192,7 @@ pub async fn establish_connection(
 
     let mut responded_header_bytes = Vec::with_capacity(header_len);
     let bytes = stream.read_buf(&mut responded_header_bytes).await?;
-    if let Ok(responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
+    if let Ok(_responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
         // TODO we should really examine this md5sum logic...
         // according to the ROS documentation, the service isn't required to respond
         // with anything other than caller_id

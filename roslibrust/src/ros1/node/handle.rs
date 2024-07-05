@@ -1,10 +1,7 @@
 use super::actor::{Node, NodeServerHandle};
-use crate::{
-    ros1::{
-        names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
-        NodeError, ServiceServer,
-    },
-    RosLibRustResult,
+use crate::ros1::{
+    names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
+    NodeError, ServiceServer,
 };
 
 /// Represents a handle to an underlying [Node]. NodeHandle's can be freely cloned, moved, copied, etc.
@@ -90,7 +87,7 @@ impl NodeHandle {
             .inner
             .register_service_client::<T>(&service_name)
             .await?;
-        Ok(ServiceClient::new(&service_name, sender))
+        Ok(sender)
     }
 
     pub async fn advertise_service<T, F>(
@@ -111,5 +108,25 @@ impl NodeHandle {
             .register_service_server::<T, F>(&service_name, server)
             .await?;
         Ok(ServiceServer::new(service_name, self.clone()))
+    }
+
+    /// Not intended to be called manually
+    /// Stops hosting the specified server.
+    /// This is automatically called when dropping the ServiceServer returned by [advertise_service]
+    pub(crate) fn unadvertise_service_server(&self, service_name: &str) -> Result<(), NodeError> {
+        // TODO should we be using Name as the type of service_name here?
+        // I don't love Name's API at the moment
+        // This function is intended to be called in a "Drop impl" which is non-async
+        // so we're wrapping in a task here.
+        // This should be fine due to the "cmd dispatch" that is the current communication mechanism with NodeServer
+        let copy = self.clone();
+        let name_copy = service_name.to_string();
+        tokio::spawn(async move {
+            let result = copy.inner.unadvertise_service(&name_copy).await;
+            if let Err(e) = result {
+                log::error!("Failed to undvertise service: {e:?}");
+            }
+        });
+        Ok(())
     }
 }

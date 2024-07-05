@@ -42,11 +42,10 @@ impl ServiceServer {
 
 impl Drop for ServiceServer {
     fn drop(&mut self) {
-        // MAJOR TODO
-        // unimplemented!()
-        // Need to eventually define and call this:
-        // self.node_handle
-        //     .unadvertise_service(&self.service_name.to_string());
+        debug!("Dropping service server: {:?}", self.service_name);
+        let _ = self
+            .node_handle
+            .unadvertise_service_server(&self.service_name.to_string());
     }
 }
 
@@ -56,6 +55,13 @@ pub(crate) struct ServiceServerLink {
     // Task is automatically aborted when link is dropped
     _child_task: ChildTask<()>,
     port: u16,
+    service_name: String,
+}
+
+impl Drop for ServiceServerLink {
+    fn drop(&mut self) {
+        log::debug!("Dropping service server link: {:?}", self.service_name);
+    }
 }
 
 impl ServiceServerLink {
@@ -75,12 +81,14 @@ impl ServiceServerLink {
             .local_addr()
             .expect("Bound tcp address did not have local address")
             .port();
+        let service_name_copy = service_name.to_string();
 
         let task = tokio::spawn(Self::actor(tcp_listener, service_name, node_name, method));
 
         Ok(Self {
             _child_task: task.into(),
             port,
+            service_name: service_name_copy,
         })
     }
 
@@ -102,17 +110,21 @@ impl ServiceServerLink {
         // can access it in parrallel and not worry about the lifetime.
         // TODO: it may be better to Arc it upfront?
         let arc_method = Arc::new(method);
+        // Tasks list here is needed to ensure that dropping this future drops child futures
+        let mut tasks: Vec<ChildTask<()>> = vec![];
         loop {
             // Accept new TCP connections
             match listener.accept().await {
                 Ok((stream, peer_addr)) => {
-                    tokio::spawn(Self::handle_tcp_connection(
+                    let task = tokio::spawn(Self::handle_tcp_connection(
                         stream,
                         peer_addr,
                         service_name.clone(),
                         node_name.clone(),
                         arc_method.clone(),
                     ));
+                    // Add spawned task to child task list to ensure dropping shuts down server
+                    tasks.push(task.into());
                 }
                 Err(e) => {
                     // Not entirely sure what circumstances can cause this?
@@ -250,7 +262,7 @@ mod test {
     async fn basic_service_server() {
         const TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
         debug!("Getting node handle");
-        let nh = NodeHandle::new("http://localhost:11311", "basic_service_server")
+        let nh = NodeHandle::new("http://localhost:11311", "/basic_service_server")
             .await
             .unwrap();
 
@@ -264,7 +276,10 @@ mod test {
         // Create the server
         debug!("Creating server");
         let _handle = nh
-            .advertise_service::<test_msgs::AddTwoInts, _>("basic_service_server", server_fn)
+            .advertise_service::<test_msgs::AddTwoInts, _>(
+                "/basic_service_server/add_two",
+                server_fn,
+            )
             .await
             .unwrap();
 
@@ -274,7 +289,7 @@ mod test {
             TIMEOUT,
             timeout(
                 TIMEOUT,
-                nh.service_client::<test_msgs::AddTwoInts>("basic_service_server"),
+                nh.service_client::<test_msgs::AddTwoInts>("/basic_service_server/add_two"),
             )
             .await
             .unwrap()
@@ -287,5 +302,74 @@ mod test {
 
         assert_eq!(call.sum, 3);
         debug!("Got 3");
+    }
+
+    #[test_log::test(tokio::test)]
+    async fn dropping_service_server_kill_correctly() {
+        debug!("Getting node handle");
+        let nh = NodeHandle::new("http://localhost:11311", "/dropping_service_node")
+            .await
+            .unwrap();
+
+        let server_fn = |request: test_msgs::AddTwoIntsRequest| {
+            info!("Got request: {request:?}");
+            return Ok(test_msgs::AddTwoIntsResponse {
+                sum: request.a + request.b,
+            });
+        };
+
+        // Create the server
+        let handle = nh
+            .advertise_service::<test_msgs::AddTwoInts, _>("~/add_two", server_fn)
+            .await
+            .unwrap();
+
+        // Make the request (should succeed)
+        let client = nh
+            .service_client::<test_msgs::AddTwoInts>("~/add_two")
+            .await
+            .unwrap();
+        let _call: test_msgs::AddTwoIntsResponse = client
+            .call(&test_msgs::AddTwoIntsRequest { a: 1, b: 2 })
+            .await
+            .unwrap();
+
+        // Shut down the server
+        std::mem::drop(handle);
+        // Wait a little bit for server shut down to process
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+
+        // Make the request again (should fail)
+        let call_2 = client
+            .call(&test_msgs::AddTwoIntsRequest { a: 1, b: 2 })
+            .await;
+        debug!("Got call_2: {call_2:?}");
+        assert!(
+            call_2.is_err(),
+            "Shouldn't be able to call after server is shut down"
+        );
+
+        // Create a new clinet
+        let client = nh
+            .service_client::<test_msgs::AddTwoInts>("~/add_two")
+            .await;
+        // Client should fail to create as there should be no provider of the service
+        assert!(
+            client.is_err(),
+            "Shouldn't be able to connect again (no provider of service)"
+        );
+
+        // Confirm ros master no longer reports our service as provided (via rosapi for fun)
+        let rosapi_client = nh
+            .service_client::<rosapi::Services>("/rosapi/services")
+            .await
+            .unwrap();
+        let service_list: rosapi::ServicesResponse = rosapi_client
+            .call(&rosapi::ServicesRequest {})
+            .await
+            .unwrap();
+        assert!(!service_list
+            .services
+            .contains(&"/dropping_service_node/add_two".to_string()));
     }
 }
