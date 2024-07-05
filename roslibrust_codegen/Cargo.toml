@@ -1,6 +1,6 @@
 [package]
 name = "roslibrust_codegen"
-version = "0.9.0"
+version = "0.10.0"
 edition = "2021"
 authors = ["carter <carterjschultz@gmail.com>", "ssnover <ssnover95@gmail.com>"]
 license = "MIT"

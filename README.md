@@ -43,9 +43,9 @@ Rough overview of the features planned to built for this crate in what order:
 | examples                     | ✅                                                         | ✅   | x    |
 | message_gen                  | ✅                                                         | ✅   | ✅  |
 | advertise / publish          | ✅                                                         | ✅   | x    |
-| unadvertise                  | ✅                                                         | x    | x    |
+| unadvertise                  | ✅                                                         | ✅   | x    |
 | subscribe                    | ✅                                                         | ✅   | x    |
-| unsubscribe                  | ✅                                                         | x    | x    |
+| unsubscribe                  | ✅                                                         | ✅   | x    |
 | services                     | ✅                                                         | x    | x    |
 | rosapi                       | ✅ (ROS1 only for now)                                     | N/A  | N/A  |
 | TLS / wss://                 | Should be working, untested                                 | N/A  | N/A  |

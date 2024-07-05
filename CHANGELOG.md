@@ -18,8 +18,15 @@ Note: need to publish with `cargo publish --all-features`
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## Unreleased
+
+### Added
+
+### Fixed
+
+### Changed
+
+## 0.10.0 - July 5th, 2024
 
 ### Added
 - ROS1 native service servers and service clients are now supported (experimental feature)
@@ -35,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 crates that were previously adding dependencies on serde, serde-big-array, and smart-default will no longer need to do so.
 - A significant reworking of the error types in the ROS1 native client was performed to move away from the `Box<dyn Error + Send + Sync>` pattern and instead use the `anyhow` crate.
 
-## 0.9.0 - May 13th, 2023
+## 0.9.0 - May 13th, 2024
 
 ### Added
 
