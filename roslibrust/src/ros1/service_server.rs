@@ -412,6 +412,5 @@ mod test {
             .await;
         debug!("Got call: {call:?}");
         assert!(call.is_err());
-        panic!()
     }
 }
