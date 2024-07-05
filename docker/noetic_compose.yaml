@@ -1,6 +1,8 @@
 services:
   rosbridge:
     image: carter12s/roslibrust-ci-noetic:rust-1-72
+    # network_mode host required for ros1 testing
+    network_mode: host
     ports:
       - "9090:9090"
       # Pass through the ros master port for native ros1 testing

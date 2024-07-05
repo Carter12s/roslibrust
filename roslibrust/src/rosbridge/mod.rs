@@ -103,11 +103,6 @@ pub(crate) struct Subscription {
     pub(crate) handles: HashMap<uuid::Uuid, Callback>,
     /// Name of ros type (package_name/message_name), used for re-subscribes
     pub(crate) topic_type: String,
-
-    // TODO consider specializing this type for ros1_native
-    // Will contain the list of publishers of this topic as told to us by rosmaster
-    // Currently only used / populated with ros1 native
-    pub(crate) known_publishers: Vec<String>,
 }
 
 // TODO move out of rosbridge and into common

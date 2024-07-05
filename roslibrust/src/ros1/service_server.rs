@@ -262,7 +262,7 @@ mod test {
     async fn basic_service_server() {
         const TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
         debug!("Getting node handle");
-        let nh = NodeHandle::new("http://localhost:11311", "basic_service_server")
+        let nh = NodeHandle::new("http://localhost:11311", "/basic_service_server")
             .await
             .unwrap();
 
@@ -276,7 +276,10 @@ mod test {
         // Create the server
         debug!("Creating server");
         let _handle = nh
-            .advertise_service::<test_msgs::AddTwoInts, _>("basic_service_server", server_fn)
+            .advertise_service::<test_msgs::AddTwoInts, _>(
+                "/basic_service_server/add_two",
+                server_fn,
+            )
             .await
             .unwrap();
 
@@ -286,7 +289,7 @@ mod test {
             TIMEOUT,
             timeout(
                 TIMEOUT,
-                nh.service_client::<test_msgs::AddTwoInts>("basic_service_server"),
+                nh.service_client::<test_msgs::AddTwoInts>("/basic_service_server/add_two"),
             )
             .await
             .unwrap()
@@ -304,7 +307,7 @@ mod test {
     #[test_log::test(tokio::test)]
     async fn dropping_service_server_kill_correctly() {
         debug!("Getting node handle");
-        let nh = NodeHandle::new("http://localhost:11311", "dropping_service_node")
+        let nh = NodeHandle::new("http://localhost:11311", "/dropping_service_node")
             .await
             .unwrap();
 
@@ -333,8 +336,8 @@ mod test {
 
         // Shut down the server
         std::mem::drop(handle);
-        // Wait for shut down to process
-        tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+        // Wait a little bit for server shut down to process
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
 
         // Make the request again (should fail)
         let call_2 = client
@@ -346,18 +349,27 @@ mod test {
             "Shouldn't be able to call after server is shut down"
         );
 
-        // Drop our client (should expunge the storage of the client from the NodeServer)
-        std::mem::drop(client);
+        // Create a new clinet
         let client = nh
             .service_client::<test_msgs::AddTwoInts>("~/add_two")
             .await;
-
         // Client should fail to create as there should be no provider of the service
         assert!(
             client.is_err(),
             "Shouldn't be able to connect again (no provider of service)"
         );
 
-        // TODO as an extra test here we could make a rosapi call
+        // Confirm ros master no longer reports our service as provided (via rosapi for fun)
+        let rosapi_client = nh
+            .service_client::<rosapi::Services>("/rosapi/services")
+            .await
+            .unwrap();
+        let service_list: rosapi::ServicesResponse = rosapi_client
+            .call(&rosapi::ServicesRequest {})
+            .await
+            .unwrap();
+        assert!(!service_list
+            .services
+            .contains(&"/dropping_service_node/add_two".to_string()));
     }
 }

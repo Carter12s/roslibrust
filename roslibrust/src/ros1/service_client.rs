@@ -7,7 +7,7 @@ use crate::{
 };
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosServiceType;
-use std::marker::PhantomData;
+use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
@@ -17,31 +17,33 @@ use tokio::{
     },
 };
 
-use super::NodeHandle;
-
 pub type CallServiceRequest = (Vec<u8>, oneshot::Sender<CallServiceResponse>);
 pub type CallServiceResponse = RosLibRustResult<Vec<u8>>;
 
+// Note: ServiceClient is clone, and this is expressly different behavior than calling .service_client() twice on NodeHandle
+// clonning a ServiceClient does not create a new connection to the service, but instead creates a second handle to the
+// same underlying service client.
+#[derive(Clone)]
 pub struct ServiceClient<T: RosServiceType> {
     service_name: Name,
     sender: mpsc::UnboundedSender<CallServiceRequest>,
     _phantom: PhantomData<T>,
-    node_handle: NodeHandle,
+    // A given copy of a service client is actually just a handle to an underlying actor
+    // When the last ServiceClient is dropped this will shut down the underlying actor and TCP connection
+    _link: Arc<ServiceClientLink>,
 }
 
 impl<T: RosServiceType> ServiceClient<T> {
-    pub fn new(
+    pub(crate) fn new(
         service_name: &Name,
         sender: mpsc::UnboundedSender<CallServiceRequest>,
-        // Need a node handle to underlying server so we can clean up
-        // after ourselves when dropped
-        node_handle: NodeHandle
+        link: ServiceClientLink,
     ) -> ServiceClient<T> {
         Self {
             service_name: service_name.to_owned(),
             sender,
             _phantom: PhantomData,
-            node_handle,
+            _link: Arc::new(link),
         }
     }
 
@@ -85,15 +87,7 @@ impl<T: RosServiceType> ServiceClient<T> {
     }
 }
 
-impl<T: RosServiceType> Drop for ServiceClient<T> {
-    fn drop(&mut self) {
-        // TODO Major, dropping ServiceClient needs to clean up link from NodeServer
-        self.node_handle.unadvertise_service_client();
-    }
-}
-
 pub struct ServiceClientLink {
-    service_type: String,
     call_sender: mpsc::UnboundedSender<CallServiceRequest>,
     _actor_task: ChildTask<()>,
 }
@@ -132,7 +126,6 @@ impl ServiceClientLink {
         let handle = tokio::spawn(actor_context);
 
         Ok(Self {
-            service_type: service_type.to_owned(),
             call_sender: call_tx,
             _actor_task: handle.into(),
         })
@@ -140,10 +133,6 @@ impl ServiceClientLink {
 
     pub fn get_sender(&self) -> mpsc::UnboundedSender<CallServiceRequest> {
         self.call_sender.clone()
-    }
-
-    pub fn service_type(&self) -> &str {
-        &self.service_type
     }
 
     async fn actor_context(
@@ -239,10 +228,7 @@ impl ServiceClientLink {
 mod test {
     use log::info;
 
-    use crate::{
-        ros1::{NodeError, NodeHandle},
-        RosLibRustError,
-    };
+    use crate::ros1::{NodeError, NodeHandle};
 
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
         "assets/ros1_test_msgs",

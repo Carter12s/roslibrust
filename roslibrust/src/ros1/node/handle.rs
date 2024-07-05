@@ -1,10 +1,7 @@
 use super::actor::{Node, NodeServerHandle};
-use crate::{
-    ros1::{
-        names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
-        NodeError, ServiceServer,
-    },
-    RosLibRustResult,
+use crate::ros1::{
+    names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
+    NodeError, ServiceServer,
 };
 
 /// Represents a handle to an underlying [Node]. NodeHandle's can be freely cloned, moved, copied, etc.
@@ -90,7 +87,7 @@ impl NodeHandle {
             .inner
             .register_service_client::<T>(&service_name)
             .await?;
-        Ok(ServiceClient::new(&service_name, sender))
+        Ok(sender)
     }
 
     pub async fn advertise_service<T, F>(
@@ -125,13 +122,11 @@ impl NodeHandle {
         let copy = self.clone();
         let name_copy = service_name.to_string();
         tokio::spawn(async move {
-          let result = copy.inner.unadvertise_service(&name_copy).await;
-          if let Err(e) = result{
-            log::error!("Failed to undvertise service: {e:?}");
-          }
+            let result = copy.inner.unadvertise_service(&name_copy).await;
+            if let Err(e) = result {
+                log::error!("Failed to undvertise service: {e:?}");
+            }
         });
         Ok(())
     }
-
-    pub(crate) fn unadvertise_service_client(&self, )
 }

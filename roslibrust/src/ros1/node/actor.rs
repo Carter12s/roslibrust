@@ -3,12 +3,12 @@ use crate::{
         names::Name,
         node::{XmlRpcServer, XmlRpcServerHandle},
         publisher::Publication,
-        service_client::{CallServiceRequest, ServiceClientLink},
+        service_client::ServiceClientLink,
         service_server::ServiceServerLink,
         subscriber::Subscription,
-        MasterClient, NodeError, ProtocolParams,
+        MasterClient, NodeError, ProtocolParams, ServiceClient,
     },
-    RosLibRustError, RosLibRustResult,
+    RosLibRustError,
 };
 use abort_on_drop::ChildTask;
 use log::warn;
@@ -57,7 +57,7 @@ pub enum NodeMsg {
         md5sum: String,
     },
     RegisterServiceClient {
-        reply: oneshot::Sender<Result<mpsc::UnboundedSender<CallServiceRequest>, String>>,
+        reply: oneshot::Sender<Result<ServiceClientLink, String>>,
         service: Name,
         service_type: String,
         srv_definition: String,
@@ -180,7 +180,7 @@ impl NodeServerHandle {
     pub async fn register_service_client<T: RosServiceType>(
         &self,
         service_name: &Name,
-    ) -> Result<mpsc::UnboundedSender<CallServiceRequest>, NodeError> {
+    ) -> Result<ServiceClient<T>, NodeError> {
         // Create a channel for hooking into the node server
         let (sender, receiver) = oneshot::channel();
 
@@ -197,10 +197,13 @@ impl NodeServerHandle {
             })?;
         // Get a channel back from the node server for pushing requests into
         let received = receiver.await?;
-        Ok(received.map_err(|err| {
+        let link = received.map_err(|err| {
             log::error!("Failed to register service client: {err}");
             NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
-        })?)
+        })?;
+        let sender = link.get_sender();
+
+        Ok(ServiceClient::new(service_name, sender, link))
     }
 
     pub async fn register_service_server<T, F>(
@@ -332,7 +335,12 @@ pub(crate) struct Node {
     // Record of subscriptions this node has
     subscriptions: HashMap<String, Subscription>,
     // Map of topic names to the service client handles for each topic
-    service_clients: HashMap<String, ServiceClientLink>,
+    // Note: decision made to not hold a list of service clients here, instead each call
+    // to register_service_client will create a new service client and return a sender to it
+    // Okay to have multiple service clients for the same service.
+    // Eventually, if we can also make ServiceClient clone()
+    // This should give better control of how disconnection and lifetimes work for a given client
+    // service_clients: HashMap<String, ServiceClientLink>,
     // Map of topic names to service server handles for each topic
     service_servers: HashMap<String, ServiceServerLink>,
     // TODO need signal to shutdown xmlrpc server when node is dropped
@@ -366,7 +374,6 @@ impl Node {
             node_msg_rx: node_receiver,
             publishers: std::collections::HashMap::new(),
             subscriptions: std::collections::HashMap::new(),
-            service_clients: std::collections::HashMap::new(),
             service_servers: std::collections::HashMap::new(),
             host_addr: addr,
             hostname: hostname.to_owned(),
@@ -651,60 +658,25 @@ impl Node {
         service_type: &str,
         srv_definition: &str,
         md5sum: &str,
-    ) -> Result<mpsc::UnboundedSender<CallServiceRequest>, Box<dyn std::error::Error>> {
+    ) -> Result<ServiceClientLink, Box<dyn std::error::Error>> {
         log::debug!("Registering service client for {service}");
         let service_name = service.resolve_to_global(&self.node_name).to_string();
 
-        //TODO MAJOR:
-        // Okay design problem here
-        // Shane decided to hand out multiple copies of a tx to the same underlying ServiceLink
-        // when duplicate service clients are created.
-        // 1. That is just a design choice and its equally valid to A) make the ServiceClient Clone instead
-        // 2. We're not counting the # of handles that exist for a given link now, which means we don't know
-        // when we should shut down the service link
-        // What to do...
+        log::debug!("Creating new service client for {service}");
+        let service_uri = self.client.lookup_service(&service_name).await?;
 
-        let existing_entry = {
-            self.service_clients.iter().find_map(|(key, value)| {
-                if key.as_str() == &service_name {
-                    if value.service_type() == service_type {
-                        Some(Ok(value.get_sender()))
-                    } else {
-                        // TODO: Why is this AddrInUse?
-                        // Is it in-use because we're double registering?
-                        // Need better error message here
-                        log::error!("Attempt to create two service clients to same service with two different types");
-                        Some(Err(Box::new(std::io::Error::from(
-                            std::io::ErrorKind::AddrInUse,
-                        ))))
-                    }
-                } else {
-                    None
-                }
-            })
-        };
+        log::debug!("Found service at {service_uri}");
+        let server_link = ServiceClientLink::new(
+            &self.node_name,
+            &service_name,
+            service_type,
+            &service_uri,
+            srv_definition,
+            md5sum,
+        )
+        .await?;
 
-        if let Some(handle) = existing_entry {
-            log::debug!("Found existing service client for {service}, returning existing handle");
-            Ok(handle?)
-        } else {
-            log::debug!("Creating new service client for {service}");
-            let service_uri = self.client.lookup_service(&service_name).await?;
-            log::debug!("Found service at {service_uri}");
-            let server_link = ServiceClientLink::new(
-                &self.node_name,
-                &service_name,
-                service_type,
-                &service_uri,
-                srv_definition,
-                md5sum,
-            )
-            .await?;
-
-            let handle = server_link.get_sender();
-            self.service_clients.insert(service_name, server_link);
-            Ok(handle)
-        }
+        Ok(server_link)
     }
 
     /// Registers a type-erased server function with the NodeServer
