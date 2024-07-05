@@ -410,6 +410,9 @@ mod test {
         let call = client
             .call(&test_msgs::AddTwoIntsRequest { a: 1, b: 2 })
             .await;
+        // Okay so this is logging the error message correctly, but the contents currently suck:
+        // "Got call: Err(IoError(Custom { kind: Other, error: "Failure response from service server: Custom { kind: NotFound, error: \"test message\" }" }))"
+        // We should someday clean up error types here, but frankly errors throughout the entire crate need an overhaul
         debug!("Got call: {call:?}");
         assert!(call.is_err());
     }
