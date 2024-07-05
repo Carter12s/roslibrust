@@ -1,4 +1,7 @@
-use crate::ros1::{names::Name, tcpros::ConnectionHeader};
+use crate::ros1::{
+    names::Name,
+    tcpros::{self, ConnectionHeader},
+};
 use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{
@@ -91,65 +94,64 @@ impl Publication {
                     log::info!(
                         "Received connection from subscriber at {peer_addr} for topic {topic_name}"
                     );
-                    let mut connection_header = Vec::with_capacity(16 * 1024);
-                    if let Ok(bytes) = stream.read_buf(&mut connection_header).await {
-                        if let Ok(connection_header) =
-                            ConnectionHeader::from_bytes(&connection_header[..bytes])
-                        {
-                            log::debug!(
-                                "Received subscribe request for {:?} with md5sum {:?}",
-                                connection_header.topic,
-                                connection_header.md5sum
-                            );
-                            // I can't find documentation for this anywhere, but when using
-                            // `rostopic hz` with one of our publishers I discovered that the rospy code sent "*" as the md5sum
-                            // To indicate a "generic subscription"...
-                            // I also discovered that `rostopic echo` does not send a md5sum (even thou ros documentation says its required)
-                            if let Some(connection_md5sum) = connection_header.md5sum {
-                                if connection_md5sum != "*" {
-                                    if let Some(local_md5sum) = &responding_conn_header.md5sum {
-                                        if connection_md5sum != *local_md5sum {
-                                            log::warn!(
+
+                    // Read the connection header:
+                    let connection_header = match tcpros::recieve_header(&mut stream).await {
+                        Ok(header) => header,
+                        Err(e) => {
+                            log::error!("Failed to read connection header: {e:?}");
+                            stream
+                                .shutdown()
+                                .await
+                                .expect("Unable to shutdown tcpstream");
+                            continue;
+                        }
+                    };
+
+                    log::debug!(
+                        "Received subscribe request for {:?} with md5sum {:?}",
+                        connection_header.topic,
+                        connection_header.md5sum
+                    );
+                    // I can't find documentation for this anywhere, but when using
+                    // `rostopic hz` with one of our publishers I discovered that the rospy code sent "*" as the md5sum
+                    // To indicate a "generic subscription"...
+                    // I also discovered that `rostopic echo` does not send a md5sum (even thou ros documentation says its required)
+                    if let Some(connection_md5sum) = connection_header.md5sum {
+                        if connection_md5sum != "*" {
+                            if let Some(local_md5sum) = &responding_conn_header.md5sum {
+                                if connection_md5sum != *local_md5sum {
+                                    log::warn!(
                                     "Got subscribe request for {}, but md5sums do not match. Expected {:?}, received {:?}",
                                     topic_name,
                                     local_md5sum,
                                     connection_md5sum,
                                     );
-                                            // Close the TCP connection
-                                            stream
-                                                .shutdown()
-                                                .await
-                                                .expect("Unable to shutdown tcpstream");
-                                            continue;
-                                        }
-                                    }
+                                    // Close the TCP connection
+                                    stream
+                                        .shutdown()
+                                        .await
+                                        .expect("Unable to shutdown tcpstream");
+                                    continue;
                                 }
                             }
-                            // Write our own connection header in response
-                            let response_header_bytes = responding_conn_header
-                                .to_bytes(false)
-                                .expect("Couldn't serialize connection header");
-                            stream
-                                .write(&response_header_bytes[..])
-                                .await
-                                .expect("Unable to respond on tcpstream");
-                            let mut wlock = subscriber_streams.write().await;
-                            wlock.push(stream);
-                            log::debug!(
-                                "Added stream for topic {:?} to subscriber {}",
-                                connection_header.topic,
-                                peer_addr
-                            );
-                        } else {
-                            let header_str = connection_header[..bytes]
-                                .into_iter()
-                                .map(|ch| if *ch < 128 { *ch as char } else { '.' })
-                                .collect::<String>();
-                            log::error!(
-                                "Failed to parse connection header: ({bytes} bytes) {header_str}",
-                            )
                         }
                     }
+                    // Write our own connection header in response
+                    let response_header_bytes = responding_conn_header
+                        .to_bytes(false)
+                        .expect("Couldn't serialize connection header");
+                    stream
+                        .write(&response_header_bytes[..])
+                        .await
+                        .expect("Unable to respond on tcpstream");
+                    let mut wlock = subscriber_streams.write().await;
+                    wlock.push(stream);
+                    log::debug!(
+                        "Added stream for topic {:?} to subscriber {}",
+                        connection_header.topic,
+                        peer_addr
+                    );
                 }
             }
         });

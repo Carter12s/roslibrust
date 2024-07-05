@@ -47,7 +47,7 @@ impl ConnectionHeader {
             let mut field = vec![0u8; field_length];
             cursor.read_exact(&mut field)?;
             let field = String::from_utf8(field).map_err(|e| {
-                warn!("Failed to parse field in connection header as valid utf8: {e:#?}");
+                warn!("Failed to parse field in connection header as valid utf8: {e:#?}, Full header: {header_data:#?}");
                 std::io::ErrorKind::InvalidData
             })?;
             let equals_pos = match field.find('=') {
@@ -87,9 +87,9 @@ impl ConnectionHeader {
                 // If you do `rosservice call /my_service` and hit TAB you'll see this field in the connection header
                 // we can ignore it
             } else if field.starts_with("error=") {
-                log::error!("Error reported in TCPROS connection header: {field}");
+                log::error!("Error reported in TCPROS connection header: {field}, full header: {header_data:#?}");
             } else {
-                log::warn!("Encountered unhandled field in connection header: {field}");
+                log::warn!("Encountered unhandled field in connection header: {field}, full header: {header_data:#?}");
             }
         }
 
@@ -194,16 +194,13 @@ pub async fn establish_connection(
         },
     )?;
 
+    // Write our own connection header to the stream
     let conn_header_bytes = conn_header.to_bytes(true)?;
     stream.write_all(&conn_header_bytes[..]).await?;
 
-    let mut header_len_bytes = [0u8; 4];
-    let _header_bytes = stream.read_exact(&mut header_len_bytes).await?;
-    let header_len = u32::from_le_bytes(header_len_bytes) as usize;
-
-    let mut responded_header_bytes = Vec::with_capacity(header_len);
-    let bytes = stream.read_buf(&mut responded_header_bytes).await?;
-    if let Ok(_responded_header) = ConnectionHeader::from_bytes(&responded_header_bytes[..bytes]) {
+    // Recieve the header from the server
+    let responded_header = recieve_header(&mut stream).await;
+    if let Ok(_responded_header) = responded_header {
         // TODO we should really examine this md5sum logic...
         // according to the ROS documentation, the service isn't required to respond
         // with anything other than caller_id
@@ -226,6 +223,22 @@ pub async fn establish_connection(
         Err(std::io::ErrorKind::InvalidData)
     }
     .map_err(std::io::Error::from)
+}
+
+// Reads a complete ROS connection header from the given stream
+pub async fn recieve_header(stream: &mut TcpStream) -> Result<ConnectionHeader, std::io::Error> {
+    // Bring trait def into scope
+    use tokio::io::AsyncReadExt;
+    // Recieve the header length
+    let mut header_len_bytes = [0u8; 4];
+    let _num_bytes_read = stream.read_exact(&mut header_len_bytes).await?;
+    // This is the length of the header itself
+    let header_len = u32::from_le_bytes(header_len_bytes) as usize;
+
+    // Initialize a buffer to hold the header
+    let mut header_bytes = vec![0u8; header_len];
+    let _num_bytes_read = stream.read_exact(&mut header_bytes).await?;
+    ConnectionHeader::from_bytes(&header_bytes)
 }
 
 #[cfg(test)]
@@ -257,5 +270,29 @@ mod test {
         assert_eq!(header.latching, true);
         assert_eq!(header.topic, Some("/chatter".to_owned()));
         assert_eq!(header.topic_type, "std_msgs/String");
+    }
+
+    #[test_log::test]
+    fn example_from_testing() {
+        // example taken from `rostopic echo` with our ros1_talker example
+        let bytes: Vec<u8> = vec![
+            37, 0, 0, 0, 99, 97, 108, 108, 101, 114, 105, 100, 61, 47, 114, 111, 115, 116, 111,
+            112, 105, 99, 95, 49, 49, 54, 56, 95, 49, 55, 50, 48, 50, 49, 53, 56, 51, 56, 57, 48,
+            50, 39, 0, 0, 0, 109, 100, 53, 115, 117, 109, 61, 57, 57, 50, 99, 101, 56, 97, 49, 54,
+            56, 55, 99, 101, 99, 56, 99, 56, 98, 100, 56, 56, 51, 101, 99, 55, 51, 99, 97, 52, 49,
+            100, 49, 31, 0, 0, 0, 109, 101, 115, 115, 97, 103, 101, 95, 100, 101, 102, 105, 110,
+            105, 116, 105, 111, 110, 61, 115, 116, 114, 105, 110, 103, 32, 100, 97, 116, 97, 10,
+            13, 0, 0, 0, 116, 99, 112, 95, 110, 111, 100, 101, 108, 97, 121, 61, 48, 14, 0, 0, 0,
+            116, 111, 112, 105, 99, 61, 47, 99, 104, 97, 116, 116, 101, 114, 20, 0, 0, 0, 116, 121,
+            112, 101, 61, 115, 116, 100, 95, 109, 115, 103, 115, 47, 83, 116, 114, 105, 110, 103,
+        ];
+
+        let header = ConnectionHeader::from_bytes(&bytes).unwrap();
+        assert_eq!(header.caller_id, "/rostopic_1168_1720215838902");
+        assert_eq!(header.topic_type, "std_msgs/String");
+        assert_eq!(
+            header.md5sum,
+            Some("992ce8a1687cec8c8bd883ec73ca41d1".to_string())
+        );
     }
 }
