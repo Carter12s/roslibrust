@@ -50,6 +50,12 @@ pub fn generate_service(service: ServiceFile) -> Result<TokenStream, Error> {
     })
 }
 
+/// Turns a string into a TokenStream that represents a raw string literal of the string
+pub fn generate_raw_string_literal(value: &str) -> TokenStream {
+    let wrapped = format!("r#\"{}\"#", value);
+    TokenStream::from_str(&wrapped).unwrap()
+}
+
 pub fn generate_struct(msg: MessageFile) -> Result<TokenStream, Error> {
     let ros_type_name = msg.get_full_name();
     let attrs = derive_attrs();
@@ -80,7 +86,10 @@ pub fn generate_struct(msg: MessageFile) -> Result<TokenStream, Error> {
 
     let struct_name = format_ident!("{}", msg.parsed.name);
     let md5sum = msg.md5sum;
-    let definition = msg.parsed.source.trim();
+    let definition = msg.definition;
+
+    // Raw here is only used to make the generated code look better.
+    let raw_message_definition = generate_raw_string_literal(&definition);
 
     let mut base = quote! {
         #[allow(non_snake_case)]
@@ -92,7 +101,7 @@ pub fn generate_struct(msg: MessageFile) -> Result<TokenStream, Error> {
         impl ::roslibrust_codegen::RosMessageType for #struct_name {
             const ROS_TYPE_NAME: &'static str = #ros_type_name;
             const MD5SUM: &'static str = #md5sum;
-            const DEFINITION: &'static str = #definition;
+            const DEFINITION: &'static str = #raw_message_definition;
         }
     };
 

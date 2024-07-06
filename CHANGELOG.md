@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Fixed
-- Bug with ros1 native publishers not parsing connection headers correctly
+- Bug with message_definitions provided by Publisher in the connection header not being the fully expanded definition.
 
 ### Changed
 

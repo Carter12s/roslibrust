@@ -322,8 +322,7 @@ struct Definition< ::sensor_msgs::CameraInfo_<ContainerAllocator>>
 "#  regardless of binning settings."
 "# The default setting of roi (all values 0) is considered the same as"
 "#  full resolution (roi.width = width, roi.height = height)."
-"RegionOfInterest roi"
-"";
+"RegionOfInterest roi";
   }
 
   static const char* value(const ::sensor_msgs::CameraInfo_<ContainerAllocator>&) { return value(); }

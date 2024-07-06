@@ -82,6 +82,7 @@ impl Publication {
             tcp_nodelay: false,
             service: None,
         };
+        log::trace!("Publisher connection header: {responding_conn_header:?}");
 
         let subscriber_streams = Arc::new(RwLock::new(Vec::new()));
 

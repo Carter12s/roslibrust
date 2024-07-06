@@ -137,8 +137,7 @@ struct Definition< ::std_srvs::TriggerResponse_<ContainerAllocator>>
   static constexpr char const* value()
   {
     return "bool success   # indicate successful run of triggered service"
-"string message # informational, e.g. for error messages"
-"";
+"string message # informational, e.g. for error messages";
   }
 
   static const char* value(const ::std_srvs::TriggerResponse_<ContainerAllocator>&) { return value(); }

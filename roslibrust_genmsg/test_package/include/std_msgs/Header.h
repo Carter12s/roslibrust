@@ -154,8 +154,7 @@ struct Definition< ::std_msgs::Header_<ContainerAllocator>>
 "# time-handling sugar is provided by the client library"
 "time stamp"
 "#Frame this data is associated with"
-"string frame_id"
-"";
+"string frame_id";
   }
 
   static const char* value(const ::std_msgs::Header_<ContainerAllocator>&) { return value(); }
