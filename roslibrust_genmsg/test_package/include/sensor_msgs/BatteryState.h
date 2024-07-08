@@ -294,7 +294,22 @@ struct Definition< ::sensor_msgs::BatteryState_<ContainerAllocator>>
 "float32[] cell_temperature  # An array of individual cell temperatures for each cell in the pack"
 "                            # If individual temperatures unknown but number of cells known set each to NaN"
 "string location          # The location into which the battery is inserted. (slot number or plug)"
-"string serial_number     # The best approximation of the battery serial number";
+"string serial_number     # The best approximation of the battery serial number"
+"================================================================================"
+"MSG: std_msgs/Header"
+"# Standard metadata for higher-level stamped data types."
+"# This is generally used to communicate timestamped data "
+"# in a particular coordinate frame."
+"# "
+"# sequence ID: consecutively increasing ID "
+"uint32 seq"
+"#Two-integer timestamp that is expressed as:"
+"# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')"
+"# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')"
+"# time-handling sugar is provided by the client library"
+"time stamp"
+"#Frame this data is associated with"
+"string frame_id";
   }
 
   static const char* value(const ::sensor_msgs::BatteryState_<ContainerAllocator>&) { return value(); }
