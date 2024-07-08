@@ -178,10 +178,10 @@ impl MessageFile {
                 continue;
             }
             let sub_message = graph.get(field.get_full_name().as_str())?;
-            unique_field_types.append(&mut Self::get_unique_field_types(
-                &sub_message.parsed,
-                graph,
-            )?);
+            // Note: need to add both the field that is referenced AND its sub-dependencies
+            unique_field_types.insert(field.get_full_name());
+            let mut sub_deps = Self::get_unique_field_types(&sub_message.parsed, graph)?;
+            unique_field_types.append(&mut sub_deps);
         }
         Some(unique_field_types)
     }
@@ -333,8 +333,11 @@ impl From<String> for RosLiteral {
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct FieldType {
     // Present when an externally referenced package is used
-    // Note: support for messages within same package is spotty...
     pub package_name: Option<String>,
+    // Redundantly store the name of the package the field is in
+    // This is so that when an external package_name is not present
+    // we can still construct the full name of the field "package/field_type"
+    pub source_package: String,
     // Explicit text of type without array specifier
     pub field_type: String,
     // Metadata indicating whether the field is a collection.
@@ -376,7 +379,7 @@ impl FieldInfo {
             .field_type
             .package_name
             .as_ref()
-            .expect(&format!("Expected package name for field {self:#?}"));
+            .unwrap_or(&self.field_type.source_package);
         format!("{field_package}/{}", self.field_type.field_type)
     }
 }

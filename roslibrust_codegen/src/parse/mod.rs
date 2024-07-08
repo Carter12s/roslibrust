@@ -156,6 +156,7 @@ fn parse_field_type(type_str: &str, array_info: Option<Option<usize>>, pkg: &Pac
                     Some(pkg.name.clone())
                 }
             },
+            source_package: pkg.name.clone(),
             field_type: items[0].to_string(),
             array_info,
         }
@@ -166,12 +167,14 @@ fn parse_field_type(type_str: &str, array_info: Option<Option<usize>>, pkg: &Pac
         if items[0] == "builtin_interfaces" {
             FieldType {
                 package_name: None,
+                source_package: pkg.name.clone(),
                 field_type: type_str.to_string(),
                 array_info,
             }
         } else {
             FieldType {
                 package_name: Some(items[0].to_string()),
+                source_package: pkg.name.clone(),
                 field_type: items[1].to_string(),
                 array_info,
             }

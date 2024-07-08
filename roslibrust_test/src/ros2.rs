@@ -78,7 +78,18 @@ uint8 LOST            = 9   # An action client can determine that a goal is LOST
                             #    be sent over the wire by an action server.
 
 # Allow for the user to associate a string with GoalStatus for debugging.
-string text"#;
+string text
+================================================================================
+MSG: actionlib_msgs/GoalID
+# The stamp should store the time at which this goal was requested.
+# It is used by an action server when it tries to preempt all
+# goals that were requested before a certain time
+builtin_interfaces/Time stamp
+
+# The id provides a way to associate feedback and
+# result message with specific goal requests. The id
+# specified must be unique.
+string id"#;
     }
     impl GoalStatus {
         pub const r#PENDING: u8 = 0u8;
@@ -112,7 +123,65 @@ string text"#;
         const DEFINITION: &'static str = r#"# Stores the statuses for goals that are currently being tracked
 # by an action server
 std_msgs/Header header
-GoalStatus[] status_list"#;
+GoalStatus[] status_list
+================================================================================
+MSG: actionlib_msgs/GoalID
+# The stamp should store the time at which this goal was requested.
+# It is used by an action server when it tries to preempt all
+# goals that were requested before a certain time
+builtin_interfaces/Time stamp
+
+# The id provides a way to associate feedback and
+# result message with specific goal requests. The id
+# specified must be unique.
+string id
+================================================================================
+MSG: actionlib_msgs/GoalStatus
+GoalID goal_id
+uint8 status
+uint8 PENDING         = 0   # The goal has yet to be processed by the action server.
+uint8 ACTIVE          = 1   # The goal is currently being processed by the action server.
+uint8 PREEMPTED       = 2   # The goal received a cancel request after it started executing
+                            #   and has since completed its execution (Terminal State).
+uint8 SUCCEEDED       = 3   # The goal was achieved successfully by the action server
+                            #   (Terminal State).
+uint8 ABORTED         = 4   # The goal was aborted during execution by the action server due
+                            #    to some failure (Terminal State).
+uint8 REJECTED        = 5   # The goal was rejected by the action server without being processed,
+                            #    because the goal was unattainable or invalid (Terminal State).
+uint8 PREEMPTING      = 6   # The goal received a cancel request after it started executing
+                            #    and has not yet completed execution.
+uint8 RECALLING       = 7   # The goal received a cancel request before it started executing, but
+                            #    the action server has not yet confirmed that the goal is canceled.
+uint8 RECALLED        = 8   # The goal received a cancel request before it started executing
+                            #    and was successfully cancelled (Terminal State).
+uint8 LOST            = 9   # An action client can determine that a goal is LOST. This should not
+                            #    be sent over the wire by an action server.
+
+# Allow for the user to associate a string with GoalStatus for debugging.
+string text
+================================================================================
+MSG: actionlib_msgs/GoalID
+# The stamp should store the time at which this goal was requested.
+# It is used by an action server when it tries to preempt all
+# goals that were requested before a certain time
+builtin_interfaces/Time stamp
+
+# The id provides a way to associate feedback and
+# result message with specific goal requests. The id
+# specified must be unique.
+string id
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
 }
 #[allow(unused_imports)]
@@ -147,7 +216,50 @@ pub mod diagnostic_msgs {
         const MD5SUM: &'static str = "7f04f8332be7e46b680724aa4e9a9d71";
         const DEFINITION: &'static str = r#"# This message is used to send diagnostic information about the state of the robot.
 std_msgs/Header header # for timestamp
-DiagnosticStatus[] status # an array of components being reported on"#;
+DiagnosticStatus[] status # an array of components being reported on
+================================================================================
+MSG: diagnostic_msgs/DiagnosticStatus
+# This message holds the status of an individual component of the robot.
+
+# Possible levels of operations.
+byte OK=0
+byte WARN=1
+byte ERROR=2
+byte STALE=3
+
+# Level of operation enumerated above.
+byte level
+# A description of the test/component reporting.
+string name
+# A description of the status.
+string message
+# A hardware unique string.
+string hardware_id
+# An array of values associated with the status.
+KeyValue[] values
+================================================================================
+MSG: diagnostic_msgs/KeyValue
+# What to label this value when viewing.
+string key
+# A value to track over time.
+string value
+================================================================================
+MSG: diagnostic_msgs/KeyValue
+# What to label this value when viewing.
+string key
+# A value to track over time.
+string value
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -186,7 +298,13 @@ string message
 # A hardware unique string.
 string hardware_id
 # An array of values associated with the status.
-KeyValue[] values"#;
+KeyValue[] values
+================================================================================
+MSG: diagnostic_msgs/KeyValue
+# What to label this value when viewing.
+string key
+# A value to track over time.
+string value"#;
     }
     impl DiagnosticStatus {
         pub const r#OK: u8 = 0u8;
@@ -319,7 +437,39 @@ string message"#;
         const MD5SUM: &'static str = "ac21b1bab7ab17546986536c22eb34e9";
         const DEFINITION: &'static str = r#"string id
 byte passed
-DiagnosticStatus[] status"#;
+DiagnosticStatus[] status
+================================================================================
+MSG: diagnostic_msgs/DiagnosticStatus
+# This message holds the status of an individual component of the robot.
+
+# Possible levels of operations.
+byte OK=0
+byte WARN=1
+byte ERROR=2
+byte STALE=3
+
+# Level of operation enumerated above.
+byte level
+# A description of the test/component reporting.
+string name
+# A description of the status.
+string message
+# A hardware unique string.
+string hardware_id
+# An array of values associated with the status.
+KeyValue[] values
+================================================================================
+MSG: diagnostic_msgs/KeyValue
+# What to label this value when viewing.
+string key
+# A value to track over time.
+string value
+================================================================================
+MSG: diagnostic_msgs/KeyValue
+# What to label this value when viewing.
+string key
+# A value to track over time.
+string value"#;
     }
     pub struct SelfTest {}
     impl ::roslibrust_codegen::RosServiceType for SelfTest {
@@ -361,7 +511,18 @@ pub mod geometry_msgs {
         const MD5SUM: &'static str = "9f195f881246fdfa2798d1d3eebca84a";
         const DEFINITION: &'static str = r#"# This expresses acceleration in free space broken into its linear and angular parts.
 Vector3  linear
-Vector3  angular"#;
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -382,7 +543,45 @@ Vector3  angular"#;
         const MD5SUM: &'static str = "19a31cf6d39a90e769a5539f9a293621";
         const DEFINITION: &'static str = r#"# An accel with reference coordinate frame and timestamp
 std_msgs/Header header
-Accel accel"#;
+Accel accel
+================================================================================
+MSG: geometry_msgs/Accel
+# This expresses acceleration in free space broken into its linear and angular parts.
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -411,7 +610,34 @@ Accel accel
 # The orientation parameters use a fixed-axis representation.
 # In order, the parameters are:
 # (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
-float64[36] covariance"#;
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Accel
+# This expresses acceleration in free space broken into its linear and angular parts.
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -432,7 +658,83 @@ float64[36] covariance"#;
         const MD5SUM: &'static str = "36b6f1177d3c3f476d4c306279c6f18a";
         const DEFINITION: &'static str = r#"# This represents an estimated accel with reference coordinate frame and timestamp.
 std_msgs/Header header
-AccelWithCovariance accel"#;
+AccelWithCovariance accel
+================================================================================
+MSG: geometry_msgs/Accel
+# This expresses acceleration in free space broken into its linear and angular parts.
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/AccelWithCovariance
+# This expresses acceleration in free space with uncertainty.
+
+Accel accel
+
+# Row-major representation of the 6x6 covariance matrix
+# The orientation parameters use a fixed-axis representation.
+# In order, the parameters are:
+# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Accel
+# This expresses acceleration in free space broken into its linear and angular parts.
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -472,7 +774,18 @@ float64 ixy
 float64 ixz
 float64 iyy
 float64 iyz
-float64 izz"#;
+float64 izz
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -494,7 +807,58 @@ float64 izz"#;
         const DEFINITION: &'static str = r#"# An Inertia with a time stamp and reference frame.
 
 std_msgs/Header header
-Inertia inertia"#;
+Inertia inertia
+================================================================================
+MSG: geometry_msgs/Inertia
+# Mass [kg]
+float64 m
+
+# Center of mass [m]
+geometry_msgs/Vector3 com
+
+# Inertia Tensor [kg-m^2]
+#     | ixx ixy ixz |
+# I = | ixy iyy iyz |
+#     | ixz iyz izz |
+float64 ixx
+float64 ixy
+float64 ixz
+float64 iyy
+float64 iyz
+float64 izz
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -569,7 +933,24 @@ float32 z"#;
         const DEFINITION: &'static str = r#"# This represents a Point with reference coordinate frame and timestamp
 
 std_msgs/Header header
-Point point"#;
+Point point
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -589,7 +970,20 @@ Point point"#;
         const MD5SUM: &'static str = "cd60a26494a087f577976f0329fa120e";
         const DEFINITION: &'static str = r#"# A specification of a polygon where the first and last points are assumed to be connected
 
-Point32[] points"#;
+Point32[] points
+================================================================================
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommended to use Point wherever possible instead of Point32.
+#
+# This recommendation is to promote interoperability.
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.
+
+float32 x
+float32 y
+float32 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -611,7 +1005,49 @@ Point32[] points"#;
         const DEFINITION: &'static str = r#"# This represents a Polygon with reference coordinate frame and timestamp
 
 std_msgs/Header header
-Polygon polygon"#;
+Polygon polygon
+================================================================================
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommended to use Point wherever possible instead of Point32.
+#
+# This recommendation is to promote interoperability.
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.
+
+float32 x
+float32 y
+float32 z
+================================================================================
+MSG: geometry_msgs/Polygon
+# A specification of a polygon where the first and last points are assumed to be connected
+
+Point32[] points
+================================================================================
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommended to use Point wherever possible instead of Point32.
+#
+# This recommendation is to promote interoperability.
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.
+
+float32 x
+float32 y
+float32 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -633,7 +1069,21 @@ Polygon polygon"#;
         const DEFINITION: &'static str = r#"# A representation of pose in free space, composed of position and orientation.
 
 Point position
-Quaternion orientation"#;
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -685,7 +1135,52 @@ float64 theta"#;
 
 std_msgs/Header header
 
-Pose[] poses"#;
+Pose[] poses
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -707,7 +1202,52 @@ Pose[] poses"#;
         const DEFINITION: &'static str = r#"# A Pose with reference coordinate frame and timestamp
 
 std_msgs/Header header
-Pose pose"#;
+Pose pose
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -736,7 +1276,41 @@ Pose pose
 # The orientation parameters use a fixed-axis representation.
 # In order, the parameters are:
 # (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
-float64[36] covariance"#;
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -758,7 +1332,97 @@ float64[36] covariance"#;
         const DEFINITION: &'static str = r#"# This expresses an estimated pose with a reference coordinate frame and timestamp
 
 std_msgs/Header header
-PoseWithCovariance pose"#;
+PoseWithCovariance pose
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseWithCovariance
+# This represents a pose in free space with uncertainty.
+
+Pose pose
+
+# Row-major representation of the 6x6 covariance matrix
+# The orientation parameters use a fixed-axis representation.
+# In order, the parameters are:
+# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -810,7 +1474,26 @@ float64 w 1"#;
         const DEFINITION: &'static str = r#"# This represents an orientation with reference coordinate frame and timestamp.
 
 std_msgs/Header header
-Quaternion quaternion"#;
+Quaternion quaternion
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -832,7 +1515,26 @@ Quaternion quaternion"#;
         const DEFINITION: &'static str = r#"# This represents the transform between two coordinate frames in free space.
 
 Vector3 translation
-Quaternion rotation"#;
+Quaternion rotation
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -870,7 +1572,62 @@ std_msgs/Header header
 string child_frame_id
 
 # Translation and rotation in 3-dimensions of child_frame_id from header.frame_id.
-Transform transform"#;
+Transform transform
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Transform
+# This represents the transform between two coordinate frames in free space.
+
+Vector3 translation
+Quaternion rotation
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -892,7 +1649,18 @@ Transform transform"#;
         const DEFINITION: &'static str = r#"# This expresses velocity in free space broken into its linear and angular parts.
 
 Vector3  linear
-Vector3  angular"#;
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -914,7 +1682,46 @@ Vector3  angular"#;
         const DEFINITION: &'static str = r#"# A twist with reference coordinate frame and timestamp
 
 std_msgs/Header header
-Twist twist"#;
+Twist twist
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -943,7 +1750,35 @@ Twist twist
 # The orientation parameters use a fixed-axis representation.
 # In order, the parameters are:
 # (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
-float64[36] covariance"#;
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -965,7 +1800,85 @@ float64[36] covariance"#;
         const DEFINITION: &'static str = r#"# This represents an estimated twist with reference coordinate frame and timestamp.
 
 std_msgs/Header header
-TwistWithCovariance twist"#;
+TwistWithCovariance twist
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/TwistWithCovariance
+# This expresses velocity in free space with uncertainty.
+
+Twist twist
+
+# Row-major representation of the 6x6 covariance matrix
+# The orientation parameters use a fixed-axis representation.
+# In order, the parameters are:
+# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1018,7 +1931,29 @@ float64 z"#;
 # so the rotational elements of a transform are the only parts applied when transforming.
 
 std_msgs/Header header
-Vector3 vector"#;
+Vector3 vector
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1040,7 +1975,18 @@ Vector3 vector"#;
         const DEFINITION: &'static str = r#"# This represents force in free space, separated into its linear and angular parts.
 
 Vector3  force
-Vector3  torque"#;
+Vector3  torque
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1062,7 +2008,46 @@ Vector3  torque"#;
         const DEFINITION: &'static str = r#"# A wrench with reference coordinate frame and timestamp
 
 std_msgs/Header header
-Wrench wrench"#;
+Wrench wrench
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Wrench
+# This represents force in free space, separated into its linear and angular parts.
+
+Vector3  force
+Vector3  torque
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
 }
 #[allow(unused_imports)]
@@ -1108,7 +2093,24 @@ float32 cell_width
 float32 cell_height
 
 # Each cell is represented by the Point at the center of the cell
-geometry_msgs/Point[] cells"#;
+geometry_msgs/Point[] cells
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1146,7 +2148,41 @@ uint32 height
 
 # The origin of the map [m, m, rad].  This is the real-world pose of the
 # bottom left corner of cell (0,0) in the map.
-geometry_msgs/Pose origin"#;
+geometry_msgs/Pose origin
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1178,7 +2214,105 @@ MapMetaData info
 # The values inside are application dependent, but frequently, 
 # 0 represents unoccupied, 1 represents definitely occupied, and
 # -1 represents unknown. 
-int8[] data"#;
+int8[] data
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/MapMetaData
+# This hold basic information about the characteristics of the OccupancyGrid
+
+# The time at which the map was loaded
+builtin_interfaces/Time map_load_time
+
+# The map resolution [m/cell]
+float32 resolution
+
+# Map width [cells]
+uint32 width
+
+# Map height [cells]
+uint32 height
+
+# The origin of the map [m, m, rad].  This is the real-world pose of the
+# bottom left corner of cell (0,0) in the map.
+geometry_msgs/Pose origin
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1213,7 +2347,164 @@ string child_frame_id
 geometry_msgs/PoseWithCovariance pose
 
 # Estimated linear and angular velocity relative to child_frame_id.
-geometry_msgs/TwistWithCovariance twist"#;
+geometry_msgs/TwistWithCovariance twist
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseWithCovariance
+# This represents a pose in free space with uncertainty.
+
+Pose pose
+
+# Row-major representation of the 6x6 covariance matrix
+# The orientation parameters use a fixed-axis representation.
+# In order, the parameters are:
+# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/TwistWithCovariance
+# This expresses velocity in free space with uncertainty.
+
+Twist twist
+
+# Row-major representation of the 6x6 covariance matrix
+# The orientation parameters use a fixed-axis representation.
+# In order, the parameters are:
+# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1238,7 +2529,103 @@ geometry_msgs/TwistWithCovariance twist"#;
 std_msgs/Header header
 
 # Array of poses to follow.
-geometry_msgs/PoseStamped[] poses"#;
+geometry_msgs/PoseStamped[] poses
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseStamped
+# A Pose with reference coordinate frame and timestamp
+
+std_msgs/Header header
+Pose pose
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1273,7 +2660,218 @@ geometry_msgs/PoseStamped[] poses"#;
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetMapResponse";
         const MD5SUM: &'static str = "d6e8b0301af2dfe2244959ba20a4080a";
         const DEFINITION: &'static str = r#"# The current map hosted by this map service.
-OccupancyGrid map"#;
+OccupancyGrid map
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/MapMetaData
+# This hold basic information about the characteristics of the OccupancyGrid
+
+# The time at which the map was loaded
+builtin_interfaces/Time map_load_time
+
+# The map resolution [m/cell]
+float32 resolution
+
+# Map width [cells]
+uint32 width
+
+# Map height [cells]
+uint32 height
+
+# The origin of the map [m, m, rad].  This is the real-world pose of the
+# bottom left corner of cell (0,0) in the map.
+geometry_msgs/Pose origin
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/OccupancyGrid
+# This represents a 2-D grid map
+std_msgs/Header header
+
+# MetaData for the map
+MapMetaData info
+
+# The map data, in row-major order, starting with (0,0). 
+# Cell (1, 0) will be listed second, representing the next cell in the x direction. 
+# Cell (0, 1) will be at the index equal to info.width, followed by (1, 1).
+# The values inside are application dependent, but frequently, 
+# 0 represents unoccupied, 1 represents definitely occupied, and
+# -1 represents unknown. 
+int8[] data
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/MapMetaData
+# This hold basic information about the characteristics of the OccupancyGrid
+
+# The time at which the map was loaded
+builtin_interfaces/Time map_load_time
+
+# The map resolution [m/cell]
+float32 resolution
+
+# Map width [cells]
+uint32 width
+
+# Map height [cells]
+uint32 height
+
+# The origin of the map [m, m, rad].  This is the real-world pose of the
+# bottom left corner of cell (0,0) in the map.
+geometry_msgs/Pose origin
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     pub struct GetMap {}
     impl ::roslibrust_codegen::RosServiceType for GetMap {
@@ -1310,7 +2908,103 @@ geometry_msgs/PoseStamped goal
 
 # If the goal is obstructed, how many meters the planner can
 # relax the constraint in x and y before failing.
-float32 tolerance"#;
+float32 tolerance
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseStamped
+# A Pose with reference coordinate frame and timestamp
+
+std_msgs/Header header
+Pose pose
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1329,7 +3023,208 @@ float32 tolerance"#;
         const ROS_TYPE_NAME: &'static str = "nav_msgs/GetPlanResponse";
         const MD5SUM: &'static str = "37c13f9b42d0ee04e1dae0d4f7d14878";
         const DEFINITION: &'static str = r#"# Array of poses from start to goal if one was successfully found.
-Path plan"#;
+Path plan
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseStamped
+# A Pose with reference coordinate frame and timestamp
+
+std_msgs/Header header
+Pose pose
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/Path
+# An array of poses that represents a Path for a robot to follow.
+
+# Indicates the frame_id of the path.
+std_msgs/Header header
+
+# Array of poses to follow.
+geometry_msgs/PoseStamped[] poses
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseStamped
+# A Pose with reference coordinate frame and timestamp
+
+std_msgs/Header header
+Pose pose
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     pub struct GetPlan {}
     impl ::roslibrust_codegen::RosServiceType for GetPlan {
@@ -1385,7 +3280,218 @@ uint8 RESULT_UNDEFINED_FAILURE=255
 
 # Returned map is only valid if result equals RESULT_SUCCESS
 nav_msgs/OccupancyGrid map
-uint8 result"#;
+uint8 result
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/MapMetaData
+# This hold basic information about the characteristics of the OccupancyGrid
+
+# The time at which the map was loaded
+builtin_interfaces/Time map_load_time
+
+# The map resolution [m/cell]
+float32 resolution
+
+# Map width [cells]
+uint32 width
+
+# Map height [cells]
+uint32 height
+
+# The origin of the map [m, m, rad].  This is the real-world pose of the
+# bottom left corner of cell (0,0) in the map.
+geometry_msgs/Pose origin
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/OccupancyGrid
+# This represents a 2-D grid map
+std_msgs/Header header
+
+# MetaData for the map
+MapMetaData info
+
+# The map data, in row-major order, starting with (0,0). 
+# Cell (1, 0) will be listed second, representing the next cell in the x direction. 
+# Cell (0, 1) will be at the index equal to info.width, followed by (1, 1).
+# The values inside are application dependent, but frequently, 
+# 0 represents unoccupied, 1 represents definitely occupied, and
+# -1 represents unknown. 
+int8[] data
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/MapMetaData
+# This hold basic information about the characteristics of the OccupancyGrid
+
+# The time at which the map was loaded
+builtin_interfaces/Time map_load_time
+
+# The map resolution [m/cell]
+float32 resolution
+
+# Map width [cells]
+uint32 width
+
+# Map height [cells]
+uint32 height
+
+# The origin of the map [m, m, rad].  This is the real-world pose of the
+# bottom left corner of cell (0,0) in the map.
+geometry_msgs/Pose origin
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     impl LoadMapResponse {
         pub const r#RESULT_SUCCESS: u8 = 0u8;
@@ -1424,7 +3530,359 @@ uint8 result"#;
 nav_msgs/OccupancyGrid map
 
 # Estimated initial pose when setting new map.
-geometry_msgs/PoseWithCovarianceStamped initial_pose"#;
+geometry_msgs/PoseWithCovarianceStamped initial_pose
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseWithCovariance
+# This represents a pose in free space with uncertainty.
+
+Pose pose
+
+# Row-major representation of the 6x6 covariance matrix
+# The orientation parameters use a fixed-axis representation.
+# In order, the parameters are:
+# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseWithCovarianceStamped
+# This expresses an estimated pose with a reference coordinate frame and timestamp
+
+std_msgs/Header header
+PoseWithCovariance pose
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/PoseWithCovariance
+# This represents a pose in free space with uncertainty.
+
+Pose pose
+
+# Row-major representation of the 6x6 covariance matrix
+# The orientation parameters use a fixed-axis representation.
+# In order, the parameters are:
+# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
+float64[36] covariance
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/MapMetaData
+# This hold basic information about the characteristics of the OccupancyGrid
+
+# The time at which the map was loaded
+builtin_interfaces/Time map_load_time
+
+# The map resolution [m/cell]
+float32 resolution
+
+# Map width [cells]
+uint32 width
+
+# Map height [cells]
+uint32 height
+
+# The origin of the map [m, m, rad].  This is the real-world pose of the
+# bottom left corner of cell (0,0) in the map.
+geometry_msgs/Pose origin
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/OccupancyGrid
+# This represents a 2-D grid map
+std_msgs/Header header
+
+# MetaData for the map
+MapMetaData info
+
+# The map data, in row-major order, starting with (0,0). 
+# Cell (1, 0) will be listed second, representing the next cell in the x direction. 
+# Cell (0, 1) will be at the index equal to info.width, followed by (1, 1).
+# The values inside are application dependent, but frequently, 
+# 0 represents unoccupied, 1 represents definitely occupied, and
+# -1 represents unknown. 
+int8[] data
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: nav_msgs/MapMetaData
+# This hold basic information about the characteristics of the OccupancyGrid
+
+# The time at which the map was loaded
+builtin_interfaces/Time map_load_time
+
+# The map resolution [m/cell]
+float32 resolution
+
+# Map width [cells]
+uint32 width
+
+# Map height [cells]
+uint32 height
+
+# The origin of the map [m, m, rad].  This is the real-world pose of the
+# bottom left corner of cell (0,0) in the map.
+geometry_msgs/Pose origin
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1547,7 +4005,18 @@ float32[] cell_voltage   # An array of individual cell voltages for each cell in
 float32[] cell_temperature # An array of individual cell temperatures for each cell in the pack
                            # If individual temperatures unknown but number of cells known set each to NaN
 string location          # The location into which the battery is inserted. (slot number or plug)
-string serial_number     # The best approximation of the battery serial number"#;
+string serial_number     # The best approximation of the battery serial number
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     impl BatteryState {
         pub const r#POWER_SUPPLY_STATUS_UNKNOWN: u8 = 0u8;
@@ -1728,7 +4197,39 @@ uint32 binning_y
 #  regardless of binning settings.
 # The default setting of roi (all values 0) is considered the same as
 #  full resolution (roi.width = width, roi.height = height).
-RegionOfInterest roi"#;
+RegionOfInterest roi
+================================================================================
+MSG: sensor_msgs/RegionOfInterest
+# This message is used to specify a region of interest within an image.
+#
+# When used to specify the ROI setting of the camera when the image was
+# taken, the height and width fields should either match the height and
+# width fields for the associated image; or height = width = 0
+# indicates that the full resolution image was captured.
+
+uint32 x_offset  # Leftmost pixel of the ROI
+                 # (0 if the ROI includes the left edge of the image)
+uint32 y_offset  # Topmost pixel of the ROI
+                 # (0 if the ROI includes the top edge of the image)
+uint32 height    # Height of ROI
+uint32 width     # Width of ROI
+
+# True if a distinct rectified ROI should be calculated from the "raw"
+# ROI in this message. Typically this should be False if the full image
+# is captured (ROI not used), and True if a subwindow is captured (ROI
+# used).
+bool do_rectify
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1803,7 +4304,18 @@ string format                # Specifies the format of the data
                              #   Acceptable values:
                              #     jpeg, png, tiff
 
-uint8[] data                 # Compressed image buffer"#;
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1834,7 +4346,18 @@ std_msgs/Header header # timestamp of the measurement
 
 float64 fluid_pressure       # Absolute pressure reading in Pascals.
 
-float64 variance             # 0 is interpreted as variance unknown"#;
+float64 variance             # 0 is interpreted as variance unknown
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1873,7 +4396,18 @@ std_msgs/Header header # timestamp is the time the illuminance was measured
 
 float64 illuminance          # Measurement of the Photometric Illuminance in Lux.
 
-float64 variance             # 0 is interpreted as variance unknown"#;
+float64 variance             # 0 is interpreted as variance unknown
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1922,7 +4456,18 @@ string encoding       # Encoding of pixels -- channel meaning, ordering, size
 
 uint8 is_bigendian    # is this data bigendian?
 uint32 step           # Full row length in bytes
-uint8[] data          # actual matrix data, size is (step * rows)"#;
+uint8[] data          # actual matrix data, size is (step * rows)
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -1969,7 +4514,37 @@ geometry_msgs/Vector3 angular_velocity
 float64[9] angular_velocity_covariance # Row major about x, y, z axes
 
 geometry_msgs/Vector3 linear_acceleration
-float64[9] linear_acceleration_covariance # Row major x, y z"#;
+float64[9] linear_acceleration_covariance # Row major x, y z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2015,7 +4590,18 @@ std_msgs/Header header
 string[] name
 float64[] position
 float64[] velocity
-float64[] effort"#;
+float64[] effort
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2044,7 +4630,18 @@ std_msgs/Header header
 float32[] axes
 
 # The buttons measurements from a joystick.
-int32[] buttons"#;
+int32[] buttons
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2101,7 +4698,23 @@ float32 intensity"#;
         const ROS_TYPE_NAME: &'static str = "sensor_msgs/JoyFeedbackArray";
         const MD5SUM: &'static str = "cde5730a895b1fc4dee6f91b754b213d";
         const DEFINITION: &'static str = r#"# This message publishes values for multiple feedback at once.
-JoyFeedback[] array"#;
+JoyFeedback[] array
+================================================================================
+MSG: sensor_msgs/JoyFeedback
+# Declare of the type of feedback
+uint8 TYPE_LED    = 0
+uint8 TYPE_RUMBLE = 1
+uint8 TYPE_BUZZER = 2
+
+uint8 type
+
+# This will hold an id number for each type of each feedback.
+# Example, the first led would be id=0, the second would be id=1
+uint8 id
+
+# Intensity of the feedback, from 0.0 to 1.0, inclusive.  If device is
+# actually binary, driver should treat 0<=x<0.5 as off, 0.5<=x<=1 as on.
+float32 intensity"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2179,7 +4792,18 @@ float32[] ranges             # range data [m]
                              # (Note: values < range_min or > range_max should be discarded)
 float32[] intensities        # intensity data [device-specific units].  If your
                              # device does not provide intensities, please leave
-                             # the array empty."#;
+                             # the array empty.
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2219,7 +4843,29 @@ geometry_msgs/Vector3 magnetic_field # x, y, and z components of the
                                            # put NaNs in the components not reported.
 
 float64[9] magnetic_field_covariance       # Row major about x, y, z axes
-                                           # 0 is interpreted as variance unknown"#;
+                                           # 0 is interpreted as variance unknown
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2266,7 +4912,96 @@ std_msgs/Header header
 string[] joint_names
 geometry_msgs/Transform[] transforms
 geometry_msgs/Twist[] twist
-geometry_msgs/Wrench[] wrench"#;
+geometry_msgs/Wrench[] wrench
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Transform
+# This represents the transform between two coordinate frames in free space.
+
+Vector3 translation
+Quaternion rotation
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Wrench
+# This represents force in free space, separated into its linear and angular parts.
+
+Vector3  force
+Vector3  torque
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2324,7 +5059,25 @@ LaserEcho[] ranges           # range data [m]
                              # -Inf measurements are too close to determine exact distance.
 LaserEcho[] intensities      # intensity data [device-specific units].  If your
                              # device does not provide intensities, please leave
-                             # the array empty."#;
+                             # the array empty.
+================================================================================
+MSG: sensor_msgs/LaserEcho
+# This message is a submessage of MultiEchoLaserScan and is not intended
+# to be used separately.
+
+float32[] echoes  # Multiple values of ranges or intensities.
+                  # Each array represents data from the same angle increment.
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2392,7 +5145,42 @@ uint8 COVARIANCE_TYPE_APPROXIMATED = 1
 uint8 COVARIANCE_TYPE_DIAGONAL_KNOWN = 2
 uint8 COVARIANCE_TYPE_KNOWN = 3
 
-uint8 position_covariance_type"#;
+uint8 position_covariance_type
+================================================================================
+MSG: sensor_msgs/NavSatStatus
+# Navigation Satellite fix status for any Global Navigation Satellite System.
+#
+# Whether to output an augmented fix is determined by both the fix
+# type and the last time differential corrections were received.  A
+# fix is valid when status >= STATUS_FIX.
+
+int8 STATUS_NO_FIX =  -1        # unable to fix position
+int8 STATUS_FIX =      0        # unaugmented fix
+int8 STATUS_SBAS_FIX = 1        # with satellite-based augmentation
+int8 STATUS_GBAS_FIX = 2        # with ground-based augmentation
+
+int8 status
+
+# Bits defining which Global Navigation Satellite System signals were
+# used by the receiver.
+
+uint16 SERVICE_GPS =     1
+uint16 SERVICE_GLONASS = 2
+uint16 SERVICE_COMPASS = 4      # includes BeiDou.
+uint16 SERVICE_GALILEO = 8
+
+uint16 service
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     impl NavSatFix {
         pub const r#COVARIANCE_TYPE_UNKNOWN: u8 = 0u8;
@@ -2484,7 +5272,57 @@ geometry_msgs/Point32[] points
 # Each channel should have the same number of elements as points array,
 # and the data in each channel should correspond 1:1 with each point.
 # Channel names in common practice are listed in ChannelFloat32.msg.
-ChannelFloat32[] channels"#;
+ChannelFloat32[] channels
+================================================================================
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommended to use Point wherever possible instead of Point32.
+#
+# This recommendation is to promote interoperability.
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.
+
+float32 x
+float32 y
+float32 z
+================================================================================
+MSG: sensor_msgs/ChannelFloat32
+# This message is used by the PointCloud message to hold optional data
+# associated with each point in the cloud. The length of the values
+# array should be the same as the length of the points array in the
+# PointCloud, and each value should be associated with the corresponding
+# point.
+#
+# Channel names in existing practice include:
+#   "u", "v" - row and column (respectively) in the left stereo image.
+#              This is opposite to usual conventions but remains for
+#              historical reasons. The newer PointCloud2 message has no
+#              such problem.
+#   "rgb" - For point clouds produced by color stereo cameras. uint8
+#           (R,G,B) values packed into the least significant 24 bits,
+#           in order.
+#   "intensity" - laser or pixel intensity.
+#   "distance"
+
+# The channel name should give semantics of the channel (e.g.
+# "intensity" instead of "value").
+string name
+
+# The values array should be 1-1 with the elements of the associated
+# PointCloud.
+float32[] values
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2535,7 +5373,36 @@ uint32  point_step   # Length of a point in bytes
 uint32  row_step     # Length of a row in bytes
 uint8[] data         # Actual point data, size is (row_step*height)
 
-bool is_dense        # True if there are no invalid points"#;
+bool is_dense        # True if there are no invalid points
+================================================================================
+MSG: sensor_msgs/PointField
+# This message holds the description of one point entry in the
+# PointCloud2 message format.
+uint8 INT8    = 1
+uint8 UINT8   = 2
+uint8 INT16   = 3
+uint8 UINT16  = 4
+uint8 INT32   = 5
+uint8 UINT32  = 6
+uint8 FLOAT32 = 7
+uint8 FLOAT64 = 8
+
+# Common PointField names are x, y, z, intensity, rgb, rgba
+string name      # Name of field
+uint32 offset    # Offset from start of point struct
+uint8  datatype  # Datatype enumeration, see above
+uint32 count     # How many elements in the field
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2642,7 +5509,18 @@ float32 range           # range data [m]
                         # -Inf represents a detection within fixed distance.
                         # (Detection too close to the sensor to quantify)
                         # +Inf represents no detection within the fixed distance.
-                        # (Object out of range)"#;
+                        # (Object out of range)
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     impl Range {
         pub const r#ULTRASOUND: u8 = 0u8;
@@ -2718,7 +5596,18 @@ float64 relative_humidity    # Expression of the relative humidity
                              # 0.0 is no partial pressure of water vapor
                              # 1.0 represents partial pressure of saturation
 
-float64 variance             # 0 is interpreted as variance unknown"#;
+float64 variance             # 0 is interpreted as variance unknown
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2745,7 +5634,18 @@ std_msgs/Header header # timestamp is the time the temperature was measured
 
 float64 temperature          # Measurement of the Temperature in Degrees Celsius.
 
-float64 variance             # 0 is interpreted as variance unknown."#;
+float64 variance             # 0 is interpreted as variance unknown.
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2771,7 +5671,18 @@ std_msgs/Header header      # stamp is system time for which measurement was val
                                   # frame_id is not used
 
 builtin_interfaces/Time time_ref  # corresponding time from this external source
-string source                     # (optional) name of time source"#;
+string source                     # (optional) name of time source
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2797,7 +5708,204 @@ string source                     # (optional) name of time source"#;
 # will assume that the region of the imager that is being referred to is
 # the region that the camera is currently capturing.
 
-sensor_msgs/CameraInfo camera_info # The camera_info to store"#;
+sensor_msgs/CameraInfo camera_info # The camera_info to store
+================================================================================
+MSG: sensor_msgs/CameraInfo
+# This message defines meta information for a camera. It should be in a
+# camera namespace on topic "camera_info" and accompanied by up to five
+# image topics named:
+#
+#   image_raw - raw data from the camera driver, possibly Bayer encoded
+#   image            - monochrome, distorted
+#   image_color      - color, distorted
+#   image_rect       - monochrome, rectified
+#   image_rect_color - color, rectified
+#
+# The image_pipeline contains packages (image_proc, stereo_image_proc)
+# for producing the four processed image topics from image_raw and
+# camera_info. The meaning of the camera parameters are described in
+# detail at http://www.ros.org/wiki/image_pipeline/CameraInfo.
+#
+# The image_geometry package provides a user-friendly interface to
+# common operations using this meta information. If you want to, e.g.,
+# project a 3d point into image coordinates, we strongly recommend
+# using image_geometry.
+#
+# If the camera is uncalibrated, the matrices D, K, R, P should be left
+# zeroed out. In particular, clients may assume that K[0] == 0.0
+# indicates an uncalibrated camera.
+
+#######################################################################
+#                     Image acquisition info                          #
+#######################################################################
+
+# Time of image acquisition, camera coordinate frame ID
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of camera
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into the plane of the image
+
+
+#######################################################################
+#                      Calibration Parameters                         #
+#######################################################################
+# These are fixed during camera calibration. Their values will be the #
+# same in all messages until the camera is recalibrated. Note that    #
+# self-calibrating systems may "recalibrate" frequently.              #
+#                                                                     #
+# The internal parameters can be used to warp a raw (distorted) image #
+# to:                                                                 #
+#   1. An undistorted image (requires D and K)                        #
+#   2. A rectified image (requires D, K, R)                           #
+# The projection matrix P projects 3D points into the rectified image.#
+#######################################################################
+
+# The image dimensions with which the camera was calibrated.
+# Normally this will be the full camera resolution in pixels.
+uint32 height
+uint32 width
+
+# The distortion model used. Supported models are listed in
+# sensor_msgs/distortion_models.hpp. For most cameras, "plumb_bob" - a
+# simple model of radial and tangential distortion - is sufficent.
+string distortion_model
+
+# The distortion parameters, size depending on the distortion model.
+# For "plumb_bob", the 5 parameters are: (k1, k2, t1, t2, k3).
+float64[] d
+
+# Intrinsic camera matrix for the raw (distorted) images.
+#     [fx  0 cx]
+# K = [ 0 fy cy]
+#     [ 0  0  1]
+# Projects 3D points in the camera coordinate frame to 2D pixel
+# coordinates using the focal lengths (fx, fy) and principal point
+# (cx, cy).
+float64[9]  k # 3x3 row-major matrix
+
+# Rectification matrix (stereo cameras only)
+# A rotation matrix aligning the camera coordinate system to the ideal
+# stereo image plane so that epipolar lines in both stereo images are
+# parallel.
+float64[9]  r # 3x3 row-major matrix
+
+# Projection/camera matrix
+#     [fx'  0  cx' Tx]
+# P = [ 0  fy' cy' Ty]
+#     [ 0   0   1   0]
+# By convention, this matrix specifies the intrinsic (camera) matrix
+#  of the processed (rectified) image. That is, the left 3x3 portion
+#  is the normal camera intrinsic matrix for the rectified image.
+# It projects 3D points in the camera coordinate frame to 2D pixel
+#  coordinates using the focal lengths (fx', fy') and principal point
+#  (cx', cy') - these may differ from the values in K.
+# For monocular cameras, Tx = Ty = 0. Normally, monocular cameras will
+#  also have R = the identity and P[1:3,1:3] = K.
+# For a stereo pair, the fourth column [Tx Ty 0]' is related to the
+#  position of the optical center of the second camera in the first
+#  camera's frame. We assume Tz = 0 so both cameras are in the same
+#  stereo image plane. The first camera always has Tx = Ty = 0. For
+#  the right (second) camera of a horizontal stereo pair, Ty = 0 and
+#  Tx = -fx' * B, where B is the baseline between the cameras.
+# Given a 3D point [X Y Z]', the projection (x, y) of the point onto
+#  the rectified image is given by:
+#  [u v w]' = P * [X Y Z 1]'
+#         x = u / w
+#         y = v / w
+#  This holds for both images of a stereo pair.
+float64[12] p # 3x4 row-major matrix
+
+
+#######################################################################
+#                      Operational Parameters                         #
+#######################################################################
+# These define the image region actually captured by the camera       #
+# driver. Although they affect the geometry of the output image, they #
+# may be changed freely without recalibrating the camera.             #
+#######################################################################
+
+# Binning refers here to any camera setting which combines rectangular
+#  neighborhoods of pixels into larger "super-pixels." It reduces the
+#  resolution of the output image to
+#  (width / binning_x) x (height / binning_y).
+# The default values binning_x = binning_y = 0 is considered the same
+#  as binning_x = binning_y = 1 (no subsampling).
+uint32 binning_x
+uint32 binning_y
+
+# Region of interest (subwindow of full camera resolution), given in
+#  full resolution (unbinned) image coordinates. A particular ROI
+#  always denotes the same window of pixels on the camera sensor,
+#  regardless of binning settings.
+# The default setting of roi (all values 0) is considered the same as
+#  full resolution (roi.width = width, roi.height = height).
+RegionOfInterest roi
+================================================================================
+MSG: sensor_msgs/RegionOfInterest
+# This message is used to specify a region of interest within an image.
+#
+# When used to specify the ROI setting of the camera when the image was
+# taken, the height and width fields should either match the height and
+# width fields for the associated image; or height = width = 0
+# indicates that the full resolution image was captured.
+
+uint32 x_offset  # Leftmost pixel of the ROI
+                 # (0 if the ROI includes the left edge of the image)
+uint32 y_offset  # Topmost pixel of the ROI
+                 # (0 if the ROI includes the top edge of the image)
+uint32 height    # Height of ROI
+uint32 width     # Width of ROI
+
+# True if a distinct rectified ROI should be calculated from the "raw"
+# ROI in this message. Typically this should be False if the full image
+# is captured (ROI not used), and True if a subwindow is captured (ROI
+# used).
+bool do_rectify
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: sensor_msgs/RegionOfInterest
+# This message is used to specify a region of interest within an image.
+#
+# When used to specify the ROI setting of the camera when the image was
+# taken, the height and width fields should either match the height and
+# width fields for the associated image; or height = width = 0
+# indicates that the full resolution image was captured.
+
+uint32 x_offset  # Leftmost pixel of the ROI
+                 # (0 if the ROI includes the left edge of the image)
+uint32 y_offset  # Topmost pixel of the ROI
+                 # (0 if the ROI includes the top edge of the image)
+uint32 height    # Height of ROI
+uint32 width     # Width of ROI
+
+# True if a distinct rectified ROI should be calculated from the "raw"
+# ROI in this message. Typically this should be False if the full image
+# is captured (ROI not used), and True if a subwindow is captured (ROI
+# used).
+bool do_rectify
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2863,7 +5971,18 @@ pub mod shape_msgs {
 MeshTriangle[] triangles
 
 # The actual vertices that make up the mesh.
-geometry_msgs/Point[] vertices"#;
+geometry_msgs/Point[] vertices
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: shape_msgs/MeshTriangle
+# Definition of a triangle's vertices.
+
+uint32[3] vertex_indices"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -2976,7 +6095,38 @@ uint8 CONE_RADIUS=1
 # Points of the polygon are ordered counter-clockwise.
 
 uint8 PRISM_HEIGHT=0
-geometry_msgs/Polygon polygon"#;
+geometry_msgs/Polygon polygon
+================================================================================
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommended to use Point wherever possible instead of Point32.
+#
+# This recommendation is to promote interoperability.
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.
+
+float32 x
+float32 y
+float32 z
+================================================================================
+MSG: geometry_msgs/Polygon
+# A specification of a polygon where the first and last points are assumed to be connected
+
+Point32[] points
+================================================================================
+MSG: geometry_msgs/Point32
+# This contains the position of a point in free space(with 32 bits of precision).
+# It is recommended to use Point wherever possible instead of Point32.
+#
+# This recommendation is to promote interoperability.
+#
+# This message is designed to take up less space when sending
+# lots of points at once, as in the case of a PointCloud.
+
+float32 x
+float32 y
+float32 z"#;
     }
     impl SolidPrimitive {
         pub const r#BOX: u8 = 1u8;
@@ -3080,7 +6230,60 @@ byte data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-byte[]            data          # array of data"#;
+byte[]            data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3194,7 +6397,60 @@ float32 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-float32[]         data          # array of data"#;
+float32[]         data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3245,7 +6501,60 @@ float64 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-float64[]         data          # array of data"#;
+float64[]         data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3323,7 +6632,60 @@ int16 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-int16[]           data          # array of data"#;
+int16[]           data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3374,7 +6736,60 @@ int32 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-int32[]           data          # array of data"#;
+int32[]           data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3425,7 +6840,60 @@ int64 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-int64[]           data          # array of data"#;
+int64[]           data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3476,7 +6944,60 @@ int8 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-int8[]            data          # array of data"#;
+int8[]            data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3552,7 +7073,17 @@ uint32 stride  # stride of given dimension"#;
 # multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
 
 MultiArrayDimension[] dim # Array of dimension properties
-uint32 data_offset        # padding bytes at front of data"#;
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3626,7 +7157,60 @@ uint16 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-uint16[]            data        # array of data"#;
+uint16[]            data        # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3677,7 +7261,60 @@ uint32 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-uint32[]          data          # array of data"#;
+uint32[]          data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3728,7 +7365,60 @@ uint64 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-uint64[]          data          # array of data"#;
+uint64[]          data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -3779,7 +7469,60 @@ uint8 data"#;
 # documentation on all multiarrays.
 
 MultiArrayLayout  layout        # specification of data layout
-uint8[]           data          # array of data"#;
+uint8[]           data          # array of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension
+================================================================================
+MSG: std_msgs/MultiArrayLayout
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+# The multiarray declares a generic multi-dimensional array of a
+# particular data type.  Dimensions are ordered from outer most
+# to inner most.
+#
+# Accessors should ALWAYS be written in terms of dimension stride
+# and specified outer-most dimension first.
+#
+# multiarray(i,j,k) = data[data_offset + dim_stride[1]*i + dim_stride[2]*j + k]
+#
+# A standard, 3-channel 640x480 image with interleaved color channels
+# would be specified as:
+#
+# dim[0].label  = "height"
+# dim[0].size   = 480
+# dim[0].stride = 3*640*480 = 921600  (note dim[0] stride is just size of image)
+# dim[1].label  = "width"
+# dim[1].size   = 640
+# dim[1].stride = 3*640 = 1920
+# dim[2].label  = "channel"
+# dim[2].size   = 3
+# dim[2].stride = 3
+#
+# multiarray(i,j,k) refers to the ith row, jth column, and kth channel.
+
+MultiArrayDimension[] dim # Array of dimension properties
+uint32 data_offset        # padding bytes at front of data
+================================================================================
+MSG: std_msgs/MultiArrayDimension
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string label   # label of given dimension
+uint32 size    # size of given dimension (in type units)
+uint32 stride  # stride of given dimension"#;
     }
 }
 #[allow(unused_imports)]
@@ -3987,7 +7730,78 @@ float32 max_disparity
 
 # Smallest allowed disparity increment. The smallest achievable depth range
 # resolution is delta_Z = (Z^2/fT)*delta_d.
-float32 delta_d"#;
+float32 delta_d
+================================================================================
+MSG: sensor_msgs/Image
+# This message contains an uncompressed image
+# (0, 0) is at top-left corner of image
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+                             # If the frame_id here and the frame_id of the CameraInfo
+                             # message associated with the image conflict
+                             # the behavior is undefined
+
+uint32 height                # image height, that is, number of rows
+uint32 width                 # image width, that is, number of columns
+
+# The legal values for encoding are in file include/sensor_msgs/image_encodings.hpp
+# If you want to standardize a new string format, join
+# ros-users@lists.ros.org and send an email proposing a new encoding.
+
+string encoding       # Encoding of pixels -- channel meaning, ordering, size
+                      # taken from the list of strings in include/sensor_msgs/image_encodings.hpp
+
+uint8 is_bigendian    # is this data bigendian?
+uint32 step           # Full row length in bytes
+uint8[] data          # actual matrix data, size is (step * rows)
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: sensor_msgs/RegionOfInterest
+# This message is used to specify a region of interest within an image.
+#
+# When used to specify the ROI setting of the camera when the image was
+# taken, the height and width fields should either match the height and
+# width fields for the associated image; or height = width = 0
+# indicates that the full resolution image was captured.
+
+uint32 x_offset  # Leftmost pixel of the ROI
+                 # (0 if the ROI includes the left edge of the image)
+uint32 y_offset  # Topmost pixel of the ROI
+                 # (0 if the ROI includes the top edge of the image)
+uint32 height    # Height of ROI
+uint32 width     # Width of ROI
+
+# True if a distinct rectified ROI should be calculated from the "raw"
+# ROI in this message. Typically this should be False if the full image
+# is captured (ROI not used), and True if a subwindow is captured (ROI
+# used).
+bool do_rectify
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
 }
 #[allow(unused_imports)]
@@ -4089,7 +7903,46 @@ string[] joint_names
 
 # Array of trajectory points, which describe the positions, velocities,
 # accelerations and/or efforts of the joints at each time point.
-JointTrajectoryPoint[] points"#;
+JointTrajectoryPoint[] points
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: trajectory_msgs/JointTrajectoryPoint
+# Each trajectory point specifies either positions[, velocities[, accelerations]]
+# or positions[, effort] for the trajectory to be executed.
+# All specified values are in the same order as the joint names in JointTrajectory.msg.
+
+# Single DOF joint positions for each joint relative to their "0" position.
+# The units depend on the specific joint type: radians for revolute or
+# continuous joints, and meters for prismatic joints.
+float64[] positions
+
+# The rate of change in position of each joint. Units are joint type dependent.
+# Radians/second for revolute or continuous joints, and meters/second for
+# prismatic joints.
+float64[] velocities
+
+# Rate of change in velocity of each joint. Units are joint type dependent.
+# Radians/second^2 for revolute or continuous joints, and meters/second^2 for
+# prismatic joints.
+float64[] accelerations
+
+# The torque or the force to be applied at each joint. For revolute/continuous
+# joints effort denotes a torque in newton-meters. For prismatic joints, effort
+# denotes a force in newtons.
+float64[] effort
+
+# Desired time from the trajectory start to arrive at this trajectory point.
+builtin_interfaces/Duration time_from_start"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -4165,7 +8018,153 @@ std_msgs/Header header
 # the joint names array.
 
 string[] joint_names
-MultiDOFJointTrajectoryPoint[] points"#;
+MultiDOFJointTrajectoryPoint[] points
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Transform
+# This represents the transform between two coordinate frames in free space.
+
+Vector3 translation
+Quaternion rotation
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: trajectory_msgs/MultiDOFJointTrajectoryPoint
+# Each multi-dof joint can specify a transform (up to 6 DOF).
+geometry_msgs/Transform[] transforms
+
+# There can be a velocity specified for the origin of the joint.
+geometry_msgs/Twist[] velocities
+
+# There can be an acceleration specified for the origin of the joint.
+geometry_msgs/Twist[] accelerations
+
+# Desired time from the trajectory start to arrive at this trajectory point.
+builtin_interfaces/Duration time_from_start
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Transform
+# This represents the transform between two coordinate frames in free space.
+
+Vector3 translation
+Quaternion rotation
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -4196,7 +8195,68 @@ geometry_msgs/Twist[] velocities
 geometry_msgs/Twist[] accelerations
 
 # Desired time from the trajectory start to arrive at this trajectory point.
-builtin_interfaces/Duration time_from_start"#;
+builtin_interfaces/Duration time_from_start
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Transform
+# This represents the transform between two coordinate frames in free space.
+
+Vector3 translation
+Quaternion rotation
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Twist
+# This expresses velocity in free space broken into its linear and angular parts.
+
+Vector3  linear
+Vector3  angular
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z"#;
     }
 }
 #[allow(unused_imports)]
@@ -4275,7 +8335,30 @@ builtin_interfaces/Duration lifetime
 # Coordinates in 2D in pixel coords. Used for LINE_STRIP, LINE_LIST, POINTS, etc.
 geometry_msgs/Point[] points
 # The color for each line, point, etc. in the points field.
-std_msgs/ColorRGBA[] outline_colors"#;
+std_msgs/ColorRGBA[] outline_colors
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     impl ImageMarker {
         pub const r#CIRCLE: i32 = 0i32;
@@ -4333,7 +8416,726 @@ float32 scale
 MenuEntry[] menu_entries
 
 # List of controls displayed for this marker.
-InteractiveMarkerControl[] controls"#;
+InteractiveMarkerControl[] controls
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/InteractiveMarkerControl
+# Represents a control that is to be displayed together with an interactive marker
+
+# Identifying string for this control.
+# You need to assign a unique value to this to receive feedback from the GUI
+# on what actions the user performs on this control (e.g. a button click).
+string name
+
+
+# Defines the local coordinate frame (relative to the pose of the parent
+# interactive marker) in which is being rotated and translated.
+# Default: Identity
+geometry_msgs/Quaternion orientation
+
+
+# Orientation mode: controls how orientation changes.
+# INHERIT: Follow orientation of interactive marker
+# FIXED: Keep orientation fixed at initial state
+# VIEW_FACING: Align y-z plane with screen (x: forward, y:left, z:up).
+uint8 INHERIT = 0
+uint8 FIXED = 1
+uint8 VIEW_FACING = 2
+
+uint8 orientation_mode
+
+# Interaction mode for this control
+#
+# NONE: This control is only meant for visualization; no context menu.
+# MENU: Like NONE, but right-click menu is active.
+# BUTTON: Element can be left-clicked.
+# MOVE_AXIS: Translate along local x-axis.
+# MOVE_PLANE: Translate in local y-z plane.
+# ROTATE_AXIS: Rotate around local x-axis.
+# MOVE_ROTATE: Combines MOVE_PLANE and ROTATE_AXIS.
+uint8 NONE = 0
+uint8 MENU = 1
+uint8 BUTTON = 2
+uint8 MOVE_AXIS = 3
+uint8 MOVE_PLANE = 4
+uint8 ROTATE_AXIS = 5
+uint8 MOVE_ROTATE = 6
+# "3D" interaction modes work with the mouse+SHIFT+CTRL or with 3D cursors.
+# MOVE_3D: Translate freely in 3D space.
+# ROTATE_3D: Rotate freely in 3D space about the origin of parent frame.
+# MOVE_ROTATE_3D: Full 6-DOF freedom of translation and rotation about the cursor origin.
+uint8 MOVE_3D = 7
+uint8 ROTATE_3D = 8
+uint8 MOVE_ROTATE_3D = 9
+
+uint8 interaction_mode
+
+
+# If true, the contained markers will also be visible
+# when the gui is not in interactive mode.
+bool always_visible
+
+
+# Markers to be displayed as custom visual representation.
+# Leave this empty to use the default control handles.
+#
+# Note:
+# - The markers can be defined in an arbitrary coordinate frame,
+#   but will be transformed into the local frame of the interactive marker.
+# - If the header of a marker is empty, its pose will be interpreted as
+#   relative to the pose of the parent interactive marker.
+Marker[] markers
+
+
+# In VIEW_FACING mode, set this to true if you don't want the markers
+# to be aligned with the camera view point. The markers will show up
+# as in INHERIT mode.
+bool independent_marker_orientation
+
+
+# Short description (< 40 characters) of what this control does,
+# e.g. "Move the robot".
+# Default: A generic description based on the interaction mode
+string description
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MenuEntry
+# MenuEntry message.
+#
+# Each InteractiveMarker message has an array of MenuEntry messages.
+# A collection of MenuEntries together describe a
+# menu/submenu/subsubmenu/etc tree, though they are stored in a flat
+# array.  The tree structure is represented by giving each menu entry
+# an ID number and a "parent_id" field.  Top-level entries are the
+# ones with parent_id = 0.  Menu entries are ordered within their
+# level the same way they are ordered in the containing array.  Parent
+# entries must appear before their children.
+#
+# Example:
+# - id = 3
+#   parent_id = 0
+#   title = "fun"
+# - id = 2
+#   parent_id = 0
+#   title = "robot"
+# - id = 4
+#   parent_id = 2
+#   title = "pr2"
+# - id = 5
+#   parent_id = 2
+#   title = "turtle"
+#
+# Gives a menu tree like this:
+#  - fun
+#  - robot
+#    - pr2
+#    - turtle
+
+# ID is a number for each menu entry.  Must be unique within the
+# control, and should never be 0.
+uint32 id
+
+# ID of the parent of this menu entry, if it is a submenu.  If this
+# menu entry is a top-level entry, set parent_id to 0.
+uint32 parent_id
+
+# menu / entry title
+string title
+
+# Arguments to command indicated by command_type (below)
+string command
+
+# Command_type stores the type of response desired when this menu
+# entry is clicked.
+# FEEDBACK: send an InteractiveMarkerFeedback message with menu_entry_id set to this entry's id.
+# ROSRUN: execute "rosrun" with arguments given in the command field (above).
+# ROSLAUNCH: execute "roslaunch" with arguments given in the command field (above).
+uint8 FEEDBACK=0
+uint8 ROSRUN=1
+uint8 ROSLAUNCH=2
+uint8 command_type
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -4434,7 +9236,299 @@ bool independent_marker_orientation
 # Short description (< 40 characters) of what this control does,
 # e.g. "Move the robot".
 # Default: A generic description based on the interaction mode
-string description"#;
+string description
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v"#;
     }
     impl InteractiveMarkerControl {
         pub const r#INHERIT: u8 = 0u8;
@@ -4516,7 +9610,52 @@ uint32 menu_entry_id
 # control.  If it does, mouse_point_valid will be true.  mouse_point
 # will be relative to the frame listed in the header.
 geometry_msgs/Point mouse_point
-bool mouse_point_valid"#;
+bool mouse_point_valid
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     impl InteractiveMarkerFeedback {
         pub const r#KEEP_ALIVE: u8 = 0u8;
@@ -4557,7 +9696,1473 @@ string server_id
 uint64 seq_num
 
 # All markers.
-InteractiveMarker[] markers"#;
+InteractiveMarker[] markers
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/InteractiveMarker
+# Time/frame info.
+# If header.time is set to 0, the marker will be retransformed into
+# its frame on each timestep. You will receive the pose feedback
+# in the same frame.
+# Otherwise, you might receive feedback in a different frame.
+# For rviz, this will be the current 'fixed frame' set by the user.
+std_msgs/Header header
+
+# Initial pose. Also, defines the pivot point for rotations.
+geometry_msgs/Pose pose
+
+# Identifying string. Must be globally unique in
+# the topic that this message is sent through.
+string name
+
+# Short description (< 40 characters).
+string description
+
+# Scale to be used for default controls (default=1).
+float32 scale
+
+# All menu and submenu entries associated with this marker.
+MenuEntry[] menu_entries
+
+# List of controls displayed for this marker.
+InteractiveMarkerControl[] controls
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/InteractiveMarkerControl
+# Represents a control that is to be displayed together with an interactive marker
+
+# Identifying string for this control.
+# You need to assign a unique value to this to receive feedback from the GUI
+# on what actions the user performs on this control (e.g. a button click).
+string name
+
+
+# Defines the local coordinate frame (relative to the pose of the parent
+# interactive marker) in which is being rotated and translated.
+# Default: Identity
+geometry_msgs/Quaternion orientation
+
+
+# Orientation mode: controls how orientation changes.
+# INHERIT: Follow orientation of interactive marker
+# FIXED: Keep orientation fixed at initial state
+# VIEW_FACING: Align y-z plane with screen (x: forward, y:left, z:up).
+uint8 INHERIT = 0
+uint8 FIXED = 1
+uint8 VIEW_FACING = 2
+
+uint8 orientation_mode
+
+# Interaction mode for this control
+#
+# NONE: This control is only meant for visualization; no context menu.
+# MENU: Like NONE, but right-click menu is active.
+# BUTTON: Element can be left-clicked.
+# MOVE_AXIS: Translate along local x-axis.
+# MOVE_PLANE: Translate in local y-z plane.
+# ROTATE_AXIS: Rotate around local x-axis.
+# MOVE_ROTATE: Combines MOVE_PLANE and ROTATE_AXIS.
+uint8 NONE = 0
+uint8 MENU = 1
+uint8 BUTTON = 2
+uint8 MOVE_AXIS = 3
+uint8 MOVE_PLANE = 4
+uint8 ROTATE_AXIS = 5
+uint8 MOVE_ROTATE = 6
+# "3D" interaction modes work with the mouse+SHIFT+CTRL or with 3D cursors.
+# MOVE_3D: Translate freely in 3D space.
+# ROTATE_3D: Rotate freely in 3D space about the origin of parent frame.
+# MOVE_ROTATE_3D: Full 6-DOF freedom of translation and rotation about the cursor origin.
+uint8 MOVE_3D = 7
+uint8 ROTATE_3D = 8
+uint8 MOVE_ROTATE_3D = 9
+
+uint8 interaction_mode
+
+
+# If true, the contained markers will also be visible
+# when the gui is not in interactive mode.
+bool always_visible
+
+
+# Markers to be displayed as custom visual representation.
+# Leave this empty to use the default control handles.
+#
+# Note:
+# - The markers can be defined in an arbitrary coordinate frame,
+#   but will be transformed into the local frame of the interactive marker.
+# - If the header of a marker is empty, its pose will be interpreted as
+#   relative to the pose of the parent interactive marker.
+Marker[] markers
+
+
+# In VIEW_FACING mode, set this to true if you don't want the markers
+# to be aligned with the camera view point. The markers will show up
+# as in INHERIT mode.
+bool independent_marker_orientation
+
+
+# Short description (< 40 characters) of what this control does,
+# e.g. "Move the robot".
+# Default: A generic description based on the interaction mode
+string description
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MenuEntry
+# MenuEntry message.
+#
+# Each InteractiveMarker message has an array of MenuEntry messages.
+# A collection of MenuEntries together describe a
+# menu/submenu/subsubmenu/etc tree, though they are stored in a flat
+# array.  The tree structure is represented by giving each menu entry
+# an ID number and a "parent_id" field.  Top-level entries are the
+# ones with parent_id = 0.  Menu entries are ordered within their
+# level the same way they are ordered in the containing array.  Parent
+# entries must appear before their children.
+#
+# Example:
+# - id = 3
+#   parent_id = 0
+#   title = "fun"
+# - id = 2
+#   parent_id = 0
+#   title = "robot"
+# - id = 4
+#   parent_id = 2
+#   title = "pr2"
+# - id = 5
+#   parent_id = 2
+#   title = "turtle"
+#
+# Gives a menu tree like this:
+#  - fun
+#  - robot
+#    - pr2
+#    - turtle
+
+# ID is a number for each menu entry.  Must be unique within the
+# control, and should never be 0.
+uint32 id
+
+# ID of the parent of this menu entry, if it is a submenu.  If this
+# menu entry is a top-level entry, set parent_id to 0.
+uint32 parent_id
+
+# menu / entry title
+string title
+
+# Arguments to command indicated by command_type (below)
+string command
+
+# Command_type stores the type of response desired when this menu
+# entry is clicked.
+# FEEDBACK: send an InteractiveMarkerFeedback message with menu_entry_id set to this entry's id.
+# ROSRUN: execute "rosrun" with arguments given in the command field (above).
+# ROSLAUNCH: execute "roslaunch" with arguments given in the command field (above).
+uint8 FEEDBACK=0
+uint8 ROSRUN=1
+uint8 ROSLAUNCH=2
+uint8 command_type
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/InteractiveMarkerControl
+# Represents a control that is to be displayed together with an interactive marker
+
+# Identifying string for this control.
+# You need to assign a unique value to this to receive feedback from the GUI
+# on what actions the user performs on this control (e.g. a button click).
+string name
+
+
+# Defines the local coordinate frame (relative to the pose of the parent
+# interactive marker) in which is being rotated and translated.
+# Default: Identity
+geometry_msgs/Quaternion orientation
+
+
+# Orientation mode: controls how orientation changes.
+# INHERIT: Follow orientation of interactive marker
+# FIXED: Keep orientation fixed at initial state
+# VIEW_FACING: Align y-z plane with screen (x: forward, y:left, z:up).
+uint8 INHERIT = 0
+uint8 FIXED = 1
+uint8 VIEW_FACING = 2
+
+uint8 orientation_mode
+
+# Interaction mode for this control
+#
+# NONE: This control is only meant for visualization; no context menu.
+# MENU: Like NONE, but right-click menu is active.
+# BUTTON: Element can be left-clicked.
+# MOVE_AXIS: Translate along local x-axis.
+# MOVE_PLANE: Translate in local y-z plane.
+# ROTATE_AXIS: Rotate around local x-axis.
+# MOVE_ROTATE: Combines MOVE_PLANE and ROTATE_AXIS.
+uint8 NONE = 0
+uint8 MENU = 1
+uint8 BUTTON = 2
+uint8 MOVE_AXIS = 3
+uint8 MOVE_PLANE = 4
+uint8 ROTATE_AXIS = 5
+uint8 MOVE_ROTATE = 6
+# "3D" interaction modes work with the mouse+SHIFT+CTRL or with 3D cursors.
+# MOVE_3D: Translate freely in 3D space.
+# ROTATE_3D: Rotate freely in 3D space about the origin of parent frame.
+# MOVE_ROTATE_3D: Full 6-DOF freedom of translation and rotation about the cursor origin.
+uint8 MOVE_3D = 7
+uint8 ROTATE_3D = 8
+uint8 MOVE_ROTATE_3D = 9
+
+uint8 interaction_mode
+
+
+# If true, the contained markers will also be visible
+# when the gui is not in interactive mode.
+bool always_visible
+
+
+# Markers to be displayed as custom visual representation.
+# Leave this empty to use the default control handles.
+#
+# Note:
+# - The markers can be defined in an arbitrary coordinate frame,
+#   but will be transformed into the local frame of the interactive marker.
+# - If the header of a marker is empty, its pose will be interpreted as
+#   relative to the pose of the parent interactive marker.
+Marker[] markers
+
+
+# In VIEW_FACING mode, set this to true if you don't want the markers
+# to be aligned with the camera view point. The markers will show up
+# as in INHERIT mode.
+bool independent_marker_orientation
+
+
+# Short description (< 40 characters) of what this control does,
+# e.g. "Move the robot".
+# Default: A generic description based on the interaction mode
+string description
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MenuEntry
+# MenuEntry message.
+#
+# Each InteractiveMarker message has an array of MenuEntry messages.
+# A collection of MenuEntries together describe a
+# menu/submenu/subsubmenu/etc tree, though they are stored in a flat
+# array.  The tree structure is represented by giving each menu entry
+# an ID number and a "parent_id" field.  Top-level entries are the
+# ones with parent_id = 0.  Menu entries are ordered within their
+# level the same way they are ordered in the containing array.  Parent
+# entries must appear before their children.
+#
+# Example:
+# - id = 3
+#   parent_id = 0
+#   title = "fun"
+# - id = 2
+#   parent_id = 0
+#   title = "robot"
+# - id = 4
+#   parent_id = 2
+#   title = "pr2"
+# - id = 5
+#   parent_id = 2
+#   title = "turtle"
+#
+# Gives a menu tree like this:
+#  - fun
+#  - robot
+#    - pr2
+#    - turtle
+
+# ID is a number for each menu entry.  Must be unique within the
+# control, and should never be 0.
+uint32 id
+
+# ID of the parent of this menu entry, if it is a submenu.  If this
+# menu entry is a top-level entry, set parent_id to 0.
+uint32 parent_id
+
+# menu / entry title
+string title
+
+# Arguments to command indicated by command_type (below)
+string command
+
+# Command_type stores the type of response desired when this menu
+# entry is clicked.
+# FEEDBACK: send an InteractiveMarkerFeedback message with menu_entry_id set to this entry's id.
+# ROSRUN: execute "rosrun" with arguments given in the command field (above).
+# ROSLAUNCH: execute "roslaunch" with arguments given in the command field (above).
+uint8 FEEDBACK=0
+uint8 ROSRUN=1
+uint8 ROSLAUNCH=2
+uint8 command_type
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -4585,7 +11190,52 @@ geometry_msgs/Pose pose
 
 # Identifying string. Must be globally unique in
 # the topic that this message is sent through.
-string name"#;
+string name
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -4638,7 +11288,1529 @@ InteractiveMarker[] markers
 InteractiveMarkerPose[] poses
 
 # Names of markers to be erased
-string[] erases"#;
+string[] erases
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/InteractiveMarker
+# Time/frame info.
+# If header.time is set to 0, the marker will be retransformed into
+# its frame on each timestep. You will receive the pose feedback
+# in the same frame.
+# Otherwise, you might receive feedback in a different frame.
+# For rviz, this will be the current 'fixed frame' set by the user.
+std_msgs/Header header
+
+# Initial pose. Also, defines the pivot point for rotations.
+geometry_msgs/Pose pose
+
+# Identifying string. Must be globally unique in
+# the topic that this message is sent through.
+string name
+
+# Short description (< 40 characters).
+string description
+
+# Scale to be used for default controls (default=1).
+float32 scale
+
+# All menu and submenu entries associated with this marker.
+MenuEntry[] menu_entries
+
+# List of controls displayed for this marker.
+InteractiveMarkerControl[] controls
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/InteractiveMarkerControl
+# Represents a control that is to be displayed together with an interactive marker
+
+# Identifying string for this control.
+# You need to assign a unique value to this to receive feedback from the GUI
+# on what actions the user performs on this control (e.g. a button click).
+string name
+
+
+# Defines the local coordinate frame (relative to the pose of the parent
+# interactive marker) in which is being rotated and translated.
+# Default: Identity
+geometry_msgs/Quaternion orientation
+
+
+# Orientation mode: controls how orientation changes.
+# INHERIT: Follow orientation of interactive marker
+# FIXED: Keep orientation fixed at initial state
+# VIEW_FACING: Align y-z plane with screen (x: forward, y:left, z:up).
+uint8 INHERIT = 0
+uint8 FIXED = 1
+uint8 VIEW_FACING = 2
+
+uint8 orientation_mode
+
+# Interaction mode for this control
+#
+# NONE: This control is only meant for visualization; no context menu.
+# MENU: Like NONE, but right-click menu is active.
+# BUTTON: Element can be left-clicked.
+# MOVE_AXIS: Translate along local x-axis.
+# MOVE_PLANE: Translate in local y-z plane.
+# ROTATE_AXIS: Rotate around local x-axis.
+# MOVE_ROTATE: Combines MOVE_PLANE and ROTATE_AXIS.
+uint8 NONE = 0
+uint8 MENU = 1
+uint8 BUTTON = 2
+uint8 MOVE_AXIS = 3
+uint8 MOVE_PLANE = 4
+uint8 ROTATE_AXIS = 5
+uint8 MOVE_ROTATE = 6
+# "3D" interaction modes work with the mouse+SHIFT+CTRL or with 3D cursors.
+# MOVE_3D: Translate freely in 3D space.
+# ROTATE_3D: Rotate freely in 3D space about the origin of parent frame.
+# MOVE_ROTATE_3D: Full 6-DOF freedom of translation and rotation about the cursor origin.
+uint8 MOVE_3D = 7
+uint8 ROTATE_3D = 8
+uint8 MOVE_ROTATE_3D = 9
+
+uint8 interaction_mode
+
+
+# If true, the contained markers will also be visible
+# when the gui is not in interactive mode.
+bool always_visible
+
+
+# Markers to be displayed as custom visual representation.
+# Leave this empty to use the default control handles.
+#
+# Note:
+# - The markers can be defined in an arbitrary coordinate frame,
+#   but will be transformed into the local frame of the interactive marker.
+# - If the header of a marker is empty, its pose will be interpreted as
+#   relative to the pose of the parent interactive marker.
+Marker[] markers
+
+
+# In VIEW_FACING mode, set this to true if you don't want the markers
+# to be aligned with the camera view point. The markers will show up
+# as in INHERIT mode.
+bool independent_marker_orientation
+
+
+# Short description (< 40 characters) of what this control does,
+# e.g. "Move the robot".
+# Default: A generic description based on the interaction mode
+string description
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MenuEntry
+# MenuEntry message.
+#
+# Each InteractiveMarker message has an array of MenuEntry messages.
+# A collection of MenuEntries together describe a
+# menu/submenu/subsubmenu/etc tree, though they are stored in a flat
+# array.  The tree structure is represented by giving each menu entry
+# an ID number and a "parent_id" field.  Top-level entries are the
+# ones with parent_id = 0.  Menu entries are ordered within their
+# level the same way they are ordered in the containing array.  Parent
+# entries must appear before their children.
+#
+# Example:
+# - id = 3
+#   parent_id = 0
+#   title = "fun"
+# - id = 2
+#   parent_id = 0
+#   title = "robot"
+# - id = 4
+#   parent_id = 2
+#   title = "pr2"
+# - id = 5
+#   parent_id = 2
+#   title = "turtle"
+#
+# Gives a menu tree like this:
+#  - fun
+#  - robot
+#    - pr2
+#    - turtle
+
+# ID is a number for each menu entry.  Must be unique within the
+# control, and should never be 0.
+uint32 id
+
+# ID of the parent of this menu entry, if it is a submenu.  If this
+# menu entry is a top-level entry, set parent_id to 0.
+uint32 parent_id
+
+# menu / entry title
+string title
+
+# Arguments to command indicated by command_type (below)
+string command
+
+# Command_type stores the type of response desired when this menu
+# entry is clicked.
+# FEEDBACK: send an InteractiveMarkerFeedback message with menu_entry_id set to this entry's id.
+# ROSRUN: execute "rosrun" with arguments given in the command field (above).
+# ROSLAUNCH: execute "roslaunch" with arguments given in the command field (above).
+uint8 FEEDBACK=0
+uint8 ROSRUN=1
+uint8 ROSLAUNCH=2
+uint8 command_type
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/InteractiveMarkerControl
+# Represents a control that is to be displayed together with an interactive marker
+
+# Identifying string for this control.
+# You need to assign a unique value to this to receive feedback from the GUI
+# on what actions the user performs on this control (e.g. a button click).
+string name
+
+
+# Defines the local coordinate frame (relative to the pose of the parent
+# interactive marker) in which is being rotated and translated.
+# Default: Identity
+geometry_msgs/Quaternion orientation
+
+
+# Orientation mode: controls how orientation changes.
+# INHERIT: Follow orientation of interactive marker
+# FIXED: Keep orientation fixed at initial state
+# VIEW_FACING: Align y-z plane with screen (x: forward, y:left, z:up).
+uint8 INHERIT = 0
+uint8 FIXED = 1
+uint8 VIEW_FACING = 2
+
+uint8 orientation_mode
+
+# Interaction mode for this control
+#
+# NONE: This control is only meant for visualization; no context menu.
+# MENU: Like NONE, but right-click menu is active.
+# BUTTON: Element can be left-clicked.
+# MOVE_AXIS: Translate along local x-axis.
+# MOVE_PLANE: Translate in local y-z plane.
+# ROTATE_AXIS: Rotate around local x-axis.
+# MOVE_ROTATE: Combines MOVE_PLANE and ROTATE_AXIS.
+uint8 NONE = 0
+uint8 MENU = 1
+uint8 BUTTON = 2
+uint8 MOVE_AXIS = 3
+uint8 MOVE_PLANE = 4
+uint8 ROTATE_AXIS = 5
+uint8 MOVE_ROTATE = 6
+# "3D" interaction modes work with the mouse+SHIFT+CTRL or with 3D cursors.
+# MOVE_3D: Translate freely in 3D space.
+# ROTATE_3D: Rotate freely in 3D space about the origin of parent frame.
+# MOVE_ROTATE_3D: Full 6-DOF freedom of translation and rotation about the cursor origin.
+uint8 MOVE_3D = 7
+uint8 ROTATE_3D = 8
+uint8 MOVE_ROTATE_3D = 9
+
+uint8 interaction_mode
+
+
+# If true, the contained markers will also be visible
+# when the gui is not in interactive mode.
+bool always_visible
+
+
+# Markers to be displayed as custom visual representation.
+# Leave this empty to use the default control handles.
+#
+# Note:
+# - The markers can be defined in an arbitrary coordinate frame,
+#   but will be transformed into the local frame of the interactive marker.
+# - If the header of a marker is empty, its pose will be interpreted as
+#   relative to the pose of the parent interactive marker.
+Marker[] markers
+
+
+# In VIEW_FACING mode, set this to true if you don't want the markers
+# to be aligned with the camera view point. The markers will show up
+# as in INHERIT mode.
+bool independent_marker_orientation
+
+
+# Short description (< 40 characters) of what this control does,
+# e.g. "Move the robot".
+# Default: A generic description based on the interaction mode
+string description
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/InteractiveMarkerPose
+# Time/frame info.
+std_msgs/Header header
+
+# Initial pose. Also, defines the pivot point for rotations.
+geometry_msgs/Pose pose
+
+# Identifying string. Must be globally unique in
+# the topic that this message is sent through.
+string name
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MenuEntry
+# MenuEntry message.
+#
+# Each InteractiveMarker message has an array of MenuEntry messages.
+# A collection of MenuEntries together describe a
+# menu/submenu/subsubmenu/etc tree, though they are stored in a flat
+# array.  The tree structure is represented by giving each menu entry
+# an ID number and a "parent_id" field.  Top-level entries are the
+# ones with parent_id = 0.  Menu entries are ordered within their
+# level the same way they are ordered in the containing array.  Parent
+# entries must appear before their children.
+#
+# Example:
+# - id = 3
+#   parent_id = 0
+#   title = "fun"
+# - id = 2
+#   parent_id = 0
+#   title = "robot"
+# - id = 4
+#   parent_id = 2
+#   title = "pr2"
+# - id = 5
+#   parent_id = 2
+#   title = "turtle"
+#
+# Gives a menu tree like this:
+#  - fun
+#  - robot
+#    - pr2
+#    - turtle
+
+# ID is a number for each menu entry.  Must be unique within the
+# control, and should never be 0.
+uint32 id
+
+# ID of the parent of this menu entry, if it is a submenu.  If this
+# menu entry is a top-level entry, set parent_id to 0.
+uint32 parent_id
+
+# menu / entry title
+string title
+
+# Arguments to command indicated by command_type (below)
+string command
+
+# Command_type stores the type of response desired when this menu
+# entry is clicked.
+# FEEDBACK: send an InteractiveMarkerFeedback message with menu_entry_id set to this entry's id.
+# ROSRUN: execute "rosrun" with arguments given in the command field (above).
+# ROSLAUNCH: execute "roslaunch" with arguments given in the command field (above).
+uint8 FEEDBACK=0
+uint8 ROSRUN=1
+uint8 ROSLAUNCH=2
+uint8 command_type
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v"#;
     }
     impl InteractiveMarkerUpdate {
         pub const r#KEEP_ALIVE: u8 = 0u8;
@@ -4757,7 +12929,112 @@ string text
 #   "embedded://mesh_name"
 string mesh_resource
 MeshFile mesh_file
-bool mesh_use_embedded_materials"#;
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v"#;
     }
     impl Marker {
         pub const r#ARROW: i32 = 0i32;
@@ -4793,7 +13070,299 @@ bool mesh_use_embedded_materials"#;
     impl ::roslibrust_codegen::RosMessageType for MarkerArray {
         const ROS_TYPE_NAME: &'static str = "visualization_msgs/MarkerArray";
         const MD5SUM: &'static str = "11e38f15427197858cf46456867167bd";
-        const DEFINITION: &'static str = r#"Marker[] markers"#;
+        const DEFINITION: &'static str = r#"Marker[] markers
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v"#;
     }
     #[allow(non_snake_case)]
     #[derive(
@@ -4963,7 +13532,1473 @@ float32 v"#;
 uint64 sequence_number
 
 # All interactive markers provided by the server.
-InteractiveMarker[] markers"#;
+InteractiveMarker[] markers
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/InteractiveMarker
+# Time/frame info.
+# If header.time is set to 0, the marker will be retransformed into
+# its frame on each timestep. You will receive the pose feedback
+# in the same frame.
+# Otherwise, you might receive feedback in a different frame.
+# For rviz, this will be the current 'fixed frame' set by the user.
+std_msgs/Header header
+
+# Initial pose. Also, defines the pivot point for rotations.
+geometry_msgs/Pose pose
+
+# Identifying string. Must be globally unique in
+# the topic that this message is sent through.
+string name
+
+# Short description (< 40 characters).
+string description
+
+# Scale to be used for default controls (default=1).
+float32 scale
+
+# All menu and submenu entries associated with this marker.
+MenuEntry[] menu_entries
+
+# List of controls displayed for this marker.
+InteractiveMarkerControl[] controls
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/InteractiveMarkerControl
+# Represents a control that is to be displayed together with an interactive marker
+
+# Identifying string for this control.
+# You need to assign a unique value to this to receive feedback from the GUI
+# on what actions the user performs on this control (e.g. a button click).
+string name
+
+
+# Defines the local coordinate frame (relative to the pose of the parent
+# interactive marker) in which is being rotated and translated.
+# Default: Identity
+geometry_msgs/Quaternion orientation
+
+
+# Orientation mode: controls how orientation changes.
+# INHERIT: Follow orientation of interactive marker
+# FIXED: Keep orientation fixed at initial state
+# VIEW_FACING: Align y-z plane with screen (x: forward, y:left, z:up).
+uint8 INHERIT = 0
+uint8 FIXED = 1
+uint8 VIEW_FACING = 2
+
+uint8 orientation_mode
+
+# Interaction mode for this control
+#
+# NONE: This control is only meant for visualization; no context menu.
+# MENU: Like NONE, but right-click menu is active.
+# BUTTON: Element can be left-clicked.
+# MOVE_AXIS: Translate along local x-axis.
+# MOVE_PLANE: Translate in local y-z plane.
+# ROTATE_AXIS: Rotate around local x-axis.
+# MOVE_ROTATE: Combines MOVE_PLANE and ROTATE_AXIS.
+uint8 NONE = 0
+uint8 MENU = 1
+uint8 BUTTON = 2
+uint8 MOVE_AXIS = 3
+uint8 MOVE_PLANE = 4
+uint8 ROTATE_AXIS = 5
+uint8 MOVE_ROTATE = 6
+# "3D" interaction modes work with the mouse+SHIFT+CTRL or with 3D cursors.
+# MOVE_3D: Translate freely in 3D space.
+# ROTATE_3D: Rotate freely in 3D space about the origin of parent frame.
+# MOVE_ROTATE_3D: Full 6-DOF freedom of translation and rotation about the cursor origin.
+uint8 MOVE_3D = 7
+uint8 ROTATE_3D = 8
+uint8 MOVE_ROTATE_3D = 9
+
+uint8 interaction_mode
+
+
+# If true, the contained markers will also be visible
+# when the gui is not in interactive mode.
+bool always_visible
+
+
+# Markers to be displayed as custom visual representation.
+# Leave this empty to use the default control handles.
+#
+# Note:
+# - The markers can be defined in an arbitrary coordinate frame,
+#   but will be transformed into the local frame of the interactive marker.
+# - If the header of a marker is empty, its pose will be interpreted as
+#   relative to the pose of the parent interactive marker.
+Marker[] markers
+
+
+# In VIEW_FACING mode, set this to true if you don't want the markers
+# to be aligned with the camera view point. The markers will show up
+# as in INHERIT mode.
+bool independent_marker_orientation
+
+
+# Short description (< 40 characters) of what this control does,
+# e.g. "Move the robot".
+# Default: A generic description based on the interaction mode
+string description
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MenuEntry
+# MenuEntry message.
+#
+# Each InteractiveMarker message has an array of MenuEntry messages.
+# A collection of MenuEntries together describe a
+# menu/submenu/subsubmenu/etc tree, though they are stored in a flat
+# array.  The tree structure is represented by giving each menu entry
+# an ID number and a "parent_id" field.  Top-level entries are the
+# ones with parent_id = 0.  Menu entries are ordered within their
+# level the same way they are ordered in the containing array.  Parent
+# entries must appear before their children.
+#
+# Example:
+# - id = 3
+#   parent_id = 0
+#   title = "fun"
+# - id = 2
+#   parent_id = 0
+#   title = "robot"
+# - id = 4
+#   parent_id = 2
+#   title = "pr2"
+# - id = 5
+#   parent_id = 2
+#   title = "turtle"
+#
+# Gives a menu tree like this:
+#  - fun
+#  - robot
+#    - pr2
+#    - turtle
+
+# ID is a number for each menu entry.  Must be unique within the
+# control, and should never be 0.
+uint32 id
+
+# ID of the parent of this menu entry, if it is a submenu.  If this
+# menu entry is a top-level entry, set parent_id to 0.
+uint32 parent_id
+
+# menu / entry title
+string title
+
+# Arguments to command indicated by command_type (below)
+string command
+
+# Command_type stores the type of response desired when this menu
+# entry is clicked.
+# FEEDBACK: send an InteractiveMarkerFeedback message with menu_entry_id set to this entry's id.
+# ROSRUN: execute "rosrun" with arguments given in the command field (above).
+# ROSLAUNCH: execute "roslaunch" with arguments given in the command field (above).
+uint8 FEEDBACK=0
+uint8 ROSRUN=1
+uint8 ROSLAUNCH=2
+uint8 command_type
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/InteractiveMarkerControl
+# Represents a control that is to be displayed together with an interactive marker
+
+# Identifying string for this control.
+# You need to assign a unique value to this to receive feedback from the GUI
+# on what actions the user performs on this control (e.g. a button click).
+string name
+
+
+# Defines the local coordinate frame (relative to the pose of the parent
+# interactive marker) in which is being rotated and translated.
+# Default: Identity
+geometry_msgs/Quaternion orientation
+
+
+# Orientation mode: controls how orientation changes.
+# INHERIT: Follow orientation of interactive marker
+# FIXED: Keep orientation fixed at initial state
+# VIEW_FACING: Align y-z plane with screen (x: forward, y:left, z:up).
+uint8 INHERIT = 0
+uint8 FIXED = 1
+uint8 VIEW_FACING = 2
+
+uint8 orientation_mode
+
+# Interaction mode for this control
+#
+# NONE: This control is only meant for visualization; no context menu.
+# MENU: Like NONE, but right-click menu is active.
+# BUTTON: Element can be left-clicked.
+# MOVE_AXIS: Translate along local x-axis.
+# MOVE_PLANE: Translate in local y-z plane.
+# ROTATE_AXIS: Rotate around local x-axis.
+# MOVE_ROTATE: Combines MOVE_PLANE and ROTATE_AXIS.
+uint8 NONE = 0
+uint8 MENU = 1
+uint8 BUTTON = 2
+uint8 MOVE_AXIS = 3
+uint8 MOVE_PLANE = 4
+uint8 ROTATE_AXIS = 5
+uint8 MOVE_ROTATE = 6
+# "3D" interaction modes work with the mouse+SHIFT+CTRL or with 3D cursors.
+# MOVE_3D: Translate freely in 3D space.
+# ROTATE_3D: Rotate freely in 3D space about the origin of parent frame.
+# MOVE_ROTATE_3D: Full 6-DOF freedom of translation and rotation about the cursor origin.
+uint8 MOVE_3D = 7
+uint8 ROTATE_3D = 8
+uint8 MOVE_ROTATE_3D = 9
+
+uint8 interaction_mode
+
+
+# If true, the contained markers will also be visible
+# when the gui is not in interactive mode.
+bool always_visible
+
+
+# Markers to be displayed as custom visual representation.
+# Leave this empty to use the default control handles.
+#
+# Note:
+# - The markers can be defined in an arbitrary coordinate frame,
+#   but will be transformed into the local frame of the interactive marker.
+# - If the header of a marker is empty, its pose will be interpreted as
+#   relative to the pose of the parent interactive marker.
+Marker[] markers
+
+
+# In VIEW_FACING mode, set this to true if you don't want the markers
+# to be aligned with the camera view point. The markers will show up
+# as in INHERIT mode.
+bool independent_marker_orientation
+
+
+# Short description (< 40 characters) of what this control does,
+# e.g. "Move the robot".
+# Default: A generic description based on the interaction mode
+string description
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/Marker
+# See:
+#  - http://www.ros.org/wiki/rviz/DisplayTypes/Marker
+#  - http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes
+#
+# for more information on using this message with rviz.
+
+int32 ARROW=0
+int32 CUBE=1
+int32 SPHERE=2
+int32 CYLINDER=3
+int32 LINE_STRIP=4
+int32 LINE_LIST=5
+int32 CUBE_LIST=6
+int32 SPHERE_LIST=7
+int32 POINTS=8
+int32 TEXT_VIEW_FACING=9
+int32 MESH_RESOURCE=10
+int32 TRIANGLE_LIST=11
+
+int32 ADD=0
+int32 MODIFY=0
+int32 DELETE=2
+int32 DELETEALL=3
+
+# Header for timestamp and frame id.
+std_msgs/Header header
+# Namespace in which to place the object.
+# Used in conjunction with id to create a unique name for the object.
+string ns
+# Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+int32 id
+# Type of object.
+int32 type
+# Action to take; one of:
+#  - 0 add/modify an object
+#  - 1 (deprecated)
+#  - 2 deletes an object (with the given ns and id)
+#  - 3 deletes all objects (or those with the given ns if any)
+int32 action
+# Pose of the object with respect the frame_id specified in the header.
+geometry_msgs/Pose pose
+# Scale of the object; 1,1,1 means default (usually 1 meter square).
+geometry_msgs/Vector3 scale
+# Color of the object; in the range: [0.0-1.0]
+std_msgs/ColorRGBA color
+# How long the object should last before being automatically deleted.
+# 0 indicates forever.
+builtin_interfaces/Duration lifetime
+# If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+bool frame_locked
+
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+geometry_msgs/Point[] points
+# Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+# The number of colors provided must either be 0 or equal to the number of points provided.
+# NOTE: alpha is not yet used
+std_msgs/ColorRGBA[] colors
+
+# Texture resource is a special URI that can either reference a texture file in
+# a format acceptable to (resource retriever)[https://index.ros.org/p/resource_retriever/]
+# or an embedded texture via a string matching the format:
+#   "embedded://texture_name"
+string texture_resource
+# An image to be loaded into the rendering engine as the texture for this marker.
+# This will be used iff texture_resource is set to embedded.
+sensor_msgs/CompressedImage texture
+# Location of each vertex within the texture; in the range: [0.0-1.0]
+UVCoordinate[] uv_coordinates
+
+# Only used for text markers
+string text
+
+# Only used for MESH_RESOURCE markers.
+# Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+# Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+# use the following format for mesh_resource:
+#   "embedded://mesh_name"
+string mesh_resource
+MeshFile mesh_file
+bool mesh_use_embedded_materials
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Pose
+# A representation of pose in free space, composed of position and orientation.
+
+Point position
+Quaternion orientation
+================================================================================
+MSG: geometry_msgs/Point
+# This contains the position of a point in free space
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Quaternion
+# This represents an orientation in free space in quaternion form.
+
+float64 x 0
+float64 y 0
+float64 z 0
+float64 w 1
+================================================================================
+MSG: geometry_msgs/Vector3
+# This represents a vector in free space.
+
+# This is semantically different than a point.
+# A vector is always anchored at the origin.
+# When a transform is applied to a vector, only the rotational component is applied.
+
+float64 x
+float64 y
+float64 z
+================================================================================
+MSG: sensor_msgs/CompressedImage
+# This message contains a compressed image.
+
+std_msgs/Header header # Header timestamp should be acquisition time of image
+                             # Header frame_id should be optical frame of camera
+                             # origin of frame should be optical center of cameara
+                             # +x should point to the right in the image
+                             # +y should point down in the image
+                             # +z should point into to plane of the image
+
+string format                # Specifies the format of the data
+                             #   Acceptable values:
+                             #     jpeg, png, tiff
+
+uint8[] data                 # Compressed image buffer
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: std_msgs/ColorRGBA
+float32 r
+float32 g
+float32 b
+float32 a
+================================================================================
+MSG: std_msgs/Header
+# Standard metadata for higher-level stamped data types.
+# This is generally used to communicate timestamped data
+# in a particular coordinate frame.
+
+# Two-integer timestamp that is expressed as seconds and nanoseconds.
+builtin_interfaces/Time stamp
+
+# Transform frame with which this data is associated.
+string frame_id
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v
+================================================================================
+MSG: visualization_msgs/MenuEntry
+# MenuEntry message.
+#
+# Each InteractiveMarker message has an array of MenuEntry messages.
+# A collection of MenuEntries together describe a
+# menu/submenu/subsubmenu/etc tree, though they are stored in a flat
+# array.  The tree structure is represented by giving each menu entry
+# an ID number and a "parent_id" field.  Top-level entries are the
+# ones with parent_id = 0.  Menu entries are ordered within their
+# level the same way they are ordered in the containing array.  Parent
+# entries must appear before their children.
+#
+# Example:
+# - id = 3
+#   parent_id = 0
+#   title = "fun"
+# - id = 2
+#   parent_id = 0
+#   title = "robot"
+# - id = 4
+#   parent_id = 2
+#   title = "pr2"
+# - id = 5
+#   parent_id = 2
+#   title = "turtle"
+#
+# Gives a menu tree like this:
+#  - fun
+#  - robot
+#    - pr2
+#    - turtle
+
+# ID is a number for each menu entry.  Must be unique within the
+# control, and should never be 0.
+uint32 id
+
+# ID of the parent of this menu entry, if it is a submenu.  If this
+# menu entry is a top-level entry, set parent_id to 0.
+uint32 parent_id
+
+# menu / entry title
+string title
+
+# Arguments to command indicated by command_type (below)
+string command
+
+# Command_type stores the type of response desired when this menu
+# entry is clicked.
+# FEEDBACK: send an InteractiveMarkerFeedback message with menu_entry_id set to this entry's id.
+# ROSRUN: execute "rosrun" with arguments given in the command field (above).
+# ROSLAUNCH: execute "roslaunch" with arguments given in the command field (above).
+uint8 FEEDBACK=0
+uint8 ROSRUN=1
+uint8 ROSLAUNCH=2
+uint8 command_type
+================================================================================
+MSG: visualization_msgs/MeshFile
+# Used to send raw mesh files.
+
+# The filename is used for both debug purposes and to provide a file extension
+# for whatever parser is used.
+string filename
+
+# This stores the raw text of the mesh file.
+uint8[] data
+================================================================================
+MSG: visualization_msgs/UVCoordinate
+# Location of the pixel as a ratio of the width of a 2D texture.
+# Values should be in range: [0.0-1.0].
+float32 u
+float32 v"#;
     }
     pub struct GetInteractiveMarkers {}
     impl ::roslibrust_codegen::RosServiceType for GetInteractiveMarkers {
