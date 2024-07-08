@@ -38,3 +38,13 @@ fn fixed_sized_arrays() {
     let x: geometry_msgs::TwistWithCovariance = Default::default();
     let _y: [f64; 36] = x.covariance;
 }
+
+#[test]
+fn test_gendeps_in_message_definition() {
+    // ROS1 requires that the message_definition includes the expanded
+    // definitions of all referenced sub-messages.
+    // See https://wiki.ros.org/roslib/gentools for example of expected format
+    // Confirm here that sub messages are included in the message definition for geometry_msgs::PointStamped
+    assert!(geometry_msgs::PointStamped::DEFINITION.contains("MSG: geometry_msgs/Point"));
+    assert!(geometry_msgs::PointStamped::DEFINITION.contains("MSG: std_msgs/Header"));
+}

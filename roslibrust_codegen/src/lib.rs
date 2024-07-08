@@ -2,7 +2,7 @@ use log::*;
 use proc_macro2::TokenStream;
 use quote::quote;
 use simple_error::{bail, SimpleError as Error};
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fmt::{Debug, Display};
 use std::path::PathBuf;
 use utils::Package;
@@ -68,16 +68,23 @@ pub trait RosServiceType {
 pub struct MessageFile {
     pub(crate) parsed: ParsedMessageFile,
     pub(crate) md5sum: String,
+    // This is the expanded definition of the message for use in message_definition field of
+    // a connection header.
+    // See how https://wiki.ros.org/ROS/TCPROS references gendeps --cat
+    // See https://wiki.ros.org/roslib/gentools for an example of the output
+    pub(crate) definition: String,
     pub(crate) is_fixed_length: bool,
 }
 
 impl MessageFile {
     fn resolve(parsed: ParsedMessageFile, graph: &BTreeMap<String, MessageFile>) -> Option<Self> {
         let md5sum = Self::compute_md5sum(&parsed, graph)?;
+        let definition = Self::compute_full_definition(&parsed, graph)?;
         let is_fixed_length = Self::determine_if_fixed_length(&parsed, graph)?;
         Some(MessageFile {
             parsed,
             md5sum,
+            definition,
             is_fixed_length,
         })
     }
@@ -111,7 +118,7 @@ impl MessageFile {
     }
 
     pub fn get_definition(&self) -> &str {
-        &self.parsed.source
+        &self.definition
     }
 
     fn compute_md5sum(
@@ -157,6 +164,54 @@ impl MessageFile {
         }
 
         Some(md5sum_content)
+    }
+
+    /// Returns the set of all referenced non-intrinsic field types in this type or any of its dependencies
+    fn get_unique_field_types(
+        parsed: &ParsedMessageFile,
+        graph: &BTreeMap<String, MessageFile>,
+    ) -> Option<BTreeSet<String>> {
+        let mut unique_field_types = BTreeSet::new();
+        for field in &parsed.fields {
+            let field_type = field.field_type.field_type.as_str();
+            if is_intrinsic_type(parsed.version.unwrap_or(RosVersion::ROS1), field_type) {
+                continue;
+            }
+            let sub_message = graph.get(field.get_full_name().as_str())?;
+            // Note: need to add both the field that is referenced AND its sub-dependencies
+            unique_field_types.insert(field.get_full_name());
+            let mut sub_deps = Self::get_unique_field_types(&sub_message.parsed, graph)?;
+            unique_field_types.append(&mut sub_deps);
+        }
+        Some(unique_field_types)
+    }
+
+    /// Computes the full definition of the message, including all referenced custom types
+    /// For reference see: https://wiki.ros.org/roslib/gentools
+    /// Implementation in gentools: https://github.com/strawlab/ros/blob/c3a8785f9d9551cc05cd74000c6536e2244bb1b1/core/roslib/src/roslib/gentools.py#L245
+    fn compute_full_definition(
+        parsed: &ParsedMessageFile,
+        graph: &BTreeMap<String, MessageFile>,
+    ) -> Option<String> {
+        let mut definition_content = String::new();
+        definition_content.push_str(&format!("{}\n", parsed.source.trim()));
+        let sep: &str =
+            "================================================================================\n";
+        for field in Self::get_unique_field_types(parsed, graph)? {
+            let Some(sub_message) = graph.get(&field) else {
+                log::error!(
+                    "Unable to find message type: {field:?}, while computing full definition of {}",
+                    parsed.get_full_name()
+                );
+                return None;
+            };
+            definition_content.push_str(sep);
+            definition_content.push_str(&format!("MSG: {}\n", sub_message.get_full_name()));
+            definition_content.push_str(&format!("{}\n", sub_message.get_definition().trim()));
+        }
+        // Remove trailing \n added by concatenation logic
+        definition_content.pop();
+        Some(definition_content)
     }
 
     fn determine_if_fixed_length(
@@ -278,8 +333,11 @@ impl From<String> for RosLiteral {
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub struct FieldType {
     // Present when an externally referenced package is used
-    // Note: support for messages within same package is spotty...
     pub package_name: Option<String>,
+    // Redundantly store the name of the package the field is in
+    // This is so that when an external package_name is not present
+    // we can still construct the full name of the field "package/field_type"
+    pub source_package: String,
     // Explicit text of type without array specifier
     pub field_type: String,
     // Metadata indicating whether the field is a collection.
@@ -321,7 +379,7 @@ impl FieldInfo {
             .field_type
             .package_name
             .as_ref()
-            .expect(&format!("Expected package name for field {self:#?}"));
+            .unwrap_or(&self.field_type.source_package);
         format!("{field_package}/{}", self.field_type.field_type)
     }
 }
@@ -648,7 +706,6 @@ fn parse_ros_files(
             "srv" => {
                 let srv_file = parse_ros_service_file(&contents, name, &pkg, &path)?;
                 parsed_services.push(srv_file);
-                // TODO ask shane, shouldn't we be pushing request and response to messages here?
             }
             "msg" => {
                 let msg = parse_ros_message_file(&contents, name, &pkg, &path)?;

@@ -176,7 +176,7 @@ pub async fn establish_connection(
     server_uri: &str,
     conn_header: ConnectionHeader,
 ) -> Result<TcpStream, std::io::Error> {
-    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::io::AsyncWriteExt;
 
     // Okay in Shane's version of this the server_uri is coming in as "rosrpc://localhost:41105"
     // which is causing this to break...
