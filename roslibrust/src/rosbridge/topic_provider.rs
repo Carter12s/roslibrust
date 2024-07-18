@@ -10,7 +10,7 @@ use crate::RosLibRustResult;
 /// It assumes topics only carry one data type, but is not expected to enforce that.
 /// It assumes that all actions can fail due to a variety of causes, and by network interruption specifically.
 #[async_trait]
-trait TopicProvider {
+pub trait TopicProvider {
     // These associated types makeup the other half of the API
     // They are expected to be "self-deregistering", where dropping them results in unadvertise or unsubscribe operations as appropriate
     type Publisher<T: RosMessageType>;
@@ -33,14 +33,19 @@ trait TopicProvider {
         request: Req,
     ) -> RosLibRustResult<Res>;
 
-    async fn advertise_service<T: RosServiceType>(
+    async fn advertise_service<T: RosServiceType, F>(
         &self,
         topic: &str,
-        server: fn(
-            T::Request,
-        )
-            -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
-    ) -> RosLibRustResult<Self::ServiceHandle>;
+        server: F,
+    ) -> RosLibRustResult<Self::ServiceHandle>
+    where
+        F: Fn(
+                T::Request,
+            )
+                -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+            + Send
+            + Sync
+            + 'static;
 }
 
 #[async_trait]
@@ -71,15 +76,21 @@ impl TopicProvider for crate::ClientHandle {
         self.call_service(topic, request).await
     }
 
-    async fn advertise_service<T: RosServiceType>(
+    async fn advertise_service<T: RosServiceType, F>(
         &self,
         topic: &str,
-        server: fn(
-            T::Request,
-        )
-            -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>,
-    ) -> RosLibRustResult<Self::ServiceHandle> {
-        self.advertise_service::<T>(topic, server).await
+        server: F,
+    ) -> RosLibRustResult<Self::ServiceHandle>
+    where
+        F: Fn(
+                T::Request,
+            )
+                -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+            + Send
+            + Sync
+            + 'static,
+    {
+        self.advertise_service::<T, F>(topic, server).await
     }
 }
 
