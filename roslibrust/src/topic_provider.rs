@@ -42,6 +42,7 @@ pub trait TopicProvider {
         F: ServiceFn<T>;
 }
 
+// Implementation of TopicProvider trait for rosbridge client
 #[async_trait]
 impl TopicProvider for crate::ClientHandle {
     type Publisher<T: RosMessageType> = crate::Publisher<T>;
@@ -82,10 +83,57 @@ impl TopicProvider for crate::ClientHandle {
     }
 }
 
+#[cfg(feature = "ros1")]
+#[async_trait]
+impl TopicProvider for crate::ros1::NodeHandle {
+    type Publisher<T: RosMessageType> = crate::ros1::Publisher<T>;
+    type Subscriber<T: RosMessageType> = crate::ros1::Subscriber<T>;
+    type ServiceHandle = crate::ros1::ServiceServer;
+
+    async fn advertise<T: RosMessageType>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::Publisher<T>> {
+        // TODO MAJOR: consider promoting queue size, making unlimited default
+        self.advertise::<T>(topic.as_ref(), 10)
+            .await
+            .map_err(|e| e.into())
+    }
+
+    async fn subscribe<T: RosMessageType>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::Subscriber<T>> {
+        // TODO MAJOR: consider promoting queue size, making unlimited default
+        self.subscribe(topic, 10).await.map_err(|e| e.into())
+    }
+
+    async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+        &self,
+        topic: &str,
+        request: Req,
+    ) -> RosLibRustResult<Res> {
+        self.call_service(topic, request).await
+    }
+
+    async fn advertise_service<T: RosServiceType, F>(
+        &self,
+        topic: &str,
+        server: F,
+    ) -> RosLibRustResult<Self::ServiceHandle>
+    where
+        F: ServiceFn<T>,
+    {
+        self.advertise_service::<T, F>(topic, server)
+            .await
+            .map_err(|e| e.into())
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::TopicProvider;
-    use crate::ClientHandle;
+    use crate::{ros1::NodeHandle, ClientHandle};
 
     // This test specifically fails because TopicProvider is not object safe
     // Traits that have methods with generic parameters cannot be object safe in rust (currently)
@@ -98,7 +146,7 @@ mod test {
     // This tests proves that you could use topic provider in a compile time api, but not object safe...
     #[test_log::test]
     #[should_panic]
-    fn topic_proivder_can_be_used_at_compile_time() {
+    fn topic_provider_can_be_used_at_compile_time() {
         struct MyClient<T: TopicProvider> {
             _client: T,
         }
@@ -107,8 +155,25 @@ mod test {
         // constructing one at runtime
         let new_mock: Result<ClientHandle, _> = Err(anyhow::anyhow!("Expected error"));
 
+
         let _x = MyClient {
-            _client: new_mock.unwrap(),
+            _client: new_mock.unwrap(), // panic
+        };
+    }
+
+    #[test_log::test]
+    #[should_panic]
+    fn topic_provider_can_be_used_with_ros1() {
+        struct MyClient<T: TopicProvider> {
+            _client: T,
+        }
+
+        // Kinda a hack way to make the compiler prove it could construct a MyClient<ClientHandle> with out actually
+        // constructing one at runtime
+        let new_mock: Result<NodeHandle, _> = Err(anyhow::anyhow!("Expected error"));
+
+        let _x = MyClient {
+            _client: new_mock.unwrap(), // panic
         };
     }
 }
