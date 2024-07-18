@@ -100,6 +100,7 @@
 
 mod rosbridge;
 pub use rosbridge::*;
+use roslibrust_codegen::RosServiceType;
 
 #[cfg(feature = "rosapi")]
 pub mod rosapi;
@@ -139,3 +140,26 @@ pub enum RosLibRustError {
 /// Note: many functions which currently return this will be updated to provide specific error
 /// types in the future instead of the generic error here.
 pub type RosLibRustResult<T> = Result<T, RosLibRustError>;
+
+// Note: service Fn is currently defined here as it used by ros1 and roslibrust impls
+/// This trait describes a function which can validly act as a ROS service
+/// server with roslibrust. We're really just using this as a trait alias
+/// as the full definition is overly verbose and trait aliases are unstable.
+pub trait ServiceFn<T: RosServiceType>:
+    Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+    + Send
+    + Sync
+    + 'static
+{
+}
+
+/// Automatic implementation of ServiceFn for Fn
+impl<T, F> ServiceFn<T> for F
+where
+    T: RosServiceType,
+    F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+        + Send
+        + Sync
+        + 'static,
+{
+}

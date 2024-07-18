@@ -6,9 +6,9 @@ use crate::{
         service_client::ServiceClientLink,
         service_server::ServiceServerLink,
         subscriber::Subscription,
-        MasterClient, NodeError, ProtocolParams, ServiceClient,
+        MasterClient, NodeError, ProtocolParams, ServiceClient, TypeErasedCallback,
     },
-    RosLibRustError,
+    RosLibRustError, ServiceFn,
 };
 use abort_on_drop::ChildTask;
 use log::warn;
@@ -68,11 +68,7 @@ pub enum NodeMsg {
         service: Name,
         service_type: String,
         srv_definition: String,
-        server: Box<
-            dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
-                + Send
-                + Sync,
-        >,
+        server: Box<TypeErasedCallback>,
         md5sum: String,
     },
     UnregisterServiceServer {
@@ -213,10 +209,7 @@ impl NodeServerHandle {
     ) -> Result<(), NodeError>
     where
         T: RosServiceType,
-        F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + Send + Sync>>
-            + Send
-            + Sync
-            + 'static,
+        F: ServiceFn<T>,
     {
         let (sender, receiver) = oneshot::channel();
 
@@ -685,11 +678,7 @@ impl Node {
         service: &Name,
         service_type: &str,
         srv_definition: &str,
-        server: Box<
-            dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
-                + Send
-                + Sync,
-        >,
+        server: Box<TypeErasedCallback>,
         md5sum: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let found = self.service_servers.get_mut(service_type);

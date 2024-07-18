@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 
-use crate::RosLibRustResult;
+use crate::{RosLibRustResult, ServiceFn};
 
 /// This trait generically describes the capability of something to act as an async interface to a set of topics
 ///
@@ -39,13 +39,7 @@ pub trait TopicProvider {
         server: F,
     ) -> RosLibRustResult<Self::ServiceHandle>
     where
-        F: Fn(
-                T::Request,
-            )
-                -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
-            + Send
-            + Sync
-            + 'static;
+        F: ServiceFn<T>;
 }
 
 #[async_trait]
@@ -82,13 +76,7 @@ impl TopicProvider for crate::ClientHandle {
         server: F,
     ) -> RosLibRustResult<Self::ServiceHandle>
     where
-        F: Fn(
-                T::Request,
-            )
-                -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
-            + Send
-            + Sync
-            + 'static,
+        F: ServiceFn<T>,
     {
         self.advertise_service::<T, F>(topic, server).await
     }

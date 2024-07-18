@@ -1,7 +1,10 @@
 use super::actor::{Node, NodeServerHandle};
-use crate::ros1::{
-    names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
-    NodeError, ServiceServer,
+use crate::{
+    ros1::{
+        names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
+        NodeError, ServiceServer,
+    },
+    ServiceFn,
 };
 
 /// Represents a handle to an underlying [Node]. NodeHandle's can be freely cloned, moved, copied, etc.
@@ -97,10 +100,7 @@ impl NodeHandle {
     ) -> Result<ServiceServer, NodeError>
     where
         T: roslibrust_codegen::RosServiceType,
-        F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + Send + Sync>>
-            + Send
-            + Sync
-            + 'static,
+        F: ServiceFn<T>,
     {
         let service_name = Name::new(service_name)?;
         let _response = self
