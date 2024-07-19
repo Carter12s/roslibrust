@@ -3,7 +3,7 @@
 
 #[cfg(feature = "topic_provider")]
 fn main() {
-    use roslibrust::topic_provider::TopicProvider;
+    use roslibrust::topic_provider::*;
 
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
         "assets/ros1_common_interfaces/std_msgs"
@@ -26,12 +26,18 @@ fn main() {
         async fn run(ros: T) {
             let publisher = ros.advertise::<std_msgs::String>("/chatter").await.unwrap();
 
-            loop {}
+            loop {
+                let msg = std_msgs::String {
+                    data: "Hello World!".to_string(),
+                };
+                publisher.publish(&msg).await.unwrap();
+            }
         }
     }
 
-    // Start the node
-    
+    // create a rosbridge handle and start node
+
+    let 
 }
 
 #[cfg(not(feature = "topic_provider"))]

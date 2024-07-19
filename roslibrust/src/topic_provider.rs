@@ -3,6 +3,26 @@ use roslibrust_codegen::{RosMessageType, RosServiceType};
 
 use crate::{RosLibRustResult, ServiceFn};
 
+// Indicates that something is a publisher and has our expected publish
+// function 
+pub trait Publish<T: RosMessageType> {
+    async fn publish(&self, data: &T) -> RosLibRustResult<()>;
+}
+
+impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
+    async fn publish(&self, data: &T) -> RosLibRustResult<()> {
+        // TODO clone here is bad and we should standardized on ownership of publish
+        self.publish(data.clone()).await
+    }
+}
+
+impl<T: RosMessageType> Publish<T> for crate::ros1::Publisher<T> {
+    async fn publish(&self, data: &T) -> RosLibRustResult<()> {
+        // TODO error type conversion here is terrible and we need to standardize error stuff badly
+        self.publish(data).await.map_err(|e| crate::RosLibRustError::SerializationError(e.to_string()))
+    }
+}
+
 /// This trait generically describes the capability of something to act as an async interface to a set of topics
 ///
 /// This trait is largely based on ROS concepts, but could be extended to other protocols / concepts.
@@ -13,7 +33,7 @@ use crate::{RosLibRustResult, ServiceFn};
 pub trait TopicProvider {
     // These associated types makeup the other half of the API
     // They are expected to be "self-deregistering", where dropping them results in unadvertise or unsubscribe operations as appropriate
-    type Publisher<T: RosMessageType>;
+    type Publisher<T: RosMessageType>: Publish<T>;
     type Subscriber<T: RosMessageType>;
     type ServiceHandle;
 
