@@ -2,7 +2,14 @@
 //! to create code that is generic of which communication backend it will use.
 
 #[cfg(feature = "topic_provider")]
-fn main() {
+#[tokio::main]
+async fn main() {
+    simple_logger::SimpleLogger::new()
+        .with_level(log::LevelFilter::Debug)
+        .without_timestamps() // required for running wsl2
+        .init()
+        .unwrap();
+
     use roslibrust::topic_provider::*;
 
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
@@ -20,24 +27,42 @@ fn main() {
 
     struct MyNode<T: TopicProvider> {
         ros: T,
+        name: String,
     }
 
     impl<T: TopicProvider> MyNode<T> {
-        async fn run(ros: T) {
-            let publisher = ros.advertise::<std_msgs::String>("/chatter").await.unwrap();
+        async fn run(self) {
+            let publisher = self.ros.advertise::<std_msgs::String>("/chatter").await.unwrap();
 
             loop {
                 let msg = std_msgs::String {
-                    data: "Hello World!".to_string(),
+                    data: format!("Hello world from {}", self.name),
                 };
                 publisher.publish(&msg).await.unwrap();
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await;
             }
         }
     }
 
     // create a rosbridge handle and start node
+    let ros = roslibrust::ClientHandle::new("ws://localhost:9090").await.unwrap();
+    let node = MyNode { ros, name: "rosbridge_node".to_string() };
+    tokio::spawn(async move { node.run().await });
 
-    let 
+    // create a ros1 handle and start node
+    let ros = roslibrust::ros1::NodeHandle::new("http://localhost:11311", "/my_node").await.unwrap();
+    let node = MyNode { ros, name: "ros1_node".to_string() };
+    tokio::spawn(async move { node.run().await });
+
+    loop {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        println!("sleeping");
+    }
+
+    // With this executable running
+    // RUST_LOG=debug cargo run --features ros1,topic_provider --example generic_client
+    // You should be able to run `rostopic echo /chatter` and see the two nodes print out their names.
+    // Note: this will not run without rosbridge running 
 }
 
 #[cfg(not(feature = "topic_provider"))]

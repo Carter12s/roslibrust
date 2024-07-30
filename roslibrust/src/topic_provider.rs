@@ -1,12 +1,15 @@
-use async_trait::async_trait;
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 
 use crate::{RosLibRustResult, ServiceFn};
 
 // Indicates that something is a publisher and has our expected publish
-// function 
+// Implementors of this trait are expected to auto-cleanup the publisher when dropped
 pub trait Publish<T: RosMessageType> {
-    async fn publish(&self, data: &T) -> RosLibRustResult<()>;
+    // Note: this is really just syntactic de-sugared `async fn`
+    // However see: https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html
+    // This generates a warning is rust as of writing due to ambiguity around the "Send-ness" of the return type
+    // We only plan to work with multi-threaded work stealing executors (e.g. tokio) so we're manually specifying Send
+    fn publish(&self, data: &T) -> impl futures::Future<Output = RosLibRustResult<()>> + Send;
 }
 
 impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
@@ -19,7 +22,9 @@ impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
 impl<T: RosMessageType> Publish<T> for crate::ros1::Publisher<T> {
     async fn publish(&self, data: &T) -> RosLibRustResult<()> {
         // TODO error type conversion here is terrible and we need to standardize error stuff badly
-        self.publish(data).await.map_err(|e| crate::RosLibRustError::SerializationError(e.to_string()))
+        self.publish(data)
+            .await
+            .map_err(|e| crate::RosLibRustError::SerializationError(e.to_string()))
     }
 }
 
@@ -29,7 +34,7 @@ impl<T: RosMessageType> Publish<T> for crate::ros1::Publisher<T> {
 /// Fundamentally, it assumes that topics are uniquely identified by a string name (likely an ASCII assumption is buried in here...).
 /// It assumes topics only carry one data type, but is not expected to enforce that.
 /// It assumes that all actions can fail due to a variety of causes, and by network interruption specifically.
-#[async_trait]
+// #[async_trait]
 pub trait TopicProvider {
     // These associated types makeup the other half of the API
     // They are expected to be "self-deregistering", where dropping them results in unadvertise or unsubscribe operations as appropriate
@@ -37,33 +42,32 @@ pub trait TopicProvider {
     type Subscriber<T: RosMessageType>;
     type ServiceHandle;
 
-    async fn advertise<T: RosMessageType>(
+    fn advertise<T: RosMessageType>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::Publisher<T>>;
+    ) -> impl futures::Future<Output = RosLibRustResult<Self::Publisher<T>>> + Send;
 
-    async fn subscribe<T: RosMessageType>(
+    fn subscribe<T: RosMessageType>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::Subscriber<T>>;
+    ) -> impl futures::Future<Output = RosLibRustResult<Self::Subscriber<T>>> + Send;
 
-    async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+    fn call_service<Req: RosMessageType, Res: RosMessageType>(
         &self,
         topic: &str,
         request: Req,
-    ) -> RosLibRustResult<Res>;
+    ) -> impl std::future::Future<Output = RosLibRustResult<Res>> + Send;
 
-    async fn advertise_service<T: RosServiceType, F>(
+    fn advertise_service<T: RosServiceType, F>(
         &self,
         topic: &str,
         server: F,
-    ) -> RosLibRustResult<Self::ServiceHandle>
+    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceHandle>> + Send
     where
         F: ServiceFn<T>;
 }
 
 // Implementation of TopicProvider trait for rosbridge client
-#[async_trait]
 impl TopicProvider for crate::ClientHandle {
     type Publisher<T: RosMessageType> = crate::Publisher<T>;
     type Subscriber<T: RosMessageType> = crate::Subscriber<T>;
@@ -104,7 +108,6 @@ impl TopicProvider for crate::ClientHandle {
 }
 
 #[cfg(feature = "ros1")]
-#[async_trait]
 impl TopicProvider for crate::ros1::NodeHandle {
     type Publisher<T: RosMessageType> = crate::ros1::Publisher<T>;
     type Subscriber<T: RosMessageType> = crate::ros1::Subscriber<T>;
@@ -133,7 +136,10 @@ impl TopicProvider for crate::ros1::NodeHandle {
         topic: &str,
         request: Req,
     ) -> RosLibRustResult<Res> {
-        self.call_service(topic, request).await
+        // TODO this is a problem
+        // service_client for Ros1 wants the service type, not the req and res types
+        // We should change top level API of TopicProvider and probably of rosbridge
+        unimplemented!();
     }
 
     async fn advertise_service<T: RosServiceType, F>(
@@ -174,7 +180,6 @@ mod test {
         // Kinda a hack way to make the compiler prove it could construct a MyClient<ClientHandle> with out actually
         // constructing one at runtime
         let new_mock: Result<ClientHandle, _> = Err(anyhow::anyhow!("Expected error"));
-
 
         let _x = MyClient {
             _client: new_mock.unwrap(), // panic
