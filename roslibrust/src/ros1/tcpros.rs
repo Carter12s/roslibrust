@@ -199,7 +199,7 @@ pub async fn establish_connection(
     stream.write_all(&conn_header_bytes[..]).await?;
 
     // Recieve the header from the server
-    let responded_header = recieve_header(&mut stream).await;
+    let responded_header = receive_header(&mut stream).await;
     if let Ok(_responded_header) = responded_header {
         // TODO we should really examine this md5sum logic...
         // according to the ROS documentation, the service isn't required to respond
@@ -226,7 +226,7 @@ pub async fn establish_connection(
 }
 
 // Reads a complete ROS connection header from the given stream
-pub async fn recieve_header(stream: &mut TcpStream) -> Result<ConnectionHeader, std::io::Error> {
+pub async fn receive_header(stream: &mut TcpStream) -> Result<ConnectionHeader, std::io::Error> {
     // Bring trait def into scope
     use tokio::io::AsyncReadExt;
     // Recieve the header length
@@ -239,6 +239,29 @@ pub async fn recieve_header(stream: &mut TcpStream) -> Result<ConnectionHeader, 
     let mut header_bytes = vec![0u8; header_len];
     let _num_bytes_read = stream.read_exact(&mut header_bytes).await?;
     ConnectionHeader::from_bytes(&header_bytes)
+}
+
+/// Reads the body of a message from the given stream
+/// It first reads the length of the body, then reads the body itself
+/// The returned Vec<> includes the length of the body at the front as serde_rosmsg expects
+pub async fn receive_body(stream: &mut TcpStream) -> Result<Vec<u8>, std::io::Error> {
+    // Bring trait def into scope
+    use tokio::io::AsyncReadExt;
+
+    // Read the four bytes of size directly
+    let mut body_len_bytes = [0u8; 4];
+    stream.read_exact(&mut body_len_bytes).await?;
+    let body_len = u32::from_le_bytes(body_len_bytes);
+
+    // Allocate buffer space for length and body
+    let mut body = vec![0u8; body_len as usize + 4];
+    // Copy the length into the first four bytes
+    body[..4].copy_from_slice(&body_len.to_le_bytes());
+    // Read the body into the buffer
+    stream.read_exact(&mut body[4..]).await?;
+
+    // Return body
+    Ok(body)
 }
 
 #[cfg(test)]

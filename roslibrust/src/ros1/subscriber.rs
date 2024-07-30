@@ -3,7 +3,7 @@ use abort_on_drop::ChildTask;
 use roslibrust_codegen::RosMessageType;
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::AsyncWriteExt,
     net::TcpStream,
     sync::{
         broadcast::{self, error::RecvError},
@@ -117,21 +117,19 @@ impl Subscription {
                 {
                     publisher_list.write().await.push(publisher_uri.to_owned());
                     // Repeatedly read from the stream until its dry
-                    let mut read_buffer = Vec::with_capacity(4 * 1024);
                     loop {
-                        if let Ok(bytes_read) = stream.read_buf(&mut read_buffer).await {
-                            if bytes_read == 0 {
-                                log::debug!("Got a message with 0 bytes, probably an EOF, closing connection");
+                        match tcpros::receive_body(&mut stream).await {
+                            Ok(body) => {
+                                let send_result = sender.send(body);
+                                if let Err(err) = send_result {
+                                    log::error!("Unable to send message data due to dropped channel, closing connection: {err}");
+                                    break;
+                                }
+                            }
+                            Err(e) => {
+                                log::debug!("Failed to read body from publisher connection: {e}, closing connection");
                                 break;
                             }
-                            log::debug!("Read {bytes_read} bytes from the publisher connection");
-                            if let Err(err) = sender.send(Vec::from(&read_buffer[..bytes_read])) {
-                                log::error!("Unable to send message data due to dropped channel, closing connection: {err}");
-                                break;
-                            }
-                            read_buffer.clear();
-                        } else {
-                            log::warn!("Got an error reading from the publisher connection on topic {topic_name:?}, closing");
                         }
                     }
                 }
@@ -155,7 +153,7 @@ async fn establish_publisher_connection(
     let conn_header_bytes = conn_header.to_bytes(true)?;
     stream.write_all(&conn_header_bytes[..]).await?;
 
-    if let Ok(responded_header) = tcpros::recieve_header(&mut stream).await {
+    if let Ok(responded_header) = tcpros::receive_header(&mut stream).await {
         if conn_header.md5sum == responded_header.md5sum {
             log::debug!(
                 "Established connection with publisher for {:?}",
@@ -246,5 +244,59 @@ pub enum SubscriberError {
 impl From<serde_rosmsg::Error> for SubscriberError {
     fn from(value: serde_rosmsg::Error) -> Self {
         Self::DeserializeError(value.to_string())
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::ros1::NodeHandle;
+
+    // TODO stop redundantly doing codegen so many times in tests
+    roslibrust_codegen_macro::find_and_generate_ros_messages!(
+        "assets/ros1_test_msgs",
+        "assets/ros1_common_interfaces"
+    );
+
+    #[test_log::test(tokio::test)]
+    async fn test_large_payload_subscriber() {
+        let nh = NodeHandle::new("http://localhost:11311", "/test_large_payload_subscriber")
+            .await
+            .unwrap();
+
+        let publisher = nh
+            .advertise::<test_msgs::RoundTripArrayRequest>("/large_payload_topic", 1)
+            .await
+            .unwrap();
+
+        let mut subscriber = nh
+            .subscribe::<test_msgs::RoundTripArrayRequest>("/large_payload_topic", 1)
+            .await
+            .unwrap();
+
+        // Give some time for subscriber to connect to publisher
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+        for _i in 0..10 {
+            let bytes = vec![0; 10_000];
+            publisher
+                .publish(&test_msgs::RoundTripArrayRequest {
+                    bytes: bytes.clone(),
+                })
+                .await
+                .unwrap();
+
+            match subscriber.next().await {
+                Some(Ok(msg)) => {
+                    assert_eq!(msg.bytes, bytes);
+                }
+                Some(Err(e)) => {
+                    panic!("Got error: {e:?}");
+                }
+                None => {
+                    panic!("Got None");
+                }
+            }
+        }
     }
 }
