@@ -97,7 +97,7 @@ impl Publication {
                     );
 
                     // Read the connection header:
-                    let connection_header = match tcpros::recieve_header(&mut stream).await {
+                    let connection_header = match tcpros::receive_header(&mut stream).await {
                         Ok(header) => header,
                         Err(e) => {
                             log::error!("Failed to read connection header: {e:?}");

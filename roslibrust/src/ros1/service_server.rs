@@ -5,7 +5,7 @@ use std::{
 
 use abort_on_drop::ChildTask;
 use log::*;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 
 use crate::ros1::tcpros::{self, ConnectionHeader};
 
@@ -170,7 +170,7 @@ impl ServiceServerLink {
         // Probably it is better to try to send an error back?
         debug!("Received service_request connection from {peer_addr} for {service_name}");
 
-        let connection_header = match tcpros::recieve_header(&mut stream).await {
+        let connection_header = match tcpros::receive_header(&mut stream).await {
             Ok(header) => header,
             Err(e) => {
                 warn!("Communication error while handling service request connection for {service_name}, could not parse header: {e:?}");
@@ -203,27 +203,15 @@ impl ServiceServerLink {
         // That means we expect one header exchange, and then multiple body exchanges
         // Each loop is one body:
         loop {
-            let mut body_len_bytes = [0u8; 4];
-            if let Err(e) = stream.read_exact(&mut body_len_bytes).await {
-                // Note: this was lowered to debug! from warn! because this is intentionally done by tools like `rosservice` to discover service type
-                debug!("Communication error while handling service request connection for {service_name}, could not get body length: {e:?}");
-                // TODO returning here simply closes the socket? Should we respond with an error instead?
-                return;
-            }
-            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-            trace!("Got body length {body_len} for service {service_name}");
-
-            let mut body = vec![0u8; body_len];
-            if let Err(e) = stream.read_exact(&mut body).await {
-                warn!("Communication error while handling service request connection for {service_name}, could not get body: {e:?}");
-                // TODO returning here simply closes the socket? Should we respond with an error instead?
-                return;
-            }
-            trace!("Got body for service {service_name}: {body:#?}");
-
-            // Okay this is funky and I should be able to do better here
-            // serde_rosmsg expects the length at the front
-            let full_body = [body_len_bytes.to_vec(), body].concat();
+            let full_body = match tcpros::receive_body(&mut stream).await {
+                Ok(body) => body,
+                Err(e) => {
+                    // Note this was degraded to debug! from warn! as every single use client produces this message
+                    debug!("Communication error while handling service request connection for {service_name}, could not read body: {e:?}");
+                    // Returning here closes the socket
+                    return;
+                }
+            };
 
             let response = (method)(full_body);
 

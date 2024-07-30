@@ -17,6 +17,8 @@ use tokio::{
     },
 };
 
+use super::tcpros;
+
 pub type CallServiceRequest = (Vec<u8>, oneshot::Sender<CallServiceResponse>);
 pub type CallServiceResponse = RosLibRustResult<Vec<u8>>;
 
@@ -67,13 +69,7 @@ impl<T: RosServiceType> ServiceClient<T> {
                     self.service_name,
                     result_payload
                 );
-
-                // Okay the 1.. is funky and needs to be addressed
-                // This is a little buried in the ROS documentation by the first byte is the "success" byte
-                // if it is 1 then the rest of the payload is the response
-                // Otherwise ros silently swaps the payload out for an error message
-                // We need to parse that error message and display somewhere
-                let response: T::Response = serde_rosmsg::from_slice(&result_payload[1..])
+                let response: T::Response = serde_rosmsg::from_slice(&result_payload)
                     .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
                 return Ok(response);
             }
@@ -201,26 +197,12 @@ impl ServiceClientLink {
 
         if success {
             // Parse length of the payload body
-            let mut body_len_bytes = [0u8; 4];
-            let _body_bytes_read = stream.read_exact(&mut body_len_bytes).await?;
-            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-
-            let mut body = vec![0u8; body_len];
-            stream.read_exact(&mut body).await?;
-
-            // Dumb mangling here, our implementation expects the length and success at the front
-            // got to be a better way than this
-            let full_body = [success_byte.to_vec(), body_len_bytes.to_vec(), body].concat();
-
-            Ok(full_body)
+            let body = tcpros::receive_body(stream).await?;
+            Ok(body)
         } else {
-            let mut body_len_bytes = [0u8; 4];
-            let _body_bytes_read = stream.read_exact(&mut body_len_bytes).await?;
-            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-            let mut body = vec![0u8; body_len];
-            stream.read_exact(&mut body).await?;
-            let full_body = [body_len_bytes.to_vec(), body].concat();
-            let err_msg: String = serde_rosmsg::from_slice(&full_body).map_err(|err| {
+            // Parse an error message as the body
+            let error_body = tcpros::receive_body(stream).await?;
+            let err_msg: String = serde_rosmsg::from_slice(&error_body).map_err(|err| {
                 log::error!("Failed to parse service call error message: {err}");
                 std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
