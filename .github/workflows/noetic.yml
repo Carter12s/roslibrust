@@ -18,7 +18,7 @@ jobs:
     defaults:
       run:
         shell: bash
-    container: carter12s/roslibrust-ci-noetic:rust-1-72
+    container: carter12s/roslibrust-ci-noetic:latest
     timeout-minutes: 20
     steps:
       - name: Checkout repo
