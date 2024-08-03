@@ -265,7 +265,7 @@ mod test {
             .unwrap();
 
         let publisher = nh
-            .advertise::<test_msgs::RoundTripArrayRequest>("/large_payload_topic", 1)
+            .advertise::<test_msgs::RoundTripArrayRequest>("/large_payload_topic", 1, false)
             .await
             .unwrap();
 
