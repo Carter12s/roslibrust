@@ -47,6 +47,7 @@ pub enum NodeMsg {
         queue_size: usize,
         msg_definition: String,
         md5sum: String,
+        latching: bool,
     },
     RegisterSubscriber {
         reply: oneshot::Sender<Result<broadcast::Receiver<Vec<u8>>, String>>,
@@ -154,6 +155,7 @@ impl NodeServerHandle {
         &self,
         topic: &str,
         queue_size: usize,
+        latching: bool,
     ) -> Result<mpsc::Sender<Vec<u8>>, NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender.send(NodeMsg::RegisterPublisher {
@@ -163,6 +165,7 @@ impl NodeServerHandle {
             queue_size,
             msg_definition: T::DEFINITION.to_owned(),
             md5sum: T::MD5SUM.to_owned(),
+            latching,
         })?;
         let received = receiver.await?;
         Ok(received.map_err(|_err| {
@@ -448,9 +451,17 @@ impl Node {
                 queue_size,
                 msg_definition,
                 md5sum,
+                latching,
             } => {
                 let res = self
-                    .register_publisher(topic, &topic_type, queue_size, msg_definition, md5sum)
+                    .register_publisher(
+                        topic,
+                        &topic_type,
+                        queue_size,
+                        msg_definition,
+                        md5sum,
+                        latching,
+                    )
                     .await;
                 match res {
                     Ok(handle) => reply.send(Ok(handle)),
@@ -600,7 +611,9 @@ impl Node {
         queue_size: usize,
         msg_definition: String,
         md5sum: String,
+        latching: bool,
     ) -> Result<mpsc::Sender<Vec<u8>>, NodeError> {
+        // Return handle to existing Publication if it exists
         let existing_entry = {
             self.publishers.iter().find_map(|(key, value)| {
                 if key.as_str() == &topic {
@@ -616,13 +629,13 @@ impl Node {
                 }
             })
         };
-
         if let Some(handle) = existing_entry {
             Ok(handle?)
         } else {
+            // Otherwise create a new Publication
             let channel = Publication::new(
                 &self.node_name,
-                false,
+                latching,
                 &topic,
                 self.host_addr,
                 queue_size,

@@ -1,6 +1,6 @@
 [package]
 name = "roslibrust"
-version = "0.10.1"
+version = "0.10.2"
 authors = ["carter <carterjschultz@gmail.com>", "ssnover <ssnover95@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -84,4 +84,4 @@ path = "tests/ros1_xmlrpc.rs"
 required-features = ["ros1_test", "ros1"]
 
 [package.metadata.docs.rs]
-features = ["all"]
+features = ["ros1"]

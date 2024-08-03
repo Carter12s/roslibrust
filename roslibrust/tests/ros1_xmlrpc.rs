@@ -64,7 +64,9 @@ mod tests {
         assert_eq!(publications.len(), 0);
         log::info!("Got publications");
 
-        let _publisher = node.advertise::<std_msgs::String>("/test_topic", 1).await?;
+        let _publisher = node
+            .advertise::<std_msgs::String>("/test_topic", 1, false)
+            .await?;
         log::info!("advertised");
 
         // Note: internally timeout()'d
@@ -117,7 +119,7 @@ mod tests {
         log::info!("Got uri {node_uri:?}");
 
         let _publisher = node
-            .advertise::<std_msgs::String>("/test_topic", 1)
+            .advertise::<std_msgs::String>("/test_topic", 1, false)
             .await
             .unwrap();
         log::info!("Got publisher");

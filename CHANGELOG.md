@@ -22,9 +22,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- ROS1 Native Publishers now support latching behavior
+- The XML RPC client for interacting directly with the rosmaster server has been exposed as a public API
+
+### Fixed
+
+### Changed
+- ROS1 Node Handle's advertise() now requies a latching argument
+
+## 0.10.2 - August 3rd, 2024
+
+### Added
 
 ### Fixed
 - Bug with message_definitions provided by Publisher in the connection header not being the fully expanded definition.
+- Bug with ROS1 native subscribers not being able to receive messages larger than 4096 bytes.
 
 ### Changed
 
