@@ -366,4 +366,42 @@ mod tests {
         debug!("Got call: {call:?}");
         assert!(call.is_err());
     }
+
+    #[test_log::test(tokio::test)]
+    async fn test_dropping_publisher_unadvertises() {
+        let nh = NodeHandle::new("http://localhost:11311", "/test_dropping_publisher")
+            .await
+            .unwrap();
+        let publisher = nh
+            .advertise::<std_msgs::Header>("/test_dropping_publisher", 1, false)
+            .await
+            .unwrap();
+
+        let master_client = roslibrust::ros1::MasterClient::new(
+            "http://localhost:11311",
+            "NAN",
+            "/test_dropping_publisher_mc",
+        )
+        .await
+        .unwrap();
+
+        let before = master_client.get_published_topics("").await.unwrap();
+        assert!(before.contains(&(
+            "/test_dropping_publisher".to_string(),
+            "std_msgs/Header".to_string()
+        )));
+
+        debug!("Start manual drop");
+        // Drop the publisher
+        std::mem::drop(publisher);
+        debug!("End manual drop");
+        // Give a little time for drop to process
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        // Confirm no longer advertised
+        let after = master_client.get_published_topics("").await.unwrap();
+        assert!(!after.contains(&(
+            "/test_dropping_publisher".to_string(),
+            "std_msgs/Header".to_string()
+        )));
+    }
 }

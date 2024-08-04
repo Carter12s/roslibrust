@@ -116,6 +116,7 @@ impl NodeHandle {
         Ok(ServiceServer::new(service_name, self.clone()))
     }
 
+    // TODO Major: This should probably be moved to NodeServerHandle?
     /// Not intended to be called manually
     /// Stops hosting the specified server.
     /// This is automatically called when dropping the ServiceServer returned by [advertise_service]

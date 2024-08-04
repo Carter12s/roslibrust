@@ -1,5 +1,6 @@
 use crate::ros1::{
     names::Name,
+    node::actor::NodeServerHandle,
     tcpros::{self, ConnectionHeader},
 };
 use abort_on_drop::ChildTask;
@@ -52,11 +53,13 @@ pub(crate) struct Publication {
     listener_port: u16,
     _tcp_accept_task: ChildTask<()>,
     _publish_task: ChildTask<()>,
-    publish_sender: mpsc::Sender<Vec<u8>>,
+    publish_sender: mpsc::WeakSender<Vec<u8>>,
 }
 
 impl Publication {
     /// Spawns a new publication and sets up all tasks to run it
+    /// Returns a handle to the publication and a mpsc::Sender to send messages to be published
+    /// Dropping the Sender will (eventually) result in the publication being dropped and all tasks being canceled
     pub(crate) async fn new(
         node_name: &Name,
         latching: bool,
@@ -66,7 +69,8 @@ impl Publication {
         msg_definition: &str,
         md5sum: &str,
         topic_type: &str,
-    ) -> Result<Self, std::io::Error> {
+        node_handle: NodeServerHandle,
+    ) -> Result<(Self, mpsc::Sender<Vec<u8>>), std::io::Error> {
         // Get a socket for receiving connections on
         let host_addr = SocketAddr::from((host_addr, 0));
         let tcp_listener = tokio::net::TcpListener::bind(host_addr).await?;
@@ -96,13 +100,13 @@ impl Publication {
 
         // Create the task that will accept new TCP connections
         let subscriber_streams_copy = subscriber_streams.clone();
-        let topic_name = topic_name.to_owned();
         let last_message_copy = last_message.clone();
+        let topic_name_copy = topic_name.to_owned();
         let tcp_accept_handle = tokio::spawn(async move {
             Self::tcp_accept_task(
                 tcp_listener,
                 subscriber_streams_copy,
-                topic_name,
+                topic_name_copy,
                 responding_conn_header,
                 last_message_copy,
             )
@@ -110,21 +114,35 @@ impl Publication {
         });
 
         // Create the task that will handle publishing messages to all streams
+        let topic_name_copy = topic_name.to_string();
         let publish_task = tokio::spawn(async move {
-            Self::publish_task(receiver, subscriber_streams, last_message).await
+            Self::publish_task(
+                receiver,
+                subscriber_streams,
+                last_message,
+                node_handle,
+                topic_name_copy,
+            )
+            .await
         });
 
-        Ok(Self {
-            topic_type: topic_type.to_owned(),
-            _tcp_accept_task: tcp_accept_handle.into(),
-            listener_port,
-            publish_sender: sender,
-            _publish_task: publish_task.into(),
-        })
+        let sender_copy = sender.clone();
+        Ok((
+            Self {
+                topic_type: topic_type.to_owned(),
+                _tcp_accept_task: tcp_accept_handle.into(),
+                listener_port,
+                publish_sender: sender.downgrade(),
+                _publish_task: publish_task.into(),
+            },
+            sender_copy,
+        ))
     }
 
-    pub(crate) fn get_sender(&self) -> mpsc::Sender<Vec<u8>> {
-        self.publish_sender.clone()
+    // Note: this returns Option<> due to a timing edge case
+    // There can be a delay between when the last sender is dropped and when the publication is dropped
+    pub(crate) fn get_sender(&self) -> Option<mpsc::Sender<Vec<u8>>> {
+        self.publish_sender.clone().upgrade()
     }
 
     pub(crate) fn port(&self) -> u16 {
@@ -143,6 +161,8 @@ impl Publication {
         mut rx: mpsc::Receiver<Vec<u8>>,
         subscriber_streams: Arc<RwLock<Vec<tokio::net::TcpStream>>>,
         last_message: Arc<RwLock<Option<Vec<u8>>>>,
+        node_handle: NodeServerHandle,
+        topic: String,
     ) {
         loop {
             match rx.recv().await {
@@ -169,7 +189,12 @@ impl Publication {
                     *last_message.write().await = Some(msg_to_publish);
                 }
                 None => {
-                    log::debug!("No more senders for the publisher channel, exiting...");
+                    log::debug!(
+                        "No more senders for the publisher channel, triggering publication cleanup"
+                    );
+                    // All senders dropped, so we want to cleanup the Publication off of the node
+                    // Tell the node server to dispose of this publication and unadvertise it
+                    let _ = node_handle.unregister_publisher(&topic).await;
                     break;
                 }
             }
@@ -270,6 +295,12 @@ impl Publication {
                 );
             }
         }
+    }
+}
+
+impl Drop for Publication {
+    fn drop(&mut self) {
+        log::debug!("Dropping publication for topic {}", self.topic_type);
     }
 }
 
