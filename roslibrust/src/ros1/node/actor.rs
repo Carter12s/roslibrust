@@ -676,7 +676,7 @@ impl Node {
             return Ok(handle?);
         }
 
-        // Otherwise create a new Publication
+        // Otherwise create a new Publication and advertise
         let (channel, sender) = Publication::new(
             &self.node_name,
             latching,
@@ -694,6 +694,7 @@ impl Node {
             err
         })?;
         self.publishers.insert(topic.clone(), channel);
+        let _ = self.client.register_publisher(&topic, topic_type).await?;
         Ok(sender)
     }
 

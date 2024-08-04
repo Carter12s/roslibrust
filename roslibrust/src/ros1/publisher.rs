@@ -4,6 +4,7 @@ use crate::ros1::{
     tcpros::{self, ConnectionHeader},
 };
 use abort_on_drop::ChildTask;
+use log::*;
 use roslibrust_codegen::RosMessageType;
 use std::{
     marker::PhantomData,
@@ -43,7 +44,7 @@ impl<T: RosMessageType> Publisher<T> {
             .send(data)
             .await
             .map_err(|_| PublisherError::StreamClosed)?;
-        log::debug!("Publishing data on topic {}", self.topic_name);
+        debug!("Publishing data on topic {}", self.topic_name);
         Ok(())
     }
 }
@@ -90,7 +91,7 @@ impl Publication {
             tcp_nodelay: false,
             service: None,
         };
-        log::trace!("Publisher connection header: {responding_conn_header:?}");
+        trace!("Publisher connection header: {responding_conn_header:?}");
 
         // Setup storage for internal list of TCP streams
         let subscriber_streams = Arc::new(RwLock::new(Vec::new()));
@@ -164,6 +165,7 @@ impl Publication {
         node_handle: NodeServerHandle,
         topic: String,
     ) {
+        debug!("Publish task has started for publication: {topic}");
         loop {
             match rx.recv().await {
                 Some(msg_to_publish) => {
@@ -172,7 +174,7 @@ impl Publication {
                     for (stream_idx, stream) in streams.iter_mut().enumerate() {
                         if let Err(err) = stream.write(&msg_to_publish[..]).await {
                             // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
-                            log::debug!("Failed to send data to subscriber: {err}, removing");
+                            debug!("Failed to send data to subscriber: {err}, removing");
                             streams_to_remove.push(stream_idx);
                         }
                     }
@@ -189,7 +191,7 @@ impl Publication {
                     *last_message.write().await = Some(msg_to_publish);
                 }
                 None => {
-                    log::debug!(
+                    debug!(
                         "No more senders for the publisher channel, triggering publication cleanup"
                     );
                     // All senders dropped, so we want to cleanup the Publication off of the node
@@ -206,6 +208,7 @@ impl Publication {
                 }
             }
         }
+        debug!("Publish task has exited for publication: {topic}");
     }
 
     /// Wraps the functionality that the tcp_accept task will perform
@@ -218,17 +221,16 @@ impl Publication {
         responding_conn_header: ConnectionHeader,                    // Header we respond with
         last_message: Arc<RwLock<Option<Vec<u8>>>>, // Last message published (used for latching)
     ) {
+        debug!("TCP accept task has started for publication: {topic_name}");
         loop {
             if let Ok((mut stream, peer_addr)) = tcp_listener.accept().await {
-                log::info!(
-                    "Received connection from subscriber at {peer_addr} for topic {topic_name}"
-                );
+                info!("Received connection from subscriber at {peer_addr} for topic {topic_name}");
 
                 // Read the connection header:
                 let connection_header = match tcpros::receive_header(&mut stream).await {
                     Ok(header) => header,
                     Err(e) => {
-                        log::error!("Failed to read connection header: {e:?}");
+                        error!("Failed to read connection header: {e:?}");
                         stream
                             .shutdown()
                             .await
@@ -237,10 +239,9 @@ impl Publication {
                     }
                 };
 
-                log::debug!(
+                debug!(
                     "Received subscribe request for {:?} with md5sum {:?}",
-                    connection_header.topic,
-                    connection_header.md5sum
+                    connection_header.topic, connection_header.md5sum
                 );
                 // I can't find documentation for this anywhere, but when using
                 // `rostopic hz` with one of our publishers I discovered that the rospy code sent "*" as the md5sum
@@ -250,7 +251,7 @@ impl Publication {
                     if connection_md5sum != "*" {
                         if let Some(local_md5sum) = &responding_conn_header.md5sum {
                             if connection_md5sum != *local_md5sum {
-                                log::warn!(
+                                warn!(
                                     "Got subscribe request for {}, but md5sums do not match. Expected {:?}, received {:?}",
                                     topic_name,
                                     local_md5sum,
@@ -278,14 +279,14 @@ impl Publication {
                 // If we're configured to latch, send the last message to the new subscriber
                 if responding_conn_header.latching {
                     if let Some(last_message) = last_message.read().await.as_ref() {
-                        log::debug!(
+                        debug!(
                             "Publication configured to be latching and has last_message, sending"
                         );
                         let res = stream.write(last_message).await;
                         match res {
                             Ok(_) => {}
                             Err(e) => {
-                                log::error!("Failed to send latch message to subscriber: {e:?}");
+                                error!("Failed to send latch message to subscriber: {e:?}");
                                 // Note doing any handling here, TCP stream will be cleaned up during
                                 // next regular publish in the publish task
                             }
@@ -295,10 +296,9 @@ impl Publication {
 
                 let mut wlock = subscriber_streams.write().await;
                 wlock.push(stream);
-                log::debug!(
+                debug!(
                     "Added stream for topic {:?} to subscriber {}",
-                    connection_header.topic,
-                    peer_addr
+                    connection_header.topic, peer_addr
                 );
             }
         }
@@ -307,7 +307,7 @@ impl Publication {
 
 impl Drop for Publication {
     fn drop(&mut self) {
-        log::debug!("Dropping publication for topic {}", self.topic_type);
+        debug!("Dropping publication for topic {}", self.topic_type);
     }
 }
 

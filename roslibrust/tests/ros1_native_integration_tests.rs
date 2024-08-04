@@ -386,6 +386,8 @@ mod tests {
         .unwrap();
 
         let before = master_client.get_published_topics("").await.unwrap();
+        debug!("Published topics: {before:?}");
+
         assert!(before.contains(&(
             "/test_dropping_publisher".to_string(),
             "std_msgs/Header".to_string()
