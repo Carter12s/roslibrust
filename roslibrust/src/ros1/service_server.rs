@@ -9,17 +9,7 @@ use tokio::io::AsyncWriteExt;
 
 use crate::ros1::tcpros::{self, ConnectionHeader};
 
-use super::{names::Name, NodeHandle};
-
-// TODO: someday I'd like to define a trait alias here for a ServerFunction
-// Currently unstable:
-// https://doc.rust-lang.org/beta/unstable-book/language-features/trait-alias.html
-// trait ServerFunction<T> = Fn(T::Request) -> Err(T::Response, Box<dyn std::error::Error + Send + Sync>) + Send + Sync + 'static;
-
-type TypeErasedCallback = dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
-    + Send
-    + Sync
-    + 'static;
+use super::{names::Name, NodeHandle, TypeErasedCallback};
 
 /// ServiceServer is simply a lifetime control
 /// The underlying ServiceServer is kept alive while object is kept alive.
