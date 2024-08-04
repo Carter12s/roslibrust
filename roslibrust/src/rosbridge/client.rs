@@ -1,6 +1,6 @@
 use crate::{
     rosbridge::comm::{self, RosBridgeComm},
-    Publisher, RosLibRustError, RosLibRustResult, ServiceHandle, Subscriber,
+    Publisher, RosLibRustError, RosLibRustResult, ServiceFn, ServiceHandle, Subscriber,
 };
 use anyhow::anyhow;
 use dashmap::DashMap;
@@ -427,13 +427,7 @@ impl ClientHandle {
     ) -> RosLibRustResult<ServiceHandle>
     where
         T: RosServiceType,
-        F: Fn(
-                T::Request,
-            )
-                -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
-            + Send
-            + Sync
-            + 'static,
+        F: ServiceFn<T>,
     {
         self.check_for_disconnect()?;
         {
