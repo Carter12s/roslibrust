@@ -194,7 +194,14 @@ impl Publication {
                     );
                     // All senders dropped, so we want to cleanup the Publication off of the node
                     // Tell the node server to dispose of this publication and unadvertise it
-                    let _ = node_handle.unregister_publisher(&topic).await;
+                    // Note: we need to do this in a spawned task or a drop-loop race condition will occur
+                    // Dropping publication results in this task being dropped, which can end up canceling the future that is doing the dropping
+                    // if we simpply .await here
+                    let nh_copy = node_handle.clone();
+                    let topic = topic.clone();
+                    tokio::spawn(async move {
+                        let _ = nh_copy.unregister_publisher(&topic).await;
+                    });
                     break;
                 }
             }
