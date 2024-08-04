@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The XML RPC client for interacting directly with the rosmaster server has been exposed as a public API
 
 ### Fixed
+- ROS1 Native Publishers correctly call unadvertise when dropped
 
 ### Changed
 - ROS1 Node Handle's advertise() now requies a latching argument

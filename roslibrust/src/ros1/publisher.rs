@@ -1,8 +1,10 @@
 use crate::ros1::{
     names::Name,
+    node::actor::NodeServerHandle,
     tcpros::{self, ConnectionHeader},
 };
 use abort_on_drop::ChildTask;
+use log::*;
 use roslibrust_codegen::RosMessageType;
 use std::{
     marker::PhantomData,
@@ -42,7 +44,7 @@ impl<T: RosMessageType> Publisher<T> {
             .send(data)
             .await
             .map_err(|_| PublisherError::StreamClosed)?;
-        log::debug!("Publishing data on topic {}", self.topic_name);
+        debug!("Publishing data on topic {}", self.topic_name);
         Ok(())
     }
 }
@@ -52,11 +54,13 @@ pub(crate) struct Publication {
     listener_port: u16,
     _tcp_accept_task: ChildTask<()>,
     _publish_task: ChildTask<()>,
-    publish_sender: mpsc::Sender<Vec<u8>>,
+    publish_sender: mpsc::WeakSender<Vec<u8>>,
 }
 
 impl Publication {
     /// Spawns a new publication and sets up all tasks to run it
+    /// Returns a handle to the publication and a mpsc::Sender to send messages to be published
+    /// Dropping the Sender will (eventually) result in the publication being dropped and all tasks being canceled
     pub(crate) async fn new(
         node_name: &Name,
         latching: bool,
@@ -66,7 +70,8 @@ impl Publication {
         msg_definition: &str,
         md5sum: &str,
         topic_type: &str,
-    ) -> Result<Self, std::io::Error> {
+        node_handle: NodeServerHandle,
+    ) -> Result<(Self, mpsc::Sender<Vec<u8>>), std::io::Error> {
         // Get a socket for receiving connections on
         let host_addr = SocketAddr::from((host_addr, 0));
         let tcp_listener = tokio::net::TcpListener::bind(host_addr).await?;
@@ -86,7 +91,7 @@ impl Publication {
             tcp_nodelay: false,
             service: None,
         };
-        log::trace!("Publisher connection header: {responding_conn_header:?}");
+        trace!("Publisher connection header: {responding_conn_header:?}");
 
         // Setup storage for internal list of TCP streams
         let subscriber_streams = Arc::new(RwLock::new(Vec::new()));
@@ -96,13 +101,13 @@ impl Publication {
 
         // Create the task that will accept new TCP connections
         let subscriber_streams_copy = subscriber_streams.clone();
-        let topic_name = topic_name.to_owned();
         let last_message_copy = last_message.clone();
+        let topic_name_copy = topic_name.to_owned();
         let tcp_accept_handle = tokio::spawn(async move {
             Self::tcp_accept_task(
                 tcp_listener,
                 subscriber_streams_copy,
-                topic_name,
+                topic_name_copy,
                 responding_conn_header,
                 last_message_copy,
             )
@@ -110,21 +115,35 @@ impl Publication {
         });
 
         // Create the task that will handle publishing messages to all streams
+        let topic_name_copy = topic_name.to_string();
         let publish_task = tokio::spawn(async move {
-            Self::publish_task(receiver, subscriber_streams, last_message).await
+            Self::publish_task(
+                receiver,
+                subscriber_streams,
+                last_message,
+                node_handle,
+                topic_name_copy,
+            )
+            .await
         });
 
-        Ok(Self {
-            topic_type: topic_type.to_owned(),
-            _tcp_accept_task: tcp_accept_handle.into(),
-            listener_port,
-            publish_sender: sender,
-            _publish_task: publish_task.into(),
-        })
+        let sender_copy = sender.clone();
+        Ok((
+            Self {
+                topic_type: topic_type.to_owned(),
+                _tcp_accept_task: tcp_accept_handle.into(),
+                listener_port,
+                publish_sender: sender.downgrade(),
+                _publish_task: publish_task.into(),
+            },
+            sender_copy,
+        ))
     }
 
-    pub(crate) fn get_sender(&self) -> mpsc::Sender<Vec<u8>> {
-        self.publish_sender.clone()
+    // Note: this returns Option<> due to a timing edge case
+    // There can be a delay between when the last sender is dropped and when the publication is dropped
+    pub(crate) fn get_sender(&self) -> Option<mpsc::Sender<Vec<u8>>> {
+        self.publish_sender.clone().upgrade()
     }
 
     pub(crate) fn port(&self) -> u16 {
@@ -143,7 +162,10 @@ impl Publication {
         mut rx: mpsc::Receiver<Vec<u8>>,
         subscriber_streams: Arc<RwLock<Vec<tokio::net::TcpStream>>>,
         last_message: Arc<RwLock<Option<Vec<u8>>>>,
+        node_handle: NodeServerHandle,
+        topic: String,
     ) {
+        debug!("Publish task has started for publication: {topic}");
         loop {
             match rx.recv().await {
                 Some(msg_to_publish) => {
@@ -152,7 +174,7 @@ impl Publication {
                     for (stream_idx, stream) in streams.iter_mut().enumerate() {
                         if let Err(err) = stream.write(&msg_to_publish[..]).await {
                             // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
-                            log::debug!("Failed to send data to subscriber: {err}, removing");
+                            debug!("Failed to send data to subscriber: {err}, removing");
                             streams_to_remove.push(stream_idx);
                         }
                     }
@@ -169,11 +191,24 @@ impl Publication {
                     *last_message.write().await = Some(msg_to_publish);
                 }
                 None => {
-                    log::debug!("No more senders for the publisher channel, exiting...");
+                    debug!(
+                        "No more senders for the publisher channel, triggering publication cleanup"
+                    );
+                    // All senders dropped, so we want to cleanup the Publication off of the node
+                    // Tell the node server to dispose of this publication and unadvertise it
+                    // Note: we need to do this in a spawned task or a drop-loop race condition will occur
+                    // Dropping publication results in this task being dropped, which can end up canceling the future that is doing the dropping
+                    // if we simpply .await here
+                    let nh_copy = node_handle.clone();
+                    let topic = topic.clone();
+                    tokio::spawn(async move {
+                        let _ = nh_copy.unregister_publisher(&topic).await;
+                    });
                     break;
                 }
             }
         }
+        debug!("Publish task has exited for publication: {topic}");
     }
 
     /// Wraps the functionality that the tcp_accept task will perform
@@ -186,17 +221,16 @@ impl Publication {
         responding_conn_header: ConnectionHeader,                    // Header we respond with
         last_message: Arc<RwLock<Option<Vec<u8>>>>, // Last message published (used for latching)
     ) {
+        debug!("TCP accept task has started for publication: {topic_name}");
         loop {
             if let Ok((mut stream, peer_addr)) = tcp_listener.accept().await {
-                log::info!(
-                    "Received connection from subscriber at {peer_addr} for topic {topic_name}"
-                );
+                info!("Received connection from subscriber at {peer_addr} for topic {topic_name}");
 
                 // Read the connection header:
                 let connection_header = match tcpros::receive_header(&mut stream).await {
                     Ok(header) => header,
                     Err(e) => {
-                        log::error!("Failed to read connection header: {e:?}");
+                        error!("Failed to read connection header: {e:?}");
                         stream
                             .shutdown()
                             .await
@@ -205,10 +239,9 @@ impl Publication {
                     }
                 };
 
-                log::debug!(
+                debug!(
                     "Received subscribe request for {:?} with md5sum {:?}",
-                    connection_header.topic,
-                    connection_header.md5sum
+                    connection_header.topic, connection_header.md5sum
                 );
                 // I can't find documentation for this anywhere, but when using
                 // `rostopic hz` with one of our publishers I discovered that the rospy code sent "*" as the md5sum
@@ -218,7 +251,7 @@ impl Publication {
                     if connection_md5sum != "*" {
                         if let Some(local_md5sum) = &responding_conn_header.md5sum {
                             if connection_md5sum != *local_md5sum {
-                                log::warn!(
+                                warn!(
                                     "Got subscribe request for {}, but md5sums do not match. Expected {:?}, received {:?}",
                                     topic_name,
                                     local_md5sum,
@@ -246,14 +279,14 @@ impl Publication {
                 // If we're configured to latch, send the last message to the new subscriber
                 if responding_conn_header.latching {
                     if let Some(last_message) = last_message.read().await.as_ref() {
-                        log::debug!(
+                        debug!(
                             "Publication configured to be latching and has last_message, sending"
                         );
                         let res = stream.write(last_message).await;
                         match res {
                             Ok(_) => {}
                             Err(e) => {
-                                log::error!("Failed to send latch message to subscriber: {e:?}");
+                                error!("Failed to send latch message to subscriber: {e:?}");
                                 // Note doing any handling here, TCP stream will be cleaned up during
                                 // next regular publish in the publish task
                             }
@@ -263,13 +296,18 @@ impl Publication {
 
                 let mut wlock = subscriber_streams.write().await;
                 wlock.push(stream);
-                log::debug!(
+                debug!(
                     "Added stream for topic {:?} to subscriber {}",
-                    connection_header.topic,
-                    peer_addr
+                    connection_header.topic, peer_addr
                 );
             }
         }
+    }
+}
+
+impl Drop for Publication {
+    fn drop(&mut self) {
+        debug!("Dropping publication for topic {}", self.topic_type);
     }
 }
 

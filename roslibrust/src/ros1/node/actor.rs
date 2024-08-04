@@ -11,7 +11,7 @@ use crate::{
     RosLibRustError, ServiceFn,
 };
 use abort_on_drop::ChildTask;
-use log::warn;
+use log::*;
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 use std::{collections::HashMap, io, net::Ipv4Addr, sync::Arc};
 use tokio::sync::{broadcast, mpsc, oneshot};
@@ -78,9 +78,12 @@ pub enum NodeMsg {
     },
     RequestTopic {
         reply: oneshot::Sender<Result<ProtocolParams, String>>,
-        caller_id: String,
         topic: String,
         protocols: Vec<String>,
+    },
+    UnregisterPublisher {
+        reply: oneshot::Sender<Result<(), String>>,
+        topic: String,
     },
 }
 
@@ -95,7 +98,7 @@ pub(crate) struct NodeServerHandle {
 
 impl NodeServerHandle {
     /// Get the URI of the master node.
-    pub async fn get_master_uri(&self) -> Result<String, NodeError> {
+    pub(crate) async fn get_master_uri(&self) -> Result<String, NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender
             .send(NodeMsg::GetMasterUri { reply: sender })?;
@@ -103,7 +106,7 @@ impl NodeServerHandle {
     }
 
     /// Get the URI of the client node.
-    pub async fn get_client_uri(&self) -> Result<String, NodeError> {
+    pub(crate) async fn get_client_uri(&self) -> Result<String, NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender
             .send(NodeMsg::GetClientUri { reply: sender })?;
@@ -112,7 +115,7 @@ impl NodeServerHandle {
 
     /// Gets the list of topics the node is currently subscribed to.
     /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
-    pub async fn get_subscriptions(&self) -> Result<Vec<(String, String)>, NodeError> {
+    pub(crate) async fn get_subscriptions(&self) -> Result<Vec<(String, String)>, NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender
             .send(NodeMsg::GetSubscriptions { reply: sender })?;
@@ -121,7 +124,7 @@ impl NodeServerHandle {
 
     /// Gets the list of topic the node is currently publishing to.
     /// Returns a tuple of (Topic Name, Topic Type) e.g. ("/rosout", "rosgraph_msgs/Log").
-    pub async fn get_publications(&self) -> Result<Vec<(String, String)>, NodeError> {
+    pub(crate) async fn get_publications(&self) -> Result<Vec<(String, String)>, NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender
             .send(NodeMsg::GetPublications { reply: sender })?;
@@ -130,7 +133,7 @@ impl NodeServerHandle {
 
     /// Updates the list of know publishers for a given topic
     /// This is used to know who to reach out to for updates
-    pub fn set_peer_publishers(
+    pub(crate) fn set_peer_publishers(
         &self,
         topic: String,
         publishers: Vec<String>,
@@ -144,14 +147,14 @@ impl NodeServerHandle {
     /// This will stop all ROS functionality and poison all NodeHandles connected
     /// to the underlying node server.
     // TODO this function should probably be pub(crate) and not pub?
-    pub fn shutdown(&self) -> Result<(), NodeError> {
+    pub(crate) fn shutdown(&self) -> Result<(), NodeError> {
         self.node_server_sender.send(NodeMsg::Shutdown)?;
         Ok(())
     }
 
     /// Registers a publisher with the underlying node server
     /// Returns a channel that the raw bytes of a publish can be shoved into to queue the publish
-    pub async fn register_publisher<T: RosMessageType>(
+    pub(crate) async fn register_publisher<T: RosMessageType>(
         &self,
         topic: &str,
         queue_size: usize,
@@ -173,10 +176,23 @@ impl NodeServerHandle {
         })?)
     }
 
+    pub(crate) async fn unregister_publisher(&self, topic: &str) -> Result<(), NodeError> {
+        let (sender, receiver) = oneshot::channel();
+        self.node_server_sender.send(NodeMsg::UnregisterPublisher {
+            reply: sender,
+            topic: topic.to_owned(),
+        })?;
+        let rx = receiver.await?;
+        rx.map_err(|err| {
+            warn!("Failure while unregistering publisher: {err:?}");
+            NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
+        })
+    }
+
     /// Registers a service client with the underlying node server
     /// This returns a channel that can be used for making service calls
     /// service calls will be queued in the channel and resolved when able.
-    pub async fn register_service_client<T: RosServiceType>(
+    pub(crate) async fn register_service_client<T: RosServiceType>(
         &self,
         service_name: &Name,
     ) -> Result<ServiceClient<T>, NodeError> {
@@ -205,7 +221,7 @@ impl NodeServerHandle {
         Ok(ServiceClient::new(service_name, sender, link))
     }
 
-    pub async fn register_service_server<T, F>(
+    pub(crate) async fn register_service_server<T, F>(
         &self,
         service_name: &Name,
         server: F,
@@ -249,7 +265,7 @@ impl NodeServerHandle {
 
     /// Called to remove a service server
     /// Delegates to the NodeServer via channel
-    pub async fn unadvertise_service(&self, service_name: &str) -> Result<(), NodeError> {
+    pub(crate) async fn unadvertise_service(&self, service_name: &str) -> Result<(), NodeError> {
         let (tx, rx) = oneshot::channel();
         log::debug!("Queuing unregister service server command for: {service_name:?}");
         self.node_server_sender
@@ -267,7 +283,7 @@ impl NodeServerHandle {
     /// If this is the first time the given topic has been subscribed to (by this node)
     /// rosmaster will be informed.
     /// Otherwise, a new rx handle will simply be returned to the existing channel.
-    pub async fn register_subscriber<T: RosMessageType>(
+    pub(crate) async fn register_subscriber<T: RosMessageType>(
         &self,
         topic: &str,
         queue_size: usize,
@@ -295,15 +311,13 @@ impl NodeServerHandle {
     // to marshal the response.
     // Users can call this function, but it really doesn't serve much of a purpose outside ROS Pub/Sub communication
     // negotiation
-    pub async fn request_topic(
+    pub(crate) async fn request_topic(
         &self,
-        caller_id: &str,
         topic: &str,
         protocols: &[String],
     ) -> Result<ProtocolParams, NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender.send(NodeMsg::RequestTopic {
-            caller_id: caller_id.to_owned(),
             topic: topic.to_owned(),
             protocols: protocols.into(),
             reply: sender,
@@ -339,10 +353,12 @@ pub(crate) struct Node {
     // service_clients: HashMap<String, ServiceClientLink>,
     // Map of topic names to service server handles for each topic
     service_servers: HashMap<String, ServiceServerLink>,
-    // TODO need signal to shutdown xmlrpc server when node is dropped
+    // TODO MAJOR: need signal to shutdown xmlrpc server when node is dropped
     host_addr: Ipv4Addr,
     hostname: String,
     node_name: Name,
+    // Store a handle to ourself so that we can pass it out later
+    node_handle: NodeServerHandle,
 }
 
 impl Node {
@@ -364,6 +380,10 @@ impl Node {
 
         let rosmaster_client =
             MasterClient::new(master_uri, client_uri, node_name.to_string()).await?;
+        let weak_handle = NodeServerHandle {
+            node_server_sender: node_sender.clone(),
+            _node_task: None,
+        };
         let mut node = Self {
             client: rosmaster_client,
             _xmlrpc_server: xmlrpc_server,
@@ -374,6 +394,7 @@ impl Node {
             host_addr: addr,
             hostname: hostname.to_owned(),
             node_name: node_name.to_owned(),
+            node_handle: weak_handle,
         };
 
         let t = Arc::new(
@@ -469,6 +490,13 @@ impl Node {
                 }
                 .expect("Failed to reply on oneshot");
             }
+            NodeMsg::UnregisterPublisher { reply, topic } => {
+                let _ = reply.send(
+                    self.unregister_publisher(&topic)
+                        .await
+                        .map_err(|err| err.to_string()),
+                );
+            }
             NodeMsg::RegisterSubscriber {
                 reply,
                 topic,
@@ -536,7 +564,6 @@ impl Node {
                 reply,
                 topic,
                 protocols,
-                ..
             } => {
                 // TODO: Should move the actual implementation similar to RegisterPublisher
                 if protocols
@@ -618,8 +645,16 @@ impl Node {
             self.publishers.iter().find_map(|(key, value)| {
                 if key.as_str() == &topic {
                     if value.topic_type() == topic_type {
-                        Some(Ok(value.get_sender()))
+                        if let Some(sender) = value.get_sender() {
+                            return Some(Ok(sender));
+                        }else{
+                            // Edge case here
+                            // The channel for the publication is closed, but publication hasn't been cleaned up yet
+                            None
+                        }
                     } else {
+                        warn!("Attempted to register publisher with different topic type than existing publisher: existing_type={}, new_type={}", value.topic_type(), topic_type);
+                        // TODO MAJOR: this is a terrible error type to return...
                         Some(Err(NodeError::IoError(std::io::Error::from(
                             std::io::ErrorKind::AddrInUse,
                         ))))
@@ -629,30 +664,49 @@ impl Node {
                 }
             })
         };
+        // If we found an existing publication return the handle to it
         if let Some(handle) = existing_entry {
-            Ok(handle?)
-        } else {
-            // Otherwise create a new Publication
-            let channel = Publication::new(
-                &self.node_name,
-                latching,
-                &topic,
-                self.host_addr,
-                queue_size,
-                &msg_definition,
-                &md5sum,
-                topic_type,
-            )
-            .await
-            .map_err(|err| {
-                log::error!("Failed to create publishing channel: {err:?}");
-                err
-            })?;
-            let handle = channel.get_sender();
-            self.publishers.insert(topic.clone(), channel);
-            let _current_subscribers = self.client.register_publisher(&topic, topic_type).await?;
-            Ok(handle)
+            return Ok(handle?);
         }
+
+        // Otherwise create a new Publication and advertise
+        let (channel, sender) = Publication::new(
+            &self.node_name,
+            latching,
+            &topic,
+            self.host_addr,
+            queue_size,
+            &msg_definition,
+            &md5sum,
+            topic_type,
+            self.node_handle.clone(),
+        )
+        .await
+        .map_err(|err| {
+            log::error!("Failed to create publishing channel: {err:?}");
+            err
+        })?;
+        self.publishers.insert(topic.clone(), channel);
+        let _ = self.client.register_publisher(&topic, topic_type).await?;
+        Ok(sender)
+    }
+
+    async fn unregister_publisher(&mut self, topic: &str) -> Result<(), NodeError> {
+        // Tell ros master we are no longer publishing this topic
+        let err1 = self.client.unregister_publisher(topic).await;
+        // Remove the publication from our internal state
+        let err2 = self.publishers.remove(topic);
+        if err1.is_err() || err2.is_none() {
+            error!(
+                "Failure unregistering publisher: {err1:?}, {}",
+                err2.is_none()
+            );
+            // MAJOR TODO: this is a terrible error type to return...
+            return Err(NodeError::IoError(std::io::Error::from(
+                std::io::ErrorKind::AddrInUse,
+            )));
+        }
+        Ok(())
     }
 
     /// Checks the internal state of the NodeServer to see if it has a service client registered for this service already
