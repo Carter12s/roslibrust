@@ -1,8 +1,10 @@
 use crate::ros1::{
     names::Name,
+    node::actor::NodeServerHandle,
     tcpros::{self, ConnectionHeader},
 };
 use abort_on_drop::ChildTask;
+use log::*;
 use roslibrust_codegen::RosMessageType;
 use std::{
     marker::PhantomData,
@@ -42,21 +44,24 @@ impl<T: RosMessageType> Publisher<T> {
             .send(data)
             .await
             .map_err(|_| PublisherError::StreamClosed)?;
-        log::debug!("Publishing data on topic {}", self.topic_name);
+        debug!("Publishing data on topic {}", self.topic_name);
         Ok(())
     }
 }
 
-pub struct Publication {
+pub(crate) struct Publication {
     topic_type: String,
     listener_port: u16,
-    _channel_task: ChildTask<()>,
+    _tcp_accept_task: ChildTask<()>,
     _publish_task: ChildTask<()>,
-    publish_sender: mpsc::Sender<Vec<u8>>,
+    publish_sender: mpsc::WeakSender<Vec<u8>>,
 }
 
 impl Publication {
-    pub async fn new(
+    /// Spawns a new publication and sets up all tasks to run it
+    /// Returns a handle to the publication and a mpsc::Sender to send messages to be published
+    /// Dropping the Sender will (eventually) result in the publication being dropped and all tasks being canceled
+    pub(crate) async fn new(
         node_name: &Name,
         latching: bool,
         topic_name: &str,
@@ -65,13 +70,17 @@ impl Publication {
         msg_definition: &str,
         md5sum: &str,
         topic_type: &str,
-    ) -> Result<Self, std::io::Error> {
+        node_handle: NodeServerHandle,
+    ) -> Result<(Self, mpsc::Sender<Vec<u8>>), std::io::Error> {
+        // Get a socket for receiving connections on
         let host_addr = SocketAddr::from((host_addr, 0));
         let tcp_listener = tokio::net::TcpListener::bind(host_addr).await?;
         let listener_port = tcp_listener.local_addr().unwrap().port();
 
-        let (sender, mut receiver) = mpsc::channel::<Vec<u8>>(queue_size);
+        // Setup the channel will will receive messages to be published on
+        let (sender, receiver) = mpsc::channel::<Vec<u8>>(queue_size);
 
+        // Setup the ROS connection header that we'll respond to all incomming connections with
         let responding_conn_header = ConnectionHeader {
             caller_id: node_name.to_string(),
             latching,
@@ -82,130 +91,223 @@ impl Publication {
             tcp_nodelay: false,
             service: None,
         };
-        log::trace!("Publisher connection header: {responding_conn_header:?}");
+        trace!("Publisher connection header: {responding_conn_header:?}");
 
+        // Setup storage for internal list of TCP streams
         let subscriber_streams = Arc::new(RwLock::new(Vec::new()));
 
+        // Setup storage for the last message published (used for latching)
+        let last_message = Arc::new(RwLock::new(None));
+
+        // Create the task that will accept new TCP connections
         let subscriber_streams_copy = subscriber_streams.clone();
-        let topic_name = topic_name.to_owned();
-        let listener_handle = tokio::spawn(async move {
-            let subscriber_streams = subscriber_streams_copy;
-            loop {
-                if let Ok((mut stream, peer_addr)) = tcp_listener.accept().await {
-                    log::info!(
-                        "Received connection from subscriber at {peer_addr} for topic {topic_name}"
-                    );
+        let last_message_copy = last_message.clone();
+        let topic_name_copy = topic_name.to_owned();
+        let tcp_accept_handle = tokio::spawn(async move {
+            Self::tcp_accept_task(
+                tcp_listener,
+                subscriber_streams_copy,
+                topic_name_copy,
+                responding_conn_header,
+                last_message_copy,
+            )
+            .await
+        });
 
-                    // Read the connection header:
-                    let connection_header = match tcpros::recieve_header(&mut stream).await {
-                        Ok(header) => header,
-                        Err(e) => {
-                            log::error!("Failed to read connection header: {e:?}");
-                            stream
-                                .shutdown()
-                                .await
-                                .expect("Unable to shutdown tcpstream");
-                            continue;
+        // Create the task that will handle publishing messages to all streams
+        let topic_name_copy = topic_name.to_string();
+        let publish_task = tokio::spawn(async move {
+            Self::publish_task(
+                receiver,
+                subscriber_streams,
+                last_message,
+                node_handle,
+                topic_name_copy,
+            )
+            .await
+        });
+
+        let sender_copy = sender.clone();
+        Ok((
+            Self {
+                topic_type: topic_type.to_owned(),
+                _tcp_accept_task: tcp_accept_handle.into(),
+                listener_port,
+                publish_sender: sender.downgrade(),
+                _publish_task: publish_task.into(),
+            },
+            sender_copy,
+        ))
+    }
+
+    // Note: this returns Option<> due to a timing edge case
+    // There can be a delay between when the last sender is dropped and when the publication is dropped
+    pub(crate) fn get_sender(&self) -> Option<mpsc::Sender<Vec<u8>>> {
+        self.publish_sender.clone().upgrade()
+    }
+
+    pub(crate) fn port(&self) -> u16 {
+        self.listener_port
+    }
+
+    pub(crate) fn topic_type(&self) -> &str {
+        &self.topic_type
+    }
+
+    /// Wraps the functionality that the publish task will perform
+    /// this task is spawned by new, and canceled when the Publication is dropped
+    /// This task constantly pulls new messages from the main publish buffer and
+    /// sends them to all of the TCP Streams that are connected to the topic.
+    async fn publish_task(
+        mut rx: mpsc::Receiver<Vec<u8>>,
+        subscriber_streams: Arc<RwLock<Vec<tokio::net::TcpStream>>>,
+        last_message: Arc<RwLock<Option<Vec<u8>>>>,
+        node_handle: NodeServerHandle,
+        topic: String,
+    ) {
+        debug!("Publish task has started for publication: {topic}");
+        loop {
+            match rx.recv().await {
+                Some(msg_to_publish) => {
+                    let mut streams = subscriber_streams.write().await;
+                    let mut streams_to_remove = vec![];
+                    for (stream_idx, stream) in streams.iter_mut().enumerate() {
+                        if let Err(err) = stream.write(&msg_to_publish[..]).await {
+                            // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
+                            debug!("Failed to send data to subscriber: {err}, removing");
+                            streams_to_remove.push(stream_idx);
                         }
-                    };
-
-                    log::debug!(
-                        "Received subscribe request for {:?} with md5sum {:?}",
-                        connection_header.topic,
-                        connection_header.md5sum
+                    }
+                    // Subtract the removed count to account for shifting indices after each
+                    // remove, only works if they're sorted which should be the case given how
+                    // it's being populated (forward enumeration)
+                    streams_to_remove.into_iter().enumerate().for_each(
+                        |(removed_cnt, stream_idx)| {
+                            streams.remove(stream_idx - removed_cnt);
+                        },
                     );
-                    // I can't find documentation for this anywhere, but when using
-                    // `rostopic hz` with one of our publishers I discovered that the rospy code sent "*" as the md5sum
-                    // To indicate a "generic subscription"...
-                    // I also discovered that `rostopic echo` does not send a md5sum (even thou ros documentation says its required)
-                    if let Some(connection_md5sum) = connection_header.md5sum {
-                        if connection_md5sum != "*" {
-                            if let Some(local_md5sum) = &responding_conn_header.md5sum {
-                                if connection_md5sum != *local_md5sum {
-                                    log::warn!(
+
+                    // Note: optimization possible here, we're storing the last message always, even if we're not latching
+                    *last_message.write().await = Some(msg_to_publish);
+                }
+                None => {
+                    debug!(
+                        "No more senders for the publisher channel, triggering publication cleanup"
+                    );
+                    // All senders dropped, so we want to cleanup the Publication off of the node
+                    // Tell the node server to dispose of this publication and unadvertise it
+                    // Note: we need to do this in a spawned task or a drop-loop race condition will occur
+                    // Dropping publication results in this task being dropped, which can end up canceling the future that is doing the dropping
+                    // if we simpply .await here
+                    let nh_copy = node_handle.clone();
+                    let topic = topic.clone();
+                    tokio::spawn(async move {
+                        let _ = nh_copy.unregister_publisher(&topic).await;
+                    });
+                    break;
+                }
+            }
+        }
+        debug!("Publish task has exited for publication: {topic}");
+    }
+
+    /// Wraps the functionality that the tcp_accept task will perform
+    /// This task is spawned by new, and canceled when the Publication is dropped
+    /// This task constantly accepts new TCP connections and adds them to the list of streams to send data to.
+    async fn tcp_accept_task(
+        tcp_listener: tokio::net::TcpListener, // The TCP listener to accept connections on
+        subscriber_streams: Arc<RwLock<Vec<tokio::net::TcpStream>>>, // Where accepted streams are stored
+        topic_name: String,                                          // Only used for logging
+        responding_conn_header: ConnectionHeader,                    // Header we respond with
+        last_message: Arc<RwLock<Option<Vec<u8>>>>, // Last message published (used for latching)
+    ) {
+        debug!("TCP accept task has started for publication: {topic_name}");
+        loop {
+            if let Ok((mut stream, peer_addr)) = tcp_listener.accept().await {
+                info!("Received connection from subscriber at {peer_addr} for topic {topic_name}");
+
+                // Read the connection header:
+                let connection_header = match tcpros::receive_header(&mut stream).await {
+                    Ok(header) => header,
+                    Err(e) => {
+                        error!("Failed to read connection header: {e:?}");
+                        stream
+                            .shutdown()
+                            .await
+                            .expect("Unable to shutdown tcpstream");
+                        continue;
+                    }
+                };
+
+                debug!(
+                    "Received subscribe request for {:?} with md5sum {:?}",
+                    connection_header.topic, connection_header.md5sum
+                );
+                // I can't find documentation for this anywhere, but when using
+                // `rostopic hz` with one of our publishers I discovered that the rospy code sent "*" as the md5sum
+                // To indicate a "generic subscription"...
+                // I also discovered that `rostopic echo` does not send a md5sum (even thou ros documentation says its required)
+                if let Some(connection_md5sum) = connection_header.md5sum {
+                    if connection_md5sum != "*" {
+                        if let Some(local_md5sum) = &responding_conn_header.md5sum {
+                            if connection_md5sum != *local_md5sum {
+                                warn!(
                                     "Got subscribe request for {}, but md5sums do not match. Expected {:?}, received {:?}",
                                     topic_name,
                                     local_md5sum,
                                     connection_md5sum,
                                     );
-                                    // Close the TCP connection
-                                    stream
-                                        .shutdown()
-                                        .await
-                                        .expect("Unable to shutdown tcpstream");
-                                    continue;
-                                }
+                                // Close the TCP connection
+                                stream
+                                    .shutdown()
+                                    .await
+                                    .expect("Unable to shutdown tcpstream");
+                                continue;
                             }
                         }
                     }
-                    // Write our own connection header in response
-                    let response_header_bytes = responding_conn_header
-                        .to_bytes(false)
-                        .expect("Couldn't serialize connection header");
-                    stream
-                        .write(&response_header_bytes[..])
-                        .await
-                        .expect("Unable to respond on tcpstream");
-                    let mut wlock = subscriber_streams.write().await;
-                    wlock.push(stream);
-                    log::debug!(
-                        "Added stream for topic {:?} to subscriber {}",
-                        connection_header.topic,
-                        peer_addr
-                    );
                 }
-            }
-        });
+                // Write our own connection header in response
+                let response_header_bytes = responding_conn_header
+                    .to_bytes(false)
+                    .expect("Couldn't serialize connection header");
+                stream
+                    .write(&response_header_bytes[..])
+                    .await
+                    .expect("Unable to respond on tcpstream");
 
-        let publish_task = tokio::spawn(async move {
-            loop {
-                match receiver.recv().await {
-                    Some(msg_to_publish) => {
-                        let mut streams = subscriber_streams.write().await;
-                        let mut streams_to_remove = vec![];
-                        for (stream_idx, stream) in streams.iter_mut().enumerate() {
-                            if let Err(err) = stream.write(&msg_to_publish[..]).await {
-                                // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
-                                log::debug!("Failed to send data to subscriber: {err}, removing");
-                                streams_to_remove.push(stream_idx);
-                            }
-                        }
-                        // Subtract the removed count to account for shifting indices after each
-                        // remove, only works if they're sorted which should be the case given how
-                        // it's being populated (forward enumeration)
-                        streams_to_remove.into_iter().enumerate().for_each(
-                            |(removed_cnt, stream_idx)| {
-                                streams.remove(stream_idx - removed_cnt);
-                            },
+                // If we're configured to latch, send the last message to the new subscriber
+                if responding_conn_header.latching {
+                    if let Some(last_message) = last_message.read().await.as_ref() {
+                        debug!(
+                            "Publication configured to be latching and has last_message, sending"
                         );
-                    }
-                    None => {
-                        log::debug!("No more senders for the publisher channel, exiting...");
-                        break;
+                        let res = stream.write(last_message).await;
+                        match res {
+                            Ok(_) => {}
+                            Err(e) => {
+                                error!("Failed to send latch message to subscriber: {e:?}");
+                                // Note doing any handling here, TCP stream will be cleaned up during
+                                // next regular publish in the publish task
+                            }
+                        }
                     }
                 }
+
+                let mut wlock = subscriber_streams.write().await;
+                wlock.push(stream);
+                debug!(
+                    "Added stream for topic {:?} to subscriber {}",
+                    connection_header.topic, peer_addr
+                );
             }
-        });
-
-        Ok(Self {
-            topic_type: topic_type.to_owned(),
-            _channel_task: listener_handle.into(),
-            listener_port,
-            publish_sender: sender,
-            _publish_task: publish_task.into(),
-        })
+        }
     }
+}
 
-    pub fn get_sender(&self) -> mpsc::Sender<Vec<u8>> {
-        self.publish_sender.clone()
-    }
-
-    pub fn port(&self) -> u16 {
-        self.listener_port
-    }
-
-    pub fn topic_type(&self) -> &str {
-        &self.topic_type
+impl Drop for Publication {
+    fn drop(&mut self) {
+        debug!("Dropping publication for topic {}", self.topic_type);
     }
 }
 

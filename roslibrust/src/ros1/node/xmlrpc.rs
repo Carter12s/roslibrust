@@ -197,7 +197,7 @@ impl XmlRpcServer {
                 let protocols = protocols.iter().flatten().cloned().collect::<Vec<_>>();
                 debug!("Request for topic {topic} from {caller_id} via protocols {protocols:?}");
                 let params = node_server
-                    .request_topic(&caller_id, &topic, &protocols)
+                    .request_topic(&topic, &protocols)
                     .await
                     .map_err(|e| {
                         Self::make_error_response(

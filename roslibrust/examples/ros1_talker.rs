@@ -15,7 +15,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .await
         .map_err(|err| err)?;
     let publisher = nh
-        .advertise::<geometry_msgs::PointStamped>("/my_point", 1)
+        .advertise::<geometry_msgs::PointStamped>("/my_point", 1, false)
         .await?;
 
     for count in 0..50 {

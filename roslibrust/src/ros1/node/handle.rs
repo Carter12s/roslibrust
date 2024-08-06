@@ -57,14 +57,20 @@ impl NodeHandle {
 
     /// Create a new publisher for the given type.
     ///
+    /// This function can be called multiple times to create multiple publishers for the same topic,
+    /// however the FIRST call will establish the queue size and latching behavior for the topic.
+    /// Subsequent calls will simply be given additional handles to the underlying publication.
+    /// This behavior was chosen to mirror ROS1's API, however it is reccomended to .clone() the returend publisher
+    /// instead of calling this function multiple times.
     pub async fn advertise<T: roslibrust_codegen::RosMessageType>(
         &self,
         topic_name: &str,
         queue_size: usize,
+        latching: bool,
     ) -> Result<Publisher<T>, NodeError> {
         let sender = self
             .inner
-            .register_publisher::<T>(topic_name, queue_size)
+            .register_publisher::<T>(topic_name, queue_size, latching)
             .await?;
         Ok(Publisher::new(topic_name, sender))
     }
@@ -110,6 +116,7 @@ impl NodeHandle {
         Ok(ServiceServer::new(service_name, self.clone()))
     }
 
+    // TODO Major: This should probably be moved to NodeServerHandle?
     /// Not intended to be called manually
     /// Stops hosting the specified server.
     /// This is automatically called when dropping the ServiceServer returned by [advertise_service]

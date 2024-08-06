@@ -20,7 +20,7 @@ pub enum RosMasterError {
 
 /// A client that exposes the API hosted by the [rosmaster](http://wiki.ros.org/ROS/Master_API)
 // TODO consider exposing this type publicly
-pub(crate) struct MasterClient {
+pub struct MasterClient {
     client: reqwest::Client,
     // Address at which the rosmaster should be found
     master_uri: String,

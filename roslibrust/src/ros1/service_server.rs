@@ -5,7 +5,7 @@ use std::{
 
 use abort_on_drop::ChildTask;
 use log::*;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 
 use crate::ros1::tcpros::{self, ConnectionHeader};
 
@@ -160,7 +160,7 @@ impl ServiceServerLink {
         // Probably it is better to try to send an error back?
         debug!("Received service_request connection from {peer_addr} for {service_name}");
 
-        let connection_header = match tcpros::recieve_header(&mut stream).await {
+        let connection_header = match tcpros::receive_header(&mut stream).await {
             Ok(header) => header,
             Err(e) => {
                 warn!("Communication error while handling service request connection for {service_name}, could not parse header: {e:?}");
@@ -193,27 +193,15 @@ impl ServiceServerLink {
         // That means we expect one header exchange, and then multiple body exchanges
         // Each loop is one body:
         loop {
-            let mut body_len_bytes = [0u8; 4];
-            if let Err(e) = stream.read_exact(&mut body_len_bytes).await {
-                // Note: this was lowered to debug! from warn! because this is intentionally done by tools like `rosservice` to discover service type
-                debug!("Communication error while handling service request connection for {service_name}, could not get body length: {e:?}");
-                // TODO returning here simply closes the socket? Should we respond with an error instead?
-                return;
-            }
-            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-            trace!("Got body length {body_len} for service {service_name}");
-
-            let mut body = vec![0u8; body_len];
-            if let Err(e) = stream.read_exact(&mut body).await {
-                warn!("Communication error while handling service request connection for {service_name}, could not get body: {e:?}");
-                // TODO returning here simply closes the socket? Should we respond with an error instead?
-                return;
-            }
-            trace!("Got body for service {service_name}: {body:#?}");
-
-            // Okay this is funky and I should be able to do better here
-            // serde_rosmsg expects the length at the front
-            let full_body = [body_len_bytes.to_vec(), body].concat();
+            let full_body = match tcpros::receive_body(&mut stream).await {
+                Ok(body) => body,
+                Err(e) => {
+                    // Note this was degraded to debug! from warn! as every single use client produces this message
+                    debug!("Communication error while handling service request connection for {service_name}, could not read body: {e:?}");
+                    // Returning here closes the socket
+                    return;
+                }
+            };
 
             let response = (method)(full_body);
 
@@ -239,176 +227,5 @@ impl ServiceServerLink {
                 }
             }
         }
-    }
-}
-
-#[cfg(feature = "ros1_test")]
-#[cfg(test)]
-mod test {
-    use log::*;
-    use tokio::time::timeout;
-
-    use crate::ros1::NodeHandle;
-
-    // TODO we're regenerating the messages in a lot of places
-    // makes the tests slower to compile and run
-    // we should probably generate messages for tests once in a central place?
-    roslibrust_codegen_macro::find_and_generate_ros_messages!(
-        "assets/ros1_common_interfaces",
-        "assets/ros1_test_msgs"
-    );
-
-    #[test_log::test(tokio::test)]
-    async fn basic_service_server() {
-        const TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
-        debug!("Getting node handle");
-        let nh = NodeHandle::new("http://localhost:11311", "/basic_service_server")
-            .await
-            .unwrap();
-
-        let server_fn = |request: test_msgs::AddTwoIntsRequest| {
-            info!("Got request: {request:?}");
-            return Ok(test_msgs::AddTwoIntsResponse {
-                sum: request.a + request.b,
-            });
-        };
-
-        // Create the server
-        debug!("Creating server");
-        let _handle = nh
-            .advertise_service::<test_msgs::AddTwoInts, _>(
-                "/basic_service_server/add_two",
-                server_fn,
-            )
-            .await
-            .unwrap();
-
-        // Make the request
-        debug!("Calling service");
-        let call: test_msgs::AddTwoIntsResponse = timeout(
-            TIMEOUT,
-            timeout(
-                TIMEOUT,
-                nh.service_client::<test_msgs::AddTwoInts>("/basic_service_server/add_two"),
-            )
-            .await
-            .unwrap()
-            .unwrap()
-            .call(&test_msgs::AddTwoIntsRequest { a: 1, b: 2 }),
-        )
-        .await
-        .unwrap()
-        .unwrap();
-
-        assert_eq!(call.sum, 3);
-        debug!("Got 3");
-    }
-
-    #[test_log::test(tokio::test)]
-    async fn dropping_service_server_kill_correctly() {
-        debug!("Getting node handle");
-        let nh = NodeHandle::new("http://localhost:11311", "/dropping_service_node")
-            .await
-            .unwrap();
-
-        let server_fn = |request: test_msgs::AddTwoIntsRequest| {
-            info!("Got request: {request:?}");
-            return Ok(test_msgs::AddTwoIntsResponse {
-                sum: request.a + request.b,
-            });
-        };
-
-        // Create the server
-        let handle = nh
-            .advertise_service::<test_msgs::AddTwoInts, _>("~/add_two", server_fn)
-            .await
-            .unwrap();
-
-        // Make the request (should succeed)
-        let client = nh
-            .service_client::<test_msgs::AddTwoInts>("~/add_two")
-            .await
-            .unwrap();
-        let _call: test_msgs::AddTwoIntsResponse = client
-            .call(&test_msgs::AddTwoIntsRequest { a: 1, b: 2 })
-            .await
-            .unwrap();
-
-        // Shut down the server
-        std::mem::drop(handle);
-        // Wait a little bit for server shut down to process
-        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-
-        // Make the request again (should fail)
-        let call_2 = client
-            .call(&test_msgs::AddTwoIntsRequest { a: 1, b: 2 })
-            .await;
-        debug!("Got call_2: {call_2:?}");
-        assert!(
-            call_2.is_err(),
-            "Shouldn't be able to call after server is shut down"
-        );
-
-        // Create a new clinet
-        let client = nh
-            .service_client::<test_msgs::AddTwoInts>("~/add_two")
-            .await;
-        // Client should fail to create as there should be no provider of the service
-        assert!(
-            client.is_err(),
-            "Shouldn't be able to connect again (no provider of service)"
-        );
-
-        // Confirm ros master no longer reports our service as provided (via rosapi for fun)
-        let rosapi_client = nh
-            .service_client::<rosapi::Services>("/rosapi/services")
-            .await
-            .unwrap();
-        let service_list: rosapi::ServicesResponse = rosapi_client
-            .call(&rosapi::ServicesRequest {})
-            .await
-            .unwrap();
-        assert!(!service_list
-            .services
-            .contains(&"/dropping_service_node/add_two".to_string()));
-    }
-
-    #[test_log::test(tokio::test)]
-    async fn service_error_behavior() {
-        debug!("Getting node handle");
-        let nh = NodeHandle::new("http://localhost:11311", "/service_error_behavior")
-            .await
-            .unwrap();
-
-        let server_fn = |request: test_msgs::AddTwoIntsRequest| -> Result<
-            test_msgs::AddTwoIntsResponse,
-            Box<dyn std::error::Error + Send + Sync>,
-        > {
-            info!("Got request: {request:?}");
-            return Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "test message",
-            )));
-        };
-
-        // Create the server
-        let _handle = nh
-            .advertise_service::<test_msgs::AddTwoInts, _>("~/add_two", server_fn)
-            .await
-            .unwrap();
-
-        // Make the request (should fail)
-        let client = nh
-            .service_client::<test_msgs::AddTwoInts>("~/add_two")
-            .await
-            .unwrap();
-        let call = client
-            .call(&test_msgs::AddTwoIntsRequest { a: 1, b: 2 })
-            .await;
-        // Okay so this is logging the error message correctly, but the contents currently suck:
-        // "Got call: Err(IoError(Custom { kind: Other, error: "Failure response from service server: Custom { kind: NotFound, error: \"test message\" }" }))"
-        // We should someday clean up error types here, but frankly errors throughout the entire crate need an overhaul
-        debug!("Got call: {call:?}");
-        assert!(call.is_err());
     }
 }

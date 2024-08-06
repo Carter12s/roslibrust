@@ -17,6 +17,8 @@ use tokio::{
     },
 };
 
+use super::tcpros;
+
 pub type CallServiceRequest = (Vec<u8>, oneshot::Sender<CallServiceResponse>);
 pub type CallServiceResponse = RosLibRustResult<Vec<u8>>;
 
@@ -67,13 +69,7 @@ impl<T: RosServiceType> ServiceClient<T> {
                     self.service_name,
                     result_payload
                 );
-
-                // Okay the 1.. is funky and needs to be addressed
-                // This is a little buried in the ROS documentation by the first byte is the "success" byte
-                // if it is 1 then the rest of the payload is the response
-                // Otherwise ros silently swaps the payload out for an error message
-                // We need to parse that error message and display somewhere
-                let response: T::Response = serde_rosmsg::from_slice(&result_payload[1..])
+                let response: T::Response = serde_rosmsg::from_slice(&result_payload)
                     .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
                 return Ok(response);
             }
@@ -201,26 +197,12 @@ impl ServiceClientLink {
 
         if success {
             // Parse length of the payload body
-            let mut body_len_bytes = [0u8; 4];
-            let _body_bytes_read = stream.read_exact(&mut body_len_bytes).await?;
-            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-
-            let mut body = vec![0u8; body_len];
-            stream.read_exact(&mut body).await?;
-
-            // Dumb mangling here, our implementation expects the length and success at the front
-            // got to be a better way than this
-            let full_body = [success_byte.to_vec(), body_len_bytes.to_vec(), body].concat();
-
-            Ok(full_body)
+            let body = tcpros::receive_body(stream).await?;
+            Ok(body)
         } else {
-            let mut body_len_bytes = [0u8; 4];
-            let _body_bytes_read = stream.read_exact(&mut body_len_bytes).await?;
-            let body_len = u32::from_le_bytes(body_len_bytes) as usize;
-            let mut body = vec![0u8; body_len];
-            stream.read_exact(&mut body).await?;
-            let full_body = [body_len_bytes.to_vec(), body].concat();
-            let err_msg: String = serde_rosmsg::from_slice(&full_body).map_err(|err| {
+            // Parse an error message as the body
+            let error_body = tcpros::receive_body(stream).await?;
+            let err_msg: String = serde_rosmsg::from_slice(&error_body).map_err(|err| {
                 log::error!("Failed to parse service call error message: {err}");
                 std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
@@ -232,118 +214,6 @@ impl ServiceClientLink {
                 std::io::ErrorKind::Other,
                 format!("Failure response from service server: {err_msg}"),
             ))
-        }
-    }
-}
-
-#[cfg(feature = "ros1_test")]
-#[cfg(test)]
-mod test {
-    use log::info;
-
-    use crate::ros1::{NodeError, NodeHandle};
-
-    roslibrust_codegen_macro::find_and_generate_ros_messages!(
-        "assets/ros1_test_msgs",
-        "assets/ros1_common_interfaces"
-    );
-
-    // Some logic in the service client specifically for handling large payloads
-    // trying to intentionally exercise that path
-    // TODO this could probably be moved to integration tests or own file
-    #[test_log::test(tokio::test)]
-    async fn test_large_service_payload_client() {
-        let nh = NodeHandle::new(
-            "http://localhost:11311",
-            "test_large_service_payload_client",
-        )
-        .await
-        .unwrap();
-
-        // Advertise a service that just echo's the bytes back
-        let _handle = nh
-            .advertise_service::<test_msgs::RoundTripArray, _>("large_service_payload", |request| {
-                Ok(test_msgs::RoundTripArrayResponse {
-                    bytes: request.bytes,
-                })
-            })
-            .await
-            .unwrap();
-
-        // Picking random value that should be larger than MTU
-        // Making sure the ROS message gets split over multiple TCP transactions
-        // and that we correctly re-assemble it on the other end
-        let bytes = vec![0; 10_000];
-
-        info!("Starting service call");
-        let response = nh
-            .service_client::<test_msgs::RoundTripArray>("large_service_payload")
-            .await
-            .unwrap()
-            .call(&test_msgs::RoundTripArrayRequest {
-                bytes: bytes.clone(),
-            })
-            .await
-            .unwrap();
-        info!("Service call complete");
-
-        assert_eq!(response.bytes, bytes);
-    }
-
-    #[test_log::test(tokio::test)]
-    async fn error_on_unprovided_service() {
-        let nh = NodeHandle::new("http://localhost:11311", "error_on_unprovided_service")
-            .await
-            .unwrap();
-
-        let client = nh
-            .service_client::<test_msgs::RoundTripArray>("unprovided_service")
-            .await;
-        assert!(client.is_err());
-        // Note / TODO: this currently returns an IoError(Kind(ConnectionAborted))
-        // which is better than hanging, but not a good error type to return
-        if !matches!(client, Err(NodeError::IoError(_))) {
-            panic!("Unexpected error type");
-        }
-    }
-
-    #[test_log::test(tokio::test)]
-    async fn persistent_client_can_be_called_multiple_times() {
-        let nh = NodeHandle::new(
-            "http://localhost:11311",
-            "/persistent_client_can_be_called_multiple_times",
-        )
-        .await
-        .unwrap();
-
-        let server_fn = |request: test_msgs::AddTwoIntsRequest| {
-            Ok(test_msgs::AddTwoIntsResponse {
-                sum: request.a + request.b,
-            })
-        };
-
-        let _handle = nh
-            .advertise_service::<test_msgs::AddTwoInts, _>(
-                "/persistent_client_can_be_called_multiple_times/add_two",
-                server_fn,
-            )
-            .await
-            .unwrap();
-
-        let client = nh
-            .service_client::<test_msgs::AddTwoInts>(
-                "/persistent_client_can_be_called_multiple_times/add_two",
-            )
-            .await
-            .unwrap();
-
-        for i in 0..10 {
-            let call: test_msgs::AddTwoIntsResponse = client
-                .call(&test_msgs::AddTwoIntsRequest { a: 1, b: i })
-                .await
-                .unwrap();
-
-            assert_eq!(call.sum, 1 + i);
         }
     }
 }

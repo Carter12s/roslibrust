@@ -9,7 +9,7 @@ use std::{
     net::{IpAddr, Ipv4Addr},
 };
 
-mod actor;
+pub(crate) mod actor;
 mod handle;
 mod xmlrpc;
 use actor::*;
