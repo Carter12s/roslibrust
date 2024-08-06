@@ -4,7 +4,6 @@
 //! Ensure rosapi is running on your target system before attempting to utilize these features!
 
 use crate::{ClientHandle, RosLibRustResult};
-use async_trait::async_trait;
 
 // TODO major issue here for folks who actually try to use rosapi in their project
 // This macro isn't going to expand correctly when not used from this crate's workspace
@@ -14,7 +13,6 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 
 /// Represents the ability to interact with the interfaces provided by the rosapi node.
 /// This trait is implemented for ClientHandle when the `rosapi` feature is enabled.
-#[async_trait]
 trait RosApi {
     async fn get_time(&self) -> RosLibRustResult<rosapi::GetTimeResponse>;
     async fn topics(&self) -> RosLibRustResult<rosapi::TopicsResponse>;
@@ -99,7 +97,6 @@ trait RosApi {
     async fn get_services(&self) -> RosLibRustResult<rosapi::ServicesResponse>;
 }
 
-#[async_trait]
 impl RosApi for ClientHandle {
     /// Get the current time
     async fn get_time(&self) -> RosLibRustResult<rosapi::GetTimeResponse> {
