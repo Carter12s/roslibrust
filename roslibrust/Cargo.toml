@@ -13,7 +13,6 @@ categories = ["science::robotics"]
 [dependencies]
 abort-on-drop = "0.2"
 anyhow = "1.0"
-async-trait = "0.1"
 byteorder = "1.4"
 dashmap = "5.3"
 deadqueue = "0.2.4" # .4+ is required to fix bug with missing tokio dep

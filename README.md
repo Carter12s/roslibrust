@@ -5,7 +5,9 @@
 [![Iron](https://github.com/Carter12s/roslibrust/actions/workflows/iron.yml/badge.svg)](https://github.com/Carter12s/roslibrust/actions/workflows/iron.yml)
 [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This package aims to provide a convenient intermediary between ROS1's rosbridge and Rust similar to roslibpy and roslibjs.
+This package aims to provide a convenient "async first" library for interacting with ROS.
+
+Currently this packaged provides support for both ROS1 native communication (TCPROS) and rosbridge's protocol which provides support for both ROS1 and ROS2 albeit with some overhead.
 
 Information about the protocol can be found [here](https://github.com/RobotWebTools/rosbridge_suite).
 
@@ -13,7 +15,7 @@ Note on documentation:
 All information about the crate itself (examples, documentation, tutorials, etc.) lives in the source code and can be viewed on [docs.rs](https://docs.rs/roslibrust).
 This readme is for "Meta" information about developing for the crate.
 
-Fully Supported via rosbridge: Noetic, Galactic, Humble.
+Fully Supported via rosbridge: Noetic, Galactic, Humble, Iron,
 
 ## Code Generation of ROS Messages
 
@@ -24,47 +26,46 @@ It's used like this:
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces/std_msgs");
 ```
 
-Code generation can also be done with a script using the same code generation backend called by the macro. See the contents of `example_package` for a detailed example of how this can be done. While the proc_macros are extremely convenient for getting started
+Code generation can also be done with a build.rs script using the same code generation backend called by the macro. See the contents of `example_package` for a detailed example of how this can be done. While the proc_macros are extremely convenient for getting started
 there is currently no (good) way for a proc_macro to inform the compiler that it needs to be re-generated when an external file
 changes. Using a build script requires more setup, but can correctly handling re-building when message files are edited.
 
-## Experimental Support for ROS1 Native
-
-If built with the `ros1` feature, `roslibrust` exports some experimental support for implementing nodes which talk to other ROS1 nodes using the TCPROS protocol without the need for the rosbridge as an intermediary. See `ros1_talker.rs` and `ros1_listener.rs` under `roslibrust/examples` to see usage. This implementation is relatively new, incomplete, and untested. Filing issues on bugs encountered is very appreciated!
-
-See this issue filter for known issues: https://github.com/Carter12s/roslibrust/labels/ros1
+Generated message types are compatible with both the ROS1 native and RosBridge backends.
 
 ## Roadmap
 
-Rough overview of the features planned to built for this crate in what order:
-
 | Feature                      | rosbridge                                                   | ROS1 | ROS2 |
 |------------------------------|-------------------------------------------------------------|------|------|
-| examples                     | ✅                                                         | ✅   | x    |
-| message_gen                  | ✅                                                         | ✅   | ✅  |
-| advertise / publish          | ✅                                                         | ✅   | x    |
-| unadvertise                  | ✅                                                         | ✅   | x    |
-| subscribe                    | ✅                                                         | ✅   | x    |
-| unsubscribe                  | ✅                                                         | ✅   | x    |
-| services                     | ✅                                                         | x    | x    |
-| rosapi                       | ✅ (ROS1 only for now)                                     | N/A  | N/A  |
+| examples                     | ✅                                                          | ✅   | x    |
+| message_gen                  | ✅                                                          | ✅   | ✅   |
+| advertise / publish          | ✅                                                          | ✅   | x    |
+| unadvertise                  | ✅                                                          | ✅   | x    |
+| subscribe                    | ✅                                                          | ✅   | x    |
+| unsubscribe                  | ✅                                                          | ✅   | x    |
+| services                     | ✅                                                          | ✅   | x    |
+| actions                      | (codgen of message types only)                                            |
+| rosapi                       | ✅                                                          | x    | x    |
 | TLS / wss://                 | Should be working, untested                                 | N/A  | N/A  |
-| ROS2 msgs length limits      | Planned                                                     | N/A  | x    |
-| cbor                         | Planned                                                     | N/A  | N/A  |
-| rosbridge status access      | Planned                                                     | N/A  | N/A  |
-| rosout logger                | Planned                                                     | x    | x    |
-| auth                         | Planned                                                     | N/A  | N/A  |
-| fragment / png               | Uncertain if this package will support                      | x    | N/A  |
-| cbor-raw                     | Uncertain if this package will support                      | N/A  | N/A  |
 
+Upcoming features in rough order:
+
+- Ability to write generic clients via ROS trait
+- In memory backend that can be used for testing
+- Support for parameter server
 
 ## Contributing
 
 Contribution through reporting of issues encountered and implementation in PRs is welcome! Before landing a large PR with lots of code implemented, please open an issue if there isn't a relevant one already available and chat with a maintainer to make sure the design fits well with all supported platforms and any in-progress implementation efforts.
 
-### Rust Version for Development
+### Minimum Supported Rust Version / MSRV
 
-Due to cargo 1.72 enabling "doctest-in-workspace" by default it is reccomended to use Rust 1.72+ for develop. Previous rust versions are support but will require some incantations when executing doctests.
+We don't have an official MSRV yet.
+
+Due to cargo 1.72 enabling "doctest-in-workspace" by default it is recommended to use Rust 1.72+ for development.
+Previous rust versions are support but will require some incantations when executing doctests.
+
+The experimental topic_provider feature currently relies on `async fn` in traits from Rust 1.75.
+When that feature standardizes that will likely become our MSRV.
 
 ### Running Tests
 

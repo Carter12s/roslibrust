@@ -21,11 +21,6 @@ mod integration_tests;
 #[allow(dead_code)]
 type TestResult = Result<(), anyhow::Error>;
 
-// Topic provider is locked behind a feature until it is stabalized
-// additionally because of its use of generic associated types, it requires rust >1.65
-#[cfg(feature = "topic_provider")]
-mod topic_provider;
-
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
 

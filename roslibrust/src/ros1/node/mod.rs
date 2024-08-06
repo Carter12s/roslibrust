@@ -1,6 +1,8 @@
 //! This module contains the top level Node and NodeHandle classes.
 //! These wrap the lower level management of a ROS Node connection into a higher level and thread safe API.
 
+use crate::RosLibRustError;
+
 use super::{names::InvalidNameError, RosMasterError};
 use std::{
     io,
@@ -11,6 +13,7 @@ pub(crate) mod actor;
 mod handle;
 mod xmlrpc;
 use actor::*;
+use anyhow::anyhow;
 pub use handle::NodeHandle;
 use tokio::sync::{mpsc, oneshot};
 use xmlrpc::*;
@@ -96,5 +99,24 @@ impl From<oneshot::error::RecvError> for NodeError {
 impl<T> From<mpsc::error::SendError<T>> for NodeError {
     fn from(_value: mpsc::error::SendError<T>) -> Self {
         Self::ChannelClosedError
+    }
+}
+
+// TODO MAJOR: this is kinda messy
+// but for historic development reasons (not having a design for errors)
+// we produced two different error types for the two different impls (ros1, rosbridge)
+// This allows fusing the two error types together so that TopicProider can work
+// but we should just better design all the error handling
+impl From<NodeError> for RosLibRustError {
+    fn from(value: NodeError) -> Self {
+        match value {
+            NodeError::RosMasterError(e) => RosLibRustError::ServerError(e.to_string()),
+            NodeError::ChannelClosedError => {
+                RosLibRustError::Unexpected(anyhow!("Channel closed, something was dropped?"))
+            }
+            NodeError::InvalidName(e) => RosLibRustError::InvalidName(e.to_string()),
+            NodeError::XmlRpcError(e) => RosLibRustError::SerializationError(e.to_string().into()),
+            NodeError::IoError(e) => RosLibRustError::IoError(e),
+        }
     }
 }

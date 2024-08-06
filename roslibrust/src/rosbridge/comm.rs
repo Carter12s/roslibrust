@@ -1,6 +1,5 @@
 use crate::{rosbridge::Writer, RosLibRustResult};
 use anyhow::bail;
-use async_trait::async_trait;
 use futures_util::SinkExt;
 use log::debug;
 use roslibrust_codegen::RosMessageType;
@@ -88,7 +87,6 @@ impl FromStr for Ops {
 /// So we're defining this trait on a foreign type, since we didn't end up
 /// using this trait for mocking. I'm inclined to replace it, and move the
 /// impls directly into some wrapper around [Writer]
-#[async_trait]
 pub(crate) trait RosBridgeComm {
     async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
     async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()>;
@@ -113,7 +111,6 @@ pub(crate) trait RosBridgeComm {
     ) -> RosLibRustResult<()>;
 }
 
-#[async_trait]
 impl RosBridgeComm for Writer {
     async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()> {
         let msg = json!(
