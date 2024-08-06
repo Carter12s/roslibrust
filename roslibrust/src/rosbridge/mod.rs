@@ -21,7 +21,6 @@ mod integration_tests;
 #[allow(dead_code)]
 type TestResult = Result<(), anyhow::Error>;
 
-
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
 

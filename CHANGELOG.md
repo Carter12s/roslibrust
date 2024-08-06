@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## Release Instructions:
+## Release Instructions
 
 Steps:
 
@@ -22,14 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+
 - ROS1 Native Publishers now support latching behavior
 - The XML RPC client for interacting directly with the rosmaster server has been exposed as a public API
+- Experimental: Initial support for writing generic clients that can be compile time specialized for rosbridge or ros1
 
 ### Fixed
+
 - ROS1 Native Publishers correctly call unadvertise when dropped
 
 ### Changed
-- ROS1 Node Handle's advertise() now requies a latching argument
+
+- ROS1 Node Handle's advertise() now requires a latching argument
 
 ## 0.10.2 - August 3rd, 2024
 

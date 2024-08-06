@@ -112,7 +112,7 @@ pub mod ros1;
 // additionally because of its use of generic associated types, it requires rust >1.65
 #[cfg(feature = "topic_provider")]
 /// Provides a generic trait for building clients / against either the rosbridge,
-/// ros1, or a mock backend 
+/// ros1, or a mock backend
 pub mod topic_provider;
 
 /// For now starting with a central error type, may break this up more in future

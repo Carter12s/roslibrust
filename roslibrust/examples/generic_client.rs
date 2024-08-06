@@ -17,7 +17,6 @@ async fn main() {
     );
     // TopicProvider cannot be an "Object Safe Trait" due to its generic parameters
     // This means we can't do:
-    // let x: Box<dyn TopicProvider> = ros1::NodeHandle;
 
     // Which specific TopicProvider you are going to use must be known at
     // compile time! We can use features to build multiple copies of our
@@ -32,7 +31,11 @@ async fn main() {
 
     impl<T: TopicProvider> MyNode<T> {
         async fn run(self) {
-            let publisher = self.ros.advertise::<std_msgs::String>("/chatter").await.unwrap();
+            let publisher = self
+                .ros
+                .advertise::<std_msgs::String>("/chatter")
+                .await
+                .unwrap();
 
             loop {
                 let msg = std_msgs::String {
@@ -45,13 +48,23 @@ async fn main() {
     }
 
     // create a rosbridge handle and start node
-    let ros = roslibrust::ClientHandle::new("ws://localhost:9090").await.unwrap();
-    let node = MyNode { ros, name: "rosbridge_node".to_string() };
+    let ros = roslibrust::ClientHandle::new("ws://localhost:9090")
+        .await
+        .unwrap();
+    let node = MyNode {
+        ros,
+        name: "rosbridge_node".to_string(),
+    };
     tokio::spawn(async move { node.run().await });
 
     // create a ros1 handle and start node
-    let ros = roslibrust::ros1::NodeHandle::new("http://localhost:11311", "/my_node").await.unwrap();
-    let node = MyNode { ros, name: "ros1_node".to_string() };
+    let ros = roslibrust::ros1::NodeHandle::new("http://localhost:11311", "/my_node")
+        .await
+        .unwrap();
+    let node = MyNode {
+        ros,
+        name: "ros1_node".to_string(),
+    };
     tokio::spawn(async move { node.run().await });
 
     loop {
@@ -62,7 +75,7 @@ async fn main() {
     // With this executable running
     // RUST_LOG=debug cargo run --features ros1,topic_provider --example generic_client
     // You should be able to run `rostopic echo /chatter` and see the two nodes print out their names.
-    // Note: this will not run without rosbridge running 
+    // Note: this will not run without rosbridge running
 }
 
 #[cfg(not(feature = "topic_provider"))]

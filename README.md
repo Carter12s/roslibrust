@@ -40,31 +40,30 @@ Rough overview of the features planned to built for this crate in what order:
 
 | Feature                      | rosbridge                                                   | ROS1 | ROS2 |
 |------------------------------|-------------------------------------------------------------|------|------|
-| examples                     | ✅                                                         | ✅   | x    |
-| message_gen                  | ✅                                                         | ✅   | ✅  |
-| advertise / publish          | ✅                                                         | ✅   | x    |
-| unadvertise                  | ✅                                                         | ✅   | x    |
-| subscribe                    | ✅                                                         | ✅   | x    |
-| unsubscribe                  | ✅                                                         | ✅   | x    |
-| services                     | ✅                                                         | x    | x    |
-| rosapi                       | ✅ (ROS1 only for now)                                     | N/A  | N/A  |
+| examples                     | ✅                                                          | ✅   | x    |
+| message_gen                  | ✅                                                          | ✅   | ✅   |
+| advertise / publish          | ✅                                                          | ✅   | x    |
+| unadvertise                  | ✅                                                          | ✅   | x    |
+| subscribe                    | ✅                                                          | ✅   | x    |
+| unsubscribe                  | ✅                                                          | ✅   | x    |
+| services                     | ✅                                                          | ✅   | x    |
+| actions                      | (codgen of messages only)                                                 |
+| rosapi                       | ✅                                                          | x    | x    |
 | TLS / wss://                 | Should be working, untested                                 | N/A  | N/A  |
-| ROS2 msgs length limits      | Planned                                                     | N/A  | x    |
-| cbor                         | Planned                                                     | N/A  | N/A  |
-| rosbridge status access      | Planned                                                     | N/A  | N/A  |
-| rosout logger                | Planned                                                     | x    | x    |
-| auth                         | Planned                                                     | N/A  | N/A  |
-| fragment / png               | Uncertain if this package will support                      | x    | N/A  |
-| cbor-raw                     | Uncertain if this package will support                      | N/A  | N/A  |
-
 
 ## Contributing
 
 Contribution through reporting of issues encountered and implementation in PRs is welcome! Before landing a large PR with lots of code implemented, please open an issue if there isn't a relevant one already available and chat with a maintainer to make sure the design fits well with all supported platforms and any in-progress implementation efforts.
 
-### Rust Version for Development
+### Minimum Supported Rust Version / MSRV
 
-Due to cargo 1.72 enabling "doctest-in-workspace" by default it is reccomended to use Rust 1.72+ for develop. Previous rust versions are support but will require some incantations when executing doctests.
+We don't have an official MSRV yet.
+
+Due to cargo 1.72 enabling "doctest-in-workspace" by default it is recommended to use Rust 1.72+ for development.
+Previous rust versions are support but will require some incantations when executing doctests.
+
+The experimental topic_provider feature currently relies on `async fn` in traits from Rust 1.75.
+When that feature standardizes that will likely become our MSRV.
 
 ### Running Tests
 

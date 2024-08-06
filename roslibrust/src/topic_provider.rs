@@ -118,7 +118,7 @@ impl TopicProvider for crate::ros1::NodeHandle {
         topic: &str,
     ) -> RosLibRustResult<Self::Publisher<T>> {
         // TODO MAJOR: consider promoting queue size, making unlimited default
-        self.advertise::<T>(topic.as_ref(), 10)
+        self.advertise::<T>(topic.as_ref(), 10, false)
             .await
             .map_err(|e| e.into())
     }
