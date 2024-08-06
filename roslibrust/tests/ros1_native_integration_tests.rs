@@ -13,6 +13,36 @@ mod tests {
     );
 
     #[test_log::test(tokio::test)]
+    async fn test_subscribe_any() {
+        // get a single message in raw bytes and test the bytes are as expected
+        let nh = NodeHandle::new("http://localhost:11311", "test_subscribe_any")
+            .await
+            .unwrap();
+
+        let publisher = nh
+            .advertise::<std_msgs::String>("/test_subscribe_any", 1, true)
+            .await
+            .unwrap();
+
+        let mut subscriber = nh
+            .subscribe_any("/test_subscribe_any", 1)
+            .await
+            .unwrap();
+
+        publisher
+            .publish(&std_msgs::String {
+                data: "test".to_owned(),
+            })
+            .await
+            .unwrap();
+
+        let res =
+            tokio::time::timeout(tokio::time::Duration::from_millis(250), subscriber.next()).await;
+        let res = res.unwrap().unwrap().unwrap();
+        assert!(res == vec![8, 0, 0, 0, 4, 0, 0, 0, 116, 101, 115, 116]);
+    }
+
+    #[test_log::test(tokio::test)]
     async fn test_latching() {
         let nh = NodeHandle::new("http://localhost:11311", "test_latching")
             .await

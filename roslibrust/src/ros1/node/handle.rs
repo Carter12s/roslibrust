@@ -2,6 +2,7 @@ use super::actor::{Node, NodeServerHandle};
 use crate::{
     ros1::{
         names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
+        subscriber::SubscriberAny,
         NodeError, ServiceServer,
     },
     ServiceFn,
@@ -73,6 +74,18 @@ impl NodeHandle {
             .register_publisher::<T>(topic_name, queue_size, latching)
             .await?;
         Ok(Publisher::new(topic_name, sender))
+    }
+
+    pub async fn subscribe_any(
+        &self,
+        topic_name: &str,
+        queue_size: usize,
+    ) -> Result<SubscriberAny, NodeError> {
+        let receiver = self
+            .inner
+            .register_subscriber::<Vec<u8>>(topic_name, queue_size)
+            .await?;
+        Ok(SubscriberAny::new(receiver))
     }
 
     pub async fn subscribe<T: roslibrust_codegen::RosMessageType>(

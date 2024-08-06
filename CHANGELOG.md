@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ROS1 Native Publishers now support latching behavior
 - The XML RPC client for interacting directly with the rosmaster server has been exposed as a public API
 - Experimental: Initial support for writing generic clients that can be compile time specialized for rosbridge or ros1
+- Can subscribe to any topic and get raw bytes instead of a deserialized message of known type
 
 ### Fixed
 

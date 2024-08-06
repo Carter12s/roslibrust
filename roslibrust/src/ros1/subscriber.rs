@@ -39,6 +39,29 @@ impl<T: RosMessageType> Subscriber<T> {
     }
 }
 
+pub struct SubscriberAny {
+    receiver: broadcast::Receiver<Vec<u8>>,
+    _phantom: PhantomData<Vec<u8>>,
+}
+
+impl SubscriberAny {
+    pub(crate) fn new(receiver: broadcast::Receiver<Vec<u8>>) -> Self {
+        Self {
+            receiver,
+            _phantom: PhantomData,
+        }
+    }
+
+    pub async fn next(&mut self) -> Option<Result<Vec<u8>, SubscriberError>> {
+        let data = match self.receiver.recv().await {
+            Ok(v) => v,
+            Err(RecvError::Closed) => return None,
+            Err(RecvError::Lagged(n)) => return Some(Err(SubscriberError::Lagged(n))),
+        };
+        Some(Ok(data))
+    }
+}
+
 pub struct Subscription {
     subscription_tasks: Vec<ChildTask<()>>,
     _msg_receiver: broadcast::Receiver<Vec<u8>>,
@@ -154,7 +177,7 @@ async fn establish_publisher_connection(
     stream.write_all(&conn_header_bytes[..]).await?;
 
     if let Ok(responded_header) = tcpros::receive_header(&mut stream).await {
-        if conn_header.md5sum == responded_header.md5sum {
+        if conn_header.md5sum == Some("*".to_string()) || conn_header.md5sum == responded_header.md5sum {
             log::debug!(
                 "Established connection with publisher for {:?}",
                 conn_header.topic
