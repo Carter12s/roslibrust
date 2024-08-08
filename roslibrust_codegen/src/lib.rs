@@ -53,9 +53,7 @@ impl RosMessageType for () {
 
 /// Fundamental traits for service types this crate works with
 /// This trait will be satisfied for any services definitions generated with this crate's message_gen functionality
-pub trait RosServiceType:
-    'static + Send + Sync
-{
+pub trait RosServiceType: 'static + Send + Sync {
     /// Name of the ros service e.g. `rospy_tutorials/AddTwoInts`
     const ROS_SERVICE_NAME: &'static str;
     /// The computed md5sum of the message file and its dependencies
