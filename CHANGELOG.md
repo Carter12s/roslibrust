@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - ROS1 Node Handle's advertise() now requires a latching argument
+- RosBridge ClientHandle [call_service()] is now templated on the service type instead of on both the request and response type.
+This is to bring it in line with the ROS1 API.
 
 ## 0.10.2 - August 3rd, 2024
 

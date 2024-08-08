@@ -357,11 +357,11 @@ impl ClientHandle {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+    pub async fn call_service<S: RosServiceType>(
         &self,
         service: &str,
-        req: Req,
-    ) -> RosLibRustResult<Res> {
+        req: S::Request,
+    ) -> RosLibRustResult<S::Response> {
         self.check_for_disconnect()?;
         let (tx, rx) = tokio::sync::oneshot::channel();
         let rand_string: String = uuid::Uuid::new_v4().to_string();

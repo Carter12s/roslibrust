@@ -255,8 +255,8 @@ mod integration_tests {
         // Make sure service advertise makes it through
         tokio::time::sleep(TIMEOUT).await;
 
-        let response: SetBoolResponse = client
-            .call_service(topic, SetBoolRequest { data: true })
+        let response = client
+            .call_service::<SetBool>(topic, SetBoolRequest { data: true })
             .await
             .expect("Failed to call service");
         assert_eq!(response.message, "call_success");
@@ -269,7 +269,7 @@ mod integration_tests {
 
         // Should now fail to get a response after the handle is dropped
         let response = client
-            .call_service::<SetBoolRequest, SetBoolResponse>(topic, SetBoolRequest { data: true })
+            .call_service::<SetBool>(topic, SetBoolRequest { data: true })
             .await;
         assert!(response.is_err());
 
@@ -361,7 +361,10 @@ mod integration_tests {
             ClientHandle::new_with_options(ClientHandleOptions::new(LOCAL_WS).timeout(TIMEOUT))
                 .await?;
 
-        match client.call_service::<(), ()>("/not_real", ()).await {
+        match client
+            .call_service::<std_srvs::Trigger>("/not_real", std_srvs::TriggerRequest {})
+            .await
+        {
             Ok(_) => {
                 panic!("Somehow returned a response on a service that didn't exist?");
             }
