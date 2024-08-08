@@ -265,7 +265,7 @@ impl ClientHandle {
     // Publishes a message
     // Fails immediately(ish) if disconnected
     // Returns success when message is put on websocket (no confirmation of receipt)
-    pub(crate) async fn publish<T>(&self, topic: &str, msg: T) -> RosLibRustResult<()>
+    pub(crate) async fn publish<T>(&self, topic: &str, msg: &T) -> RosLibRustResult<()>
     where
         T: RosMessageType,
     {

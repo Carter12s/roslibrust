@@ -82,7 +82,7 @@ mod integration_tests {
             frame_id: "self_publish".to_string(),
         };
 
-        timeout(TIMEOUT, client.publish(TOPIC, msg_out.clone()))
+        timeout(TIMEOUT, client.publish(TOPIC, &msg_out))
             .await
             .expect("Failed to publish in time")
             .unwrap();
@@ -109,7 +109,7 @@ mod integration_tests {
 
         #[cfg(feature = "ros1_test")]
         publisher
-            .publish(Time {
+            .publish(&Time {
                 data: roslibrust_codegen::Time { secs: 0, nsecs: 0 },
             })
             .await?;
@@ -200,7 +200,7 @@ mod integration_tests {
         debug!("Got subscriber");
 
         let msg = Header::default();
-        publisher.publish(msg).await?;
+        publisher.publish(&msg).await?;
         timeout(TIMEOUT, sub.next()).await?;
 
         debug!("Dropping publisher");
@@ -215,7 +215,7 @@ mod integration_tests {
         let sub = client.subscribe::<Header>(TOPIC).await?;
         // manually publishing using private api
         let msg = Header::default();
-        client.publish(TOPIC, msg).await?;
+        client.publish(TOPIC, &msg).await?;
 
         match timeout(TIMEOUT, sub.next()).await {
             Ok(_msg) => {
@@ -338,7 +338,7 @@ mod integration_tests {
         let x = std_msgs::Char {
             data: 'x'.try_into().unwrap(),
         };
-        publisher.publish(x.clone()).await?;
+        publisher.publish(&x).await?;
 
         let y = timeout(TIMEOUT, subscriber.next())
             .await
@@ -440,7 +440,7 @@ mod integration_tests {
 
         // Confirm we can send and receive messages
         publisher
-            .publish(Header::default())
+            .publish(&Header::default())
             .await
             .expect("Failed to publish");
 
@@ -453,7 +453,7 @@ mod integration_tests {
         tokio::time::sleep(WAIT_FOR_ROSBRIDGE).await;
 
         // Try to publish and confirm we get an error
-        let res = publisher.publish(Header::default()).await;
+        let res = publisher.publish(&Header::default()).await;
         match res {
             Ok(_) => {
                 panic!("Should have failed to publish after rosbridge died");
@@ -485,7 +485,7 @@ mod integration_tests {
 
         // Try to publish and confirm we reconnect automatically
         publisher
-            .publish(Header::default())
+            .publish(&Header::default())
             .await
             .expect("Failed to publish after rosbridge died");
 

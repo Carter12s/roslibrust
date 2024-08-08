@@ -90,7 +90,7 @@ impl FromStr for Ops {
 pub(crate) trait RosBridgeComm {
     async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
     async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()>;
-    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()>;
+    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: &T) -> RosLibRustResult<()>;
     async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosLibRustResult<()>;
     async fn advertise_str(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
     async fn call_service<Req: RosMessageType>(
@@ -139,7 +139,7 @@ impl RosBridgeComm for Writer {
         Ok(())
     }
 
-    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: T) -> RosLibRustResult<()> {
+    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: &T) -> RosLibRustResult<()> {
         let msg = json!(
             {
                 "op": Ops::Publish.to_string(),

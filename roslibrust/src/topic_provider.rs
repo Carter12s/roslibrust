@@ -14,8 +14,7 @@ pub trait Publish<T: RosMessageType> {
 
 impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
     async fn publish(&self, data: &T) -> RosLibRustResult<()> {
-        // TODO clone here is bad and we should standardized on ownership of publish
-        self.publish(data.clone()).await
+        self.publish(data).await
     }
 }
 
