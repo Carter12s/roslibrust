@@ -349,11 +349,8 @@ impl ClientHandle {
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
     ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
-    ///   // Call service using implied types
-    ///   // Note: () "the empty type" has an explicit definition as a RosMessageType and can be used in place of naming an empty message
-    ///   let response: rosapi::GetTimeResponse  = handle.call_service("/rosapi/get_time", ()).await?;
-    ///   // Call service using explicit types
-    ///   let response = handle.call_service::<rosapi::GetTimeRequest, rosapi::GetTimeResponse>("/rosapi/get_time", rosapi::GetTimeRequest{}).await?;
+    ///   // Call service, type of response will be rosapi::GetTimeResponse (alternatively named rosapi::GetTime::Response)
+    ///   let response = handle.call_service::<rosapi::GetTime>("/rosapi/get_time", rosapi::GetTimeRequest{}).await?;
     /// # Ok(())
     /// # }
     /// ```
