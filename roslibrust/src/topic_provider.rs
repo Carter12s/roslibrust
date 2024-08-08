@@ -41,21 +41,27 @@ pub trait TopicProvider {
     type Subscriber<T: RosMessageType>;
     type ServiceHandle;
 
+    /// Advertises a topic to be published to and returns a type specific publisher to use.
+    ///
+    /// The returned publisher is expected to be "self-deregistering", where dropping the publisher results in the appropriate unadvertise operation.
     fn advertise<T: RosMessageType>(
         &self,
         topic: &str,
     ) -> impl futures::Future<Output = RosLibRustResult<Self::Publisher<T>>> + Send;
 
+    /// Subscribes to a topic and returns a type specific subscriber to use.
+    ///
+    /// The returned subscriber is expected to be "self-deregistering", where dropping the subscriber results in the appropriate unsubscribe operation.
     fn subscribe<T: RosMessageType>(
         &self,
         topic: &str,
     ) -> impl futures::Future<Output = RosLibRustResult<Self::Subscriber<T>>> + Send;
 
-    fn call_service<Req: RosMessageType, Res: RosMessageType>(
+    fn call_service<S: RosServiceType>(
         &self,
         topic: &str,
-        request: Req,
-    ) -> impl std::future::Future<Output = RosLibRustResult<Res>> + Send;
+        request: S::Request,
+    ) -> impl std::future::Future<Output = RosLibRustResult<S::Response>> + Send;
 
     fn advertise_service<T: RosServiceType, F>(
         &self,
@@ -86,12 +92,12 @@ impl TopicProvider for crate::ClientHandle {
         self.subscribe(topic).await
     }
 
-    async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+    async fn call_service<S: RosServiceType>(
         &self,
         topic: &str,
-        request: Req,
-    ) -> RosLibRustResult<Res> {
-        self.call_service(topic, request).await
+        request: S::Request,
+    ) -> RosLibRustResult<S::Response> {
+        self.call_service::<S>(topic, request).await
     }
 
     async fn advertise_service<T: RosServiceType, F>(
@@ -130,15 +136,13 @@ impl TopicProvider for crate::ros1::NodeHandle {
         self.subscribe(topic, 10).await.map_err(|e| e.into())
     }
 
-    async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+    async fn call_service<S: RosServiceType + Send>(
         &self,
         topic: &str,
-        request: Req,
-    ) -> RosLibRustResult<Res> {
-        // TODO this is a problem
-        // service_client for Ros1 wants the service type, not the req and res types
-        // We should change top level API of TopicProvider and probably of rosbridge
-        unimplemented!();
+        request: S::Request,
+    ) -> RosLibRustResult<S::Response> {
+        let client = self.service_client::<S>(topic).await?;
+        client.call(&request).await
     }
 
     async fn advertise_service<T: RosServiceType, F>(

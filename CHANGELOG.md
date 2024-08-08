@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ROS1 Node Handle's advertise() now requires a latching argument
 - RosBridge ClientHandle [call_service()] is now templated on the service type instead of on both the request and response type.
 This is to bring it in line with the ROS1 API.
+- RosBridge ClientHandle::Publisher publish() now takes a reference to the message instead of taking ownership.
+This is to bring it in line with the ROS1 API.
+- The RosServiceType trait used by codegen now requires 'static + Send + Sync this will not affect any generated types, but custom types may have issue.
 
 ## 0.10.2 - August 3rd, 2024
 

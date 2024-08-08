@@ -406,4 +406,80 @@ mod tests {
             "std_msgs/Header".to_string()
         )));
     }
+
+    #[test_log::test(tokio::test)]
+    #[cfg(all(feature = "ros1_test", feature = "topic_provider"))]
+    async fn topic_provider_publish_functionality_test() {
+        use roslibrust::topic_provider::*;
+        use roslibrust::ClientHandle;
+
+        // Dropping watchdog at end of function cancels watchdog
+        // This test can hang which gives crappy debug output
+        let watchdog: abort_on_drop::ChildTask<()> = tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            error!("Test watchdog tripped...");
+            std::process::exit(-1);
+        })
+        .into();
+
+        // Define a custom "Node"
+        struct MyClient<T: TopicProvider> {
+            _client: T,
+        }
+
+        impl<T: TopicProvider> MyClient<T> {
+            async fn test_main(
+                ros: &T,
+                msg: &str,
+            ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+                // In the body we'll publish a message
+                let publisher = ros
+                    .advertise::<std_msgs::String>("/topic_provider_func_test")
+                    .await?;
+                // Give some time for subscriber to connect in
+                tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+                publisher
+                    .publish(&std_msgs::String { data: msg.into() })
+                    .await?;
+                // Give some time for publish to process out
+                tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+                Ok(())
+            }
+        }
+
+        // Create a ros1 subscriber on our topic
+        let nh = NodeHandle::new(
+            "http://localhost:11311",
+            "/topic_provider_func_test_listener",
+        )
+        .await
+        .unwrap();
+        let mut sub = nh
+            .subscribe::<std_msgs::String>("/topic_provider_func_test", 1)
+            .await
+            .unwrap();
+
+        // Use our generic node with ROS1 to publish
+        let nh_clone = nh.clone();
+        tokio::spawn(async move {
+            MyClient::<NodeHandle>::test_main(&nh_clone, "hello world from ros1").await
+        });
+
+        // Confirm we got the message
+        let msg = sub.next().await.unwrap().unwrap();
+        assert_eq!(msg.data, "hello world from ros1");
+
+        // Use our generic node with rosbridge to publish
+        tokio::spawn(async move {
+            MyClient::<ClientHandle>::test_main(
+                &ClientHandle::new("ws://localhost:9090").await.unwrap(),
+                "hello world from rosbridge",
+            )
+            .await
+        });
+
+        // Confirm we got the message
+        let msg = sub.next().await.unwrap().unwrap();
+        assert_eq!(msg.data, "hello world from rosbridge");
+    }
 }
