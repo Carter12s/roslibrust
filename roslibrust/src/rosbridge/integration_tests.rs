@@ -115,7 +115,7 @@ mod integration_tests {
             .await?;
 
         #[cfg(feature = "ros2_test")]
-        publisher.publish(Time { secs: 0, nsecs: 0 }).await?;
+        publisher.publish(&Time { secs: 0, nsecs: 0 }).await?;
 
         match timeout(TIMEOUT, sub.next()).await {
             Err(_elapsed) => {
