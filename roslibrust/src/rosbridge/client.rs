@@ -265,7 +265,7 @@ impl ClientHandle {
     // Publishes a message
     // Fails immediately(ish) if disconnected
     // Returns success when message is put on websocket (no confirmation of receipt)
-    pub(crate) async fn publish<T>(&self, topic: &str, msg: T) -> RosLibRustResult<()>
+    pub(crate) async fn publish<T>(&self, topic: &str, msg: &T) -> RosLibRustResult<()>
     where
         T: RosMessageType,
     {
@@ -349,19 +349,16 @@ impl ClientHandle {
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
     ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
-    ///   // Call service using implied types
-    ///   // Note: () "the empty type" has an explicit definition as a RosMessageType and can be used in place of naming an empty message
-    ///   let response: rosapi::GetTimeResponse  = handle.call_service("/rosapi/get_time", ()).await?;
-    ///   // Call service using explicit types
-    ///   let response = handle.call_service::<rosapi::GetTimeRequest, rosapi::GetTimeResponse>("/rosapi/get_time", rosapi::GetTimeRequest{}).await?;
+    ///   // Call service, type of response will be rosapi::GetTimeResponse (alternatively named rosapi::GetTime::Response)
+    ///   let response = handle.call_service::<rosapi::GetTime>("/rosapi/get_time", rosapi::GetTimeRequest{}).await?;
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn call_service<Req: RosMessageType, Res: RosMessageType>(
+    pub async fn call_service<S: RosServiceType>(
         &self,
         service: &str,
-        req: Req,
-    ) -> RosLibRustResult<Res> {
+        req: S::Request,
+    ) -> RosLibRustResult<S::Response> {
         self.check_for_disconnect()?;
         let (tx, rx) = tokio::sync::oneshot::channel();
         let rand_string: String = uuid::Uuid::new_v4().to_string();

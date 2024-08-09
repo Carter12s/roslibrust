@@ -18,7 +18,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let client = ClientHandle::new("ws://localhost:9090").await?;
 
     let result = client
-        .call_service::<(), rosapi::GetTimeResponse>("/rosapi/get_time", ())
+        .call_service::<rosapi::GetTime>("/rosapi/get_time", rosapi::GetTimeRequest {})
         .await
         .expect("Error while calling get_time service");
 
