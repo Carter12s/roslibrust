@@ -1,8 +1,8 @@
 use super::actor::{Node, NodeServerHandle};
 use crate::{
     ros1::{
-        names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
-        subscriber::SubscriberAny, NodeError, ServiceServer,
+        names::Name, publisher::Publisher, publisher::PublisherAny, service_client::ServiceClient,
+        subscriber::Subscriber, subscriber::SubscriberAny, NodeError, ServiceServer,
     },
     ServiceFn,
 };
@@ -62,6 +62,21 @@ impl NodeHandle {
     /// Subsequent calls will simply be given additional handles to the underlying publication.
     /// This behavior was chosen to mirror ROS1's API, however it is reccomended to .clone() the returend publisher
     /// instead of calling this function multiple times.
+    pub async fn advertise_any(
+        &self,
+        topic_name: &str,
+        topic_type: &str,
+        msg_definition: &str,
+        queue_size: usize,
+        latching: bool,
+    ) -> Result<PublisherAny, NodeError> {
+        let sender = self
+            .inner
+            .register_publisher_any(topic_name, topic_type, msg_definition, queue_size, latching)
+            .await?;
+        Ok(PublisherAny::new(topic_name, sender))
+    }
+
     pub async fn advertise<T: roslibrust_codegen::RosMessageType>(
         &self,
         topic_name: &str,

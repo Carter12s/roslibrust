@@ -179,6 +179,7 @@ async fn establish_publisher_connection(
 
     if let Ok(responded_header) = tcpros::receive_header(&mut stream).await {
         if conn_header.md5sum == Some("*".to_string())
+            || responded_header.md5sum == Some("*".to_string())
             || conn_header.md5sum == responded_header.md5sum
         {
             log::debug!(
