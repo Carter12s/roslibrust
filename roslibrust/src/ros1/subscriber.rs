@@ -1,6 +1,6 @@
 use crate::ros1::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
-use roslibrust_codegen::RosMessageType;
+use roslibrust_codegen::{RosMessageType, ShapeShifter};
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::AsyncWriteExt,
@@ -41,7 +41,7 @@ impl<T: RosMessageType> Subscriber<T> {
 
 pub struct SubscriberAny {
     receiver: broadcast::Receiver<Vec<u8>>,
-    _phantom: PhantomData<Vec<u8>>,
+    _phantom: PhantomData<ShapeShifter>,
 }
 
 impl SubscriberAny {
@@ -52,6 +52,7 @@ impl SubscriberAny {
         }
     }
 
+    // pub async fn next(&mut self) -> Option<Result<ShapeShifter, SubscriberError>> {
     pub async fn next(&mut self) -> Option<Result<Vec<u8>, SubscriberError>> {
         let data = match self.receiver.recv().await {
             Ok(v) => v,

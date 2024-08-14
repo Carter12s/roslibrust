@@ -83,7 +83,7 @@ impl NodeHandle {
     ) -> Result<SubscriberAny, NodeError> {
         let receiver = self
             .inner
-            .register_subscriber::<Vec<u8>>(topic_name, queue_size)
+            .register_subscriber::<roslibrust_codegen::ShapeShifter>(topic_name, queue_size)
             .await?;
         Ok(SubscriberAny::new(receiver))
     }
