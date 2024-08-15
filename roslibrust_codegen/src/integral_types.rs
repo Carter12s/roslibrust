@@ -36,6 +36,16 @@ impl RosMessageType for Time {
     const DEFINITION: &'static str = "";
 }
 
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
+pub struct ShapeShifter(Vec<u8>);
+
+// The equivalent of rospy AnyMsg or C++ ShapeShifter, subscribe_any() uses this type
+impl RosMessageType for ShapeShifter {
+    const ROS_TYPE_NAME: &'static str = "*";
+    const MD5SUM: &'static str = "*";
+    const DEFINITION: &'static str = "";
+}
+
 // TODO provide chrono conversions here behind a cfg flag
 
 /// Matches the integral ros1 duration type, with extensions for ease of use

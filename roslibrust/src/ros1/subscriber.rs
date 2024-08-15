@@ -1,6 +1,6 @@
 use crate::ros1::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
-use roslibrust_codegen::RosMessageType;
+use roslibrust_codegen::{RosMessageType, ShapeShifter};
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::AsyncWriteExt,
@@ -36,6 +36,30 @@ impl<T: RosMessageType> Subscriber<T> {
             Ok(p) => Some(Ok(p)),
             Err(e) => Some(Err(e.into())),
         }
+    }
+}
+
+pub struct SubscriberAny {
+    receiver: broadcast::Receiver<Vec<u8>>,
+    _phantom: PhantomData<ShapeShifter>,
+}
+
+impl SubscriberAny {
+    pub(crate) fn new(receiver: broadcast::Receiver<Vec<u8>>) -> Self {
+        Self {
+            receiver,
+            _phantom: PhantomData,
+        }
+    }
+
+    // pub async fn next(&mut self) -> Option<Result<ShapeShifter, SubscriberError>> {
+    pub async fn next(&mut self) -> Option<Result<Vec<u8>, SubscriberError>> {
+        let data = match self.receiver.recv().await {
+            Ok(v) => v,
+            Err(RecvError::Closed) => return None,
+            Err(RecvError::Lagged(n)) => return Some(Err(SubscriberError::Lagged(n))),
+        };
+        Some(Ok(data))
     }
 }
 
@@ -154,7 +178,9 @@ async fn establish_publisher_connection(
     stream.write_all(&conn_header_bytes[..]).await?;
 
     if let Ok(responded_header) = tcpros::receive_header(&mut stream).await {
-        if conn_header.md5sum == responded_header.md5sum {
+        if conn_header.md5sum == Some("*".to_string())
+            || conn_header.md5sum == responded_header.md5sum
+        {
             log::debug!(
                 "Established connection with publisher for {:?}",
                 conn_header.topic
