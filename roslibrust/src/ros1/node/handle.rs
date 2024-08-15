@@ -2,8 +2,7 @@ use super::actor::{Node, NodeServerHandle};
 use crate::{
     ros1::{
         names::Name, publisher::Publisher, service_client::ServiceClient, subscriber::Subscriber,
-        subscriber::SubscriberAny,
-        NodeError, ServiceServer,
+        subscriber::SubscriberAny, NodeError, ServiceServer,
     },
     ServiceFn,
 };

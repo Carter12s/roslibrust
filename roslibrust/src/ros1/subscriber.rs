@@ -178,7 +178,9 @@ async fn establish_publisher_connection(
     stream.write_all(&conn_header_bytes[..]).await?;
 
     if let Ok(responded_header) = tcpros::receive_header(&mut stream).await {
-        if conn_header.md5sum == Some("*".to_string()) || conn_header.md5sum == responded_header.md5sum {
+        if conn_header.md5sum == Some("*".to_string())
+            || conn_header.md5sum == responded_header.md5sum
+        {
             log::debug!(
                 "Established connection with publisher for {:?}",
                 conn_header.topic

@@ -24,10 +24,7 @@ mod tests {
             .await
             .unwrap();
 
-        let mut subscriber = nh
-            .subscribe_any("/test_subscribe_any", 1)
-            .await
-            .unwrap();
+        let mut subscriber = nh.subscribe_any("/test_subscribe_any", 1).await.unwrap();
 
         publisher
             .publish(&std_msgs::String {
