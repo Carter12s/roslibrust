@@ -60,7 +60,7 @@ impl NodeHandle {
     /// This function can be called multiple times to create multiple publishers for the same topic,
     /// however the FIRST call will establish the queue size and latching behavior for the topic.
     /// Subsequent calls will simply be given additional handles to the underlying publication.
-    /// This behavior was chosen to mirror ROS1's API, however it is reccomended to .clone() the returend publisher
+    /// This behavior was chosen to mirror ROS1's API, however it is recommended to .clone() the returned publisher
     /// instead of calling this function multiple times.
     pub async fn advertise_any(
         &self,

@@ -66,6 +66,10 @@ impl PublisherAny {
 
     /// Queues a message to be send on the related topic.
     /// Returns when the data has been queued not when data is actually sent.
+    ///
+    /// This expects the data to be the raw bytes of the message body as they would appear going over the wire.
+    /// See ros1_publish_any.rs example for more details.
+    /// Body length should be included as first four bytes.
     pub async fn publish(&self, data: &Vec<u8>) -> Result<(), PublisherError> {
         // TODO this is a pretty dumb...
         // because of the internal channel used for re-direction this future doesn't
