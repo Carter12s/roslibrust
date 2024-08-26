@@ -2,8 +2,8 @@ use roslibrust_codegen::{RosMessageType, RosServiceType};
 
 use crate::{RosLibRustResult, ServiceFn};
 
-// Indicates that something is a publisher and has our expected publish
-// Implementors of this trait are expected to auto-cleanup the publisher when dropped
+/// Indicates that something is a publisher and has our expected publish
+/// Implementors of this trait are expected to auto-cleanup the publisher when dropped
 pub trait Publish<T: RosMessageType> {
     // Note: this is really just syntactic de-sugared `async fn`
     // However see: https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html
@@ -12,18 +12,57 @@ pub trait Publish<T: RosMessageType> {
     fn publish(&self, data: &T) -> impl futures::Future<Output = RosLibRustResult<()>> + Send;
 }
 
+// Provide an implementation of publish for rosbridge backend
 impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
     async fn publish(&self, data: &T) -> RosLibRustResult<()> {
         self.publish(data).await
     }
 }
 
+// Provide an implementation of publish for ros1 backend
 impl<T: RosMessageType> Publish<T> for crate::ros1::Publisher<T> {
     async fn publish(&self, data: &T) -> RosLibRustResult<()> {
         // TODO error type conversion here is terrible and we need to standardize error stuff badly
         self.publish(data)
             .await
             .map_err(|e| crate::RosLibRustError::SerializationError(e.to_string()))
+    }
+}
+
+/// Indicates that something is a subscriber and has our expected subscribe method
+/// Implementors of this trait are expected to auto-cleanup the subscriber when dropped
+pub trait Subscribe<T: RosMessageType> {
+    // TODO need to solidify how we want errors to work with subscribers...
+    // TODO ros1 currently requires mut for next, we should change that
+    fn next(&mut self) -> impl futures::Future<Output = RosLibRustResult<T>> + Send;
+}
+
+impl<T: RosMessageType> Subscribe<T> for crate::Subscriber<T> {
+    async fn next(&mut self) -> RosLibRustResult<T> {
+        // TODO: rosbridge subscribe really should emit errors...
+        Ok(crate::Subscriber::next(self).await)
+    }
+}
+
+impl<T: RosMessageType> Subscribe<T> for crate::ros1::Subscriber<T> {
+    async fn next(&mut self) -> RosLibRustResult<T> {
+        let res = crate::ros1::Subscriber::next(self).await;
+        match res {
+            Some(Ok(msg)) => Ok(msg),
+            Some(Err(e)) => {
+                log::error!("Subscriber got error: {e:?}");
+                // TODO gotta do better error conversion / error types here
+                Err(crate::RosLibRustError::Unexpected(anyhow::anyhow!(
+                    "Subscriber got error: {e:?}"
+                )))
+            }
+            None => {
+                log::error!("Subscriber hit dropped channel");
+                Err(crate::RosLibRustError::Unexpected(anyhow::anyhow!(
+                    "Channel closed, something was dropped?"
+                )))
+            }
+        }
     }
 }
 
