@@ -17,8 +17,8 @@ use tokio::time::Duration;
 use tokio_tungstenite::tungstenite::Message;
 
 use super::{
-    MessageQueue, PublisherHandle, Reader, ServiceCallback, Socket, Subscription, Writer,
-    QUEUE_SIZE,
+    MessageQueue, PublisherHandle, Reader, ServiceCallback, ServiceClient, Socket, Subscription,
+    Writer, QUEUE_SIZE,
 };
 
 /// Builder options for creating a client
@@ -462,6 +462,21 @@ impl ClientHandle {
         } // Drop client lock here so we can clone without creating an issue
 
         Ok(ServiceHandle {
+            client: self.clone(),
+            topic: topic.to_string(),
+        })
+    }
+
+    /// Creates a service client that can be used to repeatedly call a service.
+    ///
+    /// Note: Unlike with ROS1 native service, this provides no performance benefit over call_service,
+    /// and is just a thin wrapper around call_service.
+    pub async fn service_client<T>(&self, topic: &str) -> RosLibRustResult<ServiceClient<T>>
+    where
+        T: RosServiceType,
+    {
+        Ok(ServiceClient {
+            _marker: Default::default(),
             client: self.clone(),
             topic: topic.to_string(),
         })

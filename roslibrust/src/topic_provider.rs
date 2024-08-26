@@ -1,6 +1,6 @@
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 
-use crate::{RosLibRustResult, ServiceFn};
+use crate::{RosLibRustResult, ServiceClient, ServiceFn};
 
 /// Indicates that something is a publisher and has our expected publish
 /// Implementors of this trait are expected to auto-cleanup the publisher when dropped
@@ -72,17 +72,17 @@ impl<T: RosMessageType> Subscribe<T> for crate::ros1::Subscriber<T> {
 /// Fundamentally, it assumes that topics are uniquely identified by a string name (likely an ASCII assumption is buried in here...).
 /// It assumes topics only carry one data type, but is not expected to enforce that.
 /// It assumes that all actions can fail due to a variety of causes, and by network interruption specifically.
-// #[async_trait]
 pub trait TopicProvider {
     // These associated types makeup the other half of the API
     // They are expected to be "self-deregistering", where dropping them results in unadvertise or unsubscribe operations as appropriate
+    // We require Publisher and Subscriber types to be Send + 'static so they can be sent into different tokio tasks once created
     type Publisher<T: RosMessageType>: Publish<T> + Send + 'static;
     type Subscriber<T: RosMessageType>: Subscribe<T> + Send + 'static;
     type ServiceHandle;
 
     /// Advertises a topic to be published to and returns a type specific publisher to use.
     ///
-    /// The returned publisher is expected to be "self-deregistering", where dropping the publisher results in the appropriate unadvertise operation.
+    /// The returned publisher is expected to be "self de-registering", where dropping the publisher results in the appropriate unadvertise operation.
     fn advertise<T: RosMessageType>(
         &self,
         topic: &str,
@@ -90,7 +90,7 @@ pub trait TopicProvider {
 
     /// Subscribes to a topic and returns a type specific subscriber to use.
     ///
-    /// The returned subscriber is expected to be "self-deregistering", where dropping the subscriber results in the appropriate unsubscribe operation.
+    /// The returned subscriber is expected to be "self de-registering", where dropping the subscriber results in the appropriate unsubscribe operation.
     fn subscribe<T: RosMessageType>(
         &self,
         topic: &str,
@@ -189,6 +189,95 @@ impl TopicProvider for crate::ros1::NodeHandle {
         topic: &str,
         server: F,
     ) -> RosLibRustResult<Self::ServiceHandle>
+    where
+        F: ServiceFn<T>,
+    {
+        self.advertise_service::<T, F>(topic, server)
+            .await
+            .map_err(|e| e.into())
+    }
+}
+
+/// Defines what it means to be something that is callable as a service
+pub trait Service<T: RosServiceType> {
+    fn call(
+        &self,
+        request: &T::Request,
+    ) -> impl futures::Future<Output = RosLibRustResult<T::Response>> + Send;
+}
+
+impl<T: RosServiceType> Service<T> for crate::ServiceClient<T> {
+    async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
+        // TODO sort out the reference vs clone stuff here
+        ServiceClient::call(&self, request.clone()).await
+    }
+}
+
+impl<T: RosServiceType> Service<T> for crate::ros1::ServiceClient<T> {
+    async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
+        self.call(request).await
+    }
+}
+
+/// This trait is analogous to TopicProvider, but instead provides the capability to create service servers and service clients
+pub trait ServiceProvider {
+    type ServiceClient<T: RosServiceType>: Service<T> + Send + 'static;
+    type ServiceServer;
+
+    fn service_client<T: RosServiceType + 'static>(
+        &self,
+        topic: &str,
+    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceClient<T>>> + Send;
+
+    fn advertise_service<T: RosServiceType + 'static, F>(
+        &self,
+        topic: &str,
+        server: F,
+    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceServer>> + Send
+    where
+        F: ServiceFn<T>;
+}
+
+impl ServiceProvider for crate::ClientHandle {
+    type ServiceClient<T: RosServiceType> = crate::ServiceClient<T>;
+    type ServiceServer = crate::ServiceHandle;
+
+    async fn service_client<T: RosServiceType + 'static>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::ServiceClient<T>> {
+        self.service_client::<T>(topic).await
+    }
+
+    fn advertise_service<T: RosServiceType + 'static, F>(
+        &self,
+        topic: &str,
+        server: F,
+    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceServer>> + Send
+    where
+        F: ServiceFn<T>,
+    {
+        self.advertise_service(topic, server)
+    }
+}
+
+impl ServiceProvider for crate::ros1::NodeHandle {
+    type ServiceClient<T: RosServiceType> = crate::ros1::ServiceClient<T>;
+    type ServiceServer = crate::ros1::ServiceServer;
+
+    async fn service_client<T: RosServiceType + 'static>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::ServiceClient<T>> {
+        // TODO bad error mapping here...
+        self.service_client::<T>(topic).await.map_err(|e| e.into())
+    }
+
+    async fn advertise_service<T: RosServiceType + 'static, F>(
+        &self,
+        topic: &str,
+        server: F,
+    ) -> RosLibRustResult<Self::ServiceServer>
     where
         F: ServiceFn<T>,
     {
