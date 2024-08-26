@@ -76,8 +76,8 @@ impl<T: RosMessageType> Subscribe<T> for crate::ros1::Subscriber<T> {
 pub trait TopicProvider {
     // These associated types makeup the other half of the API
     // They are expected to be "self-deregistering", where dropping them results in unadvertise or unsubscribe operations as appropriate
-    type Publisher<T: RosMessageType>: Publish<T>;
-    type Subscriber<T: RosMessageType>;
+    type Publisher<T: RosMessageType>: Publish<T> + Send + 'static;
+    type Subscriber<T: RosMessageType>: Subscribe<T> + Send + 'static;
     type ServiceHandle;
 
     /// Advertises a topic to be published to and returns a type specific publisher to use.

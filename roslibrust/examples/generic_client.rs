@@ -29,6 +29,7 @@ async fn main() {
         name: String,
     }
 
+    // Basic example of a node that publishes and subscribes to itself
     impl<T: TopicProvider> MyNode<T> {
         async fn run(self) {
             let publisher = self
@@ -36,6 +37,19 @@ async fn main() {
                 .advertise::<std_msgs::String>("/chatter")
                 .await
                 .unwrap();
+
+            let mut subscriber = self
+                .ros
+                .subscribe::<std_msgs::String>("/chatter")
+                .await
+                .unwrap();
+
+            tokio::spawn(async move {
+                loop {
+                    let msg = subscriber.next().await.unwrap();
+                    println!("Got message: {}", msg.data);
+                }
+            });
 
             loop {
                 let msg = std_msgs::String {
