@@ -20,6 +20,7 @@ impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
 }
 
 // Provide an implementation of publish for ros1 backend
+#[cfg(feature = "ros1")]
 impl<T: RosMessageType> Publish<T> for crate::ros1::Publisher<T> {
     async fn publish(&self, data: &T) -> RosLibRustResult<()> {
         // TODO error type conversion here is terrible and we need to standardize error stuff badly
@@ -44,6 +45,7 @@ impl<T: RosMessageType> Subscribe<T> for crate::Subscriber<T> {
     }
 }
 
+#[cfg(feature = "ros1")]
 impl<T: RosMessageType> Subscribe<T> for crate::ros1::Subscriber<T> {
     async fn next(&mut self) -> RosLibRustResult<T> {
         let res = crate::ros1::Subscriber::next(self).await;
@@ -78,7 +80,6 @@ pub trait TopicProvider {
     // We require Publisher and Subscriber types to be Send + 'static so they can be sent into different tokio tasks once created
     type Publisher<T: RosMessageType>: Publish<T> + Send + 'static;
     type Subscriber<T: RosMessageType>: Subscribe<T> + Send + 'static;
-    type ServiceHandle;
 
     /// Advertises a topic to be published to and returns a type specific publisher to use.
     ///
@@ -95,27 +96,12 @@ pub trait TopicProvider {
         &self,
         topic: &str,
     ) -> impl futures::Future<Output = RosLibRustResult<Self::Subscriber<T>>> + Send;
-
-    fn call_service<S: RosServiceType>(
-        &self,
-        topic: &str,
-        request: S::Request,
-    ) -> impl std::future::Future<Output = RosLibRustResult<S::Response>> + Send;
-
-    fn advertise_service<T: RosServiceType, F>(
-        &self,
-        topic: &str,
-        server: F,
-    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceHandle>> + Send
-    where
-        F: ServiceFn<T>;
 }
 
 // Implementation of TopicProvider trait for rosbridge client
 impl TopicProvider for crate::ClientHandle {
     type Publisher<T: RosMessageType> = crate::Publisher<T>;
     type Subscriber<T: RosMessageType> = crate::Subscriber<T>;
-    type ServiceHandle = crate::ServiceHandle;
 
     async fn advertise<T: RosMessageType>(
         &self,
@@ -130,32 +116,12 @@ impl TopicProvider for crate::ClientHandle {
     ) -> RosLibRustResult<Self::Subscriber<T>> {
         self.subscribe(topic).await
     }
-
-    async fn call_service<S: RosServiceType>(
-        &self,
-        topic: &str,
-        request: S::Request,
-    ) -> RosLibRustResult<S::Response> {
-        self.call_service::<S>(topic, request).await
-    }
-
-    async fn advertise_service<T: RosServiceType, F>(
-        &self,
-        topic: &str,
-        server: F,
-    ) -> RosLibRustResult<Self::ServiceHandle>
-    where
-        F: ServiceFn<T>,
-    {
-        self.advertise_service::<T, F>(topic, server).await
-    }
 }
 
 #[cfg(feature = "ros1")]
 impl TopicProvider for crate::ros1::NodeHandle {
     type Publisher<T: RosMessageType> = crate::ros1::Publisher<T>;
     type Subscriber<T: RosMessageType> = crate::ros1::Subscriber<T>;
-    type ServiceHandle = crate::ros1::ServiceServer;
 
     async fn advertise<T: RosMessageType>(
         &self,
@@ -174,28 +140,6 @@ impl TopicProvider for crate::ros1::NodeHandle {
         // TODO MAJOR: consider promoting queue size, making unlimited default
         self.subscribe(topic, 10).await.map_err(|e| e.into())
     }
-
-    async fn call_service<S: RosServiceType + Send>(
-        &self,
-        topic: &str,
-        request: S::Request,
-    ) -> RosLibRustResult<S::Response> {
-        let client = self.service_client::<S>(topic).await?;
-        client.call(&request).await
-    }
-
-    async fn advertise_service<T: RosServiceType, F>(
-        &self,
-        topic: &str,
-        server: F,
-    ) -> RosLibRustResult<Self::ServiceHandle>
-    where
-        F: ServiceFn<T>,
-    {
-        self.advertise_service::<T, F>(topic, server)
-            .await
-            .map_err(|e| e.into())
-    }
 }
 
 /// Defines what it means to be something that is callable as a service
@@ -213,6 +157,7 @@ impl<T: RosServiceType> Service<T> for crate::ServiceClient<T> {
     }
 }
 
+#[cfg(feature = "ros1")]
 impl<T: RosServiceType> Service<T> for crate::ros1::ServiceClient<T> {
     async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
         self.call(request).await
@@ -261,6 +206,7 @@ impl ServiceProvider for crate::ClientHandle {
     }
 }
 
+#[cfg(feature = "ros1")]
 impl ServiceProvider for crate::ros1::NodeHandle {
     type ServiceClient<T: RosServiceType> = crate::ros1::ServiceClient<T>;
     type ServiceServer = crate::ros1::ServiceServer;
