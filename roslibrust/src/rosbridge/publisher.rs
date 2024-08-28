@@ -48,7 +48,7 @@ impl<T: RosMessageType> Publisher<T> {
     /// Successful sending of the message does not guarantee successful receipt or re-transmission by
     /// rosbridge_server, rosbridge_server will fail to re-transmit if the type of the message does not
     /// match the topic's definition on roscore.
-    pub async fn publish(&self, msg: T) -> RosLibRustResult<()> {
+    pub async fn publish(&self, msg: &T) -> RosLibRustResult<()> {
         self.client.publish(&self.topic, msg).await
     }
 }

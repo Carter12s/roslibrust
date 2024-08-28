@@ -93,7 +93,7 @@ async fn main() -> Result<(), anyhow::Error> {
                 };
 
                 // and re-publish it!
-                publisher.publish(converted_msg).await?;
+                publisher.publish(&converted_msg).await?;
                 info!("Message successfully sent to ros2!");
             }
         }
