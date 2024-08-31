@@ -130,18 +130,15 @@ pub fn message_definition_to_md5sum(msg_name: &str, full_def: &str) -> Result<St
     let mut sub_messages: HashMap<&str, String> = HashMap::new();
     // Note: the first section doesn't contain the "MSG: <type>" line so we don't need to strip it here
     let clean_root = clean_msg(sections[0]);
+    if clean_root == "".to_string() {
+        return Err("empty cleaned root definition".into());
+    }
     sub_messages.insert(msg_name, clean_root);
 
     for section in &sections[1..] {
         let line0 = section.lines().next().ok_or("empty section")?;
         if !line0.starts_with("MSG: ") {
-            // TODO(carter) this function is using a mix of logging and error returns?
-            // Should either always log, or never log
-            log::error!(
-                "{}",
-                format!("bad section {section} -> {line0} doesn't start with 'MSG: '")
-            );
-            return Err("bad section".into());
+            return Err("bad section {section} -> {line0} doesn't start with 'MSG: '".into());
         }
         // TODO(lucasw) the full text definition doesn't always have the full message types with
         // the package name,
@@ -976,6 +973,84 @@ mod test {
             let expected = "acffd30cd6b6de30f120938c17c593fb";
             let md5sum = format!("{:x}", md5::compute(def.trim_end().as_bytes()));
             assert_eq!(md5sum, expected, "partially checksumed rosgraph_msgs/Log");
+        }
+
+        {
+            let msg_type = "bad_msgs/Empty";
+            let def = "";
+            let _md5sum =
+                crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap_err();
+        }
+
+        {
+            let msg_type = "bad_msgs/CommentSpacesOnly";
+            let def =
+                "# message with only comments and whitespace\n# another line comment\n\n    \n";
+            let _md5sum =
+                crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap_err();
+        }
+
+        {
+            let msg_type = "fake_msgs/MissingSectionMsg";
+            let def = "string name\nstring msg\n================================================================================\n# message with only comments and whitespace\n# another line comment\n\n    \n";
+            let _md5sum =
+                crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap_err();
+        }
+
+        {
+            let msg_type = "bad_msgs/BadLog";
+            let def = "##
+## Severity level constants
+byte DEUG=1 #debug level
+byte FATAL=16 #fatal/critical level
+##
+## Fields
+##
+Header header
+byte level
+string name # name of the node
+uint32 line # line the message came from
+string[] topics # topic names that the node publishes
+
+================================================================================
+MSG: std_msgs/badHeader
+# Standard metadata for higher-level stamped data types.
+# 
+# sequence ID: consecutively increasing ID 
+uint32 seq
+#Two-integer timestamp that is expressed as:
+time stamp
+";
+            let _md5sum =
+                crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap_err();
+        }
+
+        {
+            // TODO(lucasw) not sure if this is an ok message, currently it passes
+            let expected = "96c44a027b586ee888fe95ac325151ae";
+            let msg_type = "fake_msgs/CommentSpacesOnlySection";
+            let def = "string name\nstring msg\n================================================================================\nMSG: foo/bar\n# message with only comments and whitespace\n# another line comment\n\n    \n";
+            let md5sum = crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap();
+            println!("{msg_type}, computed {md5sum}, expected {expected}");
+            assert_eq!(md5sum, expected, "{msg_type}");
+        }
+
+        {
+            let msg_type = "fake_msgs/Garbage";
+            let def = r#"
+fsdajklf
+
+==                   #fdjkl
+
+MSG:    jklfd
+# 
+================================================================================
+f
+
+vjk
+"#;
+            let _md5sum =
+                crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap_err();
         }
 
         // TODO(lucasw) it would be nice to pull these out of the real messages, but to avoid
