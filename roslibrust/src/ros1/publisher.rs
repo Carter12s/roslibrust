@@ -291,7 +291,8 @@ impl Publication {
                     if connection_md5sum != "*" {
                         if let Some(local_md5sum) = &responding_conn_header.md5sum {
                             // TODO(lucasw) is it ok to match any with "*"?
-                            if local_md5sum != "*" && connection_md5sum != *local_md5sum {
+                            // if local_md5sum != "*" && connection_md5sum != *local_md5sum {
+                            if connection_md5sum != *local_md5sum {
                                 warn!(
                                     "Got subscribe request for {}, but md5sums do not match. Expected {:?}, received {:?}",
                                     topic_name,
