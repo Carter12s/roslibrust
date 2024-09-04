@@ -16,6 +16,7 @@ use tokio::{
     sync::{mpsc, RwLock},
 };
 
+/// The regular Publisher representation returned by calling advertise on a [crate::ros1::NodeHandle].
 pub struct Publisher<T> {
     topic_name: String,
     sender: mpsc::Sender<Vec<u8>>,
@@ -49,6 +50,9 @@ impl<T: RosMessageType> Publisher<T> {
     }
 }
 
+/// A specialty publisher used when message type is not known at compile time.
+///
+/// Relies on user to provide serialized data. Typically used with playback from bag files.
 pub struct PublisherAny {
     topic_name: String,
     sender: mpsc::Sender<Vec<u8>>,

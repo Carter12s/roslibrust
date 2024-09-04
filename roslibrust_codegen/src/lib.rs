@@ -72,23 +72,13 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
     }
 
     // the types that don't need to be defined within the definition
-    let base_types: HashSet<String> = HashSet::from_iter([
-        "bool",
-        "byte",
-        "int8",
-        "int16",
-        "int32",
-        "int64",
-        "uint8",
-        "uint16",
-        "uint32",
-        "uint64",
-        "float32",
-        "float64",
-        "time",
-        "duration",
-        "string",
-    ].map(|name| name.to_string()));
+    let base_types: HashSet<String> = HashSet::from_iter(
+        [
+            "bool", "byte", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32",
+            "uint64", "float32", "float64", "time", "duration", "string",
+        ]
+        .map(|name| name.to_string()),
+    );
 
     let mut clean_def = String::new();
 
@@ -119,7 +109,7 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
             continue;
         }
         // println!(" -> {line}");
-        clean_def += &format!("{line}\n");  // &(line.to_owned() + "\n");
+        clean_def += &format!("{line}\n"); // &(line.to_owned() + "\n");
     }
     // strip final newline
     clean_def = clean_def.trim().to_string();
@@ -145,7 +135,10 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
         let lines: Vec<&str> = section.lines().collect();
         let line0 = lines[0];
         if !line0.starts_with("MSG: ") {
-            log::error!("{}", format!("bad section {section} -> {line0} doesn't start with 'MSG: '"));
+            log::error!(
+                "{}",
+                format!("bad section {section} -> {line0} doesn't start with 'MSG: '")
+            );
             return Err("bad section".into());
         }
         // TODO(lucasw) the full text definition doesn't always have the full message types with
@@ -222,14 +215,14 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
             let md5sum = md5::compute(field_def.trim_end().as_bytes());
             let md5sum_text = format!("{md5sum:x}");
             hashed.insert((*name).clone(), md5sum_text);
-        }  // go through sub-messages and hash more or them
+        } // go through sub-messages and hash more or them
     } // keep looping until no progress or all sub-messages are hashed
-    /*
-    if verbose:
-        print("<<<<<<<<<<<<\n")
-        for k, v in hashed.items():
-            print(f"{k}: {v}")
-    */
+      /*
+      if verbose:
+          print("<<<<<<<<<<<<\n")
+          for k, v in hashed.items():
+              print(f"{k}: {v}")
+      */
 
     match hashed.get(&msg_type) {
         Some(hash) => Ok((*hash).clone()),
@@ -973,7 +966,6 @@ mod test {
     /// generated checksums
     #[test_log::test]
     fn msg_def_to_md5() {
-
         {
             let def = "byte DEBUG=1\nbyte INFO=2\nbyte WARN=4\nbyte ERROR=8\nbyte FATAL=16\n\
                 2176decaecbce78abc3b96ef049fabed header\n\
