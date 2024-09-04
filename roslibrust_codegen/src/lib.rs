@@ -106,24 +106,15 @@ fn clean_msg(msg: &str) -> String {
 }
 
 // TODO(lucasw) this deserves a lot of str vs String cleanup
-// TODO(lucasw) the msg_type isn't actually needed
+// TODO(lucasw) the msg_type isn't actually needed - Carter (it actually is, or we need to know the package name at least)
 /// This function will calculate the md5sum of an expanded message definition.
 /// The expanded message definition is the output of `gendeps --cat` see: <https://wiki.ros.org/roslib/gentools>
 /// This definition is typically sent in the connection header of a ros1 topic and is also stored in bag files.
 /// This can be used to calculate the md5sum when message definitions aren't available at compile time.
-pub fn message_definition_to_md5sum(msg_name: &str, full_def: String) -> Result<String, Error> {
+pub fn message_definition_to_md5sum(msg_name: &str, full_def: &str) -> Result<String, Error> {
     if full_def == "".to_string() {
         return Err("empty input definition".into());
     }
-
-    // the types that don't need to be defined within the definition
-    let base_types: HashSet<String> = HashSet::from_iter(
-        [
-            "bool", "byte", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32",
-            "uint64", "float32", "float64", "time", "duration", "string",
-        ]
-        .map(|name| name.to_string()),
-    );
 
     // Split the full definition into sections per message
     let sep: &str =
@@ -163,71 +154,86 @@ pub fn message_definition_to_md5sum(msg_name: &str, full_def: String) -> Result<
         sub_messages.insert(section_type, body);
     }
 
-    let mut hashed: HashMap<String, String> = HashMap::new();
-    let mut old_hashed_len = -1;
-    // expect to process at least one definition every pass
-    while hashed.len() as i64 > old_hashed_len {
-        old_hashed_len = hashed.len() as i64;
-        for (name, msg) in &sub_messages {
-            let name = *name;
-            let pkg_name = name.split("/").collect::<Vec<&str>>()[0];
-            if hashed.contains_key(name) {
-                continue;
+    // TODO MAJOR(carter): I'd like to convert this loop to a recursive function where we pass in the map of hashes
+    // and update them as we go, this tripple loop is stinky to my eye.
+    // TODO(carter) we should be able to do this in close to one pass if we iterate the full_def backwards
+    let mut hashed = HashMap::new();
+    let hash = message_definition_to_md5sum_recursive(msg_name, &sub_messages, &mut hashed)?;
+
+    Ok(hash)
+}
+
+/// Calculates the hash of the specified message type by recursively calling itself on all dependencies
+/// Uses defs as the list of message definitions available for it (expects them to already be cleaned)
+/// Uses hashes as the cache of already calculated hashes so we don't redo work
+fn message_definition_to_md5sum_recursive(
+    msg_type: &str,
+    defs: &HashMap<&str, String>,
+    mut hashes: &mut HashMap<String, String>,
+) -> Result<String, Error> {
+    let base_types: HashSet<String> = HashSet::from_iter(
+        [
+            "bool", "byte", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32",
+            "uint64", "float32", "float64", "time", "duration", "string",
+        ]
+        .map(|name| name.to_string()),
+    );
+    let def = defs.get(msg_type).ok_or(simple_error::simple_error!(
+        "Couldn't find message type: {msg_type}"
+    ))?;
+    let pkg_name = msg_type.split("/").collect::<Vec<&str>>()[0];
+    // We'll store the expanded hash definition in this string as we go
+    let mut field_def = "".to_string();
+    for line_raw in def.lines() {
+        let line_split = line_raw.trim().split_whitespace().collect::<Vec<&str>>();
+        if line_split.len() < 2 {
+            log::error!("bad line to split '{line_raw}'");
+            // TODO(lucasw) or error out
+            continue;
+        }
+        let (raw_field_type, _field_name) = (line_split[0], line_split[1]);
+        // leave array characters alone, could be [] [C] where C is a constant
+        let field_type = raw_field_type.split("[").collect::<Vec<&str>>()[0].to_string();
+
+        let full_field_type;
+        let line;
+        if base_types.contains(&field_type) {
+            line = line_raw.to_string();
+        } else {
+            // TODO(lucasw) are there other special message types besides header- or is it anything in std_msgs?
+            if field_type == "Header" {
+                full_field_type = "std_msgs/Header".to_string();
+            } else if !field_type.contains("/") {
+                full_field_type = format!("{pkg_name}/{field_type}");
+            } else {
+                full_field_type = field_type;
             }
-            let mut do_hash = true;
-            let mut field_def = "".to_string();
-            for line_raw in msg.lines() {
-                let line_split = line_raw.trim().split_whitespace().collect::<Vec<&str>>();
-                if line_split.len() < 2 {
-                    log::error!("bad line to split '{line_raw}'");
-                    // TODO(lucasw) or error out
-                    continue;
+
+            match hashes.get(&full_field_type) {
+                Some(hash_value) => {
+                    // Hash already exists in cache so we can use it
+                    line = line_raw.replace(raw_field_type, hash_value).to_string();
                 }
-                let (raw_field_type, _field_name) = (line_split[0], line_split[1]);
-                // leave array characters alone, could be [] [C] where C is a constant
-                let field_type = raw_field_type.split("[").collect::<Vec<&str>>()[0].to_string();
-
-                let full_field_type;
-                let line;
-                if base_types.contains(&field_type) {
-                    line = line_raw.to_string();
-                } else {
-                    // TODO(lucasw) are there other special message types besides header- or is it anything in std_msgs?
-                    if field_type == "Header" {
-                        full_field_type = "std_msgs/Header".to_string();
-                    } else if !field_type.contains("/") {
-                        full_field_type = format!("{pkg_name}/{field_type}");
-                    } else {
-                        full_field_type = field_type;
-                    }
-
-                    match hashed.get(&full_field_type) {
-                        Some(hash_value) => {
-                            line = line_raw.replace(raw_field_type, hash_value).to_string();
-                        }
-                        None => {
-                            error!("Failed to find full_field_type: {full_field_type} with processing {name}");
-                            do_hash = false;
-                            break;
-                        }
-                    }
+                None => {
+                    // Recurse! To calculate hash of this field type
+                    let hash = message_definition_to_md5sum_recursive(
+                        &full_field_type,
+                        defs,
+                        &mut hashes,
+                    )?;
+                    line = line_raw.replace(raw_field_type, &hash).to_string();
                 }
-                field_def += &format!("{line}\n");
             }
-            if !do_hash {
-                continue;
-            }
-            field_def = field_def.trim().to_string();
-            let md5sum = md5::compute(field_def.trim_end().as_bytes());
-            let md5sum_text = format!("{md5sum:x}");
-            hashed.insert(name.to_string(), md5sum_text);
-        } // go through sub-messages and hash more or them
-    } // keep looping until no progress or all sub-messages are hashed
+        }
+        field_def += &format!("{line}\n");
+    }
+    field_def = field_def.trim().to_string();
+    let md5sum = md5::compute(field_def.trim_end().as_bytes());
+    let md5sum_text = format!("{md5sum:x}");
+    // Insert our hash into the cache before we return
+    hashes.insert(msg_type.to_string(), md5sum_text.clone());
 
-    Ok(hashed
-        .get(msg_name)
-        .ok_or("Couldn't get root message type")?
-        .to_string())
+    Ok(md5sum_text)
 }
 
 #[derive(Clone, Debug)]
