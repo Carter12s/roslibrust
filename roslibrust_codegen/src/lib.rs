@@ -64,9 +64,54 @@ pub trait RosServiceType {
     type Response: RosMessageType;
 }
 
+/// Taking in a message definition
+/// reformat it according to the md5sum algorithm: <https://wiki.ros.org/ROS/Technical%20Overview#Message_serialization_and_msg_MD5_sums>
+/// - Comments removed
+/// - Extra whitespace removed
+/// - package names of dependencies removed
+/// - constants reordered to be at the front
+fn clean_msg(msg: &str) -> String {
+    let mut result_params = vec![];
+    let mut result_constants = vec![];
+    for line in msg.lines() {
+        let line = line.trim();
+        // Skip comment lines
+        if line.starts_with("#") {
+            continue;
+        }
+        // Strip comment from the end of the line (if present)
+        let line = line.split("#").collect::<Vec<&str>>()[0].trim();
+        // Remove any extra whitespace from inside the line
+        let line = line.split_whitespace().collect::<Vec<&str>>().join(" ");
+        // Remove any whitespace on either side of the "=" for constants
+        let line = line.replace(" = ", "=");
+        // Skip any empty lines
+        if line == "" {
+            continue;
+        }
+        // Determine if constant or not
+        if line.contains("=") {
+            result_constants.push(line);
+        } else {
+            result_params.push(line);
+        }
+    }
+    format!(
+        "{}\n{}",
+        result_constants.join("\n"),
+        result_params.join("\n")
+    )
+    .trim()
+    .to_string() // Last trim here is lazy, but gets job done
+}
+
 // TODO(lucasw) this deserves a lot of str vs String cleanup
 // TODO(lucasw) the msg_type isn't actually needed
-pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Result<String, Error> {
+/// This function will calculate the md5sum of an expanded message definition.
+/// The expanded message definition is the output of `gendeps --cat` see: <https://wiki.ros.org/roslib/gentools>
+/// This definition is typically sent in the connection header of a ros1 topic and is also stored in bag files.
+/// This can be used to calculate the md5sum when message definitions aren't available at compile time.
+pub fn message_definition_to_md5sum(msg_name: &str, full_def: String) -> Result<String, Error> {
     if full_def == "".to_string() {
         return Err("empty input definition".into());
     }
@@ -80,61 +125,27 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
         .map(|name| name.to_string()),
     );
 
-    let mut clean_def = String::new();
-
-    for line_raw in full_def.lines() {
-        if line_raw.starts_with("#") {
-            continue;
-        }
-        // println!("{line_raw}");
-
-        // if there is a comment at the end of the line cut it off
-        let line = line_raw.split("#").collect::<Vec<&str>>()[0].trim();
-
-        // replace multiple whitespaces with one space
-        // https://stackoverflow.com/questions/73962868/how-to-remove-useless-space-in-rust-string-without-using-regex
-        let line: String = line
-            // trim leading and trailing space
-            .trim()
-            // split on whitespace
-            // including the space where the string was split
-            .split_inclusive(char::is_whitespace)
-            // filter out substrings containing only whitespace
-            .filter(|part| !part.trim().is_empty())
-            .collect();
-
-        // oddly 'uint8 FOO=1' becomes 'uint8 FOO = 1', so restore it
-        let line = line.replace(" = ", "=");
-        if line == "" {
-            continue;
-        }
-        // println!(" -> {line}");
-        clean_def += &format!("{line}\n"); // &(line.to_owned() + "\n");
-    }
-    // strip final newline
-    clean_def = clean_def.trim().to_string();
-    // if verbose { println!(clean_def); }
-    //
-    if clean_def == "".to_string() {
-        return Err("empty cleaned definition".into());
-    }
-
-    // println!("\n**** {msg_type} ****\n{}", clean_def);
-
+    // Split the full definition into sections per message
     let sep: &str =
         "================================================================================\n";
-    let sections = clean_def.split(sep).collect::<Vec<&str>>();
+    let sections = full_def.split(sep).collect::<Vec<&str>>();
     if sections.len() == 0 {
+        // Carter: this error is impossible, split only gives empty iterator when input string is empty
+        // which we've already checked for above
         return Err("empty sections".into());
     }
 
-    let mut sub_messages: HashMap<String, String> = HashMap::new();
-    sub_messages.insert(msg_type.clone(), sections[0].trim().to_string());
-    // if verbose { println!("definition without comments:"); }
+    // Split the overall definition into seperate sub-messages sorted by message type (incluidng package name)
+    let mut sub_messages: HashMap<&str, String> = HashMap::new();
+    // Note: the first section doesn't contain the "MSG: <type>" line so we don't need to strip it here
+    let clean_root = clean_msg(sections[0]);
+    sub_messages.insert(msg_name, clean_root);
+
     for section in &sections[1..] {
-        let lines: Vec<&str> = section.lines().collect();
-        let line0 = lines[0];
+        let line0 = section.lines().next().ok_or("empty section")?;
         if !line0.starts_with("MSG: ") {
+            // TODO(carter) this function is using a mix of logging and error returns?
+            // Should either always log, or never log
             log::error!(
                 "{}",
                 format!("bad section {section} -> {line0} doesn't start with 'MSG: '")
@@ -145,15 +156,12 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
         // the package name,
         // but I think this is only when the message type is Header or the package of the message
         // being define is the same as the message in the field
-        let section_type = line0.split(" ").collect::<Vec<&str>>()[1].to_string();
-        let body = lines[1..].join("\n").trim().to_string();
+        // Carter: I agree with this, we found the same when dealing with this previously
+        let section_type = line0.split(" ").collect::<Vec<&str>>()[1];
+        let end_of_first_line = section.find("\n").ok_or("No body found in section")?;
+        let body = clean_msg(&section[end_of_first_line + 1..]);
         sub_messages.insert(section_type, body);
-
-        // print(repr(section))
-        // print(section)
-        // print("---")
     }
-    // if verbose {print(f"\nsub messages: {sub_messages.keys()}\n"); }
 
     let mut hashed: HashMap<String, String> = HashMap::new();
     let mut old_hashed_len = -1;
@@ -161,6 +169,7 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
     while hashed.len() as i64 > old_hashed_len {
         old_hashed_len = hashed.len() as i64;
         for (name, msg) in &sub_messages {
+            let name = *name;
             let pkg_name = name.split("/").collect::<Vec<&str>>()[0];
             if hashed.contains_key(name) {
                 continue;
@@ -183,7 +192,7 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
                 if base_types.contains(&field_type) {
                     line = line_raw.to_string();
                 } else {
-                    // TODO(lucasw) are there other special message types besides eader- or is it anything in std_msgs?
+                    // TODO(lucasw) are there other special message types besides header- or is it anything in std_msgs?
                     if field_type == "Header" {
                         full_field_type = "std_msgs/Header".to_string();
                     } else if !field_type.contains("/") {
@@ -197,8 +206,7 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
                             line = line_raw.replace(raw_field_type, hash_value).to_string();
                         }
                         None => {
-                            // if verbose:
-                            //     print(f"can't find {full_field_type}, loop until no progress")
+                            error!("Failed to find full_field_type: {full_field_type} with processing {name}");
                             do_hash = false;
                             break;
                         }
@@ -210,27 +218,16 @@ pub fn message_definition_to_md5sum(msg_type: String, full_def: String) -> Resul
                 continue;
             }
             field_def = field_def.trim().to_string();
-            // if verbose:
-            //     print(f"getting hash {name}: {repr(field_def)}")
             let md5sum = md5::compute(field_def.trim_end().as_bytes());
             let md5sum_text = format!("{md5sum:x}");
-            hashed.insert((*name).clone(), md5sum_text);
+            hashed.insert(name.to_string(), md5sum_text);
         } // go through sub-messages and hash more or them
     } // keep looping until no progress or all sub-messages are hashed
-      /*
-      if verbose:
-          print("<<<<<<<<<<<<\n")
-          for k, v in hashed.items():
-              print(f"{k}: {v}")
-      */
 
-    match hashed.get(&msg_type) {
-        Some(hash) => Ok((*hash).clone()),
-        None => {
-            log::error!("couldn't get {msg_type}");
-            Err("couldn't get hash".into())
-        }
-    }
+    Ok(hashed
+        .get(msg_name)
+        .ok_or("Couldn't get root message type")?
+        .to_string())
 }
 
 #[derive(Clone, Debug)]
@@ -1160,7 +1157,7 @@ bool do_rectify
 
 "#;
             let expected = "c9a58c1b0b154e0e6da7578cb991d214";
-            let md5sum = crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap();
+            let md5sum = crate::message_definition_to_md5sum(msg_type, def.into()).unwrap();
             println!("{msg_type}, computed {md5sum}, expected {expected}");
             assert_eq!(md5sum, expected, "{msg_type}");
         }
@@ -1169,7 +1166,7 @@ bool do_rectify
             let msg_type = "std_msgs/Header";
             let def = "# Standard metadata for higher-level stamped data types.\n# This is generally used to communicate timestamped data \n# in a particular coordinate frame.\n# \n# sequence ID: consecutively increasing ID \nuint32 seq\n#Two-integer timestamp that is expressed as:\n# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n# time-handling sugar is provided by the client library\ntime stamp\n#Frame this data is associated with\nstring frame_id\n";
             let expected = "2176decaecbce78abc3b96ef049fabed";
-            let md5sum = crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap();
+            let md5sum = crate::message_definition_to_md5sum(msg_type, def.into()).unwrap();
             println!("{msg_type}, computed {md5sum}, expected {expected}");
             assert_eq!(md5sum, expected, "{msg_type}");
         }
@@ -1178,7 +1175,7 @@ bool do_rectify
             let msg_type = "rosgraph_msgs/Log";
             let def = "##\n## Severity level constants\n##\nbyte DEBUG=1 #debug level\nbyte INFO=2  #general level\nbyte WARN=4  #warning level\nbyte ERROR=8 #error level\nbyte FATAL=16 #fatal/critical level\n##\n## Fields\n##\nHeader header\nbyte level\nstring name # name of the node\nstring msg # message \nstring file # file the message came from\nstring function # function the message came from\nuint32 line # line the message came from\nstring[] topics # topic names that the node publishes\n\n================================================================================\nMSG: std_msgs/Header\n# Standard metadata for higher-level stamped data types.\n# This is generally used to communicate timestamped data \n# in a particular coordinate frame.\n# \n# sequence ID: consecutively increasing ID \nuint32 seq\n#Two-integer timestamp that is expressed as:\n# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n# time-handling sugar is provided by the client library\ntime stamp\n#Frame this data is associated with\nstring frame_id\n";
             let expected = "acffd30cd6b6de30f120938c17c593fb";
-            let md5sum = crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap();
+            let md5sum = crate::message_definition_to_md5sum(msg_type, def.into()).unwrap();
             println!("{msg_type}, computed {md5sum}, expected {expected}");
             assert_eq!(md5sum, expected, "{msg_type}");
         }
@@ -1187,7 +1184,7 @@ bool do_rectify
             let msg_type = "nav_msgs/Odometry";
             let def = "# This represents an estimate of a position and velocity in free space.  \n# The pose in this message should be specified in the coordinate frame given by header.frame_id.\n# The twist in this message should be specified in the coordinate frame given by the child_frame_id\nHeader header\nstring child_frame_id\ngeometry_msgs/PoseWithCovariance pose\ngeometry_msgs/TwistWithCovariance twist\n\n================================================================================\nMSG: std_msgs/Header\n# Standard metadata for higher-level stamped data types.\n# This is generally used to communicate timestamped data \n# in a particular coordinate frame.\n# \n# sequence ID: consecutively increasing ID \nuint32 seq\n#Two-integer timestamp that is expressed as:\n# * stamp.sec: seconds (stamp_secs) since epoch (in Python the variable is called 'secs')\n# * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')\n# time-handling sugar is provided by the client library\ntime stamp\n#Frame this data is associated with\nstring frame_id\n\n================================================================================\nMSG: geometry_msgs/PoseWithCovariance\n# This represents a pose in free space with uncertainty.\n\nPose pose\n\n# Row-major representation of the 6x6 covariance matrix\n# The orientation parameters use a fixed-axis representation.\n# In order, the parameters are:\n# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)\nfloat64[36] covariance\n\n================================================================================\nMSG: geometry_msgs/Pose\n# A representation of pose in free space, composed of position and orientation. \nPoint position\nQuaternion orientation\n\n================================================================================\nMSG: geometry_msgs/Point\n# This contains the position of a point in free space\nfloat64 x\nfloat64 y\nfloat64 z\n\n================================================================================\nMSG: geometry_msgs/Quaternion\n# This represents an orientation in free space in quaternion form.\n\nfloat64 x\nfloat64 y\nfloat64 z\nfloat64 w\n\n================================================================================\nMSG: geometry_msgs/TwistWithCovariance\n# This expresses velocity in free space with uncertainty.\n\nTwist twist\n\n# Row-major representation of the 6x6 covariance matrix\n# The orientation parameters use a fixed-axis representation.\n# In order, the parameters are:\n# (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)\nfloat64[36] covariance\n\n================================================================================\nMSG: geometry_msgs/Twist\n# This expresses velocity in free space broken into its linear and angular parts.\nVector3  linear\nVector3  angular\n\n================================================================================\nMSG: geometry_msgs/Vector3\n# This represents a vector in free space. \n# It is only meant to represent a direction. Therefore, it does not\n# make sense to apply a translation to it (e.g., when applying a \n# generic rigid transformation to a Vector3, tf2 will only apply the\n# rotation). If you want your data to be translatable too, use the\n# geometry_msgs/Point message instead.\n\nfloat64 x\nfloat64 y\nfloat64 z";
             let expected = "cd5e73d190d741a2f92e81eda573aca7";
-            let md5sum = crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap();
+            let md5sum = crate::message_definition_to_md5sum(msg_type, def.into()).unwrap();
             println!("{msg_type}, computed {md5sum}, expected {expected}");
             assert_eq!(md5sum, expected);
         }
@@ -1256,7 +1253,7 @@ float64 w
 
 "#;
             let expected = "94810edda583a504dfda3829e70d7eec";
-            let md5sum = crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap();
+            let md5sum = crate::message_definition_to_md5sum(msg_type, def.into()).unwrap();
             println!("{msg_type}, computed {md5sum}, expected {expected}");
             assert_eq!(md5sum, expected);
         }
@@ -1441,9 +1438,48 @@ uint32 count     # How many elements in the field
 
 "#;
             let expected = "05c51d9aea1fb4cfdc8effb94f197b6f";
-            let md5sum = crate::message_definition_to_md5sum(msg_type.into(), def.into()).unwrap();
+            let md5sum = crate::message_definition_to_md5sum(msg_type, def.into()).unwrap();
             println!("{msg_type}, computed {md5sum}, expected {expected}");
             assert_eq!(md5sum, expected, "{msg_type}");
         }
+    }
+
+    // Basic test of clean_msg function
+    #[test]
+    fn clean_msg_test() {
+        let test_msg = r#"
+# This message holds the description of one point entry in the
+# PointCloud2 message format.
+uint8 INT8    = 1
+uint8 UINT8   = 2
+uint8 INT16   = 3
+uint8 UINT16  = 4
+uint8 INT32   = 5
+uint8 UINT32  = 6 # Random Comment
+
+string name      # Name of field
+uint32 offset    # Offset from start of point struct
+uint8  datatype  # Datatype enumeration, see above
+uint32 count     # How many elements in the field
+
+
+uint8 FLOAT32 = 7
+uint8 FLOAT64 = 8
+
+"#;
+        let result = crate::clean_msg(test_msg);
+        let expected = r#"uint8 INT8=1
+uint8 UINT8=2
+uint8 INT16=3
+uint8 UINT16=4
+uint8 INT32=5
+uint8 UINT32=6
+uint8 FLOAT32=7
+uint8 FLOAT64=8
+string name
+uint32 offset
+uint8 datatype
+uint32 count"#;
+        assert_eq!(result, expected);
     }
 }
