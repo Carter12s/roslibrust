@@ -76,21 +76,21 @@ fn clean_msg(msg: &str) -> String {
     for line in msg.lines() {
         let line = line.trim();
         // Skip comment lines
-        if line.starts_with("#") {
+        if line.starts_with('#') {
             continue;
         }
         // Strip comment from the end of the line (if present)
-        let line = line.split("#").collect::<Vec<&str>>()[0].trim();
+        let line = line.split('#').collect::<Vec<&str>>()[0].trim();
         // Remove any extra whitespace from inside the line
         let line = line.split_whitespace().collect::<Vec<&str>>().join(" ");
         // Remove any whitespace on either side of the "=" for constants
         let line = line.replace(" = ", "=");
         // Skip any empty lines
-        if line == "" {
+        if line.is_empty() {
             continue;
         }
         // Determine if constant or not
-        if line.contains("=") {
+        if line.contains('=') {
             result_constants.push(line);
         } else {
             result_params.push(line);
@@ -112,7 +112,7 @@ fn clean_msg(msg: &str) -> String {
 /// This definition is typically sent in the connection header of a ros1 topic and is also stored in bag files.
 /// This can be used to calculate the md5sum when message definitions aren't available at compile time.
 pub fn message_definition_to_md5sum(msg_name: &str, full_def: &str) -> Result<String, Error> {
-    if full_def == "".to_string() {
+    if full_def.is_empty() {
         return Err("empty input definition".into());
     }
 
@@ -120,7 +120,7 @@ pub fn message_definition_to_md5sum(msg_name: &str, full_def: &str) -> Result<St
     let sep: &str =
         "================================================================================\n";
     let sections = full_def.split(sep).collect::<Vec<&str>>();
-    if sections.len() == 0 {
+    if sections.is_empty() {
         // Carter: this error is impossible, split only gives empty iterator when input string is empty
         // which we've already checked for above
         return Err("empty sections".into());
@@ -130,7 +130,7 @@ pub fn message_definition_to_md5sum(msg_name: &str, full_def: &str) -> Result<St
     let mut sub_messages: HashMap<&str, String> = HashMap::new();
     // Note: the first section doesn't contain the "MSG: <type>" line so we don't need to strip it here
     let clean_root = clean_msg(sections[0]);
-    if clean_root == "".to_string() {
+    if clean_root.is_empty() {
         return Err("empty cleaned root definition".into());
     }
     sub_messages.insert(msg_name, clean_root);
@@ -145,8 +145,8 @@ pub fn message_definition_to_md5sum(msg_name: &str, full_def: &str) -> Result<St
         // but I think this is only when the message type is Header or the package of the message
         // being define is the same as the message in the field
         // Carter: I agree with this, we found the same when dealing with this previously
-        let section_type = line0.split(" ").collect::<Vec<&str>>()[1];
-        let end_of_first_line = section.find("\n").ok_or("No body found in section")?;
+        let section_type = line0.split_whitespace().collect::<Vec<&str>>()[1];
+        let end_of_first_line = section.find('\n').ok_or("No body found in section")?;
         let body = clean_msg(&section[end_of_first_line + 1..]);
         sub_messages.insert(section_type, body);
     }
@@ -166,7 +166,7 @@ pub fn message_definition_to_md5sum(msg_name: &str, full_def: &str) -> Result<St
 fn message_definition_to_md5sum_recursive(
     msg_type: &str,
     defs: &HashMap<&str, String>,
-    mut hashes: &mut HashMap<String, String>,
+    hashes: &mut HashMap<String, String>,
 ) -> Result<String, Error> {
     let base_types: HashSet<String> = HashSet::from_iter(
         [
@@ -178,11 +178,11 @@ fn message_definition_to_md5sum_recursive(
     let def = defs.get(msg_type).ok_or(simple_error::simple_error!(
         "Couldn't find message type: {msg_type}"
     ))?;
-    let pkg_name = msg_type.split("/").collect::<Vec<&str>>()[0];
+    let pkg_name = msg_type.split('/').collect::<Vec<&str>>()[0];
     // We'll store the expanded hash definition in this string as we go
     let mut field_def = "".to_string();
     for line_raw in def.lines() {
-        let line_split = line_raw.trim().split_whitespace().collect::<Vec<&str>>();
+        let line_split = line_raw.split_whitespace().collect::<Vec<&str>>();
         if line_split.len() < 2 {
             log::error!("bad line to split '{line_raw}'");
             // TODO(lucasw) or error out
@@ -190,7 +190,7 @@ fn message_definition_to_md5sum_recursive(
         }
         let (raw_field_type, _field_name) = (line_split[0], line_split[1]);
         // leave array characters alone, could be [] [C] where C is a constant
-        let field_type = raw_field_type.split("[").collect::<Vec<&str>>()[0].to_string();
+        let field_type = raw_field_type.split('[').collect::<Vec<&str>>()[0].to_string();
 
         let full_field_type;
         let line;
@@ -200,7 +200,7 @@ fn message_definition_to_md5sum_recursive(
             // TODO(lucasw) are there other special message types besides header- or is it anything in std_msgs?
             if field_type == "Header" {
                 full_field_type = "std_msgs/Header".to_string();
-            } else if !field_type.contains("/") {
+            } else if !field_type.contains('/') {
                 full_field_type = format!("{pkg_name}/{field_type}");
             } else {
                 full_field_type = field_type;
@@ -216,7 +216,7 @@ fn message_definition_to_md5sum_recursive(
                     let hash = message_definition_to_md5sum_recursive(
                         &full_field_type,
                         defs,
-                        &mut hashes,
+                        hashes,
                     )?;
                     line = line_raw.replace(raw_field_type, &hash).to_string();
                 }
