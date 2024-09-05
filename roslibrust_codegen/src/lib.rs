@@ -213,11 +213,8 @@ fn message_definition_to_md5sum_recursive(
                 }
                 None => {
                     // Recurse! To calculate hash of this field type
-                    let hash = message_definition_to_md5sum_recursive(
-                        &full_field_type,
-                        defs,
-                        hashes,
-                    )?;
+                    let hash =
+                        message_definition_to_md5sum_recursive(&full_field_type, defs, hashes)?;
                     line = line_raw.replace(raw_field_type, &hash).to_string();
                 }
             }
