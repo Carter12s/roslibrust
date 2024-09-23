@@ -13,6 +13,38 @@ mod tests {
     );
 
     #[test_log::test(tokio::test)]
+    async fn test_publish_any() {
+        // publish a single message in raw bytes and test the received message is as expected
+        let nh = NodeHandle::new("http://localhost:11311", "test_publish_any")
+            .await
+            .unwrap();
+
+        let publisher = nh
+            .advertise_any(
+                "/test_publish_any",
+                "std_msgs/String",
+                "string data\n",
+                1,
+                true,
+            )
+            .await
+            .unwrap();
+
+        let mut subscriber = nh
+            .subscribe::<std_msgs::String>("/test_publish_any", 1)
+            .await
+            .unwrap();
+
+        let msg_raw: Vec<u8> = vec![8, 0, 0, 0, 4, 0, 0, 0, 116, 101, 115, 116].to_vec();
+        publisher.publish(&msg_raw).await.unwrap();
+
+        let res =
+            tokio::time::timeout(tokio::time::Duration::from_millis(250), subscriber.next()).await;
+        let msg = res.unwrap().unwrap().unwrap();
+        assert_eq!(msg.data, "test");
+    }
+
+    #[test_log::test(tokio::test)]
     async fn test_subscribe_any() {
         // get a single message in raw bytes and test the bytes are as expected
         let nh = NodeHandle::new("http://localhost:11311", "test_subscribe_any")

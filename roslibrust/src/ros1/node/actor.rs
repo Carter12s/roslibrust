@@ -176,6 +176,49 @@ impl NodeServerHandle {
         })?)
     }
 
+    /// Registers a publisher with the underlying node server
+    /// Returns a channel that the raw bytes of a publish can be shoved into to queue the publish
+    pub(crate) async fn register_publisher_any(
+        &self,
+        topic: &str,
+        topic_type: &str,
+        msg_definition: &str,
+        queue_size: usize,
+        latching: bool,
+    ) -> Result<mpsc::Sender<Vec<u8>>, NodeError> {
+        let (sender, receiver) = oneshot::channel();
+
+        let md5sum;
+        let md5sum_res =
+            roslibrust_codegen::message_definition_to_md5sum(topic_type, msg_definition);
+        match md5sum_res {
+            // TODO(lucasw) make a new error type for this?
+            Err(err) => {
+                log::error!("{:?}", err);
+                return Err(NodeError::IoError(io::Error::from(
+                    io::ErrorKind::ConnectionAborted,
+                )));
+            }
+            Ok(md5sum_rv) => {
+                md5sum = md5sum_rv;
+            }
+        }
+
+        self.node_server_sender.send(NodeMsg::RegisterPublisher {
+            reply: sender,
+            topic: topic.to_owned(),
+            topic_type: topic_type.to_owned(),
+            queue_size,
+            msg_definition: msg_definition.to_owned(),
+            md5sum,
+            latching,
+        })?;
+        let received = receiver.await?;
+        Ok(received.map_err(|_err| {
+            NodeError::IoError(io::Error::from(io::ErrorKind::ConnectionAborted))
+        })?)
+    }
+
     pub(crate) async fn unregister_publisher(&self, topic: &str) -> Result<(), NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender.send(NodeMsg::UnregisterPublisher {

@@ -16,6 +16,7 @@ use tokio::{
     sync::{mpsc, RwLock},
 };
 
+/// The regular Publisher representation returned by calling advertise on a [crate::ros1::NodeHandle].
 pub struct Publisher<T> {
     topic_name: String,
     sender: mpsc::Sender<Vec<u8>>,
@@ -42,6 +43,45 @@ impl<T: RosMessageType> Publisher<T> {
         // Or we should do some significant re-work to have it only yield when the data is sent.
         self.sender
             .send(data)
+            .await
+            .map_err(|_| PublisherError::StreamClosed)?;
+        debug!("Publishing data on topic {}", self.topic_name);
+        Ok(())
+    }
+}
+
+/// A specialty publisher used when message type is not known at compile time.
+///
+/// Relies on user to provide serialized data. Typically used with playback from bag files.
+pub struct PublisherAny {
+    topic_name: String,
+    sender: mpsc::Sender<Vec<u8>>,
+    phantom: PhantomData<Vec<u8>>,
+}
+
+impl PublisherAny {
+    pub(crate) fn new(topic_name: &str, sender: mpsc::Sender<Vec<u8>>) -> Self {
+        Self {
+            topic_name: topic_name.to_owned(),
+            sender,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Queues a message to be send on the related topic.
+    /// Returns when the data has been queued not when data is actually sent.
+    ///
+    /// This expects the data to be the raw bytes of the message body as they would appear going over the wire.
+    /// See ros1_publish_any.rs example for more details.
+    /// Body length should be included as first four bytes.
+    pub async fn publish(&self, data: &Vec<u8>) -> Result<(), PublisherError> {
+        // TODO this is a pretty dumb...
+        // because of the internal channel used for re-direction this future doesn't
+        // actually complete when the data is sent, but merely when it is queued to be sent
+        // This function could probably be non-async
+        // Or we should do some significant re-work to have it only yield when the data is sent.
+        self.sender
+            .send(data.to_vec())
             .await
             .map_err(|_| PublisherError::StreamClosed)?;
         debug!("Publishing data on topic {}", self.topic_name);
@@ -250,6 +290,8 @@ impl Publication {
                 if let Some(connection_md5sum) = connection_header.md5sum {
                     if connection_md5sum != "*" {
                         if let Some(local_md5sum) = &responding_conn_header.md5sum {
+                            // TODO(lucasw) is it ok to match any with "*"?
+                            // if local_md5sum != "*" && connection_md5sum != *local_md5sum {
                             if connection_md5sum != *local_md5sum {
                                 warn!(
                                     "Got subscribe request for {}, but md5sums do not match. Expected {:?}, received {:?}",
