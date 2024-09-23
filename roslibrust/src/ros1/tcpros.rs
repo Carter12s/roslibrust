@@ -257,7 +257,7 @@ pub async fn receive_body(stream: &mut TcpStream) -> Result<Vec<u8>, std::io::Er
     let mut body = vec![0u8; body_len as usize + 4];
     // Copy the length into the first four bytes
     body[..4].copy_from_slice(&body_len.to_le_bytes());
-    // Read the body into the buffer
+    // Read the body into the buffer after the header
     stream.read_exact(&mut body[4..]).await?;
 
     // Return body
