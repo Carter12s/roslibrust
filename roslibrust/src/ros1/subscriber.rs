@@ -1,5 +1,6 @@
 use crate::ros1::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
+use log::*;
 use roslibrust_codegen::{RosMessageType, ShapeShifter};
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
@@ -27,13 +28,29 @@ impl<T: RosMessageType> Subscriber<T> {
     }
 
     pub async fn next(&mut self) -> Option<Result<T, SubscriberError>> {
+        trace!("Subscriber of type {:?} awaiting recv()", T::ROS_TYPE_NAME);
         let data = match self.receiver.recv().await {
-            Ok(v) => v,
+            Ok(v) => {
+                trace!("Subscriber of type {:?} received data", T::ROS_TYPE_NAME);
+                v
+            }
             Err(RecvError::Closed) => return None,
             Err(RecvError::Lagged(n)) => return Some(Err(SubscriberError::Lagged(n))),
         };
+        trace!(
+            "Subscriber of type {:?} deserializing data",
+            T::ROS_TYPE_NAME
+        );
+        let tick = tokio::time::Instant::now();
         match serde_rosmsg::from_slice::<T>(&data[..]) {
-            Ok(p) => Some(Ok(p)),
+            Ok(p) => {
+                let duration = tick.elapsed();
+                trace!(
+                    "Subscriber of type {:?} deserialized data in {duration:?}",
+                    T::ROS_TYPE_NAME
+                );
+                Some(Ok(p))
+            }
             Err(e) => Some(Err(e.into())),
         }
     }
@@ -142,8 +159,18 @@ impl Subscription {
                     publisher_list.write().await.push(publisher_uri.to_owned());
                     // Repeatedly read from the stream until its dry
                     loop {
+                        trace!(
+                            "Subscription to {} receiving from {} is awaiting next body",
+                            topic_name,
+                            publisher_uri
+                        );
                         match tcpros::receive_body(&mut stream).await {
                             Ok(body) => {
+                                trace!(
+                                    "Subscription to {} receiving from {} received body",
+                                    topic_name,
+                                    publisher_uri
+                                );
                                 let send_result = sender.send(body);
                                 if let Err(err) = send_result {
                                     log::error!("Unable to send message data due to dropped channel, closing connection: {err}");

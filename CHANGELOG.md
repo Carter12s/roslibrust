@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - ROS1 Native Publishers correctly call unadvertise when dropped
+- ROS1 Native Publishers no longer occasionally truncate very large messages (>5MB)
 
 ### Changed
 
