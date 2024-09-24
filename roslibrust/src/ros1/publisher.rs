@@ -211,8 +211,9 @@ impl Publication {
                 Some(msg_to_publish) => {
                     let mut streams = subscriber_streams.write().await;
                     let mut streams_to_remove = vec![];
+                    // TODO: we're awaiting in a for loop... Could parallelize here
                     for (stream_idx, stream) in streams.iter_mut().enumerate() {
-                        if let Err(err) = stream.write(&msg_to_publish[..]).await {
+                        if let Err(err) = stream.write_all(&msg_to_publish[..]).await {
                             // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
                             debug!("Failed to send data to subscriber: {err}, removing");
                             streams_to_remove.push(stream_idx);
@@ -265,7 +266,6 @@ impl Publication {
         loop {
             if let Ok((mut stream, peer_addr)) = tcp_listener.accept().await {
                 info!("Received connection from subscriber at {peer_addr} for topic {topic_name}");
-
                 // Read the connection header:
                 let connection_header = match tcpros::receive_header(&mut stream).await {
                     Ok(header) => header,
@@ -314,7 +314,7 @@ impl Publication {
                     .to_bytes(false)
                     .expect("Couldn't serialize connection header");
                 stream
-                    .write(&response_header_bytes[..])
+                    .write_all(&response_header_bytes[..])
                     .await
                     .expect("Unable to respond on tcpstream");
 
