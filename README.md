@@ -9,13 +9,15 @@ This package aims to provide a convenient "async first" library for interacting 
 
 Currently this packaged provides support for both ROS1 native communication (TCPROS) and rosbridge's protocol which provides support for both ROS1 and ROS2 albeit with some overhead.
 
-Information about the protocol can be found [here](https://github.com/RobotWebTools/rosbridge_suite).
+Information about the rosbridge protocol can be found [here](https://github.com/RobotWebTools/rosbridge_suite).
 
 Note on documentation:
 All information about the crate itself (examples, documentation, tutorials, etc.) lives in the source code and can be viewed on [docs.rs](https://docs.rs/roslibrust).
 This readme is for "Meta" information about developing for the crate.
 
-Fully Supported via rosbridge: Noetic, Galactic, Humble, Iron,
+Fully Supported via rosbridge: Noetic, Galactic, Humble, Iron.
+
+Fully Supported via ROS1 native: Noetic
 
 ## Code Generation of ROS Messages
 
