@@ -42,7 +42,7 @@ impl<T: RosMessageType> Subscriber<T> {
             T::ROS_TYPE_NAME
         );
         let tick = tokio::time::Instant::now();
-        match serde_rosmsg::from_slice::<T>(&data[..]) {
+        match roslibrust_serde_rosmsg::from_slice::<T>(&data[..]) {
             Ok(p) => {
                 let duration = tick.elapsed();
                 trace!(
@@ -146,7 +146,7 @@ impl Subscription {
             let sender = self.msg_sender.clone();
             let publisher_list = self.known_publishers.clone();
             let publisher_uri = publisher_uri.to_owned();
-
+            trace!("Creating new subscription connection for {publisher_uri} on {topic_name}");
             let handle = tokio::spawn(async move {
                 if let Ok(mut stream) = establish_publisher_connection(
                     &node_name,
@@ -295,8 +295,8 @@ pub enum SubscriberError {
     Lagged(u64),
 }
 
-impl From<serde_rosmsg::Error> for SubscriberError {
-    fn from(value: serde_rosmsg::Error) -> Self {
+impl From<roslibrust_serde_rosmsg::Error> for SubscriberError {
+    fn from(value: roslibrust_serde_rosmsg::Error) -> Self {
         Self::DeserializeError(value.to_string())
     }
 }

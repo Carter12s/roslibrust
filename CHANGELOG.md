@@ -25,7 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- ROS1 Native Publishers no longer occasionally truncate very large messages when configured with latching
+
 ### Changed
+
+- Passing of large messages containing uint8[] arrays is now substantially faster
+- Generated code now relies on serde_bytes to enable faster handling of uint8[] arrays
+- Switched to a fork of serde_rosmsg to enable faster handling of uint8[] arrays
 
 ## 0.11.0
 

@@ -35,7 +35,7 @@ impl<T: RosMessageType> Publisher<T> {
     /// Queues a message to be send on the related topic.
     /// Returns when the data has been queued not when data is actually sent.
     pub async fn publish(&self, data: &T) -> Result<(), PublisherError> {
-        let data = serde_rosmsg::to_vec(&data)?;
+        let data = roslibrust_serde_rosmsg::to_vec(&data)?;
         // TODO this is a pretty dumb...
         // because of the internal channel used for re-direction this future doesn't
         // actually complete when the data is sent, but merely when it is queued to be sent
@@ -209,6 +209,7 @@ impl Publication {
         loop {
             match rx.recv().await {
                 Some(msg_to_publish) => {
+                    trace!("Publish task got message to publish for topic: {topic}");
                     let mut streams = subscriber_streams.write().await;
                     let mut streams_to_remove = vec![];
                     // TODO: we're awaiting in a for loop... Could parallelize here
@@ -324,7 +325,7 @@ impl Publication {
                         debug!(
                             "Publication configured to be latching and has last_message, sending"
                         );
-                        let res = stream.write(last_message).await;
+                        let res = stream.write_all(last_message).await;
                         match res {
                             Ok(_) => {}
                             Err(e) => {
@@ -362,8 +363,8 @@ pub enum PublisherError {
     StreamClosed,
 }
 
-impl From<serde_rosmsg::Error> for PublisherError {
-    fn from(value: serde_rosmsg::Error) -> Self {
+impl From<roslibrust_serde_rosmsg::Error> for PublisherError {
+    fn from(value: roslibrust_serde_rosmsg::Error) -> Self {
         Self::SerializingError(value.to_string())
     }
 }

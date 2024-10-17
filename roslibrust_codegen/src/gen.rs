@@ -133,8 +133,11 @@ fn generate_field_definition(
             .ok_or(Error::new(format!("No Rust type for {}", field.field_type)))?
             .to_owned(),
     };
+    // Wrap type in appropriate Vec or array wrapper based on array information
     let rust_field_type = match field.field_type.array_info {
-        Some(None) => format!("::std::vec::Vec<{rust_field_type}>"),
+        Some(None) => {
+            format!("::std::vec::Vec<{rust_field_type}>")
+        }
         Some(Some(fixed_length)) => format!("[{rust_field_type}; {fixed_length}]"),
         None => rust_field_type,
     };
@@ -184,6 +187,15 @@ fn generate_field_definition(
     // Larger than 32.
     const MAX_FIXED_ARRAY_LEN: usize = 32;
     let serde_line = match field.field_type.array_info {
+        Some(None) => {
+            // Special case for Vec<u8>, which massively benefit from optimizations in serde_bytes
+            // This makes deserializing an Image ~97% faster
+            if field.field_type.field_type == "uint8" {
+                quote! { #[serde(with = "::roslibrust_codegen::serde_bytes")] }
+            } else {
+                quote! {}
+            }
+        }
         Some(Some(fixed_array_len)) if fixed_array_len > MAX_FIXED_ARRAY_LEN => {
             quote! { #[serde(with = "::roslibrust_codegen::BigArray")] }
         }
