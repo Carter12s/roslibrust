@@ -1626,7 +1626,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "abort-on-drop",
  "anyhow",
@@ -1662,7 +1662,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust_codegen"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "env_logger 0.10.2",
  "lazy_static",
@@ -1685,7 +1685,7 @@ dependencies = [
 
 [[package]]
 name = "roslibrust_codegen_macro"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "proc-macro2",
  "quote",

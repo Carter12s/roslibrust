@@ -25,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+### Changed
+
+## 0.11.1
+
+### Added
+
+### Fixed
+
 - ROS1 Native Publishers no longer occasionally truncate very large messages when configured with latching
 
 ### Changed
