@@ -1,11 +1,7 @@
 use crate::ros1::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
 use log::*;
-<<<<<<< HEAD
 use roslibrust_codegen::{RosMessageType, ShapeShifter};
-=======
-use roslibrust_codegen::RosMessageType;
->>>>>>> Switch to fork of serde_rosmsg, benchmark that it is indeed much faster, fix bug with missing write_all
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::AsyncWriteExt,
@@ -170,15 +166,11 @@ impl Subscription {
                         );
                         match tcpros::receive_body(&mut stream).await {
                             Ok(body) => {
-<<<<<<< HEAD
                                 trace!(
                                     "Subscription to {} receiving from {} received body",
                                     topic_name,
                                     publisher_uri
                                 );
-=======
-                                trace!("Got new message from publisher {publisher_uri} on {topic_name}");
->>>>>>> Switch to fork of serde_rosmsg, benchmark that it is indeed much faster, fix bug with missing write_all
                                 let send_result = sender.send(body);
                                 if let Err(err) = send_result {
                                     log::error!("Unable to send message data due to dropped channel, closing connection: {err}");
