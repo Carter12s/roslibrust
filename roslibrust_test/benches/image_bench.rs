@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use pprof::criterion::{PProfProfiler, Output};
+use pprof::criterion::{Output, PProfProfiler};
 use std::{
     hint::black_box,
     sync::{Arc, Mutex},
