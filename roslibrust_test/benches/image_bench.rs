@@ -1,4 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
+use pprof::criterion::{PProfProfiler, Output};
 use std::{
     hint::black_box,
     sync::{Arc, Mutex},
@@ -74,5 +75,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group!(
+    name = benches;
+    config = Criterion::default().with_profiler(PProfProfiler::new(1000, Output::Flamegraph(None)));
+    targets = criterion_benchmark
+);
 criterion_main!(benches);
