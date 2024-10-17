@@ -13,7 +13,13 @@ log = "0.4"
 
 [dev-dependencies]
 diffy = "0.3.0"
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+tokio = { version = "1.24", features = ["full"] }
 
 [[bin]]
 path = "src/performance_ramp.rs"
 name = "ramp"
+
+[[bench]]
+name = "image_bench"
+harness = false

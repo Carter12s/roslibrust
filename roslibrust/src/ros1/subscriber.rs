@@ -1,7 +1,11 @@
 use crate::ros1::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
 use log::*;
+<<<<<<< HEAD
 use roslibrust_codegen::{RosMessageType, ShapeShifter};
+=======
+use roslibrust_codegen::RosMessageType;
+>>>>>>> Switch to fork of serde_rosmsg, benchmark that it is indeed much faster, fix bug with missing write_all
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::AsyncWriteExt,
@@ -42,7 +46,7 @@ impl<T: RosMessageType> Subscriber<T> {
             T::ROS_TYPE_NAME
         );
         let tick = tokio::time::Instant::now();
-        match serde_rosmsg::from_slice::<T>(&data[..]) {
+        match roslibrust_serde_rosmsg::from_slice::<T>(&data[..]) {
             Ok(p) => {
                 let duration = tick.elapsed();
                 trace!(
@@ -146,7 +150,7 @@ impl Subscription {
             let sender = self.msg_sender.clone();
             let publisher_list = self.known_publishers.clone();
             let publisher_uri = publisher_uri.to_owned();
-
+            trace!("Creating new subscription connection for {publisher_uri} on {topic_name}");
             let handle = tokio::spawn(async move {
                 if let Ok(mut stream) = establish_publisher_connection(
                     &node_name,
@@ -166,11 +170,15 @@ impl Subscription {
                         );
                         match tcpros::receive_body(&mut stream).await {
                             Ok(body) => {
+<<<<<<< HEAD
                                 trace!(
                                     "Subscription to {} receiving from {} received body",
                                     topic_name,
                                     publisher_uri
                                 );
+=======
+                                trace!("Got new message from publisher {publisher_uri} on {topic_name}");
+>>>>>>> Switch to fork of serde_rosmsg, benchmark that it is indeed much faster, fix bug with missing write_all
                                 let send_result = sender.send(body);
                                 if let Err(err) = send_result {
                                     log::error!("Unable to send message data due to dropped channel, closing connection: {err}");
@@ -295,8 +303,8 @@ pub enum SubscriberError {
     Lagged(u64),
 }
 
-impl From<serde_rosmsg::Error> for SubscriberError {
-    fn from(value: serde_rosmsg::Error) -> Self {
+impl From<roslibrust_serde_rosmsg::Error> for SubscriberError {
+    fn from(value: roslibrust_serde_rosmsg::Error) -> Self {
         Self::DeserializeError(value.to_string())
     }
 }

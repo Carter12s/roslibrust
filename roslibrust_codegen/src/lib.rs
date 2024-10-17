@@ -23,8 +23,9 @@ pub use integral_types::*;
 // Modeled from: https://users.rust-lang.org/t/proc-macros-using-third-party-crate/42465/4
 pub use ::serde;
 pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
-pub use serde_big_array::BigArray;
-pub use smart_default::SmartDefault;
+pub use serde_big_array::BigArray; // Used in generated code for large fixed sized arrays
+pub use serde_bytes;
+pub use smart_default::SmartDefault; // Used in generated code for default values // Used in generated code for faster Vec<u8> serialization
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality

@@ -280,10 +280,10 @@ impl NodeServerHandle {
         // This gives a generic closure that operates on byte arrays that we can then store and use freely
         let server_typeless =
             move |message: Vec<u8>| -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
-                let request = serde_rosmsg::from_slice::<T::Request>(&message)
+                let request = roslibrust_serde_rosmsg::from_slice::<T::Request>(&message)
                     .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
                 let response = server(request)?;
-                Ok(serde_rosmsg::to_vec(&response)
+                Ok(roslibrust_serde_rosmsg::to_vec(&response)
                     .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?)
             };
         let server_typeless = Box::new(server_typeless);

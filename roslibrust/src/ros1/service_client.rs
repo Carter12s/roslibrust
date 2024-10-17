@@ -54,7 +54,7 @@ impl<T: RosServiceType> ServiceClient<T> {
     }
 
     pub async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
-        let request_payload = serde_rosmsg::to_vec(request)
+        let request_payload = roslibrust_serde_rosmsg::to_vec(request)
             .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
         let (response_tx, response_rx) = oneshot::channel();
 
@@ -69,7 +69,7 @@ impl<T: RosServiceType> ServiceClient<T> {
                     self.service_name,
                     result_payload
                 );
-                let response: T::Response = serde_rosmsg::from_slice(&result_payload)
+                let response: T::Response = roslibrust_serde_rosmsg::from_slice(&result_payload)
                     .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
                 return Ok(response);
             }
@@ -202,13 +202,14 @@ impl ServiceClientLink {
         } else {
             // Parse an error message as the body
             let error_body = tcpros::receive_body(stream).await?;
-            let err_msg: String = serde_rosmsg::from_slice(&error_body).map_err(|err| {
-                log::error!("Failed to parse service call error message: {err}");
-                std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    "Failed to parse service call error message",
-                )
-            })?;
+            let err_msg: String =
+                roslibrust_serde_rosmsg::from_slice(&error_body).map_err(|err| {
+                    log::error!("Failed to parse service call error message: {err}");
+                    std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "Failed to parse service call error message",
+                    )
+                })?;
             // TODO probably specific error type for this
             Err(std::io::Error::new(
                 std::io::ErrorKind::Other,

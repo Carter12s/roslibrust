@@ -7543,6 +7543,7 @@ float32[] values"#;
     pub struct CompressedImage {
         pub r#header: std_msgs::Header,
         pub r#format: ::std::string::String,
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#data: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for CompressedImage {
@@ -7695,6 +7696,7 @@ string frame_id"#;
         pub r#encoding: ::std::string::String,
         pub r#is_bigendian: u8,
         pub r#step: u32,
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#data: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for Image {
@@ -8649,6 +8651,7 @@ string frame_id"#;
         pub r#is_bigendian: bool,
         pub r#point_step: u32,
         pub r#row_step: u32,
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#data: ::std::vec::Vec<u8>,
         pub r#is_dense: bool,
     }
@@ -10506,6 +10509,7 @@ uint32 stride  # stride of given dimension"#;
     #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt8MultiArray {
         pub r#layout: self::MultiArrayLayout,
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#data: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for UInt8MultiArray {
@@ -11100,6 +11104,7 @@ int64 sum"#;
     )]
     #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct RoundTripArrayRequest {
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#bytes: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for RoundTripArrayRequest {
@@ -11119,6 +11124,7 @@ uint8[] bytes"#;
     )]
     #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct RoundTripArrayResponse {
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#bytes: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for RoundTripArrayResponse {

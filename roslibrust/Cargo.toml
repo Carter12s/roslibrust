@@ -38,7 +38,7 @@ roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro", version = "0.
 roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.11.0" }
 reqwest = { version = "0.11", optional = true } # Only used with native ros1
 serde_xmlrpc = { version = "0.2", optional = true } # Only used with native ros1
-serde_rosmsg = { version = "0.2", optional = true } # Only used with native ros1
+roslibrust_serde_rosmsg = { version = "0.3", optional = true } # Only used with native ros1
 hyper = { version = "0.14", features = [
     "server",
 ], optional = true } # Only used with native ros1
@@ -74,7 +74,7 @@ ros1 = [
     "dep:hyper",
     "dep:gethostname",
     "dep:regex",
-    "dep:serde_rosmsg",
+    "dep:roslibrust_serde_rosmsg",
 ]
 
 
