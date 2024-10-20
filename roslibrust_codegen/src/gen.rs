@@ -38,6 +38,7 @@ pub fn generate_service(service: ServiceFile) -> Result<TokenStream, Error> {
         #request_msg
         #response_msg
 
+        #[allow(dead_code)]
         pub struct #struct_name {
 
         }
@@ -108,6 +109,7 @@ pub fn generate_struct(msg: MessageFile) -> Result<TokenStream, Error> {
     // Only if we have constants append the impl
     if !constants.is_empty() {
         base.extend(quote! {
+            #[allow(unused)]
             impl #struct_name {
                 #(#constants )*
             }

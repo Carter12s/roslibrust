@@ -91,6 +91,7 @@ builtin_interfaces/Time stamp
 # specified must be unique.
 string id"#;
     }
+    #[allow(unused)]
     impl GoalStatus {
         pub const r#PENDING: u8 = 0u8;
         pub const r#ACTIVE: u8 = 1u8;
@@ -306,6 +307,7 @@ string key
 # A value to track over time.
 string value"#;
     }
+    #[allow(unused)]
     impl DiagnosticStatus {
         pub const r#OK: u8 = 0u8;
         pub const r#WARN: u8 = 1u8;
@@ -394,6 +396,7 @@ bool success
 # Message with additional information about the success or failure
 string message"#;
     }
+    #[allow(dead_code)]
     pub struct AddDiagnostics {}
     impl ::roslibrust_codegen::RosServiceType for AddDiagnostics {
         const ROS_SERVICE_NAME: &'static str = "diagnostic_msgs/AddDiagnostics";
@@ -471,6 +474,7 @@ string key
 # A value to track over time.
 string value"#;
     }
+    #[allow(dead_code)]
     pub struct SelfTest {}
     impl ::roslibrust_codegen::RosServiceType for SelfTest {
         const ROS_SERVICE_NAME: &'static str = "diagnostic_msgs/SelfTest";
@@ -2873,6 +2877,7 @@ builtin_interfaces/Time stamp
 # Transform frame with which this data is associated.
 string frame_id"#;
     }
+    #[allow(dead_code)]
     pub struct GetMap {}
     impl ::roslibrust_codegen::RosServiceType for GetMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/GetMap";
@@ -3226,6 +3231,7 @@ builtin_interfaces/Time stamp
 # Transform frame with which this data is associated.
 string frame_id"#;
     }
+    #[allow(dead_code)]
     pub struct GetPlan {}
     impl ::roslibrust_codegen::RosServiceType for GetPlan {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/GetPlan";
@@ -3493,6 +3499,7 @@ builtin_interfaces/Time stamp
 # Transform frame with which this data is associated.
 string frame_id"#;
     }
+    #[allow(unused)]
     impl LoadMapResponse {
         pub const r#RESULT_SUCCESS: u8 = 0u8;
         pub const r#RESULT_MAP_DOES_NOT_EXIST: u8 = 1u8;
@@ -3500,6 +3507,7 @@ string frame_id"#;
         pub const r#RESULT_INVALID_MAP_METADATA: u8 = 3u8;
         pub const r#RESULT_UNDEFINED_FAILURE: u8 = 255u8;
     }
+    #[allow(dead_code)]
     pub struct LoadMap {}
     impl ::roslibrust_codegen::RosServiceType for LoadMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/LoadMap";
@@ -3903,6 +3911,7 @@ string frame_id"#;
         const DEFINITION: &'static str = r#"# True if the map was successfully set, false otherwise.
 bool success"#;
     }
+    #[allow(dead_code)]
     pub struct SetMap {}
     impl ::roslibrust_codegen::RosServiceType for SetMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/SetMap";
@@ -4018,6 +4027,7 @@ builtin_interfaces/Time stamp
 # Transform frame with which this data is associated.
 string frame_id"#;
     }
+    #[allow(unused)]
     impl BatteryState {
         pub const r#POWER_SUPPLY_STATUS_UNKNOWN: u8 = 0u8;
         pub const r#POWER_SUPPLY_STATUS_CHARGING: u8 = 1u8;
@@ -4678,6 +4688,7 @@ uint8 id
 # actually binary, driver should treat 0<=x<0.5 as off, 0.5<=x<=1 as on.
 float32 intensity"#;
     }
+    #[allow(unused)]
     impl JoyFeedback {
         pub const r#TYPE_LED: u8 = 0u8;
         pub const r#TYPE_RUMBLE: u8 = 1u8;
@@ -5184,6 +5195,7 @@ builtin_interfaces/Time stamp
 # Transform frame with which this data is associated.
 string frame_id"#;
     }
+    #[allow(unused)]
     impl NavSatFix {
         pub const r#COVARIANCE_TYPE_UNKNOWN: u8 = 0u8;
         pub const r#COVARIANCE_TYPE_APPROXIMATED: u8 = 1u8;
@@ -5230,6 +5242,7 @@ uint16 SERVICE_GALILEO = 8
 
 uint16 service"#;
     }
+    #[allow(unused)]
     impl NavSatStatus {
         pub const r#STATUS_NO_FIX: i8 = -1i8;
         pub const r#STATUS_FIX: i8 = 0i8;
@@ -5443,6 +5456,7 @@ uint32 offset    # Offset from start of point struct
 uint8  datatype  # Datatype enumeration, see above
 uint32 count     # How many elements in the field"#;
     }
+    #[allow(unused)]
     impl PointField {
         pub const r#INT8: u8 = 1u8;
         pub const r#UINT8: u8 = 2u8;
@@ -5525,6 +5539,7 @@ builtin_interfaces/Time stamp
 # Transform frame with which this data is associated.
 string frame_id"#;
     }
+    #[allow(unused)]
     impl Range {
         pub const r#ULTRASOUND: u8 = 0u8;
         pub const r#INFRARED: u8 = 1u8;
@@ -5930,6 +5945,7 @@ string frame_id"#;
         const DEFINITION: &'static str = r#"bool success                             # True if the call succeeded
 string status_message                    # Used to give details about success"#;
     }
+    #[allow(dead_code)]
     pub struct SetCameraInfo {}
     impl ::roslibrust_codegen::RosServiceType for SetCameraInfo {
         const ROS_SERVICE_NAME: &'static str = "sensor_msgs/SetCameraInfo";
@@ -6131,6 +6147,7 @@ float32 x
 float32 y
 float32 z"#;
     }
+    #[allow(unused)]
     impl SolidPrimitive {
         pub const r#BOX: u8 = 1u8;
         pub const r#SPHERE: u8 = 2u8;
@@ -7574,6 +7591,7 @@ pub mod std_srvs {
         const MD5SUM: &'static str = "d41d8cd98f00b204e9800998ecf8427e";
         const DEFINITION: &'static str = r#""#;
     }
+    #[allow(dead_code)]
     pub struct Empty {}
     impl ::roslibrust_codegen::RosServiceType for Empty {
         const ROS_SERVICE_NAME: &'static str = "std_srvs/Empty";
@@ -7619,6 +7637,7 @@ pub mod std_srvs {
         const DEFINITION: &'static str = r#"bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages"#;
     }
+    #[allow(dead_code)]
     pub struct SetBool {}
     impl ::roslibrust_codegen::RosServiceType for SetBool {
         const ROS_SERVICE_NAME: &'static str = "std_srvs/SetBool";
@@ -7662,6 +7681,7 @@ string message # informational, e.g. for error messages"#;
         const DEFINITION: &'static str = r#"bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages"#;
     }
+    #[allow(dead_code)]
     pub struct Trigger {}
     impl ::roslibrust_codegen::RosServiceType for Trigger {
         const ROS_SERVICE_NAME: &'static str = "std_srvs/Trigger";
@@ -8364,6 +8384,7 @@ builtin_interfaces/Time stamp
 # Transform frame with which this data is associated.
 string frame_id"#;
     }
+    #[allow(unused)]
     impl ImageMarker {
         pub const r#CIRCLE: i32 = 0i32;
         pub const r#LINE_STRIP: i32 = 1i32;
@@ -9534,6 +9555,7 @@ MSG: visualization_msgs/UVCoordinate
 float32 u
 float32 v"#;
     }
+    #[allow(unused)]
     impl InteractiveMarkerControl {
         pub const r#INHERIT: u8 = 0u8;
         pub const r#FIXED: u8 = 1u8;
@@ -9661,6 +9683,7 @@ builtin_interfaces/Time stamp
 # Transform frame with which this data is associated.
 string frame_id"#;
     }
+    #[allow(unused)]
     impl InteractiveMarkerFeedback {
         pub const r#KEEP_ALIVE: u8 = 0u8;
         pub const r#POSE_UPDATE: u8 = 1u8;
@@ -12816,6 +12839,7 @@ MSG: visualization_msgs/UVCoordinate
 float32 u
 float32 v"#;
     }
+    #[allow(unused)]
     impl InteractiveMarkerUpdate {
         pub const r#KEEP_ALIVE: u8 = 0u8;
         pub const r#UPDATE: u8 = 1u8;
@@ -13040,6 +13064,7 @@ MSG: visualization_msgs/UVCoordinate
 float32 u
 float32 v"#;
     }
+    #[allow(unused)]
     impl Marker {
         pub const r#ARROW: i32 = 0i32;
         pub const r#CUBE: i32 = 1i32;
@@ -13443,6 +13468,7 @@ uint8 ROSRUN=1
 uint8 ROSLAUNCH=2
 uint8 command_type"#;
     }
+    #[allow(unused)]
     impl MenuEntry {
         pub const r#FEEDBACK: u8 = 0u8;
         pub const r#ROSRUN: u8 = 1u8;
@@ -15005,6 +15031,7 @@ MSG: visualization_msgs/UVCoordinate
 float32 u
 float32 v"#;
     }
+    #[allow(dead_code)]
     pub struct GetInteractiveMarkers {}
     impl ::roslibrust_codegen::RosServiceType for GetInteractiveMarkers {
         const ROS_SERVICE_NAME: &'static str = "visualization_msgs/GetInteractiveMarkers";
