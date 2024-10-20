@@ -9,6 +9,7 @@ use crate::{
 
 /// Represents a handle to an underlying Node. NodeHandle's can be freely cloned, moved, copied, etc.
 /// This class provides the user facing API for interacting with ROS.
+/// The last node handle dropped shuts down the node.
 #[derive(Clone)]
 pub struct NodeHandle {
     inner: NodeServerHandle,
