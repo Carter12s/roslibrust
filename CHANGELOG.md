@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Generated code now includes various lint attributes to suppress warnings.
+
 ### Changed
 
 ## 0.11.1
