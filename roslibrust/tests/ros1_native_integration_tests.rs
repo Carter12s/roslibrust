@@ -525,5 +525,4 @@ mod tests {
         assert!(!data.is_subscribed("/test_cleanup_sub", "/test_node_cleanup"));
         assert!(!data.is_service_provider("/test_cleanup_srv", "/test_node_cleanup"));
     }
-
 }
