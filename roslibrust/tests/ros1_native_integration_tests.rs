@@ -469,61 +469,61 @@ mod tests {
     /// Test that we correctly purge references to publishers, subscribers and services servers when a node shuts down
     #[test_log::test(tokio::test)]
     async fn node_cleanup() {
-        let future = async {
-            // Create our node
-            // this nh controls the lifetimes
-            let nh = NodeHandle::new("http://localhost:11311", "/test_node_cleanup")
-                .await
-                .unwrap();
-
-            // Create a publisher so a topic will connected
-            let _publisher = nh
-                .advertise::<std_msgs::Header>("/test_cleanup_pub", 1, false)
-                .await
-                .unwrap();
-
-            let _subscriber = nh
-                .subscribe::<std_msgs::Header>("/test_cleanup_sub", 1)
-                .await
-                .unwrap();
-
-            let _service_server = nh
-                .advertise_service::<std_srvs::Trigger, _>("/test_cleanup_srv", |_req| {
-                    Ok(Default::default())
-                })
-                .await
-                .unwrap();
-
-            let master_client = roslibrust::ros1::MasterClient::new(
-                "http://localhost:11311",
-                "NAN",
-                "/test_node_cleanup_checker",
-            )
+        // Create our node
+        // this nh controls the lifetimes
+        let nh = NodeHandle::new("http://localhost:11311", "/test_node_cleanup")
             .await
             .unwrap();
 
-            let data = master_client.get_system_state().await.unwrap();
-            info!("Got data before drop: {data:?}");
+        // Create pub, sub, and service server to prove all get cleaned up
+        let _publisher = nh
+            .advertise::<std_msgs::Header>("/test_cleanup_pub", 1, false)
+            .await
+            .unwrap();
 
-            // Check that our three connections are reported by the ros master before starting
-            assert!(data.is_publishing("/test_cleanup_pub", "/test_node_cleanup"));
-            assert!(data.is_subscribed("/test_cleanup_sub", "/test_node_cleanup"));
-            assert!(data.is_service_provider("/test_cleanup_srv", "/test_node_cleanup"));
+        let _subscriber = nh
+            .subscribe::<std_msgs::Header>("/test_cleanup_sub", 1)
+            .await
+            .unwrap();
 
-            // Drop our node handle
-            std::mem::drop(nh);
+        let _service_server = nh
+            .advertise_service::<std_srvs::Trigger, _>("/test_cleanup_srv", |_req| {
+                Ok(Default::default())
+            })
+            .await
+            .unwrap();
 
-            // Delay to allow destructor to complete
-            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-            let data = master_client.get_system_state().await.unwrap();
-            info!("Got data after drop: {data:?}");
+        let master_client = roslibrust::ros1::MasterClient::new(
+            "http://localhost:11311",
+            "NAN",
+            "/test_node_cleanup_checker",
+        )
+        .await
+        .unwrap();
 
-            // Check that our three connections are no longer reported by the ros master after dropping
-            assert!(!data.is_publishing("/test_cleanup_pub", "/test_node_cleanup"));
-            assert!(!data.is_subscribed("/test_cleanup_sub", "/test_node_cleanup"));
-            assert!(!data.is_service_provider("/test_cleanup_srv", "/test_node_cleanup"));
-        };
-        // 1 second to complete the whole test.
-        tokio::time::timeout(tokio::time::Duration::from_secs(1), future).await.unwrap();
+        let data = master_client.get_system_state().await.unwrap();
+        info!("Got data before drop: {data:?}");
+
+        // Check that our three connections are reported by the ros master before starting
+        assert!(data.is_publishing("/test_cleanup_pub", "/test_node_cleanup"));
+        assert!(data.is_subscribed("/test_cleanup_sub", "/test_node_cleanup"));
+        assert!(data.is_service_provider("/test_cleanup_srv", "/test_node_cleanup"));
+
+        // Drop our node handle
+        std::mem::drop(nh);
+
+        // Confirm here that Node actually got shut down
+        debug!("Drop has happened");
+        // Delay to allow destructor to complete
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        debug!("sleep is over");
+        let data = master_client.get_system_state().await.unwrap();
+        info!("Got data after drop: {data:?}");
+
+        // Check that our three connections are no longer reported by the ros master after dropping
+        assert!(!data.is_publishing("/test_cleanup_pub", "/test_node_cleanup"));
+        assert!(!data.is_subscribed("/test_cleanup_sub", "/test_node_cleanup"));
+        assert!(!data.is_service_provider("/test_cleanup_srv", "/test_node_cleanup"));
     }
+
 }

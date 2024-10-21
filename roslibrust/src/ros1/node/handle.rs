@@ -42,6 +42,18 @@ impl NodeHandle {
         Ok(nh)
     }
 
+    /// This creates a clone() of NodeHandle that doesn't keep the underlying node alive
+    /// This should be used for things like ServiceServer which wants to be able to talk to the node
+    /// but doesn't need to keep the node alive.
+    pub(crate) fn weak_clone(&self) -> NodeHandle {
+        NodeHandle {
+            inner: NodeServerHandle {
+                node_server_sender: self.inner.node_server_sender.clone(),
+                _node_task: None,
+            },
+        }
+    }
+
     /// This function may be removed...
     /// All node handles connect to a backend node server that actually handles the communication with ROS
     /// If this function returns false, the backend node server has shut down and this handle is invalid.
@@ -148,7 +160,8 @@ impl NodeHandle {
             .inner
             .register_service_server::<T, F>(&service_name, server)
             .await?;
-        Ok(ServiceServer::new(service_name, self.clone()))
+        // Super important. Don't clone self or we create a STRONG NodeHandle that keeps the node alive
+        Ok(ServiceServer::new(service_name, self.weak_clone()))
     }
 
     // TODO Major: This should probably be moved to NodeServerHandle?

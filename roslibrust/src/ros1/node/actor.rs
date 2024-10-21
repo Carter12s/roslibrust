@@ -101,7 +101,7 @@ pub(crate) struct NodeServerHandle {
     // If this handle should keep the underlying node task alive it will hold an
     // Arc to the underlying node task. This is an option because internal handles
     // within the node shouldn't keep it alive (e.g. what we hand to xml server)
-    _node_task: Option<Arc<ChildTask<()>>>,
+    pub(crate) _node_task: Option<Arc<ChildTask<()>>>,
 }
 
 impl NodeServerHandle {
@@ -857,39 +857,47 @@ impl Node {
     // Clears any extant node connections with the ros master
     // This is not expected to be called anywhere other than the drop impl
     fn shutdown(&mut self) {
-        let future = async {
+        // Based on this answer: 3b https://stackoverflow.com/questions/71541765/rust-async-drop
+        // Make copies of what we need to shut down
+        let client = self.client.clone();
+        let subscriptions = std::mem::take(&mut self.subscriptions);
+        let publishers = std::mem::take(&mut self.publishers);
+        let service_servers = std::mem::take(&mut self.service_servers);
+        let host_addr = self.host_addr;
+
+        // Move copies into a future that will do the clean-ups
+        let future = async move {
+            debug!("Start shutdown node");
             // Note: we're ignoring all failures here and doing best effort cleanup
             // Many of these log messages will be incorrect until we get our cleanup logic dialed in.
-            for (topic, _subscriptions) in &self.subscriptions {
+            for (topic, _subscriptions) in &subscriptions {
                 debug!("Node shutdown is cleaning up subscription: {topic}");
-                let _ = self.client.unregister_subscriber(topic).await.map_err(|e| {
+                let _ = client.unregister_subscriber(topic).await.map_err(|e| {
                     error!("Failed to unregister subscriber for topic: {topic} while shutting down node");
                     e
                 });
                 debug!("CHECK");
             }
 
-            for (topic, _publication) in &self.publishers {
+            for (topic, _publication) in &publishers {
                 debug!("Node shutdown is cleaning up publishing: {topic}");
-                let _ = self.client.unregister_publisher(topic).await.map_err(|e| {
+                let _ = client.unregister_publisher(topic).await.map_err(|e| {
                     error!("Failed to unregister publisher for topic: {topic} while shutting down node.");
                     e
                 });
             }
 
-            for (topic, service_link) in &self.service_servers {
+            for (topic, service_link) in &service_servers {
                 debug!("Node shutdown is cleaning up service: {topic}");
-                let uri = format!("rosrpc://{}:{}", self.host_addr, service_link.port());
-                let _ = self.client.unregister_service(topic, uri).await.map_err(|e| {
+                let uri = format!("rosrpc://{}:{}", host_addr, service_link.port());
+                let _ = client.unregister_service(topic, uri).await.map_err(|e| {
                     error!("Failed to unregister server server for topic: {topic} while shutting down node.");
                     e
                 });
             }
         };
-
-        let runtime = tokio::runtime::Handle::try_current().expect("Roslibrust should always be run inside tokio runtime");
-        // Run the shutdown tasks to completion
-        runtime.block_on(future);
+        // Spawn shutdown operation in a separate task
+        tokio::spawn(future);
     }
 }
 
