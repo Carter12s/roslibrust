@@ -39,6 +39,9 @@ pub enum NodeMsg {
         topic: String,
         publishers: Vec<String>,
     },
+    // This function exists because "shutdown" is one of the XmlRpc Client APIs that is
+    // technically part of the ROS ecosystem (never really seen it used)
+    // This results in the node's task ending and the node being dropped.
     Shutdown,
     RegisterPublisher {
         reply: oneshot::Sender<Result<mpsc::Sender<Vec<u8>>, String>>,
@@ -87,13 +90,18 @@ pub enum NodeMsg {
     },
 }
 
+/// Represents a communication handle to an underlying node server
+/// The node server handles all communication with ROS Master and keeps
+/// track of subscriptions, publishers, etc.
+/// Things that need to interact with the node server do so through a command channel
+/// Some handles are "root" handles that when dropped also drop the node server.
 #[derive(Clone)]
 pub(crate) struct NodeServerHandle {
     pub(crate) node_server_sender: mpsc::UnboundedSender<NodeMsg>,
     // If this handle should keep the underlying node task alive it will hold an
     // Arc to the underlying node task. This is an option because internal handles
     // within the node shouldn't keep it alive (e.g. what we hand to xml server)
-    _node_task: Option<Arc<ChildTask<()>>>,
+    pub(crate) _node_task: Option<Arc<ChildTask<()>>>,
 }
 
 impl NodeServerHandle {
@@ -146,7 +154,6 @@ impl NodeServerHandle {
     /// Informs the underlying node server to shutdown
     /// This will stop all ROS functionality and poison all NodeHandles connected
     /// to the underlying node server.
-    // TODO this function should probably be pub(crate) and not pub?
     pub(crate) fn shutdown(&self) -> Result<(), NodeError> {
         self.node_server_sender.send(NodeMsg::Shutdown)?;
         Ok(())
@@ -373,6 +380,8 @@ impl NodeServerHandle {
     }
 }
 
+// TODO we sometimes refer to this entity as "Node" and sometimes as "NodeServer"
+// we should standardize terminology.
 /// Represents a single "real" node, typically only one of these is expected per process
 /// but nothing should specifically prevent that.
 /// This is sometimes referred to as the NodeServer in the documentation, many NodeHandles can point to one NodeServer
@@ -452,6 +461,8 @@ impl Node {
                             node.handle_msg(node_msg).await;
                         }
                         None => {
+                            // This isn't an really expected case?
+                            log::warn!("Node command channel closed, shutting down");
                             break;
                         }
                     }
@@ -841,5 +852,60 @@ impl Node {
                 "Attempt to unregister service that is not currently registered",
             )));
         }
+    }
+
+    // Clears any extant node connections with the ros master
+    // This is not expected to be called anywhere other than the drop impl
+    fn shutdown(&mut self) {
+        // Based on this answer: 3b https://stackoverflow.com/questions/71541765/rust-async-drop
+        // Make copies of what we need to shut down
+        let client = self.client.clone();
+        let subscriptions = std::mem::take(&mut self.subscriptions);
+        let publishers = std::mem::take(&mut self.publishers);
+        let service_servers = std::mem::take(&mut self.service_servers);
+        let host_addr = self.host_addr;
+
+        // Move copies into a future that will do the clean-ups
+        let future = async move {
+            debug!("Start shutdown node");
+            // Note: we're ignoring all failures here and doing best effort cleanup
+            // Many of these log messages will be incorrect until we get our cleanup logic dialed in.
+            for (topic, _subscriptions) in &subscriptions {
+                debug!("Node shutdown is cleaning up subscription: {topic}");
+                let _ = client.unregister_subscriber(topic).await.map_err(|e| {
+                    error!("Failed to unregister subscriber for topic: {topic} while shutting down node");
+                    e
+                });
+                debug!("CHECK");
+            }
+
+            for (topic, _publication) in &publishers {
+                debug!("Node shutdown is cleaning up publishing: {topic}");
+                let _ = client.unregister_publisher(topic).await.map_err(|e| {
+                    error!("Failed to unregister publisher for topic: {topic} while shutting down node.");
+                    e
+                });
+            }
+
+            for (topic, service_link) in &service_servers {
+                debug!("Node shutdown is cleaning up service: {topic}");
+                let uri = format!("rosrpc://{}:{}", host_addr, service_link.port());
+                let _ = client.unregister_service(topic, uri).await.map_err(|e| {
+                    error!("Failed to unregister server server for topic: {topic} while shutting down node.");
+                    e
+                });
+            }
+        };
+        // Spawn shutdown operation in a separate task
+        tokio::spawn(future);
+    }
+}
+
+// It is important to clean-up any stray topic / service connections when we shut down
+// Goal of this implementation is that the node appears fully dead to ROS after this and
+// `rosnode list` / `rosnode info` don't show any remaining connections.
+impl Drop for Node {
+    fn drop(&mut self) {
+        self.shutdown();
     }
 }

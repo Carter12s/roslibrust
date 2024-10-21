@@ -9,6 +9,7 @@ use crate::{
 
 /// Represents a handle to an underlying Node. NodeHandle's can be freely cloned, moved, copied, etc.
 /// This class provides the user facing API for interacting with ROS.
+/// The last node handle dropped shuts down the node.
 #[derive(Clone)]
 pub struct NodeHandle {
     inner: NodeServerHandle,
@@ -39,6 +40,18 @@ impl NodeHandle {
         let nh = NodeHandle { inner: node };
 
         Ok(nh)
+    }
+
+    /// This creates a clone() of NodeHandle that doesn't keep the underlying node alive
+    /// This should be used for things like ServiceServer which wants to be able to talk to the node
+    /// but doesn't need to keep the node alive.
+    pub(crate) fn weak_clone(&self) -> NodeHandle {
+        NodeHandle {
+            inner: NodeServerHandle {
+                node_server_sender: self.inner.node_server_sender.clone(),
+                _node_task: None,
+            },
+        }
     }
 
     /// This function may be removed...
@@ -147,7 +160,8 @@ impl NodeHandle {
             .inner
             .register_service_server::<T, F>(&service_name, server)
             .await?;
-        Ok(ServiceServer::new(service_name, self.clone()))
+        // Super important. Don't clone self or we create a STRONG NodeHandle that keeps the node alive
+        Ok(ServiceServer::new(service_name, self.weak_clone()))
     }
 
     // TODO Major: This should probably be moved to NodeServerHandle?

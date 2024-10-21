@@ -240,7 +240,9 @@ impl Publication {
                     // Tell the node server to dispose of this publication and unadvertise it
                     // Note: we need to do this in a spawned task or a drop-loop race condition will occur
                     // Dropping publication results in this task being dropped, which can end up canceling the future that is doing the dropping
-                    // if we simpply .await here
+                    // if we simply .await here
+                    // TODO: This allows publisher to clean themselves up iff node remains running after publisher is dropped...
+                    // NodeHandle clean-up is not resulting in a good state clean-up currently..
                     let nh_copy = node_handle.clone();
                     let topic = topic.clone();
                     tokio::spawn(async move {
