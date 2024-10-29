@@ -86,6 +86,10 @@ impl ConnectionHeader {
                 // for the purpose of discovering the service type
                 // If you do `rosservice call /my_service` and hit TAB you'll see this field in the connection header
                 // we can ignore it
+            } else if field.starts_with("response_type=") || field.starts_with("request_type=") {
+                // More undocumented fields!
+                // Discovered in testing that some roscpp service servers will set these on service responses
+                // We can ignore em
             } else if field.starts_with("error=") {
                 log::error!("Error reported in TCPROS connection header: {field}, full header: {header_data:#?}");
             } else {
