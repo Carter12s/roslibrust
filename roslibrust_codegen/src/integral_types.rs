@@ -3,6 +3,14 @@ use crate::RosMessageType;
 /// Matches the integral ros1 type time, with extensions for ease of use
 /// NOTE: in ROS1 "Time" is not a message in and of itself and std_msgs/Time should be used.
 /// However, in ROS2 "Time" is a message and part of builtin_interfaces/Time.
+// Okay some complexities lurk here that I really don't like
+// In ROS1 time is i32 secs and i32 nsecs
+// In ROS2 time is i32 secs and u32 nsecs
+// How many nsecs are there in a sec? +1e9 which will fit inside of either?
+// But ROS really doesn't declare what is valid for nsecs larger than 1e9, how should that be handled?
+// How should negative nsecs work anyway?
+// For now not too hard to define a conversion into ROS, trick to define conversion out of ROS
+// https://docs.ros2.org/foxy/api/builtin_interfaces/msg/Time.html
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
 pub struct Time {
     // Note: rosbridge appears to accept secs and nsecs in for time without issue?
@@ -10,10 +18,10 @@ pub struct Time {
 
     // This alias is required for ros2 where field has been renamed
     #[serde(alias = "sec")]
-    pub secs: u32,
+    pub secs: i32,
     // This alias is required for ros2 where field has been renamed
     #[serde(alias = "nanosec")]
-    pub nsecs: u32,
+    pub nsecs: i32,
 }
 
 impl From<std::time::SystemTime> for Time {
@@ -21,10 +29,11 @@ impl From<std::time::SystemTime> for Time {
         let delta = val
             .duration_since(std::time::UNIX_EPOCH)
             .expect("Failed to convert system time into unix epoch");
-        let downcast_secs = u32::try_from(delta.as_secs()).expect("Failed to convert system time to ROS representation, seconds term overflows u32 likely");
+        let downcast_secs = i32::try_from(delta.as_secs()).expect(&format!("Failed to convert system time to ROS representation, seconds term overflows i32 likely: {delta:?}"));
+        let downcast_nanos = i32::try_from(delta.subsec_nanos()).expect(&format!("Failed to convert system time to ROS representation, nanoseconds term overflowing likely: {delta:?}"));
         Time {
             secs: downcast_secs,
-            nsecs: delta.subsec_nanos(),
+            nsecs: downcast_nanos,
         }
     }
 }

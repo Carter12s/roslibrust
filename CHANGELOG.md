@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Internal integral type Time changed from u32 to i32 representation to better align with ROS1
+
 ## 0.11.1
 
 ### Added
