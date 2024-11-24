@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keeping a ros1::ServiceServer alive no longer keeps the underlying node alive past the last ros1::NodeHandle being dropped.
+- Dropping the last ros1::NodeHandle results in the node cleaning up any advertises, subscriptions, and services with the ROS master.
 - Generated code now includes various lint attributes to suppress warnings.
 - TCPROS header parsing now ignores (the undocumented fields) response_type and request_type and doesn't produce warnings on them.
 

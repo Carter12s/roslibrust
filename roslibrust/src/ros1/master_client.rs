@@ -20,6 +20,7 @@ pub enum RosMasterError {
 
 /// A client that exposes the API hosted by the [rosmaster](http://wiki.ros.org/ROS/Master_API)
 // TODO consider exposing this type publicly
+#[derive(Clone)] // Note is clone to support an odd case in Node::drop
 pub struct MasterClient {
     client: reqwest::Client,
     // Address at which the rosmaster should be found
