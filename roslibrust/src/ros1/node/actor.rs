@@ -44,7 +44,7 @@ pub enum NodeMsg {
     // This results in the node's task ending and the node being dropped.
     Shutdown,
     RegisterPublisher {
-        reply: oneshot::Sender<Result<mpsc::Sender<Vec<u8>>, String>>,
+        reply: oneshot::Sender<Result<broadcast::Sender<Vec<u8>>, String>>,
         topic: String,
         topic_type: String,
         queue_size: usize,
@@ -166,7 +166,7 @@ impl NodeServerHandle {
         topic: &str,
         queue_size: usize,
         latching: bool,
-    ) -> Result<mpsc::Sender<Vec<u8>>, NodeError> {
+    ) -> Result<broadcast::Sender<Vec<u8>>, NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender.send(NodeMsg::RegisterPublisher {
             reply: sender,
@@ -192,7 +192,7 @@ impl NodeServerHandle {
         msg_definition: &str,
         queue_size: usize,
         latching: bool,
-    ) -> Result<mpsc::Sender<Vec<u8>>, NodeError> {
+    ) -> Result<broadcast::Sender<Vec<u8>>, NodeError> {
         let (sender, receiver) = oneshot::channel();
 
         let md5sum;
@@ -693,19 +693,14 @@ impl Node {
         msg_definition: String,
         md5sum: String,
         latching: bool,
-    ) -> Result<mpsc::Sender<Vec<u8>>, NodeError> {
+    ) -> Result<broadcast::Sender<Vec<u8>>, NodeError> {
         // Return handle to existing Publication if it exists
         let existing_entry = {
             self.publishers.iter().find_map(|(key, value)| {
                 if key.as_str() == &topic {
                     if value.topic_type() == topic_type {
-                        if let Some(sender) = value.get_sender() {
-                            return Some(Ok(sender));
-                        }else{
-                            // Edge case here
-                            // The channel for the publication is closed, but publication hasn't been cleaned up yet
-                            None
-                        }
+                        let sender = value.get_sender();
+                        return Some(Ok(sender));
                     } else {
                         warn!("Attempted to register publisher with different topic type than existing publisher: existing_type={}, new_type={}", value.topic_type(), topic_type);
                         // TODO MAJOR: this is a terrible error type to return...

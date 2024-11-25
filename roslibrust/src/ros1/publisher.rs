@@ -13,18 +13,21 @@ use std::{
 };
 use tokio::{
     io::AsyncWriteExt,
-    sync::{mpsc, RwLock},
+    sync::{
+        broadcast::{self, error::RecvError},
+        RwLock,
+    },
 };
 
 /// The regular Publisher representation returned by calling advertise on a [crate::ros1::NodeHandle].
 pub struct Publisher<T> {
     topic_name: String,
-    sender: mpsc::Sender<Vec<u8>>,
+    sender: broadcast::Sender<Vec<u8>>,
     phantom: PhantomData<T>,
 }
 
 impl<T: RosMessageType> Publisher<T> {
-    pub(crate) fn new(topic_name: &str, sender: mpsc::Sender<Vec<u8>>) -> Self {
+    pub(crate) fn new(topic_name: &str, sender: broadcast::Sender<Vec<u8>>) -> Self {
         Self {
             topic_name: topic_name.to_owned(),
             sender,
@@ -32,8 +35,8 @@ impl<T: RosMessageType> Publisher<T> {
         }
     }
 
-    /// Queues a message to be send on the related topic.
-    /// Returns when the data has been queued not when data is actually sent.
+    /// Queues a message to be sent on the related topic.
+    // TODO Major this no longer needs to be (or should be) async
     pub async fn publish(&self, data: &T) -> Result<(), PublisherError> {
         let data = roslibrust_serde_rosmsg::to_vec(&data)?;
         // TODO this is a pretty dumb...
@@ -43,7 +46,6 @@ impl<T: RosMessageType> Publisher<T> {
         // Or we should do some significant re-work to have it only yield when the data is sent.
         self.sender
             .send(data)
-            .await
             .map_err(|_| PublisherError::StreamClosed)?;
         debug!("Publishing data on topic {}", self.topic_name);
         Ok(())
@@ -55,12 +57,12 @@ impl<T: RosMessageType> Publisher<T> {
 /// Relies on user to provide serialized data. Typically used with playback from bag files.
 pub struct PublisherAny {
     topic_name: String,
-    sender: mpsc::Sender<Vec<u8>>,
+    sender: broadcast::Sender<Vec<u8>>,
     phantom: PhantomData<Vec<u8>>,
 }
 
 impl PublisherAny {
-    pub(crate) fn new(topic_name: &str, sender: mpsc::Sender<Vec<u8>>) -> Self {
+    pub(crate) fn new(topic_name: &str, sender: broadcast::Sender<Vec<u8>>) -> Self {
         Self {
             topic_name: topic_name.to_owned(),
             sender,
@@ -68,12 +70,12 @@ impl PublisherAny {
         }
     }
 
-    /// Queues a message to be send on the related topic.
-    /// Returns when the data has been queued not when data is actually sent.
+    /// Queues a message to be sent on the related topic.
     ///
     /// This expects the data to be the raw bytes of the message body as they would appear going over the wire.
     /// See ros1_publish_any.rs example for more details.
     /// Body length should be included as first four bytes.
+    // TODO this no longer needs to be (or should be) async
     pub async fn publish(&self, data: &Vec<u8>) -> Result<(), PublisherError> {
         // TODO this is a pretty dumb...
         // because of the internal channel used for re-direction this future doesn't
@@ -82,7 +84,6 @@ impl PublisherAny {
         // Or we should do some significant re-work to have it only yield when the data is sent.
         self.sender
             .send(data.to_vec())
-            .await
             .map_err(|_| PublisherError::StreamClosed)?;
         debug!("Publishing data on topic {}", self.topic_name);
         Ok(())
@@ -93,8 +94,8 @@ pub(crate) struct Publication {
     topic_type: String,
     listener_port: u16,
     _tcp_accept_task: ChildTask<()>,
-    _publish_task: ChildTask<()>,
-    publish_sender: mpsc::WeakSender<Vec<u8>>,
+    // TODO: Need to make sure this isn't keeping things alive that it shouldn't
+    publish_sender: broadcast::Sender<Vec<u8>>,
 }
 
 impl Publication {
@@ -111,14 +112,14 @@ impl Publication {
         md5sum: &str,
         topic_type: &str,
         node_handle: NodeServerHandle,
-    ) -> Result<(Self, mpsc::Sender<Vec<u8>>), std::io::Error> {
+    ) -> Result<(Self, broadcast::Sender<Vec<u8>>), std::io::Error> {
         // Get a socket for receiving connections on
         let host_addr = SocketAddr::from((host_addr, 0));
         let tcp_listener = tokio::net::TcpListener::bind(host_addr).await?;
         let listener_port = tcp_listener.local_addr().unwrap().port();
 
         // Setup the channel will will receive messages to be published on
-        let (sender, receiver) = mpsc::channel::<Vec<u8>>(queue_size);
+        let (sender, receiver) = broadcast::channel::<Vec<u8>>(queue_size);
 
         // Setup the ROS connection header that we'll respond to all incomming connections with
         let responding_conn_header = ConnectionHeader {
@@ -150,19 +151,7 @@ impl Publication {
                 topic_name_copy,
                 responding_conn_header,
                 last_message_copy,
-            )
-            .await
-        });
-
-        // Create the task that will handle publishing messages to all streams
-        let topic_name_copy = topic_name.to_string();
-        let publish_task = tokio::spawn(async move {
-            Self::publish_task(
                 receiver,
-                subscriber_streams,
-                last_message,
-                node_handle,
-                topic_name_copy,
             )
             .await
         });
@@ -173,17 +162,14 @@ impl Publication {
                 topic_type: topic_type.to_owned(),
                 _tcp_accept_task: tcp_accept_handle.into(),
                 listener_port,
-                publish_sender: sender.downgrade(),
-                _publish_task: publish_task.into(),
+                publish_sender: sender,
             },
             sender_copy,
         ))
     }
 
-    // Note: this returns Option<> due to a timing edge case
-    // There can be a delay between when the last sender is dropped and when the publication is dropped
-    pub(crate) fn get_sender(&self) -> Option<mpsc::Sender<Vec<u8>>> {
-        self.publish_sender.clone().upgrade()
+    pub(crate) fn get_sender(&self) -> broadcast::Sender<Vec<u8>> {
+        self.publish_sender.clone()
     }
 
     pub(crate) fn port(&self) -> u16 {
@@ -199,43 +185,33 @@ impl Publication {
     /// This task constantly pulls new messages from the main publish buffer and
     /// sends them to all of the TCP Streams that are connected to the topic.
     async fn publish_task(
-        mut rx: mpsc::Receiver<Vec<u8>>,
-        subscriber_streams: Arc<RwLock<Vec<tokio::net::TcpStream>>>,
-        last_message: Arc<RwLock<Option<Vec<u8>>>>,
-        node_handle: NodeServerHandle,
+        mut rx: broadcast::Receiver<Vec<u8>>, // Receives messages to publish from the main buffer of messages
+        mut stream: tokio::net::TcpStream,
         topic: String,
     ) {
-        debug!("Publish task has started for publication: {topic}");
+        let peer = stream.peer_addr();
+        debug!("Publish task has started for publication: {topic} connection to {peer:?}");
         loop {
             match rx.recv().await {
-                Some(msg_to_publish) => {
+                Ok(msg_to_publish) => {
                     trace!("Publish task got message to publish for topic: {topic}");
-                    let mut streams = subscriber_streams.write().await;
-                    let mut streams_to_remove = vec![];
-                    // TODO: we're awaiting in a for loop... Could parallelize here
-                    for (stream_idx, stream) in streams.iter_mut().enumerate() {
-                        if let Err(err) = stream.write_all(&msg_to_publish[..]).await {
-                            // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
-                            debug!("Failed to send data to subscriber: {err}, removing");
-                            streams_to_remove.push(stream_idx);
-                        }
+                    // Proxy the message to the watch channel
+                    if let Err(err) = stream.write_all(&msg_to_publish[..]).await {
+                        // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
+                        debug!("Failed to send data to subscriber: {err}, removing");
                     }
-                    // Subtract the removed count to account for shifting indices after each
-                    // remove, only works if they're sorted which should be the case given how
-                    // it's being populated (forward enumeration)
-                    streams_to_remove.into_iter().enumerate().for_each(
-                        |(removed_cnt, stream_idx)| {
-                            streams.remove(stream_idx - removed_cnt);
-                        },
-                    );
-
-                    // Note: optimization possible here, we're storing the last message always, even if we're not latching
-                    *last_message.write().await = Some(msg_to_publish);
                 }
-                None => {
+                Err(RecvError::Lagged(num)) => {
+                    debug!("TCP for peer {peer:?} is lagging behind, {num} messages were skipped");
+                    continue;
+                }
+                Err(RecvError::Closed) => {
                     debug!(
                         "No more senders for the publisher channel, triggering publication cleanup"
                     );
+                    // TODO SHIT SHOW HERE
+                    // broadcast stuffs breaks our cleanup plan
+
                     // All senders dropped, so we want to cleanup the Publication off of the node
                     // Tell the node server to dispose of this publication and unadvertise it
                     // Note: we need to do this in a spawned task or a drop-loop race condition will occur
@@ -243,16 +219,16 @@ impl Publication {
                     // if we simply .await here
                     // TODO: This allows publisher to clean themselves up iff node remains running after publisher is dropped...
                     // NodeHandle clean-up is not resulting in a good state clean-up currently..
-                    let nh_copy = node_handle.clone();
-                    let topic = topic.clone();
-                    tokio::spawn(async move {
-                        let _ = nh_copy.unregister_publisher(&topic).await;
-                    });
+                    // let nh_copy = node_handle.clone();
+                    // let topic = topic.clone();
+                    // tokio::spawn(async move {
+                    //     let _ = nh_copy.unregister_publisher(&topic).await;
+                    // });
                     break;
                 }
             }
         }
-        debug!("Publish task has exited for publication: {topic}");
+        debug!("Publish task has exited for publication: {topic} connection to {peer:?}");
     }
 
     /// Wraps the functionality that the tcp_accept task will perform
@@ -264,6 +240,7 @@ impl Publication {
         topic_name: String,                                          // Only used for logging
         responding_conn_header: ConnectionHeader,                    // Header we respond with
         last_message: Arc<RwLock<Option<Vec<u8>>>>, // Last message published (used for latching)
+        rx: broadcast::Receiver<Vec<u8>>, // Receives messages to publish from the main buffer of messages
     ) {
         debug!("TCP accept task has started for publication: {topic_name}");
         loop {
@@ -327,6 +304,11 @@ impl Publication {
                         debug!(
                             "Publication configured to be latching and has last_message, sending"
                         );
+                        // TODO likely a bug here... but pretty subtle
+                        // If we disconnect here, out accept task could get blocked trying to write this message out
+                        // until the TCP Socket errors. Resulting in this publisher being unable to connect to new
+                        // subscribers for some number of seconds.
+                        // This write_all should be moved into a separate task
                         let res = stream.write_all(last_message).await;
                         match res {
                             Ok(_) => {}
@@ -339,8 +321,16 @@ impl Publication {
                     }
                 }
 
-                let mut wlock = subscriber_streams.write().await;
-                wlock.push(stream);
+                // let mut wlock = subscriber_streams.write().await;
+                // wlock.push(stream);
+
+                // Create a new task to handle writing to the TCP stream
+                let rx_copy = rx.resubscribe();
+                let topic_name_copy = topic_name.clone();
+                tokio::spawn(async move {
+                    Self::publish_task(rx_copy, stream, topic_name_copy).await;
+                });
+
                 debug!(
                     "Added stream for topic {:?} to subscriber {}",
                     connection_header.topic, peer_addr
