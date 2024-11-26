@@ -44,7 +44,7 @@ pub enum NodeMsg {
     // This results in the node's task ending and the node being dropped.
     Shutdown,
     RegisterPublisher {
-        reply: oneshot::Sender<Result<broadcast::Sender<Vec<u8>>, String>>,
+        reply: oneshot::Sender<Result<(broadcast::Sender<Vec<u8>>, mpsc::Sender<()>), String>>,
         topic: String,
         topic_type: String,
         queue_size: usize,
@@ -166,7 +166,7 @@ impl NodeServerHandle {
         topic: &str,
         queue_size: usize,
         latching: bool,
-    ) -> Result<broadcast::Sender<Vec<u8>>, NodeError> {
+    ) -> Result<(broadcast::Sender<Vec<u8>>, mpsc::Sender<()>), NodeError> {
         let (sender, receiver) = oneshot::channel();
         self.node_server_sender.send(NodeMsg::RegisterPublisher {
             reply: sender,
@@ -192,7 +192,7 @@ impl NodeServerHandle {
         msg_definition: &str,
         queue_size: usize,
         latching: bool,
-    ) -> Result<broadcast::Sender<Vec<u8>>, NodeError> {
+    ) -> Result<(broadcast::Sender<Vec<u8>>, mpsc::Sender<()>), NodeError> {
         let (sender, receiver) = oneshot::channel();
 
         let md5sum;
@@ -693,33 +693,43 @@ impl Node {
         msg_definition: String,
         md5sum: String,
         latching: bool,
-    ) -> Result<broadcast::Sender<Vec<u8>>, NodeError> {
+    ) -> Result<(broadcast::Sender<Vec<u8>>, mpsc::Sender<()>), NodeError> {
         // Return handle to existing Publication if it exists
         let existing_entry = {
             self.publishers.iter().find_map(|(key, value)| {
-                if key.as_str() == &topic {
-                    if value.topic_type() == topic_type {
-                        let sender = value.get_sender();
-                        return Some(Ok(sender));
-                    } else {
-                        warn!("Attempted to register publisher with different topic type than existing publisher: existing_type={}, new_type={}", value.topic_type(), topic_type);
+                if key.as_str() != &topic {
+                    return None;
+                }
+                if value.topic_type() != topic_type {
+                    warn!("Attempted to register publisher with different topic type than existing publisher: existing_type={}, new_type={}", value.topic_type(), topic_type);
+                    // TODO MAJOR: this is a terrible error type to return...
+                    return Some(Err(NodeError::IoError(std::io::Error::from(
+                        std::io::ErrorKind::AddrInUse,
+                    ))));
+                }
+                let (sender, shutdown) = value.get_senders();
+                match shutdown.upgrade() {
+                    Some(shutdown) => {
+                        Some(Ok((sender, shutdown)))
+                    }
+                    None => {
+                        error!("We still have an entry for a publication, but it has been shutdown");
                         // TODO MAJOR: this is a terrible error type to return...
                         Some(Err(NodeError::IoError(std::io::Error::from(
                             std::io::ErrorKind::AddrInUse,
                         ))))
                     }
-                } else {
-                    None
                 }
             })
         };
         // If we found an existing publication return the handle to it
         if let Some(handle) = existing_entry {
-            return Ok(handle?);
+            let (sender, shutdown) = handle?;
+            return Ok((sender, shutdown));
         }
 
         // Otherwise create a new Publication and advertise
-        let (channel, sender) = Publication::new(
+        let (channel, sender, shutdown) = Publication::new(
             &self.node_name,
             latching,
             &topic,
@@ -737,7 +747,7 @@ impl Node {
         })?;
         self.publishers.insert(topic.clone(), channel);
         let _ = self.client.register_publisher(&topic, topic_type).await?;
-        Ok(sender)
+        Ok((sender, shutdown))
     }
 
     async fn unregister_publisher(&mut self, topic: &str) -> Result<(), NodeError> {
