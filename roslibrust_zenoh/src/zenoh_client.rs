@@ -1,9 +1,6 @@
-use anyhow::bail;
 use roslibrust::topic_provider::{Publish, Subscribe, TopicProvider};
 use roslibrust::{RosLibRustError, RosLibRustResult};
 use roslibrust_codegen::RosMessageType;
-use zenoh::handlers::FifoChannelHandler;
-use zenoh::key_expr::OwnedKeyExpr;
 
 pub struct ZenohClient {
     session: zenoh::Session,
@@ -95,7 +92,6 @@ impl TopicProvider for ZenohClient {
             }
         };
 
-        println!("type of pub: {:?}", std::any::type_name_of_val(&publisher));
         Ok(ZenohPublisher {
             publisher,
             _marker: std::marker::PhantomData,
