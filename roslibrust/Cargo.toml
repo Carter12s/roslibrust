@@ -1,6 +1,6 @@
 [package]
 name = "roslibrust"
-version = "0.10.2"
+version = "0.11.1"
 authors = ["carter <carterjschultz@gmail.com>", "ssnover <ssnover95@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -34,11 +34,11 @@ tokio = { version = "1.20", features = [
 ] }
 tokio-tungstenite = { version = "0.17" }
 uuid = { version = "1.1", features = ["v4"] }
-roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro", version = "0.10.0" }
-roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.10.0" }
+roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro", version = "0.11.1" }
+roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.11.1" }
 reqwest = { version = "0.11", optional = true } # Only used with native ros1
 serde_xmlrpc = { version = "0.2", optional = true } # Only used with native ros1
-serde_rosmsg = { version = "0.2", optional = true } # Only used with native ros1
+roslibrust_serde_rosmsg = { version = "0.3", optional = true } # Only used with native ros1
 hyper = { version = "0.14", features = [
     "server",
 ], optional = true } # Only used with native ros1
@@ -74,7 +74,7 @@ ros1 = [
     "dep:hyper",
     "dep:gethostname",
     "dep:regex",
-    "dep:serde_rosmsg",
+    "dep:roslibrust_serde_rosmsg",
 ]
 
 

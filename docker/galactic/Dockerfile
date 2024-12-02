@@ -7,7 +7,7 @@ RUN apt update && apt install -y git
 RUN apt update && apt install -y ros-galactic-rosbridge-suite
 
 # Curl required to install rust, build-essential required to build quote & proc-macro2
-RUN apt update && apt install -y --fix-missing curl build-essential
+RUN apt update && apt install -y --fix-missing curl build-essential libssl-dev pkg-config
 # Install latest stable rust
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 

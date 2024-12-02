@@ -92,6 +92,7 @@ time stamp
 # specified must be unique.
 string id"#;
     }
+    #[allow(unused)]
     impl GoalStatus {
         pub const r#PENDING: u8 = 0u8;
         pub const r#ACTIVE: u8 = 1u8;
@@ -302,6 +303,7 @@ MSG: diagnostic_msgs/KeyValue
 string key # what to label this value when viewing
 string value # a value to track over time"#;
     }
+    #[allow(unused)]
     impl DiagnosticStatus {
         pub const r#OK: u8 = 0u8;
         pub const r#WARN: u8 = 1u8;
@@ -388,6 +390,7 @@ bool success
 # Message with additional information about the success or failure
 string message"#;
     }
+    #[allow(dead_code)]
     pub struct AddDiagnostics {}
     impl ::roslibrust_codegen::RosServiceType for AddDiagnostics {
         const ROS_SERVICE_NAME: &'static str = "diagnostic_msgs/AddDiagnostics";
@@ -457,6 +460,7 @@ MSG: diagnostic_msgs/KeyValue
 string key # what to label this value when viewing
 string value # a value to track over time"#;
     }
+    #[allow(dead_code)]
     pub struct SelfTest {}
     impl ::roslibrust_codegen::RosServiceType for SelfTest {
         const ROS_SERVICE_NAME: &'static str = "diagnostic_msgs/SelfTest";
@@ -4818,6 +4822,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(dead_code)]
     pub struct GetMap {}
     impl ::roslibrust_codegen::RosServiceType for GetMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/GetMap";
@@ -5181,6 +5186,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(dead_code)]
     pub struct GetPlan {}
     impl ::roslibrust_codegen::RosServiceType for GetPlan {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/GetPlan";
@@ -5442,6 +5448,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl LoadMapResponse {
         pub const r#RESULT_SUCCESS: u8 = 0u8;
         pub const r#RESULT_MAP_DOES_NOT_EXIST: u8 = 1u8;
@@ -5449,6 +5456,7 @@ string frame_id"#;
         pub const r#RESULT_INVALID_MAP_METADATA: u8 = 3u8;
         pub const r#RESULT_UNDEFINED_FAILURE: u8 = 255u8;
     }
+    #[allow(dead_code)]
     pub struct LoadMap {}
     impl ::roslibrust_codegen::RosServiceType for LoadMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/LoadMap";
@@ -5842,6 +5850,7 @@ string frame_id"#;
         const MD5SUM: &'static str = "358e233cde0c8a8bcfea4ce193f8fc15";
         const DEFINITION: &'static str = r#"bool success"#;
     }
+    #[allow(dead_code)]
     pub struct SetMap {}
     impl ::roslibrust_codegen::RosServiceType for SetMap {
         const ROS_SERVICE_NAME: &'static str = "nav_msgs/SetMap";
@@ -5929,6 +5938,7 @@ string[] constvalues"#;
         const MD5SUM: &'static str = "d41d8cd98f00b204e9800998ecf8427e";
         const DEFINITION: &'static str = r#""#;
     }
+    #[allow(dead_code)]
     pub struct DeleteParam {}
     impl ::roslibrust_codegen::RosServiceType for DeleteParam {
         const ROS_SERVICE_NAME: &'static str = "rosapi/DeleteParam";
@@ -5970,6 +5980,7 @@ string[] constvalues"#;
         const MD5SUM: &'static str = "46807ba271844ac5ba4730a47556b236";
         const DEFINITION: &'static str = r#"string[] action_servers"#;
     }
+    #[allow(dead_code)]
     pub struct GetActionServers {}
     impl ::roslibrust_codegen::RosServiceType for GetActionServers {
         const ROS_SERVICE_NAME: &'static str = "rosapi/GetActionServers";
@@ -6015,6 +6026,7 @@ string default"#;
         const MD5SUM: &'static str = "64e58419496c7248b4ef25731f88b8c3";
         const DEFINITION: &'static str = r#"string value"#;
     }
+    #[allow(dead_code)]
     pub struct GetParam {}
     impl ::roslibrust_codegen::RosServiceType for GetParam {
         const ROS_SERVICE_NAME: &'static str = "rosapi/GetParam";
@@ -6056,6 +6068,7 @@ string default"#;
         const MD5SUM: &'static str = "dc7ae3609524b18034e49294a4ce670e";
         const DEFINITION: &'static str = r#"string[] names"#;
     }
+    #[allow(dead_code)]
     pub struct GetParamNames {}
     impl ::roslibrust_codegen::RosServiceType for GetParamNames {
         const ROS_SERVICE_NAME: &'static str = "rosapi/GetParamNames";
@@ -6097,6 +6110,7 @@ string default"#;
         const MD5SUM: &'static str = "556a4fb76023a469987922359d08a844";
         const DEFINITION: &'static str = r#"time time"#;
     }
+    #[allow(dead_code)]
     pub struct GetTime {}
     impl ::roslibrust_codegen::RosServiceType for GetTime {
         const ROS_SERVICE_NAME: &'static str = "rosapi/GetTime";
@@ -6140,6 +6154,7 @@ string default"#;
         const MD5SUM: &'static str = "e8c90de4adc1219c86af9c2874c0c1b5";
         const DEFINITION: &'static str = r#"bool exists"#;
     }
+    #[allow(dead_code)]
     pub struct HasParam {}
     impl ::roslibrust_codegen::RosServiceType for HasParam {
         const ROS_SERVICE_NAME: &'static str = "rosapi/HasParam";
@@ -6192,6 +6207,7 @@ string[] examples
 string[] constnames
 string[] constvalues"#;
     }
+    #[allow(dead_code)]
     pub struct MessageDetails {}
     impl ::roslibrust_codegen::RosServiceType for MessageDetails {
         const ROS_SERVICE_NAME: &'static str = "rosapi/MessageDetails";
@@ -6239,6 +6255,7 @@ string[] constvalues"#;
 string[] publishing
 string[] services"#;
     }
+    #[allow(dead_code)]
     pub struct NodeDetails {}
     impl ::roslibrust_codegen::RosServiceType for NodeDetails {
         const ROS_SERVICE_NAME: &'static str = "rosapi/NodeDetails";
@@ -6280,6 +6297,7 @@ string[] services"#;
         const MD5SUM: &'static str = "3d07bfda1268b4f76b16b7ba8a82665d";
         const DEFINITION: &'static str = r#"string[] nodes"#;
     }
+    #[allow(dead_code)]
     pub struct Nodes {}
     impl ::roslibrust_codegen::RosServiceType for Nodes {
         const ROS_SERVICE_NAME: &'static str = "rosapi/Nodes";
@@ -6323,6 +6341,7 @@ string[] services"#;
         const MD5SUM: &'static str = "167d8030c4ca4018261dff8ae5083dc8";
         const DEFINITION: &'static str = r#"string[] publishers"#;
     }
+    #[allow(dead_code)]
     pub struct Publishers {}
     impl ::roslibrust_codegen::RosServiceType for Publishers {
         const ROS_SERVICE_NAME: &'static str = "rosapi/Publishers";
@@ -6366,6 +6385,7 @@ string[] services"#;
         const MD5SUM: &'static str = "87c264f142c2aeca13349d90aeec0386";
         const DEFINITION: &'static str = r#"string global_name"#;
     }
+    #[allow(dead_code)]
     pub struct SearchParam {}
     impl ::roslibrust_codegen::RosServiceType for SearchParam {
         const ROS_SERVICE_NAME: &'static str = "rosapi/SearchParam";
@@ -6409,6 +6429,7 @@ string[] services"#;
         const MD5SUM: &'static str = "092ff9f63242a37704ce411703ec5eaf";
         const DEFINITION: &'static str = r#"string host"#;
     }
+    #[allow(dead_code)]
     pub struct ServiceHost {}
     impl ::roslibrust_codegen::RosServiceType for ServiceHost {
         const ROS_SERVICE_NAME: &'static str = "rosapi/ServiceHost";
@@ -6452,6 +6473,7 @@ string[] services"#;
         const MD5SUM: &'static str = "a94c40e70a4b82863e6e52ec16732447";
         const DEFINITION: &'static str = r#"string node"#;
     }
+    #[allow(dead_code)]
     pub struct ServiceNode {}
     impl ::roslibrust_codegen::RosServiceType for ServiceNode {
         const ROS_SERVICE_NAME: &'static str = "rosapi/ServiceNode";
@@ -6495,6 +6517,7 @@ string[] services"#;
         const MD5SUM: &'static str = "945f6849f44f061c178ab393b12c1358";
         const DEFINITION: &'static str = r#"string[] providers"#;
     }
+    #[allow(dead_code)]
     pub struct ServiceProviders {}
     impl ::roslibrust_codegen::RosServiceType for ServiceProviders {
         const ROS_SERVICE_NAME: &'static str = "rosapi/ServiceProviders";
@@ -6547,6 +6570,7 @@ string[] examples
 string[] constnames
 string[] constvalues"#;
     }
+    #[allow(dead_code)]
     pub struct ServiceRequestDetails {}
     impl ::roslibrust_codegen::RosServiceType for ServiceRequestDetails {
         const ROS_SERVICE_NAME: &'static str = "rosapi/ServiceRequestDetails";
@@ -6599,6 +6623,7 @@ string[] examples
 string[] constnames
 string[] constvalues"#;
     }
+    #[allow(dead_code)]
     pub struct ServiceResponseDetails {}
     impl ::roslibrust_codegen::RosServiceType for ServiceResponseDetails {
         const ROS_SERVICE_NAME: &'static str = "rosapi/ServiceResponseDetails";
@@ -6642,6 +6667,7 @@ string[] constvalues"#;
         const MD5SUM: &'static str = "dc67331de85cf97091b7d45e5c64ab75";
         const DEFINITION: &'static str = r#"string type"#;
     }
+    #[allow(dead_code)]
     pub struct ServiceType {}
     impl ::roslibrust_codegen::RosServiceType for ServiceType {
         const ROS_SERVICE_NAME: &'static str = "rosapi/ServiceType";
@@ -6683,6 +6709,7 @@ string[] constvalues"#;
         const MD5SUM: &'static str = "e44a7e7bcb900acadbcc28b132378f0c";
         const DEFINITION: &'static str = r#"string[] services"#;
     }
+    #[allow(dead_code)]
     pub struct Services {}
     impl ::roslibrust_codegen::RosServiceType for Services {
         const ROS_SERVICE_NAME: &'static str = "rosapi/Services";
@@ -6726,6 +6753,7 @@ string[] constvalues"#;
         const MD5SUM: &'static str = "e44a7e7bcb900acadbcc28b132378f0c";
         const DEFINITION: &'static str = r#"string[] services"#;
     }
+    #[allow(dead_code)]
     pub struct ServicesForType {}
     impl ::roslibrust_codegen::RosServiceType for ServicesForType {
         const ROS_SERVICE_NAME: &'static str = "rosapi/ServicesForType";
@@ -6769,6 +6797,7 @@ string value"#;
         const MD5SUM: &'static str = "d41d8cd98f00b204e9800998ecf8427e";
         const DEFINITION: &'static str = r#""#;
     }
+    #[allow(dead_code)]
     pub struct SetParam {}
     impl ::roslibrust_codegen::RosServiceType for SetParam {
         const ROS_SERVICE_NAME: &'static str = "rosapi/SetParam";
@@ -6812,6 +6841,7 @@ string value"#;
         const MD5SUM: &'static str = "22418cab5ba9531d8c2b738b4e56153b";
         const DEFINITION: &'static str = r#"string[] subscribers"#;
     }
+    #[allow(dead_code)]
     pub struct Subscribers {}
     impl ::roslibrust_codegen::RosServiceType for Subscribers {
         const ROS_SERVICE_NAME: &'static str = "rosapi/Subscribers";
@@ -6855,6 +6885,7 @@ string value"#;
         const MD5SUM: &'static str = "dc67331de85cf97091b7d45e5c64ab75";
         const DEFINITION: &'static str = r#"string type"#;
     }
+    #[allow(dead_code)]
     pub struct TopicType {}
     impl ::roslibrust_codegen::RosServiceType for TopicType {
         const ROS_SERVICE_NAME: &'static str = "rosapi/TopicType";
@@ -6898,6 +6929,7 @@ string value"#;
         const DEFINITION: &'static str = r#"string[] topics
 string[] types"#;
     }
+    #[allow(dead_code)]
     pub struct Topics {}
     impl ::roslibrust_codegen::RosServiceType for Topics {
         const ROS_SERVICE_NAME: &'static str = "rosapi/Topics";
@@ -6943,6 +6975,7 @@ string[] types"#;
 string[] types
 string[] typedefs_full_text"#;
     }
+    #[allow(dead_code)]
     pub struct TopicsAndRawTypes {}
     impl ::roslibrust_codegen::RosServiceType for TopicsAndRawTypes {
         const ROS_SERVICE_NAME: &'static str = "rosapi/TopicsAndRawTypes";
@@ -6986,6 +7019,7 @@ string[] typedefs_full_text"#;
         const MD5SUM: &'static str = "b0eef9a05d4e829092fc2f2c3c2aad3d";
         const DEFINITION: &'static str = r#"string[] topics"#;
     }
+    #[allow(dead_code)]
     pub struct TopicsForType {}
     impl ::roslibrust_codegen::RosServiceType for TopicsForType {
         const ROS_SERVICE_NAME: &'static str = "rosapi/TopicsForType";
@@ -7088,6 +7122,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl Log {
         pub const r#DEBUG: u8 = 1u8;
         pub const r#INFO: u8 = 2u8;
@@ -7271,6 +7306,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl BatteryState {
         pub const r#POWER_SUPPLY_STATUS_UNKNOWN: u8 = 0u8;
         pub const r#POWER_SUPPLY_STATUS_CHARGING: u8 = 1u8;
@@ -7543,6 +7579,7 @@ float32[] values"#;
     pub struct CompressedImage {
         pub r#header: std_msgs::Header,
         pub r#format: ::std::string::String,
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#data: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for CompressedImage {
@@ -7695,6 +7732,7 @@ string frame_id"#;
         pub r#encoding: ::std::string::String,
         pub r#is_bigendian: u8,
         pub r#step: u32,
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#data: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for Image {
@@ -7958,6 +7996,7 @@ uint8 id
 # actually binary, driver should treat 0<=x<0.5 as off, 0.5<=x<=1 as on.
 float32 intensity"#;
     }
+    #[allow(unused)]
     impl JoyFeedback {
         pub const r#TYPE_LED: u8 = 0u8;
         pub const r#TYPE_RUMBLE: u8 = 1u8;
@@ -8488,6 +8527,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl NavSatFix {
         pub const r#COVARIANCE_TYPE_UNKNOWN: u8 = 0u8;
         pub const r#COVARIANCE_TYPE_APPROXIMATED: u8 = 1u8;
@@ -8534,6 +8574,7 @@ uint16 SERVICE_GALILEO = 8
 
 uint16 service"#;
     }
+    #[allow(unused)]
     impl NavSatStatus {
         pub const r#STATUS_NO_FIX: i8 = -1i8;
         pub const r#STATUS_FIX: i8 = 0i8;
@@ -8649,6 +8690,7 @@ string frame_id"#;
         pub r#is_bigendian: bool,
         pub r#point_step: u32,
         pub r#row_step: u32,
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#data: ::std::vec::Vec<u8>,
         pub r#is_dense: bool,
     }
@@ -8750,6 +8792,7 @@ uint32 offset    # Offset from start of point struct
 uint8  datatype  # Datatype enumeration, see above
 uint32 count     # How many elements in the field"#;
     }
+    #[allow(unused)]
     impl PointField {
         pub const r#INT8: u8 = 1u8;
         pub const r#UINT8: u8 = 2u8;
@@ -8837,6 +8880,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl Range {
         pub const r#ULTRASOUND: u8 = 0u8;
         pub const r#INFRARED: u8 = 1u8;
@@ -9261,6 +9305,7 @@ string frame_id"#;
         const DEFINITION: &'static str = r#"bool success          # True if the call succeeded
 string status_message # Used to give details about success"#;
     }
+    #[allow(dead_code)]
     pub struct SetCameraInfo {}
     impl ::roslibrust_codegen::RosServiceType for SetCameraInfo {
         const ROS_SERVICE_NAME: &'static str = "sensor_msgs/SetCameraInfo";
@@ -9423,6 +9468,7 @@ uint8 CYLINDER_RADIUS=1
 uint8 CONE_HEIGHT=0
 uint8 CONE_RADIUS=1"#;
     }
+    #[allow(unused)]
     impl SolidPrimitive {
         pub const r#BOX: u8 = 1u8;
         pub const r#SPHERE: u8 = 2u8;
@@ -10506,6 +10552,7 @@ uint32 stride  # stride of given dimension"#;
     #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct UInt8MultiArray {
         pub r#layout: self::MultiArrayLayout,
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#data: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for UInt8MultiArray {
@@ -10603,6 +10650,7 @@ pub mod std_srvs {
         const MD5SUM: &'static str = "d41d8cd98f00b204e9800998ecf8427e";
         const DEFINITION: &'static str = r#""#;
     }
+    #[allow(dead_code)]
     pub struct Empty {}
     impl ::roslibrust_codegen::RosServiceType for Empty {
         const ROS_SERVICE_NAME: &'static str = "std_srvs/Empty";
@@ -10648,6 +10696,7 @@ pub mod std_srvs {
         const DEFINITION: &'static str = r#"bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages"#;
     }
+    #[allow(dead_code)]
     pub struct SetBool {}
     impl ::roslibrust_codegen::RosServiceType for SetBool {
         const ROS_SERVICE_NAME: &'static str = "std_srvs/SetBool";
@@ -10691,6 +10740,7 @@ string message # informational, e.g. for error messages"#;
         const DEFINITION: &'static str = r#"bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages"#;
     }
+    #[allow(dead_code)]
     pub struct Trigger {}
     impl ::roslibrust_codegen::RosServiceType for Trigger {
         const ROS_SERVICE_NAME: &'static str = "std_srvs/Trigger";
@@ -10884,6 +10934,7 @@ string TEST_STR_2 = '/topic_2'
 string DISABLE_HEARTBEAT_TIMEOUT_PARAM=/bond_disable_heartbeat_timeout
 float32 TEST_FLOAT=0 # testing"#;
     }
+    #[allow(unused)]
     impl Constants {
         pub const r#TEST_STR: &'static str = "\"/topic\"";
         pub const r#TEST_STR_2: &'static str = "'/topic_2'";
@@ -11032,6 +11083,7 @@ uint8 STATUS_SHUTTING_DOWN=4
 uint8 STATUS_SHUTDOWN=5
 uint8 status"#;
     }
+    #[allow(unused)]
     impl NodeInfo {
         pub const r#STATUS_UNINITIALIZED: u8 = 0u8;
         pub const r#STATUS_DISCONNECTED: u8 = 1u8;
@@ -11082,6 +11134,7 @@ int64 b"#;
         const DEFINITION: &'static str = r#"# Overflow? What overflow?
 int64 sum"#;
     }
+    #[allow(dead_code)]
     pub struct AddTwoInts {}
     impl ::roslibrust_codegen::RosServiceType for AddTwoInts {
         const ROS_SERVICE_NAME: &'static str = "test_msgs/AddTwoInts";
@@ -11100,6 +11153,7 @@ int64 sum"#;
     )]
     #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct RoundTripArrayRequest {
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#bytes: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for RoundTripArrayRequest {
@@ -11119,6 +11173,7 @@ uint8[] bytes"#;
     )]
     #[serde(crate = "::roslibrust_codegen::serde")]
     pub struct RoundTripArrayResponse {
+        #[serde(with = "::roslibrust_codegen::serde_bytes")]
         pub r#bytes: ::std::vec::Vec<u8>,
     }
     impl ::roslibrust_codegen::RosMessageType for RoundTripArrayResponse {
@@ -11126,6 +11181,7 @@ uint8[] bytes"#;
         const MD5SUM: &'static str = "d159f2bd8169d3b3339e6f1fce045c6d";
         const DEFINITION: &'static str = r#"uint8[] bytes"#;
     }
+    #[allow(dead_code)]
     pub struct RoundTripArray {}
     impl ::roslibrust_codegen::RosServiceType for RoundTripArray {
         const ROS_SERVICE_NAME: &'static str = "test_msgs/RoundTripArray";
@@ -11598,6 +11654,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl ImageMarker {
         pub const r#CIRCLE: u8 = 0u8;
         pub const r#LINE_STRIP: u8 = 1u8;
@@ -12426,6 +12483,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl InteractiveMarkerControl {
         pub const r#INHERIT: u8 = 0u8;
         pub const r#FIXED: u8 = 1u8;
@@ -12556,6 +12614,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl InteractiveMarkerFeedback {
         pub const r#KEEP_ALIVE: u8 = 0u8;
         pub const r#POSE_UPDATE: u8 = 1u8;
@@ -14805,6 +14864,7 @@ uint8 ROSRUN=1
 uint8 ROSLAUNCH=2
 uint8 command_type"#;
     }
+    #[allow(unused)]
     impl InteractiveMarkerUpdate {
         pub const r#KEEP_ALIVE: u8 = 0u8;
         pub const r#UPDATE: u8 = 1u8;
@@ -14950,6 +15010,7 @@ time stamp
 #Frame this data is associated with
 string frame_id"#;
     }
+    #[allow(unused)]
     impl Marker {
         pub const r#ARROW: u8 = 0u8;
         pub const r#CUBE: u8 = 1u8;
@@ -15239,6 +15300,7 @@ uint8 ROSRUN=1
 uint8 ROSLAUNCH=2
 uint8 command_type"#;
     }
+    #[allow(unused)]
     impl MenuEntry {
         pub const r#FEEDBACK: u8 = 0u8;
         pub const r#ROSRUN: u8 = 1u8;

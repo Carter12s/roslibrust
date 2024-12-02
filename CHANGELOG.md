@@ -23,13 +23,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Fixed
+
+- Keeping a ros1::ServiceServer alive no longer keeps the underlying node alive past the last ros1::NodeHandle being dropped.
+- Dropping the last ros1::NodeHandle results in the node cleaning up any advertises, subscriptions, and services with the ROS master.
+- Generated code now includes various lint attributes to suppress warnings.
+- TCPROS header parsing now ignores (the undocumented fields) response_type and request_type and doesn't produce warnings on them.
+
+### Changed
+
+- Internal integral type Time changed from u32 to i32 representation to better align with ROS1
+- Conversions between ROS Time and Duration to std::time::Time and std::time::Duration switched to TryFrom as they can be fallible.
+
+## 0.11.1
+
+### Added
+
+### Fixed
+
+- ROS1 Native Publishers no longer occasionally truncate very large messages when configured with latching
+
+### Changed
+
+- Passing of large messages containing uint8[] arrays is now substantially faster
+- Generated code now relies on serde_bytes to enable faster handling of uint8[] arrays
+- Switched to a fork of serde_rosmsg to enable faster handling of uint8[] arrays
+
+## 0.11.0
+
+### Added
+
 - ROS1 Native Publishers now support latching behavior
 - The XML RPC client for interacting directly with the rosmaster server has been exposed as a public API
 - Experimental: Initial support for writing generic clients that can be compile time specialized for rosbridge or ros1
+- Can subscribe to any topic and get raw bytes instead of a deserialized message of known type
+- Can publish to any topic and send raw bytes instead of a deserialized message
 
 ### Fixed
 
 - ROS1 Native Publishers correctly call unadvertise when dropped
+- ROS1 Native Publishers no longer occasionally truncate very large messages (>5MB)
 
 ### Changed
 
@@ -45,6 +78,7 @@ This is to bring it in line with the ROS1 API.
 ### Added
 
 ### Fixed
+
 - Bug with message_definitions provided by Publisher in the connection header not being the fully expanded definition.
 - Bug with ROS1 native subscribers not being able to receive messages larger than 4096 bytes.
 
@@ -55,6 +89,7 @@ This is to bring it in line with the ROS1 API.
 ### Added
 
 ### Fixed
+
 - Bug with ros1 native publishers not parsing connection headers correctly
 
 ### Changed
@@ -62,6 +97,7 @@ This is to bring it in line with the ROS1 API.
 ## 0.10.0 - July 5th, 2024
 
 ### Added
+
 - ROS1 native service servers and service clients are now supported (experimental feature)
 
 ### Fixed
@@ -89,45 +125,45 @@ crates that were previously adding dependencies on serde, serde-big-array, and s
 
 ### Changed
 
- - The function interface for top level generation functions in `roslibrust_codegen` have been changed to include the list of dependent
+- The function interface for top level generation functions in `roslibrust_codegen` have been changed to include the list of dependent
 filesystem paths that should trigger re-running code generation. Note: new files added to the search paths will not be automatically detected.
 - [Breaking Change] Codegen now generates fixed sized arrays as arrays [T; N] instead of Vec<T>
- - Removed `find_and_generate_ros_messages_relative_to_manifest_dir!` this proc_macro was changing the current working directory of the compilation job resulting in a variety of strange compilation behaviors. Build.rs scripts are recommended for use cases requiring fine grained control of message generation.
- - The function interface for top level generation functions in `roslibrust_codegen` have been changed to include the list of dependent filesystem paths that should trigger re-running code generation. Note: new files added to the search paths will not be automatically detected.
- - Refactor the `ros1::node` module into separate smaller pieces. This should be invisible externally (and no changes to examples were required).
+- Removed `find_and_generate_ros_messages_relative_to_manifest_dir!` this proc_macro was changing the current working directory of the compilation job resulting in a variety of strange compilation behaviors. Build.rs scripts are recommended for use cases requiring fine grained control of message generation.
+- The function interface for top level generation functions in `roslibrust_codegen` have been changed to include the list of dependent filesystem paths that should trigger re-running code generation. Note: new files added to the search paths will not be automatically detected.
+- Refactor the `ros1::node` module into separate smaller pieces. This should be invisible externally (and no changes to examples were required).
 
 ## 0.8.0 - October 4th, 2023
 
 ### Added
 
- - Experimental support for ROS1 native communication behind the `ros1` feature flag
- - Generation of C++ source added via `roslibrust_genmsg` along with arbitrary languages via passed in templates
- - Generation of Rust source for actions
- - Example for custom generic message usage with rosbridge
- - Example for async native ROS1 listener
- - Example for async native ROS1 publisher
+- Experimental support for ROS1 native communication behind the `ros1` feature flag
+- Generation of C++ source added via `roslibrust_genmsg` along with arbitrary languages via passed in templates
+- Generation of Rust source for actions
+- Example for custom generic message usage with rosbridge
+- Example for async native ROS1 listener
+- Example for async native ROS1 publisher
 
 
 ### Fixed
 
- - Incorrect handling of ROS1 message string constants
+- Incorrect handling of ROS1 message string constants
 
 ### Changed
 
- - `crawl` function in `roslibrust_codegen` updated to a more flexible API
- - Overhaul of error handling in roslibrust_codegen to bubble errors up, and remove use of panic! and unwrap(). Significantly better error messages should be produced from proc_macros and build.rs files. Direct usages of the API will need to be updated to handle the returned error type.
- - RosMessageType trait now has associated constants for MD5SUM and DEFINITION to enable ROS1 native support. These constants are optional at this time with a default value of "" provided.
+- `crawl` function in `roslibrust_codegen` updated to a more flexible API
+- Overhaul of error handling in roslibrust_codegen to bubble errors up, and remove use of panic! and unwrap(). Significantly better error messages should be produced from proc_macros and build.rs files. Direct usages of the API will need to be updated to handle the returned error type.
+- RosMessageType trait now has associated constants for MD5SUM and DEFINITION to enable ROS1 native support. These constants are optional at this time with a default value of "" provided.
 
 ## 0.7.0 - March 13, 2022
 
 ### Added
 
- - Support for default field values in ROS2 messages
- - Added public APIs for getting message data from search and for generating Rust code given message data in roslibrust_codegen
- - More useful logs available when running codegen
- - Refactor some of the public APIs and types in roslibrust_codegen (concept of `ParsedMessageFile` vs `MessageFile`)
- - Added a method `get_md5sum` to `MessageFile`
- - Additional code generation API and macro which excludes `ROS_PACKAGE_PATH`
+- Support for default field values in ROS2 messages
+- Added public APIs for getting message data from search and for generating Rust code given message data in roslibrust_codegen
+- More useful logs available when running codegen
+- Refactor some of the public APIs and types in roslibrust_codegen (concept of `ParsedMessageFile` vs `MessageFile`)
+- Added a method `get_md5sum` to `MessageFile`
+- Additional code generation API and macro which excludes `ROS_PACKAGE_PATH`
 
 ### Fixed
 

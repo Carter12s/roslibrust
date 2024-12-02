@@ -1,6 +1,7 @@
 use crate::ros1::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
-use roslibrust_codegen::RosMessageType;
+use log::*;
+use roslibrust_codegen::{RosMessageType, ShapeShifter};
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::AsyncWriteExt,
@@ -27,15 +28,55 @@ impl<T: RosMessageType> Subscriber<T> {
     }
 
     pub async fn next(&mut self) -> Option<Result<T, SubscriberError>> {
+        trace!("Subscriber of type {:?} awaiting recv()", T::ROS_TYPE_NAME);
+        let data = match self.receiver.recv().await {
+            Ok(v) => {
+                trace!("Subscriber of type {:?} received data", T::ROS_TYPE_NAME);
+                v
+            }
+            Err(RecvError::Closed) => return None,
+            Err(RecvError::Lagged(n)) => return Some(Err(SubscriberError::Lagged(n))),
+        };
+        trace!(
+            "Subscriber of type {:?} deserializing data",
+            T::ROS_TYPE_NAME
+        );
+        let tick = tokio::time::Instant::now();
+        match roslibrust_serde_rosmsg::from_slice::<T>(&data[..]) {
+            Ok(p) => {
+                let duration = tick.elapsed();
+                trace!(
+                    "Subscriber of type {:?} deserialized data in {duration:?}",
+                    T::ROS_TYPE_NAME
+                );
+                Some(Ok(p))
+            }
+            Err(e) => Some(Err(e.into())),
+        }
+    }
+}
+
+pub struct SubscriberAny {
+    receiver: broadcast::Receiver<Vec<u8>>,
+    _phantom: PhantomData<ShapeShifter>,
+}
+
+impl SubscriberAny {
+    pub(crate) fn new(receiver: broadcast::Receiver<Vec<u8>>) -> Self {
+        Self {
+            receiver,
+            _phantom: PhantomData,
+        }
+    }
+
+    // pub async fn next(&mut self) -> Option<Result<ShapeShifter, SubscriberError>> {
+    pub async fn next(&mut self) -> Option<Result<Vec<u8>, SubscriberError>> {
         let data = match self.receiver.recv().await {
             Ok(v) => v,
             Err(RecvError::Closed) => return None,
             Err(RecvError::Lagged(n)) => return Some(Err(SubscriberError::Lagged(n))),
         };
-        match serde_rosmsg::from_slice::<T>(&data[..]) {
-            Ok(p) => Some(Ok(p)),
-            Err(e) => Some(Err(e.into())),
-        }
+        Some(Ok(data))
     }
 }
 
@@ -105,7 +146,7 @@ impl Subscription {
             let sender = self.msg_sender.clone();
             let publisher_list = self.known_publishers.clone();
             let publisher_uri = publisher_uri.to_owned();
-
+            trace!("Creating new subscription connection for {publisher_uri} on {topic_name}");
             let handle = tokio::spawn(async move {
                 if let Ok(mut stream) = establish_publisher_connection(
                     &node_name,
@@ -118,8 +159,18 @@ impl Subscription {
                     publisher_list.write().await.push(publisher_uri.to_owned());
                     // Repeatedly read from the stream until its dry
                     loop {
+                        trace!(
+                            "Subscription to {} receiving from {} is awaiting next body",
+                            topic_name,
+                            publisher_uri
+                        );
                         match tcpros::receive_body(&mut stream).await {
                             Ok(body) => {
+                                trace!(
+                                    "Subscription to {} receiving from {} received body",
+                                    topic_name,
+                                    publisher_uri
+                                );
                                 let send_result = sender.send(body);
                                 if let Err(err) = send_result {
                                     log::error!("Unable to send message data due to dropped channel, closing connection: {err}");
@@ -154,7 +205,10 @@ async fn establish_publisher_connection(
     stream.write_all(&conn_header_bytes[..]).await?;
 
     if let Ok(responded_header) = tcpros::receive_header(&mut stream).await {
-        if conn_header.md5sum == responded_header.md5sum {
+        if conn_header.md5sum == Some("*".to_string())
+            || responded_header.md5sum == Some("*".to_string())
+            || conn_header.md5sum == responded_header.md5sum
+        {
             log::debug!(
                 "Established connection with publisher for {:?}",
                 conn_header.topic
@@ -241,8 +295,8 @@ pub enum SubscriberError {
     Lagged(u64),
 }
 
-impl From<serde_rosmsg::Error> for SubscriberError {
-    fn from(value: serde_rosmsg::Error) -> Self {
+impl From<roslibrust_serde_rosmsg::Error> for SubscriberError {
+    fn from(value: roslibrust_serde_rosmsg::Error) -> Self {
         Self::DeserializeError(value.to_string())
     }
 }

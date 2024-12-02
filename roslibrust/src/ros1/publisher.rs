@@ -16,6 +16,7 @@ use tokio::{
     sync::{mpsc, RwLock},
 };
 
+/// The regular Publisher representation returned by calling advertise on a [crate::ros1::NodeHandle].
 pub struct Publisher<T> {
     topic_name: String,
     sender: mpsc::Sender<Vec<u8>>,
@@ -34,7 +35,7 @@ impl<T: RosMessageType> Publisher<T> {
     /// Queues a message to be send on the related topic.
     /// Returns when the data has been queued not when data is actually sent.
     pub async fn publish(&self, data: &T) -> Result<(), PublisherError> {
-        let data = serde_rosmsg::to_vec(&data)?;
+        let data = roslibrust_serde_rosmsg::to_vec(&data)?;
         // TODO this is a pretty dumb...
         // because of the internal channel used for re-direction this future doesn't
         // actually complete when the data is sent, but merely when it is queued to be sent
@@ -42,6 +43,45 @@ impl<T: RosMessageType> Publisher<T> {
         // Or we should do some significant re-work to have it only yield when the data is sent.
         self.sender
             .send(data)
+            .await
+            .map_err(|_| PublisherError::StreamClosed)?;
+        debug!("Publishing data on topic {}", self.topic_name);
+        Ok(())
+    }
+}
+
+/// A specialty publisher used when message type is not known at compile time.
+///
+/// Relies on user to provide serialized data. Typically used with playback from bag files.
+pub struct PublisherAny {
+    topic_name: String,
+    sender: mpsc::Sender<Vec<u8>>,
+    phantom: PhantomData<Vec<u8>>,
+}
+
+impl PublisherAny {
+    pub(crate) fn new(topic_name: &str, sender: mpsc::Sender<Vec<u8>>) -> Self {
+        Self {
+            topic_name: topic_name.to_owned(),
+            sender,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Queues a message to be send on the related topic.
+    /// Returns when the data has been queued not when data is actually sent.
+    ///
+    /// This expects the data to be the raw bytes of the message body as they would appear going over the wire.
+    /// See ros1_publish_any.rs example for more details.
+    /// Body length should be included as first four bytes.
+    pub async fn publish(&self, data: &Vec<u8>) -> Result<(), PublisherError> {
+        // TODO this is a pretty dumb...
+        // because of the internal channel used for re-direction this future doesn't
+        // actually complete when the data is sent, but merely when it is queued to be sent
+        // This function could probably be non-async
+        // Or we should do some significant re-work to have it only yield when the data is sent.
+        self.sender
+            .send(data.to_vec())
             .await
             .map_err(|_| PublisherError::StreamClosed)?;
         debug!("Publishing data on topic {}", self.topic_name);
@@ -169,10 +209,12 @@ impl Publication {
         loop {
             match rx.recv().await {
                 Some(msg_to_publish) => {
+                    trace!("Publish task got message to publish for topic: {topic}");
                     let mut streams = subscriber_streams.write().await;
                     let mut streams_to_remove = vec![];
+                    // TODO: we're awaiting in a for loop... Could parallelize here
                     for (stream_idx, stream) in streams.iter_mut().enumerate() {
-                        if let Err(err) = stream.write(&msg_to_publish[..]).await {
+                        if let Err(err) = stream.write_all(&msg_to_publish[..]).await {
                             // TODO: A single failure between nodes that cross host boundaries is probably normal, should make this more robust perhaps
                             debug!("Failed to send data to subscriber: {err}, removing");
                             streams_to_remove.push(stream_idx);
@@ -198,7 +240,9 @@ impl Publication {
                     // Tell the node server to dispose of this publication and unadvertise it
                     // Note: we need to do this in a spawned task or a drop-loop race condition will occur
                     // Dropping publication results in this task being dropped, which can end up canceling the future that is doing the dropping
-                    // if we simpply .await here
+                    // if we simply .await here
+                    // TODO: This allows publisher to clean themselves up iff node remains running after publisher is dropped...
+                    // NodeHandle clean-up is not resulting in a good state clean-up currently..
                     let nh_copy = node_handle.clone();
                     let topic = topic.clone();
                     tokio::spawn(async move {
@@ -225,7 +269,6 @@ impl Publication {
         loop {
             if let Ok((mut stream, peer_addr)) = tcp_listener.accept().await {
                 info!("Received connection from subscriber at {peer_addr} for topic {topic_name}");
-
                 // Read the connection header:
                 let connection_header = match tcpros::receive_header(&mut stream).await {
                     Ok(header) => header,
@@ -250,6 +293,8 @@ impl Publication {
                 if let Some(connection_md5sum) = connection_header.md5sum {
                     if connection_md5sum != "*" {
                         if let Some(local_md5sum) = &responding_conn_header.md5sum {
+                            // TODO(lucasw) is it ok to match any with "*"?
+                            // if local_md5sum != "*" && connection_md5sum != *local_md5sum {
                             if connection_md5sum != *local_md5sum {
                                 warn!(
                                     "Got subscribe request for {}, but md5sums do not match. Expected {:?}, received {:?}",
@@ -272,7 +317,7 @@ impl Publication {
                     .to_bytes(false)
                     .expect("Couldn't serialize connection header");
                 stream
-                    .write(&response_header_bytes[..])
+                    .write_all(&response_header_bytes[..])
                     .await
                     .expect("Unable to respond on tcpstream");
 
@@ -282,7 +327,7 @@ impl Publication {
                         debug!(
                             "Publication configured to be latching and has last_message, sending"
                         );
-                        let res = stream.write(last_message).await;
+                        let res = stream.write_all(last_message).await;
                         match res {
                             Ok(_) => {}
                             Err(e) => {
@@ -320,8 +365,8 @@ pub enum PublisherError {
     StreamClosed,
 }
 
-impl From<serde_rosmsg::Error> for PublisherError {
-    fn from(value: serde_rosmsg::Error) -> Self {
+impl From<roslibrust_serde_rosmsg::Error> for PublisherError {
+    fn from(value: roslibrust_serde_rosmsg::Error) -> Self {
         Self::SerializingError(value.to_string())
     }
 }

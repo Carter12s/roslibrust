@@ -13,6 +13,65 @@ mod tests {
     );
 
     #[test_log::test(tokio::test)]
+    async fn test_publish_any() {
+        // publish a single message in raw bytes and test the received message is as expected
+        let nh = NodeHandle::new("http://localhost:11311", "test_publish_any")
+            .await
+            .unwrap();
+
+        let publisher = nh
+            .advertise_any(
+                "/test_publish_any",
+                "std_msgs/String",
+                "string data\n",
+                1,
+                true,
+            )
+            .await
+            .unwrap();
+
+        let mut subscriber = nh
+            .subscribe::<std_msgs::String>("/test_publish_any", 1)
+            .await
+            .unwrap();
+
+        let msg_raw: Vec<u8> = vec![8, 0, 0, 0, 4, 0, 0, 0, 116, 101, 115, 116].to_vec();
+        publisher.publish(&msg_raw).await.unwrap();
+
+        let res =
+            tokio::time::timeout(tokio::time::Duration::from_millis(250), subscriber.next()).await;
+        let msg = res.unwrap().unwrap().unwrap();
+        assert_eq!(msg.data, "test");
+    }
+
+    #[test_log::test(tokio::test)]
+    async fn test_subscribe_any() {
+        // get a single message in raw bytes and test the bytes are as expected
+        let nh = NodeHandle::new("http://localhost:11311", "test_subscribe_any")
+            .await
+            .unwrap();
+
+        let publisher = nh
+            .advertise::<std_msgs::String>("/test_subscribe_any", 1, true)
+            .await
+            .unwrap();
+
+        let mut subscriber = nh.subscribe_any("/test_subscribe_any", 1).await.unwrap();
+
+        publisher
+            .publish(&std_msgs::String {
+                data: "test".to_owned(),
+            })
+            .await
+            .unwrap();
+
+        let res =
+            tokio::time::timeout(tokio::time::Duration::from_millis(250), subscriber.next()).await;
+        let res = res.unwrap().unwrap().unwrap();
+        assert!(res == vec![8, 0, 0, 0, 4, 0, 0, 0, 116, 101, 115, 116]);
+    }
+
+    #[test_log::test(tokio::test)]
     async fn test_latching() {
         let nh = NodeHandle::new("http://localhost:11311", "test_latching")
             .await
@@ -415,7 +474,7 @@ mod tests {
 
         // Dropping watchdog at end of function cancels watchdog
         // This test can hang which gives crappy debug output
-        let watchdog: abort_on_drop::ChildTask<()> = tokio::spawn(async move {
+        let _watchdog: abort_on_drop::ChildTask<()> = tokio::spawn(async move {
             tokio::time::sleep(std::time::Duration::from_secs(2)).await;
             error!("Test watchdog tripped...");
             std::process::exit(-1);
@@ -481,5 +540,65 @@ mod tests {
         // Confirm we got the message
         let msg = sub.next().await.unwrap().unwrap();
         assert_eq!(msg.data, "hello world from rosbridge");
+    }
+
+    /// Test that we correctly purge references to publishers, subscribers and services servers when a node shuts down
+    #[test_log::test(tokio::test)]
+    async fn node_cleanup() {
+        // Create our node
+        // this nh controls the lifetimes
+        let nh = NodeHandle::new("http://localhost:11311", "/test_node_cleanup")
+            .await
+            .unwrap();
+
+        // Create pub, sub, and service server to prove all get cleaned up
+        let _publisher = nh
+            .advertise::<std_msgs::Header>("/test_cleanup_pub", 1, false)
+            .await
+            .unwrap();
+
+        let _subscriber = nh
+            .subscribe::<std_msgs::Header>("/test_cleanup_sub", 1)
+            .await
+            .unwrap();
+
+        let _service_server = nh
+            .advertise_service::<std_srvs::Trigger, _>("/test_cleanup_srv", |_req| {
+                Ok(Default::default())
+            })
+            .await
+            .unwrap();
+
+        let master_client = roslibrust::ros1::MasterClient::new(
+            "http://localhost:11311",
+            "NAN",
+            "/test_node_cleanup_checker",
+        )
+        .await
+        .unwrap();
+
+        let data = master_client.get_system_state().await.unwrap();
+        info!("Got data before drop: {data:?}");
+
+        // Check that our three connections are reported by the ros master before starting
+        assert!(data.is_publishing("/test_cleanup_pub", "/test_node_cleanup"));
+        assert!(data.is_subscribed("/test_cleanup_sub", "/test_node_cleanup"));
+        assert!(data.is_service_provider("/test_cleanup_srv", "/test_node_cleanup"));
+
+        // Drop our node handle
+        std::mem::drop(nh);
+
+        // Confirm here that Node actually got shut down
+        debug!("Drop has happened");
+        // Delay to allow destructor to complete
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        debug!("sleep is over");
+        let data = master_client.get_system_state().await.unwrap();
+        info!("Got data after drop: {data:?}");
+
+        // Check that our three connections are no longer reported by the ros master after dropping
+        assert!(!data.is_publishing("/test_cleanup_pub", "/test_node_cleanup"));
+        assert!(!data.is_subscribed("/test_cleanup_sub", "/test_node_cleanup"));
+        assert!(!data.is_service_provider("/test_cleanup_srv", "/test_node_cleanup"));
     }
 }

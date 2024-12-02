@@ -12,6 +12,7 @@ pub use node::*;
 
 mod publisher;
 pub use publisher::Publisher;
+pub use publisher::PublisherAny;
 mod service_client;
 pub use service_client::ServiceClient;
 mod subscriber;

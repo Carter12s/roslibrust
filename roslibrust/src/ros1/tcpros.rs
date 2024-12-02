@@ -86,6 +86,10 @@ impl ConnectionHeader {
                 // for the purpose of discovering the service type
                 // If you do `rosservice call /my_service` and hit TAB you'll see this field in the connection header
                 // we can ignore it
+            } else if field.starts_with("response_type=") || field.starts_with("request_type=") {
+                // More undocumented fields!
+                // Discovered in testing that some roscpp service servers will set these on service responses
+                // We can ignore em
             } else if field.starts_with("error=") {
                 log::error!("Error reported in TCPROS connection header: {field}, full header: {header_data:#?}");
             } else {
@@ -252,13 +256,15 @@ pub async fn receive_body(stream: &mut TcpStream) -> Result<Vec<u8>, std::io::Er
     let mut body_len_bytes = [0u8; 4];
     stream.read_exact(&mut body_len_bytes).await?;
     let body_len = u32::from_le_bytes(body_len_bytes);
+    trace!("Read length from stream: {}", body_len);
 
     // Allocate buffer space for length and body
     let mut body = vec![0u8; body_len as usize + 4];
     // Copy the length into the first four bytes
     body[..4].copy_from_slice(&body_len.to_le_bytes());
-    // Read the body into the buffer
+    // Read the body into the buffer after the header
     stream.read_exact(&mut body[4..]).await?;
+    trace!("Read body of size: {}", body.len());
 
     // Return body
     Ok(body)

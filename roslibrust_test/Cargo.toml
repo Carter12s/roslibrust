@@ -5,9 +5,22 @@ edition = "2021"
 
 [dependencies]
 env_logger = "0.10"
-roslibrust = { path = "../roslibrust" }
+roslibrust = { path = "../roslibrust", features = ["ros1"] }
 roslibrust_codegen = { path = "../roslibrust_codegen" }
 lazy_static = "1.4"
+tokio = { version = "1.20", features = ["net", "sync"] }
+log = "0.4"
 
 [dev-dependencies]
 diffy = "0.3.0"
+criterion = { version = "0.4", features = ["html_reports", "async_tokio"] }
+pprof = { version = "0.11", features = ["flamegraph", "criterion"] }
+tokio = { version = "1.24", features = ["full"] }
+
+[[bin]]
+path = "src/performance_ramp.rs"
+name = "ramp"
+
+[[bench]]
+name = "image_bench"
+harness = false

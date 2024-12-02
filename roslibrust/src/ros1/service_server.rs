@@ -220,7 +220,7 @@ impl ServiceServerLink {
                     warn!("Error from user service method for {service_name}: {e:?}");
 
                     let error_string = format!("{:?}", e);
-                    let error_bytes = serde_rosmsg::to_vec(&error_string).unwrap();
+                    let error_bytes = roslibrust_serde_rosmsg::to_vec(&error_string).unwrap();
                     let full_response = [vec![0u8], error_bytes].concat();
 
                     stream.write_all(&full_response).await.unwrap();
