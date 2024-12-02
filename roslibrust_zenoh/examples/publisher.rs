@@ -5,7 +5,7 @@ use roslibrust_zenoh::ZenohClient;
 use roslibrust::topic_provider::TopicProvider;
 // IMPORTANT to bring this trait into scope so we can access the functions it provides
 // This trait provides the [next] function on ZenohSubscriber
-use roslibrust::topic_provider::Subscribe;
+use roslibrust::topic_provider::Publish;
 
 // Generate rust definitions for our messages
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces/std_msgs");
@@ -14,8 +14,8 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 // for details on running the bridge.
 
 // While the bridge is running (with a rosmaster either internally or externally), the following command can be used
-// to test the functionality: `rostopic pub -r 1 /chatter std_msgs/String "data: 'hello world'"`
-// Or run the publisher example `cargo run --example publisher`
+// to test the functionality: `rostopic echo /chatter`
+// Or run the subscriber example `cargo run --example subscriber`
 #[tokio::main]
 async fn main() {
     let session = zenoh::open(zenoh::Config::default()).await.unwrap();
@@ -24,15 +24,20 @@ async fn main() {
     // Create a zenoh subscriber to the ros topic /chatter
     // Internally this handles the "topic mangling" that zenoh-ros1-plugin / zenoh-ros1-bridge performs
     // and sets up deserialization of the ROS1 type into our Rust type
-    let mut subscriber = client
-        .subscribe::<std_msgs::String>("/chatter")
+    let publisher = client
+        .advertise::<std_msgs::String>("/chatter")
         .await
         .unwrap();
 
+    // Run at 1Hz
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(1));
+
     loop {
-        // Get the next message
-        let msg = subscriber.next().await.unwrap();
-        // Publish
-        println!("Got message: {}", msg.data);
+        let msg = std_msgs::String {
+            data: "Hello world".to_string(),
+        };
+        publisher.publish(&msg).await.unwrap();
+        println!("Published!");
+        interval.tick().await;
     }
 }

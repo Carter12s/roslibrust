@@ -17,13 +17,24 @@ impl ZenohClient {
 }
 
 pub struct ZenohPublisher<T> {
-    topic: String,
+    publisher: zenoh::pubsub::Publisher<'static>,
     _marker: std::marker::PhantomData<T>,
 }
 
 impl<T: RosMessageType> Publish<T> for ZenohPublisher<T> {
     async fn publish(&self, data: &T) -> RosLibRustResult<()> {
-        todo!()
+        let bytes = roslibrust_serde_rosmsg::to_vec(data).map_err(|e| {
+            RosLibRustError::SerializationError(format!("Failed to serialize message: {e:?}"))
+        })?;
+
+        // Note: serde_rosmsg places the length of the message as the first four bytes
+        // Which zenoh ros1 bridge does not expect, so we need to strip it off.
+        match self.publisher.put(&bytes[4..]).await {
+            Ok(()) => Ok(()),
+            Err(e) => Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                "Failed to publish message to zenoh: {e:?}"
+            ))),
+        }
     }
 }
 
@@ -31,13 +42,13 @@ impl<T: RosMessageType> Publish<T> for ZenohPublisher<T> {
 type ZenohSubInner =
     zenoh::pubsub::Subscriber<zenoh::handlers::FifoChannelHandler<zenoh::sample::Sample>>;
 pub struct ZenohSubscriber<T> {
-    sub: ZenohSubInner,
+    subscriber: ZenohSubInner,
     _marker: std::marker::PhantomData<T>,
 }
 
 impl<T: RosMessageType> Subscribe<T> for ZenohSubscriber<T> {
     async fn next(&mut self) -> RosLibRustResult<T> {
-        let next = self.sub.recv_async().await;
+        let next = self.subscriber.recv_async().await;
 
         let sample = match next {
             Ok(sample) => sample,
@@ -73,7 +84,22 @@ impl TopicProvider for ZenohClient {
         &self,
         topic: &str,
     ) -> RosLibRustResult<Self::Publisher<T>> {
-        todo!()
+        let mangled_topic = mangle_topic(topic, T::ROS_TYPE_NAME, T::MD5SUM);
+        let publisher = match self.session.declare_publisher(mangled_topic).await {
+            Ok(publisher) => publisher,
+            Err(e) => {
+                // TODO errors still suck with this API...
+                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                    "Failed to declare publisher: {e:?}"
+                )));
+            }
+        };
+
+        println!("type of pub: {:?}", std::any::type_name_of_val(&publisher));
+        Ok(ZenohPublisher {
+            publisher,
+            _marker: std::marker::PhantomData,
+        })
     }
 
     async fn subscribe<T: RosMessageType>(
@@ -91,7 +117,7 @@ impl TopicProvider for ZenohClient {
             }
         };
         Ok(ZenohSubscriber {
-            sub,
+            subscriber: sub,
             _marker: std::marker::PhantomData,
         })
     }
