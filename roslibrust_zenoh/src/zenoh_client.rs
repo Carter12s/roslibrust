@@ -50,7 +50,7 @@ impl<T: RosMessageType> Subscribe<T> for ZenohSubscriber<T> {
         };
 
         let bytes = sample.payload().to_bytes();
-        
+
         // This is messy roslibrust expects the starting bytes to be total message size
         // which Zenoh or the bridge is stripping somewhere, so I'm just manually sticking them back for now
         // This is very inefficient, but it works for now.

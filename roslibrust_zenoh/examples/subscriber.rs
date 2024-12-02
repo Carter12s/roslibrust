@@ -17,14 +17,16 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 // to test the functionality: `rostopic pub /chatter std_msgs/String "data: 'hello world'"`
 #[tokio::main]
 async fn main() {
-
     let session = zenoh::open(zenoh::Config::default()).await.unwrap();
     let client = ZenohClient::new(session);
 
     // Create a zenoh subscriber to the ros topic /chatter
     // Internally this handles the "topic mangling" that zenoh-ros1-plugin / zenoh-ros1-bridge performs
     // and sets up deserialization of the ROS1 type into our Rust type
-    let mut subscriber = client.subscribe::<std_msgs::String>("/chatter").await.unwrap();
+    let mut subscriber = client
+        .subscribe::<std_msgs::String>("/chatter")
+        .await
+        .unwrap();
 
     loop {
         // Get the next message
