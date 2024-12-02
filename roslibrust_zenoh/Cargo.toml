@@ -1,0 +1,17 @@
+[package]
+name = "roslibrust_zenoh"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.41", features = ["rt-multi-thread", "sync", "macros"] }
+roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
+roslibrust_codegen = { path = "../roslibrust_codegen" }
+roslibrust = { path = "../roslibrust", features = ["topic_provider"] }
+zenoh = "1.0"
+hex = "0.4"
+anyhow = "1.0"
+roslibrust_serde_rosmsg = "0.3"
+
