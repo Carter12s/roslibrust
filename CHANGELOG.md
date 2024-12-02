@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- roslibrust_zenoh now proivides a Zenoh client that is compatible with the zenoh-ros1-plugin / zenoh-ros1-bridge
+
 ### Fixed
 
 - Keeping a ros1::ServiceServer alive no longer keeps the underlying node alive past the last ros1::NodeHandle being dropped.
