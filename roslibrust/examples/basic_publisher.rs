@@ -21,7 +21,7 @@ async fn main() -> Result<(), anyhow::Error> {
     loop {
         let msg = std_msgs::Header::default();
         info!("About to publish");
-        let result = publisher.publish(msg).await;
+        let result = publisher.publish(&msg).await;
         match result {
             Ok(()) => {
                 info!("Published msg!");

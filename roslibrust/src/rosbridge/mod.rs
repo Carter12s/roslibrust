@@ -1,6 +1,7 @@
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
 mod subscriber;
+use roslibrust_codegen::RosServiceType;
 pub use subscriber::*;
 
 // Publisher is a transparent module, we directly expose internal types
@@ -67,6 +68,25 @@ pub struct ServiceHandle {
 impl Drop for ServiceHandle {
     fn drop(&mut self) {
         self.client.unadvertise_service(&self.topic);
+    }
+}
+
+/// Rosbridge doesn't have the same concept of service client that ros1 native has
+/// This type is used to replicate the api of ros1::ServiceClient, but really it
+/// just a thin wrapper around call_service() and has no performance benefits
+pub struct ServiceClient<T> {
+    _marker: std::marker::PhantomData<T>,
+    // Need a client handle so we can fwd to call_service
+    client: ClientHandle,
+    // Need the topic we are calling on
+    topic: String,
+}
+
+impl<T: RosServiceType> ServiceClient<T> {
+    pub async fn call(&self, request: T::Request) -> RosLibRustResult<T::Response> {
+        self.client
+            .call_service::<T>(self.topic.as_str(), request)
+            .await
     }
 }
 
