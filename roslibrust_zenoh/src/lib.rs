@@ -1,6 +1,6 @@
 //! A crate for interfacing to ROS1 via the [zenoh-ros1-plugin / zenoh-ros1-bridge](https://github.com/eclipse-zenoh/zenoh-plugin-ros1).
 
-use roslibrust::topic_provider::{Publish, ServiceProvider, Subscribe, TopicProvider};
+use roslibrust::topic_provider::{Publish, Service, ServiceProvider, Subscribe, TopicProvider};
 use roslibrust::{RosLibRustError, RosLibRustResult};
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 
@@ -135,8 +135,18 @@ fn mangle_topic(topic: &str, type_str: &str, md5sum: &str) -> String {
     format!("{type_str}/{md5sum}/{topic}")
 }
 
+pub struct ZenohServiceClient<T: RosServiceType> {
+    _marker: std::marker::PhantomData<T>,
+}
+
+impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
+    async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
+        todo!()
+    }
+}
+
 impl ServiceProvider for ZenohClient {
-    type ServiceClient<T: RosServiceType> = ();
+    type ServiceClient<T: RosServiceType> = ZenohServiceClient<T>;
     type ServiceServer = ();
 
     async fn service_client<T: roslibrust_codegen::RosServiceType + 'static>(

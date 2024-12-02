@@ -730,7 +730,7 @@ pub fn generate_rust_ros_message_definitions(
             }
             Ok(())
         })
-        .collect::<Result<_, Error>>()?;
+        .collect::<Result<(), Error>>()?;
     // Do the same for services
     services
         .into_iter()
@@ -744,7 +744,7 @@ pub fn generate_rust_ros_message_definitions(
             }
             Ok(())
         })
-        .collect::<Result<_, Error>>()?;
+        .collect::<Result<(), Error>>()?;
     // Now generate modules to wrap all of the TokenStreams in a module for each package
     let all_pkgs = modules_to_struct_definitions
         .keys()
@@ -753,7 +753,7 @@ pub fn generate_rust_ros_message_definitions(
     let module_definitions = modules_to_struct_definitions
         .into_iter()
         .map(|(pkg, struct_defs)| generate_mod(pkg, struct_defs, &all_pkgs[..]))
-        .collect::<Vec<_>>();
+        .collect::<Vec<TokenStream>>();
 
     Ok(quote! {
         #(#module_definitions)*
