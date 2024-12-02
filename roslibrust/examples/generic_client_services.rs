@@ -12,9 +12,7 @@ async fn main() {
 
     use roslibrust::topic_provider::*;
 
-    roslibrust_codegen_macro::find_and_generate_ros_messages!(
-        "assets/ros1_common_interfaces/ros_comm_msgs/std_srvs"
-    );
+    roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
     // TopicProvider cannot be an "Object Safe Trait" due to its generic parameters
     // This means we can't do:
 
