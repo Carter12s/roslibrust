@@ -13,7 +13,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .init()
         .unwrap();
 
-    let nh = NodeHandle::new("http://localhost:11311", "service_server_rs").await?;
+    let nh = NodeHandle::new("http://127.0.0.1:11311", "service_server_rs").await?;
     log::info!("Connected!");
 
     // Because our service server can run from any thread at any time
@@ -37,7 +37,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // Start our service running!
     let _handle = nh
-        .advertise_service::<std_srvs::SetBool, _>("~/my_set_bool", server_fn)
+        .advertise_service::<std_srvs::SetBool, _>("/my_set_bool", server_fn)
         .await?;
     info!("Service has started");
 
@@ -50,20 +50,20 @@ async fn main() -> Result<(), anyhow::Error> {
     // As long as _handle is kept alive our service will continue to run
 
     // For funsies we can also spawn a task to periodically call our service
-    let service_client = nh
-        .service_client::<std_srvs::SetBool>("~/my_set_bool")
-        .await?;
-    tokio::spawn(async move {
-        let mut bool = false;
-        loop {
-            bool = !bool;
-            service_client
-                .call(&std_srvs::SetBoolRequest { data: bool })
-                .await
-                .unwrap();
-            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        }
-    });
+    // let service_client = nh
+    //     .service_client::<std_srvs::SetBool>("~/my_set_bool")
+    //     .await?;
+    // tokio::spawn(async move {
+    //     let mut bool = false;
+    //     loop {
+    //         bool = !bool;
+    //         service_client
+    //             .call(&std_srvs::SetBoolRequest { data: bool })
+    //             .await
+    //             .unwrap();
+    //         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+    //     }
+    // });
 
     // We can still access our shared state, we just have to do it safely
     loop {

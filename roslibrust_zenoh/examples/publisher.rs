@@ -18,6 +18,10 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 // Or run the subscriber example `cargo run --example subscriber`
 #[tokio::main]
 async fn main() {
+    // Setup a logger for debugging purposes
+    // use RUST_LOG=debug for more information if this doesn't work for you
+    env_logger::init();
+
     let session = zenoh::open(zenoh::Config::default()).await.unwrap();
     let client = ZenohClient::new(session);
 

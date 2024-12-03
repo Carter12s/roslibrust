@@ -14,4 +14,7 @@ zenoh = "1.0"
 hex = "0.4"
 anyhow = "1.0"
 roslibrust_serde_rosmsg = "0.3"
+log = "0.4"
 
+[dev-dependencies]
+env_logger = "0.11"

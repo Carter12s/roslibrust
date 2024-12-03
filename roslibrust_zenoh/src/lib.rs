@@ -4,6 +4,8 @@ use roslibrust::topic_provider::{Publish, Service, ServiceProvider, Subscribe, T
 use roslibrust::{RosLibRustError, RosLibRustResult};
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 
+use log::*;
+
 pub struct ZenohClient {
     session: zenoh::Session,
 }
@@ -136,12 +138,65 @@ fn mangle_topic(topic: &str, type_str: &str, md5sum: &str) -> String {
 }
 
 pub struct ZenohServiceClient<T: RosServiceType> {
+    session: zenoh::Session,
+    zenoh_query: String,
     _marker: std::marker::PhantomData<T>,
 }
 
 impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
     async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
-        todo!()
+        let request_bytes = roslibrust_serde_rosmsg::to_vec(request).map_err(|e| {
+            RosLibRustError::SerializationError(format!("Failed to serialize message: {e:?}"))
+        })?;
+        debug!("request bytes: {request_bytes:?}");
+
+        let query = match self
+            .session
+            .get(&self.zenoh_query)
+            .payload(&request_bytes[4..])
+            // .timeout(tokio::time::Duration::from_secs(1))
+            .await
+        {
+            Ok(query) => query,
+            Err(e) => {
+                // TODO errors still suck with this API...
+                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                    "Failed to create query for service: {e:?}"
+                )));
+            }
+        };
+
+        let response = match query.recv_async().await {
+            Ok(data) => data,
+            Err(e) => {
+                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                    "Failed to receive response from service: {e:?}"
+                )));
+            }
+        };
+
+        // TODO unclear why this is double failable in the API
+        let sample = match response.into_result() {
+            Ok(bytes) => bytes,
+            Err(e) => {
+                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                    "Failed to receive sample from service: {e:?}"
+                )));
+            }
+        };
+
+        let bytes = sample.payload().to_bytes();
+
+        // This is messy roslibrust expects the starting bytes to be total message size
+        // which Zenoh or the bridge is stripping somewhere, so I'm just manually sticking them back for now
+        // This is very inefficient, but it works for now.
+        let starting_bytes = (bytes.len() as u32).to_le_bytes();
+        let bytes = [&starting_bytes, &bytes[..]].concat();
+
+        let msg = roslibrust_serde_rosmsg::from_slice(&bytes).map_err(|e| {
+            RosLibRustError::SerializationError(format!("Failed to deserialize sample: {e:?}"))
+        })?;
+        Ok(msg)
     }
 }
 
@@ -153,7 +208,13 @@ impl ServiceProvider for ZenohClient {
         &self,
         topic: &str,
     ) -> RosLibRustResult<Self::ServiceClient<T>> {
-        todo!()
+        let mangled_topic = mangle_topic(topic, T::ROS_SERVICE_NAME, T::MD5SUM);
+
+        Ok(ZenohServiceClient {
+            session: self.session.clone(),
+            zenoh_query: mangled_topic,
+            _marker: std::marker::PhantomData,
+        })
     }
 
     async fn advertise_service<
@@ -182,5 +243,16 @@ mod tests {
             ),
             "7374645f6d7367732f537472696e67/992ce8a1687cec8c8bd883ec73ca41d1/chatter"
         );
+    }
+
+    #[test]
+    fn test_mangle_service() {
+        assert_eq!(
+            mangle_topic(
+                "/service_server_rs/my_set_bool",
+                "std_srvs/SetBool",
+                "09fb03525b03e7ea1fd3992bafd87e16"
+            ),
+            "7374645f737276732f536574426f6f6c/09fb03525b03e7ea1fd3992bafd87e16/service_server_rs/my_set_bool");
     }
 }
