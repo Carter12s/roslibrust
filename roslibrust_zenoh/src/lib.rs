@@ -5,7 +5,6 @@ use roslibrust::{RosLibRustError, RosLibRustResult};
 use roslibrust_codegen::{RosMessageType, RosServiceType};
 
 use log::*;
-use tokio::select;
 use zenoh::bytes::ZBytes;
 
 pub struct ZenohClient {
