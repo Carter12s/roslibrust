@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- roslibrust_mock now provides a basic mock implementation of roslibrust's generic traits for use in building automated testing of nodes.
+
 ### Fixed
 
 - Keeping a ros1::ServiceServer alive no longer keeps the underlying node alive past the last ros1::NodeHandle being dropped.
