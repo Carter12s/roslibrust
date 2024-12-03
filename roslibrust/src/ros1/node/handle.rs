@@ -83,11 +83,11 @@ impl NodeHandle {
         queue_size: usize,
         latching: bool,
     ) -> Result<PublisherAny, NodeError> {
-        let sender = self
+        let (sender, shutdown) = self
             .inner
             .register_publisher_any(topic_name, topic_type, msg_definition, queue_size, latching)
             .await?;
-        Ok(PublisherAny::new(topic_name, sender))
+        Ok(PublisherAny::new(topic_name, sender, shutdown))
     }
 
     /// Create a new publisher for the given type.
@@ -103,11 +103,11 @@ impl NodeHandle {
         queue_size: usize,
         latching: bool,
     ) -> Result<Publisher<T>, NodeError> {
-        let sender = self
+        let (sender, shutdown) = self
             .inner
             .register_publisher::<T>(topic_name, queue_size, latching)
             .await?;
-        Ok(Publisher::new(topic_name, sender))
+        Ok(Publisher::new(topic_name, sender, shutdown))
     }
 
     pub async fn subscribe_any(
