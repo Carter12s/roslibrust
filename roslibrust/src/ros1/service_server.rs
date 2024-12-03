@@ -217,10 +217,6 @@ impl ServiceServerLink {
 
                     stream.write_all(&full_response).await.unwrap();
                     debug!("Wrote full service response for {service_name}");
-                    // Temporary change for testing with zenoh-ros1-bridge
-                    // THIS MAGICALLY MAKES IT WORK, THEIR CODE IS NOT "RECEIVING THE RESPONSE" UNTIL THE TCP SOCKET IS CLOSED!!
-                    stream.shutdown().await.unwrap();
-                    break;
                 }
                 Err(e) => {
                     warn!("Error from user service method for {service_name}: {e:?}");
