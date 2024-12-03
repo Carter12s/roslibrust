@@ -161,7 +161,10 @@ impl ServiceServerLink {
         debug!("Received service_request connection from {peer_addr} for {service_name}");
 
         let connection_header = match tcpros::receive_header(&mut stream).await {
-            Ok(header) => header,
+            Ok(header) => {
+                debug!("Received service request for {service_name} with header {header:?}");
+                header
+            }
             Err(e) => {
                 warn!("Communication error while handling service request connection for {service_name}, could not parse header: {e:?}");
                 // TODO returning here simply closes the socket? Should we respond with an error instead?
@@ -215,6 +218,11 @@ impl ServiceServerLink {
                     let full_response = [vec![1u8], response].concat();
 
                     stream.write_all(&full_response).await.unwrap();
+                    debug!("Wrote full service response for {service_name}");
+                    // Temporary change for testing with zenoh-ros1-bridge
+                    // THIS MAGICALLY MAKES IT WORK, THEIR CODE IS NOT "RECEIVING THE RESPONSE" UNTIL THE TCP SOCKET IS CLOSED!!
+                    stream.shutdown().await.unwrap();
+                    break;
                 }
                 Err(e) => {
                     warn!("Error from user service method for {service_name}: {e:?}");
