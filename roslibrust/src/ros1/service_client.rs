@@ -108,6 +108,8 @@ impl ServiceClientLink {
             service: Some(service_name.to_owned()),
             topic_type: service_type.to_owned(),
             tcp_nodelay: false,
+            // We do want a persistent connection to our service clients
+            persistent: Some(true),
         };
 
         let (call_tx, call_rx) = mpsc::unbounded_channel::<CallServiceRequest>();
