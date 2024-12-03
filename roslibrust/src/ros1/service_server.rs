@@ -183,6 +183,7 @@ impl ServiceServerLink {
             topic: None,
             topic_type: service_type.to_string(),
             tcp_nodelay: false,
+            persistent: None,
         };
         let bytes = response_header.to_bytes(false).unwrap();
         if let Err(e) = stream.write_all(&bytes).await {
@@ -191,9 +192,6 @@ impl ServiceServerLink {
             return;
         }
 
-        // TODO we're not currently reading the persistent flag out of the connection header and treating
-        // all connections as persistent
-        // That means we expect one header exchange, and then multiple body exchanges
         // Each loop is one body:
         loop {
             let full_body = match tcpros::receive_body(&mut stream).await {
@@ -233,6 +231,15 @@ impl ServiceServerLink {
 
                     stream.write_all(&full_response).await.unwrap();
                 }
+            }
+
+            // If a persistent service connection was requested keep requesting bodies
+            if let Some(true) = connection_header.persistent {
+                continue;
+            } else {
+                // This will result in the task shutting down, dropping the TCP socket and clean shutdown
+                debug!("Service request connection for {service_name} is not persistent, shutting down");
+                break;
             }
         }
     }
