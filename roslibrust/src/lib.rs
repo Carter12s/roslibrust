@@ -100,7 +100,11 @@
 
 mod rosbridge;
 pub use rosbridge::*;
-use roslibrust_codegen::RosServiceType;
+
+// Re export the codegen traits so that crates that only interact with abstract messages
+// don't need to depend on the codegen crate
+pub use roslibrust_codegen::RosMessageType;
+pub use roslibrust_codegen::RosServiceType;
 
 #[cfg(feature = "rosapi")]
 pub mod rosapi;

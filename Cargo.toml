@@ -8,5 +8,6 @@ members = [
     "roslibrust_codegen_macro",
     "roslibrust_genmsg",
     "roslibrust_test",
+    "roslibrust_mock",
 ]
 resolver = "2"
