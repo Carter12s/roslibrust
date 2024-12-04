@@ -25,13 +25,11 @@ pub struct ZenohPublisher<T> {
 
 impl<T: RosMessageType> Publish<T> for ZenohPublisher<T> {
     async fn publish(&self, data: &T) -> RosLibRustResult<()> {
-        let bytes = roslibrust_serde_rosmsg::to_vec(data).map_err(|e| {
+        let bytes = roslibrust_serde_rosmsg::to_vec_skip_length(data).map_err(|e| {
             RosLibRustError::SerializationError(format!("Failed to serialize message: {e:?}"))
         })?;
 
-        // Note: serde_rosmsg places the length of the message as the first four bytes
-        // Which zenoh ros1 bridge does not expect, so we need to strip it off.
-        match self.publisher.put(&bytes[4..]).await {
+        match self.publisher.put(&bytes).await {
             Ok(()) => Ok(()),
             Err(e) => Err(RosLibRustError::Unexpected(anyhow::anyhow!(
                 "Failed to publish message to zenoh: {e:?}"
@@ -63,16 +61,12 @@ impl<T: RosMessageType> Subscribe<T> for ZenohSubscriber<T> {
         };
 
         let bytes = sample.payload().to_bytes();
-
-        // This is messy roslibrust expects the starting bytes to be total message size
-        // which Zenoh or the bridge is stripping somewhere, so I'm just manually sticking them back for now
-        // This is very inefficient, but it works for now.
-        let starting_bytes = (bytes.len() as u32).to_le_bytes();
-        let bytes = [&starting_bytes, &bytes[..]].concat();
-
-        let msg = roslibrust_serde_rosmsg::from_slice(&bytes).map_err(|e| {
-            RosLibRustError::SerializationError(format!("Failed to deserialize sample: {e:?}"))
-        })?;
+        // Note: Zenoh decided to not make the 4 byte length header part of the payload
+        // So we use the known length version of the deserialization
+        let msg = roslibrust_serde_rosmsg::from_slice_known_length(&bytes, bytes.len() as u32)
+            .map_err(|e| {
+                RosLibRustError::SerializationError(format!("Failed to deserialize sample: {e:?}"))
+            })?;
         Ok(msg)
     }
 }
@@ -157,7 +151,8 @@ pub struct ZenohServiceClient<T: RosServiceType> {
 
 impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
     async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
-        let request_bytes = roslibrust_serde_rosmsg::to_vec(request).map_err(|e| {
+        // Note: Zenoh decided the 4 byte length header is not part of the payload
+        let request_bytes = roslibrust_serde_rosmsg::to_vec_skip_length(request).map_err(|e| {
             RosLibRustError::SerializationError(format!("Failed to serialize message: {e:?}"))
         })?;
         debug!("request bytes: {request_bytes:?}");
@@ -165,8 +160,7 @@ impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
         let query = match self
             .session
             .get(&self.zenoh_query)
-            .payload(&request_bytes[4..])
-            // .timeout(tokio::time::Duration::from_secs(1))
+            .payload(&request_bytes)
             .await
         {
             Ok(query) => query,
@@ -199,15 +193,11 @@ impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
 
         let bytes = sample.payload().to_bytes();
 
-        // This is messy roslibrust expects the starting bytes to be total message size
-        // which Zenoh or the bridge is stripping somewhere, so I'm just manually sticking them back for now
-        // This is very inefficient, but it works for now.
-        let starting_bytes = (bytes.len() as u32).to_le_bytes();
-        let bytes = [&starting_bytes, &bytes[..]].concat();
-
-        let msg = roslibrust_serde_rosmsg::from_slice(&bytes).map_err(|e| {
-            RosLibRustError::SerializationError(format!("Failed to deserialize sample: {e:?}"))
-        })?;
+        // Note: Zenoh decided to not make the 4 byte length header part of the payload
+        let msg = roslibrust_serde_rosmsg::from_slice_known_length(&bytes, bytes.len() as u32)
+            .map_err(|e| {
+                RosLibRustError::SerializationError(format!("Failed to deserialize sample: {e:?}"))
+            })?;
         Ok(msg)
     }
 }
@@ -275,15 +265,14 @@ impl ServiceProvider for ZenohClient {
                 };
                 let bytes = payload.to_bytes();
                 debug!("Got bytes: {bytes:?}");
-                // TODO MAJOR HACK HERE STILL
-                // Our deserialization still expects the first four bytes to be the total message size
-                // So we're just going to manually add the bytes back in
-                let starting_bytes = (bytes.len() as u32).to_le_bytes();
-                let bytes = [&starting_bytes, &bytes[..]].concat();
 
-                let Ok(request) = roslibrust_serde_rosmsg::from_slice(&bytes).map_err(|e| {
-                    error!("Failed to deserialize request: {e:?}");
-                }) else {
+                // Note: Zenoh decided the 4 byte length header is not part of the payload
+                let Ok(request) =
+                    roslibrust_serde_rosmsg::from_slice_known_length(&bytes, bytes.len() as u32)
+                        .map_err(|e| {
+                            error!("Failed to deserialize request: {e:?}");
+                        })
+                else {
                     continue;
                 };
 
@@ -293,15 +282,13 @@ impl ServiceProvider for ZenohClient {
                     continue;
                 };
 
-                let Ok(response_bytes) = roslibrust_serde_rosmsg::to_vec(&response).map_err(|e| {
-                    error!("Failed to serialize response: {e:?}");
-                }) else {
+                let Ok(response_bytes) = roslibrust_serde_rosmsg::to_vec_skip_length(&response)
+                    .map_err(|e| {
+                        error!("Failed to serialize response: {e:?}");
+                    })
+                else {
                     continue;
                 };
-
-                // TODO HACK HERE STILL
-                // Zenoh doesn't want the first four bytes that are the overall message size:
-                let response_bytes = &response_bytes[4..];
 
                 let _ = query
                     .reply(query.key_expr(), response_bytes)

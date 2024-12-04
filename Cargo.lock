@@ -2493,14 +2493,13 @@ dependencies = [
 
 [[package]]
 name = "roslibrust_serde_rosmsg"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee7ea0fc21625dd94a69e126b9f2c1eab4b60dd80a6abf3e0a3e284f9d648586"
+checksum = "dfcb4a6411b4969947dd4fcc23488c4fd7e2e3c180c8d167bece0661df5c0fae"
 dependencies = [
  "byteorder",
  "error-chain",
  "serde",
- "serde_derive",
 ]
 
 [[package]]
