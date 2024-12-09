@@ -212,6 +212,9 @@ pub async fn establish_connection(
 
     // Write our own connection header to the stream
     let conn_header_bytes = conn_header.to_bytes(true)?;
+    trace!(
+        "Sending connection header to server {server_uri} for topic {topic_name}: {conn_header:?}"
+    );
     stream.write_all(&conn_header_bytes[..]).await?;
 
     // Recieve the header from the server
