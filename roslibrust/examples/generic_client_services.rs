@@ -1,5 +1,8 @@
 //! Purpose of this example is to show how the ServiceProvider trait can be use
 //! to create code that is generic of which communication backend it will use.
+use roslibrust::topic_provider::*;
+
+roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
 
 #[cfg(feature = "topic_provider")]
 #[tokio::main]
@@ -10,11 +13,6 @@ async fn main() {
         .init()
         .unwrap();
 
-    use roslibrust::topic_provider::*;
-
-    roslibrust_codegen_macro::find_and_generate_ros_messages!(
-        "assets/ros1_common_interfaces/ros_comm_msgs/std_srvs"
-    );
     // TopicProvider cannot be an "Object Safe Trait" due to its generic parameters
     // This means we can't do:
 

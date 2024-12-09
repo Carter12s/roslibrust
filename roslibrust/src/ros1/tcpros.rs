@@ -21,8 +21,8 @@ pub struct ConnectionHeader {
     pub topic: Option<String>,
     pub topic_type: String,
     pub tcp_nodelay: bool, // TODO this field should be optional and None for service clients and servers
-                           // TODO service client may include "persistent" here
-                           // TODO service server only has to respond with caller_id (all other fields optional)
+    pub persistent: Option<bool>,
+    // TODO service server only has to respond with caller_id (all other fields optional)
 }
 
 impl ConnectionHeader {
@@ -40,6 +40,7 @@ impl ConnectionHeader {
         let mut service = None;
         let mut topic_type = String::new();
         let mut tcp_nodelay = false;
+        let mut persistent = None;
 
         // TODO: Unhandled: error, persistent
         while cursor.position() < header_data.len() as u64 {
@@ -80,6 +81,10 @@ impl ConnectionHeader {
                 let mut tcp_nodelay_str = String::new();
                 field[equals_pos + 1..].clone_into(&mut tcp_nodelay_str);
                 tcp_nodelay = &tcp_nodelay_str != "0";
+            } else if field.starts_with("persistent=") {
+                let mut persistent_str = String::new();
+                field[equals_pos + 1..].clone_into(&mut persistent_str);
+                persistent = Some(&persistent_str != "0");
             } else if field.starts_with("probe=") {
                 // probe is apprantly an undocumented header field that is sent
                 // by certain ros tools when they initiate a service_client connection to a service server
@@ -106,6 +111,7 @@ impl ConnectionHeader {
             service,
             topic_type,
             tcp_nodelay,
+            persistent,
         };
         trace!(
             "Got connection header: {header:?} for topic {:?}",
@@ -162,6 +168,12 @@ impl ConnectionHeader {
         header_data.write_u32::<LittleEndian>(topic_type.len() as u32)?;
         header_data.write(topic_type.as_bytes())?;
 
+        if let Some(persistent) = self.persistent {
+            let persistent = format!("persistent={}", if persistent { 1 } else { 0 });
+            header_data.write_u32::<LittleEndian>(persistent.len() as u32)?;
+            header_data.write(persistent.as_bytes())?;
+        }
+
         // Now that we know the length, stick its value in the first 4 bytes
         let total_length = (header_data.len() - 4) as u32;
         for (idx, byte) in total_length.to_le_bytes().iter().enumerate() {
@@ -200,6 +212,9 @@ pub async fn establish_connection(
 
     // Write our own connection header to the stream
     let conn_header_bytes = conn_header.to_bytes(true)?;
+    trace!(
+        "Sending connection header to server {server_uri} for topic {topic_name}: {conn_header:?}"
+    );
     stream.write_all(&conn_header_bytes[..]).await?;
 
     // Recieve the header from the server

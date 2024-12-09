@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - roslibrust_mock now provides a basic mock implementation of roslibrust's generic traits for use in building automated testing of nodes.
+- roslibrust_zenoh now proivides a Zenoh client that is compatible with the zenoh-ros1-plugin / zenoh-ros1-bridge
 
 ### Fixed
 
@@ -31,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropping the last ros1::NodeHandle results in the node cleaning up any advertises, subscriptions, and services with the ROS master.
 - Generated code now includes various lint attributes to suppress warnings.
 - TCPROS header parsing now ignores (the undocumented fields) response_type and request_type and doesn't produce warnings on them.
+- ROS1 native service servers now respect the "persistent" header field, and automatically close the underlying TCP socket after a single request unless persistent is set to 1 in the connection header.
 
 ### Changed
 

@@ -161,7 +161,10 @@ impl ServiceServerLink {
         debug!("Received service_request connection from {peer_addr} for {service_name}");
 
         let connection_header = match tcpros::receive_header(&mut stream).await {
-            Ok(header) => header,
+            Ok(header) => {
+                debug!("Received service request for {service_name} with header {header:?}");
+                header
+            }
             Err(e) => {
                 warn!("Communication error while handling service request connection for {service_name}, could not parse header: {e:?}");
                 // TODO returning here simply closes the socket? Should we respond with an error instead?
@@ -180,6 +183,7 @@ impl ServiceServerLink {
             topic: None,
             topic_type: service_type.to_string(),
             tcp_nodelay: false,
+            persistent: None,
         };
         let bytes = response_header.to_bytes(false).unwrap();
         if let Err(e) = stream.write_all(&bytes).await {
@@ -188,9 +192,6 @@ impl ServiceServerLink {
             return;
         }
 
-        // TODO we're not currently reading the persistent flag out of the connection header and treating
-        // all connections as persistent
-        // That means we expect one header exchange, and then multiple body exchanges
         // Each loop is one body:
         loop {
             let full_body = match tcpros::receive_body(&mut stream).await {
@@ -215,6 +216,7 @@ impl ServiceServerLink {
                     let full_response = [vec![1u8], response].concat();
 
                     stream.write_all(&full_response).await.unwrap();
+                    debug!("Wrote full service response for {service_name}");
                 }
                 Err(e) => {
                     warn!("Error from user service method for {service_name}: {e:?}");
@@ -225,6 +227,15 @@ impl ServiceServerLink {
 
                     stream.write_all(&full_response).await.unwrap();
                 }
+            }
+
+            // If a persistent service connection was requested keep requesting bodies
+            if let Some(true) = connection_header.persistent {
+                continue;
+            } else {
+                // This will result in the task shutting down, dropping the TCP socket and clean shutdown
+                debug!("Service request connection for {service_name} is not persistent, shutting down");
+                break;
             }
         }
     }

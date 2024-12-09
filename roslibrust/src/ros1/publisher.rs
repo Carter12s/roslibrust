@@ -158,6 +158,7 @@ impl Publication {
             topic_type: topic_type.to_owned(),
             tcp_nodelay: false,
             service: None,
+            persistent: None,
         };
         trace!("Publisher connection header: {responding_conn_header:?}");
 

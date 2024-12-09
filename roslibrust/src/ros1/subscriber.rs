@@ -107,6 +107,7 @@ impl Subscription {
             topic_type: topic_type.to_owned(),
             tcp_nodelay: false,
             service: None,
+            persistent: None,
         };
 
         Self {
