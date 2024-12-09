@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- roslibrust_mock now provides a basic mock implementation of roslibrust's generic traits for use in building automated testing of nodes.
 - roslibrust_zenoh now proivides a Zenoh client that is compatible with the zenoh-ros1-plugin / zenoh-ros1-bridge
 
 ### Fixed
