@@ -1,7 +1,7 @@
 //! This module contains the top level Node and NodeHandle classes.
 //! These wrap the lower level management of a ROS Node connection into a higher level and thread safe API.
 
-use crate::RosLibRustError;
+use roslibrust_common::RosLibRustError;
 
 use super::{names::InvalidNameError, RosMasterError};
 use std::{

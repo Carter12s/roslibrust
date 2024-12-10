@@ -1,19 +1,17 @@
-use log::*;
-use roslibrust::ClientHandle;
-
-roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces",);
+#[cfg(feature = "rosbridge")]
+roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces/rosapi");
 
 /// This example shows calling a service
 /// To run this example rosbridge and a roscore should be running
 /// As well as the rosapi node.
 /// This node calls a service on the rosapi node to get the current ros time.
+#[cfg(feature = "rosbridge")]
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), anyhow::Error> {
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .without_timestamps() // Required for running in wsl2
-        .init()
-        .unwrap();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    use log::*;
+    use roslibrust::rosbridge::ClientHandle;
+
+    env_logger::init();
 
     let client = ClientHandle::new("ws://localhost:9090").await?;
 
@@ -24,4 +22,9 @@ async fn main() -> Result<(), anyhow::Error> {
 
     info!("Got time: {:?}", result);
     Ok(())
+}
+
+#[cfg(not(feature = "rosbridge"))]
+fn main() {
+    eprintln!("This example does nothing without compiling with the feature 'rosbridge'");
 }

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-roslibrust = { path = "../roslibrust", features = ["topic_provider"] }
+roslibrust_common = { path = "../roslibrust_common" }
 tokio = { version = "1.41", features = ["sync", "rt-multi-thread", "macros"] }
 # Used for serializing messages
 bincode = "1.3"

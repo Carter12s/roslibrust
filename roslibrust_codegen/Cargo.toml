@@ -13,6 +13,7 @@ categories = ["science::robotics"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+roslibrust_common = { path = "../roslibrust_common" }
 lazy_static = "1.4"
 log = "0.4"
 md5 = "0.7"

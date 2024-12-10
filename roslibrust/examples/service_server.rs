@@ -1,10 +1,10 @@
-use roslibrust::ClientHandle;
-
 // One way to import message definitions:
+#[cfg(feature = "rosbridge")]
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
 
 // A basic service server exampple, that logs the request is recieves and returns
 // a canned response.
+#[cfg(feature = "rosbridge")]
 fn my_service(
     request: std_srvs::SetBoolRequest,
     my_string: &str,
@@ -39,17 +39,13 @@ fn my_service(
 ///
 /// To actually exercise our service we need to call it with something.
 /// One option would be to use a ros commaline tool: `rosservice call /my_set_bool "data: false"` or `ros2 service call /my_set_bool std_srvs/srv/SetBool data:\ false\ `.
+#[cfg(feature = "rosbridge")]
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), anyhow::Error> {
-    // Initialize a basic logger useful if anything goes wrong while running the example
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .without_timestamps() // Required for running in wsl2
-        .init()
-        .unwrap();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
 
     // Create a new client
-    let client = ClientHandle::new("ws://localhost:9090").await?;
+    let client = roslibrust::rosbridge::ClientHandle::new("ws://localhost:9090").await?;
 
     // The string you want to pass in to the closure
     let my_string = "Some string";
@@ -70,4 +66,9 @@ async fn main() -> Result<(), anyhow::Error> {
 
     tokio::signal::ctrl_c().await?;
     Ok(())
+}
+
+#[cfg(not(feature = "rosbridge"))]
+fn main() {
+    eprintln!("This example does nothing without compiling with the feature 'rosbridge'");
 }

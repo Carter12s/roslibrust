@@ -1,17 +1,16 @@
 //! Purpose of this example is to show how the TopicProvider trait can be use
 //! to create code that is generic of which communication backend it will use.
-use roslibrust::topic_provider::*;
 
+// Important to bring these traits into scope so we can use them
+
+#[cfg(all(feature = "rosbridge", feature = "ros1"))]
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces/std_msgs");
 
-#[cfg(feature = "topic_provider")]
+#[cfg(all(feature = "rosbridge", feature = "ros1"))]
 #[tokio::main]
 async fn main() {
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .without_timestamps() // required for running wsl2
-        .init()
-        .unwrap();
+    use roslibrust::{Publish, Subscribe, TopicProvider};
+    env_logger::init();
 
     // TopicProvider cannot be an "Object Safe Trait" due to its generic parameters
     // This means we can't do:
@@ -60,7 +59,7 @@ async fn main() {
     }
 
     // create a rosbridge handle and start node
-    let ros = roslibrust::ClientHandle::new("ws://localhost:9090")
+    let ros = roslibrust::rosbridge::ClientHandle::new("ws://localhost:9090")
         .await
         .unwrap();
     let node = MyNode {
@@ -90,5 +89,9 @@ async fn main() {
     // Note: this will not run without rosbridge running
 }
 
-#[cfg(not(feature = "topic_provider"))]
-fn main() {}
+#[cfg(not(all(feature = "rosbridge", feature = "ros1")))]
+fn main() {
+    eprintln!(
+        "This example does nothing without compiling with the feature 'rosbridge' and 'ros1'"
+    );
+}

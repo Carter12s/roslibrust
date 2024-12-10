@@ -2,9 +2,6 @@
 //! both ROS1 types and ROS2 types, can use two clients to communicate
 //! with both versions of ROS at the same time.
 
-use log::*;
-use roslibrust::ClientHandle;
-
 /// We place the ros1 generate code into a module to prevent name collisions with the identically
 /// named ros2 types.
 mod ros1 {
@@ -52,14 +49,12 @@ mod ros2 {
 /// After both bridges are up and running, run this example.
 /// With this example running you should then be able to use the ros1 command line tools to publish a message,
 /// and see them appear in ros2 with its command line tools
+#[cfg(feature = "rosbridge")]
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> Result<(), anyhow::Error> {
-    // Initialize a basic logger useful if anything goes wrong while running the example
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .without_timestamps() // Required for running in wsl2
-        .init()
-        .unwrap();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    use log::*;
+    use roslibrust::rosbridge::ClientHandle;
+    env_logger::init();
 
     info!("Attempting to connect to ros1...");
     let ros1_client = ClientHandle::new("ws://localhost:9090").await?;
@@ -100,4 +95,9 @@ async fn main() -> Result<(), anyhow::Error> {
     }
 
     Ok(())
+}
+
+#[cfg(not(feature = "rosbridge"))]
+fn main() {
+    eprintln!("This example does nothing without compiling with the feature 'rosbridge'");
 }

@@ -1,8 +1,8 @@
 //! Purpose of this example is to show how to host service visible to ROS1 from a Zenoh client.
 
 // IMPORTANT to bring this trait into scope so we can access the functions it provides
-// [ServiceProvider] is what allows us to actually access .service_client()
-use roslibrust::topic_provider::ServiceProvider;
+// [roslibrust::ServiceProvider] is what allows us to actually access .service_client()
+use roslibrust::ServiceProvider;
 use roslibrust_zenoh::ZenohClient;
 
 // IMPORTANT this example will not work with the default zenoh-ros1-bridge settings!

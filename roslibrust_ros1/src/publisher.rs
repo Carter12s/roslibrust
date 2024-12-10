@@ -1,10 +1,10 @@
-use crate::ros1::{
+use crate::{
     names::Name,
     tcpros::{self, ConnectionHeader},
 };
 use abort_on_drop::ChildTask;
 use log::*;
-use roslibrust_codegen::RosMessageType;
+use roslibrust_common::RosMessageType;
 use std::{
     marker::PhantomData,
     net::{Ipv4Addr, SocketAddr},

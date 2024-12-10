@@ -1,12 +1,12 @@
 //! Purpose of this example is to show how to call a ROS1 service from a Zenoh client.
 
-// IMPORTANT to bring this trait into scope so we can access the functions it provides
-// [Service] is what allows us to actually access [call]
-use roslibrust::topic_provider::Service;
+/// IMPORTANT to bring this trait into scope so we can access the functions it provides
+/// [roslibrust::Service] is what allows us to actually access [call]
+use roslibrust::Service;
 
-// IMPORTANT to bring this trait into scope so we can access the functions it provides
-// [ServiceProvider] is what allows us to actually access .service_client()
-use roslibrust::topic_provider::ServiceProvider;
+/// IMPORTANT to bring this trait into scope so we can access the functions it provides
+/// [roslibrust::ServiceProvider] is what allows us to actually access .service_client()
+use roslibrust::ServiceProvider;
 
 // Bring our client type into scope
 use roslibrust_zenoh::ZenohClient;

@@ -1,5 +1,5 @@
 use crate::{ClientHandle, RosLibRustResult};
-use roslibrust_codegen::RosMessageType;
+use roslibrust_common::RosMessageType;
 
 /// A handle given to the caller when they advertise a topic
 ///
