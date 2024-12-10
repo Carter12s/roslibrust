@@ -1,13 +1,11 @@
-use crate::{
-    rosbridge::comm::{self, RosBridgeComm},
-    Publisher, RosLibRustError, RosLibRustResult, ServiceHandle, Subscriber,
-};
+use crate::comm::Ops;
+use crate::comm::RosBridgeComm;
+use crate::{Publisher, ServiceHandle, Subscriber};
 use anyhow::anyhow;
 use dashmap::DashMap;
 use futures::StreamExt;
 use log::*;
-use roslibrust_common::ServiceFn;
-use roslibrust_common::{RosMessageType, RosServiceType};
+use roslibrust_common::*;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -60,7 +58,7 @@ impl ClientHandleOptions {
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 ///   // Create a new client
-///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
 ///   // Create a copy of the handle (does not create a seperate connection)
 ///   let mut handle2 = handle.clone();
 ///   tokio::spawn(async move {
@@ -206,11 +204,11 @@ impl ClientHandle {
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
-    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     ///   // Subscribe using ::<T> style
     ///   let subscriber1 = handle.subscribe::<std_msgs::Header>("/topic").await?;
     ///   // Subscribe using explicit type style
-    ///   let subscriber2: roslibrust::Subscriber<std_msgs::Header> = handle.subscribe::<std_msgs::Header>("/topic").await?;
+    ///   let subscriber2: roslibrust_rosbridge::Subscriber<std_msgs::Header> = handle.subscribe("/topic").await?;
     ///   # Ok(())
     /// # }
     /// ```
@@ -239,7 +237,7 @@ impl ClientHandle {
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
-    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     ///   // Subscribe to the same topic with two different types
     ///   let ros1_subscriber = handle.subscribe::<ros1::std_msgs::Header>("/topic").await?;
     ///   let ros2_subscriber = handle.subscribe::<ros2::std_msgs::Header>("/topic").await?;
@@ -297,11 +295,11 @@ impl ClientHandle {
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
-    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     ///   // Advertise using ::<T> style
     ///   let mut publisher = handle.advertise::<std_msgs::Header>("/topic").await?;
     ///   // Advertise using explicit type
-    ///   let mut publisher2: roslibrust::Publisher<std_msgs::Header> = handle.advertise("/other_topic").await?;
+    ///   let mut publisher2: roslibrust_rosbridge::Publisher<std_msgs::Header> = handle.advertise("/other_topic").await?;
     ///   # Ok(())
     /// # }
     /// ```
@@ -349,7 +347,7 @@ impl ClientHandle {
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
-    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     ///   // Call service, type of response will be rosapi::GetTimeResponse (alternatively named rosapi::GetTime::Response)
     ///   let response = handle.call_service::<rosapi::GetTime>("/rosapi/get_time", rosapi::GetTimeRequest{}).await?;
     /// # Ok(())
@@ -615,17 +613,17 @@ impl Client {
                     .expect("Op field not present on returned object.")
                     .as_str()
                     .expect("Op field was not of string type.");
-                let op = comm::Ops::from_str(op)?;
+                let op = Ops::from_str(op)?;
                 match op {
-                    comm::Ops::Publish => {
+                    Ops::Publish => {
                         trace!("handling publish for {:?}", &parsed);
                         self.handle_publish(parsed).await;
                     }
-                    comm::Ops::ServiceResponse => {
+                    Ops::ServiceResponse => {
                         trace!("handling service response for {:?}", &parsed);
                         self.handle_response(parsed).await;
                     }
-                    comm::Ops::CallService => {
+                    Ops::CallService => {
                         trace!("handling call_service for {:?}", &parsed);
                         self.handle_service(parsed).await;
                     }

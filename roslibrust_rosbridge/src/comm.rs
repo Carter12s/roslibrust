@@ -1,4 +1,4 @@
-use crate::{rosbridge::Writer, RosLibRustResult};
+use crate::{RosLibRustResult, Writer};
 use anyhow::bail;
 use futures_util::SinkExt;
 use log::debug;

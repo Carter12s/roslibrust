@@ -1,3 +1,4 @@
+#[cfg(feature = "ros1")]
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
 
 /// This example demonstrates ths usage of the .advertise_any() function
@@ -8,7 +9,7 @@ roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_in
 
 #[cfg(feature = "ros1")]
 #[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Note: this example needs a ros master running to work
     let node =
         roslibrust::ros1::NodeHandle::new("http://localhost:11311", "/ros1_publish_any").await?;

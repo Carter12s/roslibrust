@@ -11,9 +11,7 @@ mod integration_tests {
 
     use std::sync::Arc;
 
-    use crate::{
-        rosbridge::TestResult, ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber,
-    };
+    use crate::{ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber, TestResult};
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
@@ -177,11 +175,6 @@ mod integration_tests {
     // of advertise / unadvertise status. Unclear how to confirm whether unadvertise was sent or not
     #[ignore]
     async fn unadvertise() -> TestResult {
-        let _ = simple_logger::SimpleLogger::new()
-            .with_level(log::LevelFilter::Debug)
-            .without_timestamps()
-            .init();
-
         // Flow:
         //  1. Create a publisher and subscriber
         //  2. Send a message and confirm connection works (topic was advertised)

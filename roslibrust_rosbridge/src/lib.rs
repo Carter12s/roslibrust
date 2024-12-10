@@ -1,4 +1,5 @@
 use roslibrust_common::*;
+
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
 mod subscriber;
@@ -30,10 +31,6 @@ use std::collections::HashMap;
 use tokio::net::TcpStream;
 use tokio_tungstenite::*;
 use tungstenite::Message;
-
-// Doing this to maintain backwards compatibilities like `use roslibrust::rosbridge::RosLibRustError`
-#[allow(unused)]
-pub use roslibrust_common::{RosLibRustError, RosLibRustResult};
 
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) + Send + Sync>;
@@ -144,15 +141,15 @@ impl ServiceProvider for crate::ClientHandle {
         self.service_client::<T>(topic).await
     }
 
-    fn advertise_service<T: RosServiceType + 'static, F>(
+    async fn advertise_service<T: RosServiceType + 'static, F>(
         &self,
         topic: &str,
         server: F,
-    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceServer>> + Send
+    ) -> RosLibRustResult<Self::ServiceServer>
     where
         F: ServiceFn<T>,
     {
-        self.advertise_service(topic, server)
+        self.advertise_service(topic, server).await
     }
 }
 

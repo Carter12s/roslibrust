@@ -98,9 +98,6 @@
 //! Specifically, roslibrust attempts to follow "good" ros error handling convention and be as compatible as possible
 //! with various error types; however, due to the async nature of the crate `Box<dyn Error + Send + Sync>` is needed.
 
-mod rosbridge;
-pub use rosbridge::*;
-
 // Re-export common types and traits under the roslibrust namespace
 pub use roslibrust_common::*;
 
@@ -110,3 +107,15 @@ pub mod rosapi;
 // If the ros1 feature is enabled, export the roslibrust_ros1 crate under ros1
 #[cfg(feature = "ros1")]
 pub use roslibrust_ros1 as ros1;
+
+// If the rosbridge feature is enabled, export the roslibrust_rosbridge crate under rosbridge
+#[cfg(feature = "rosbridge")]
+pub use roslibrust_rosbridge as rosbridge;
+
+// If the zenoh feature is enabled, export the roslibrust_zenoh crate under zenoh
+#[cfg(feature = "zenoh")]
+pub use roslibrust_zenoh as zenoh;
+
+// If the mock feature is enabled, export the roslibrust_mock crate under mock
+#[cfg(feature = "mock")]
+pub use roslibrust_mock as mock;

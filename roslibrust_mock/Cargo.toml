@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-roslibrust = { path = "../roslibrust", features = ["topic_provider"] }
+roslibrust_common = { path = "../roslibrust_common" }
 tokio = { version = "1.41", features = ["sync", "rt-multi-thread", "macros"] }
 # Used for serializing messages
 bincode = "1.3"
@@ -12,8 +12,5 @@ bincode = "1.3"
 log = "0.4"
 
 [dev-dependencies]
-# Ideally this shouldn't need to be here
-roslibrust_common = { path = "../roslibrust_common" }
-# Neither should this...
 roslibrust_codegen = { path = "../roslibrust_codegen" }
 roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }

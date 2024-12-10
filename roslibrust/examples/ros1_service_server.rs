@@ -1,17 +1,14 @@
+#[cfg(feature = "ros1")]
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
 
 #[cfg(feature = "ros1")]
 #[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     use log::*;
     use roslibrust::ros1::NodeHandle;
     use std::sync::{Arc, Mutex};
 
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .without_timestamps()
-        .init()
-        .unwrap();
+    env_logger::init();
 
     let nh = NodeHandle::new("http://localhost:11311", "service_server_rs").await?;
     log::info!("Connected!");

@@ -3,12 +3,15 @@
 members = [
     "example_package",
     "example_package_macro",
-    "roslibrust",
-    "roslibrust_codegen",
     "roslibrust_codegen_macro",
+    "roslibrust_codegen",
+    "roslibrust_common",
     "roslibrust_genmsg",
-    "roslibrust_test",
     "roslibrust_mock",
-    "roslibrust_zenoh", "roslibrust_ros1", "roslibrust_common",
+    "roslibrust_ros1",
+    "roslibrust_rosbridge",
+    "roslibrust_test",
+    "roslibrust_zenoh",
+    "roslibrust",
 ]
 resolver = "2"

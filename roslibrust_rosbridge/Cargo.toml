@@ -1,0 +1,36 @@
+[package]
+name = "roslibrust_rosbridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+roslibrust_common = { path = "../roslibrust_common" }
+tokio = { version = "1.20", features = [
+    "net",
+    "macros",
+    "time",
+    "rt-multi-thread",
+    "sync",
+] }
+tokio-tungstenite = { version = "0.17" }
+uuid = { version = "1.1", features = ["v4"] }
+log = "0.4"
+serde_json = "1.0"
+anyhow = "1.0"
+futures = "0.3"
+futures-util = "0.3"
+dashmap = "5.3"
+deadqueue = "0.2.4" # .4+ is required to fix bug with missing tokio dep
+
+[dev-dependencies]
+test-log = "0.2"
+roslibrust_codegen = { path = "../roslibrust_codegen" }
+roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
+
+[features]
+# Used to enable tests that rely on a locally running rosbridge
+running_bridge = []
+# Indicates we're testing with running ROS1 bridge
+ros1_test = ["running_bridge"]
+# Indicates we're testing with running ROS2 bridge
+ros2_test = ["running_bridge"]

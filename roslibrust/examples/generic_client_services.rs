@@ -1,18 +1,15 @@
 //! Purpose of this example is to show how the ServiceProvider trait can be use
 //! to create code that is generic of which communication backend it will use.
-#[cfg(feature = "topic_provider")]
-use roslibrust::topic_provider::*;
 
+#[cfg(all(feature = "rosbridge", feature = "ros1"))]
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");
 
-#[cfg(feature = "topic_provider")]
+#[cfg(all(feature = "rosbridge", feature = "ros1"))]
 #[tokio::main]
 async fn main() {
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .without_timestamps() // required for running wsl2
-        .init()
-        .unwrap();
+    // Important to bring these traits into scope so we can use them
+    use roslibrust::{Service, ServiceProvider};
+    env_logger::init();
 
     // TopicProvider cannot be an "Object Safe Trait" due to its generic parameters
     // This means we can't do:
@@ -57,16 +54,17 @@ async fn main() {
                 tokio::time::sleep(std::time::Duration::from_millis(500)).await;
                 println!("sleeping");
 
-                client
+                let response = client
                     .call(&std_srvs::SetBoolRequest { data: true })
                     .await
                     .unwrap();
+                println!("Got response: {response:?}");
             }
         }
     }
 
     // create a rosbridge handle and start node
-    let ros = roslibrust::ClientHandle::new("ws://localhost:9090")
+    let ros = roslibrust::rosbridge::ClientHandle::new("ws://localhost:9090")
         .await
         .unwrap();
     let node = MyNode { ros };
@@ -89,5 +87,9 @@ async fn main() {
     // You should see log output from both nodes
 }
 
-#[cfg(not(feature = "topic_provider"))]
-fn main() {}
+#[cfg(not(all(feature = "rosbridge", feature = "ros1")))]
+fn main() {
+    eprintln!(
+        "This example does nothing without compiling with the feature 'rosbridge' and 'ros1'"
+    );
+}
