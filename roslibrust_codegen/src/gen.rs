@@ -42,7 +42,7 @@ pub fn generate_service(service: ServiceFile) -> Result<TokenStream, Error> {
         pub struct #struct_name {
 
         }
-        impl ::roslibrust_codegen::RosServiceType for #struct_name {
+        impl ::roslibrust_common::RosServiceType for #struct_name {
             const ROS_SERVICE_NAME: &'static str = #service_type_name;
             const MD5SUM: &'static str = #service_md5sum;
             type Request = #request_name;
@@ -99,7 +99,7 @@ pub fn generate_struct(msg: MessageFile) -> Result<TokenStream, Error> {
             #(#fields )*
         }
 
-        impl ::roslibrust_codegen::RosMessageType for #struct_name {
+        impl ::roslibrust_common::RosMessageType for #struct_name {
             const ROS_TYPE_NAME: &'static str = #ros_type_name;
             const MD5SUM: &'static str = #md5sum;
             const DEFINITION: &'static str = #raw_message_definition;

@@ -1,12 +1,9 @@
 use crate::{
-    ros1::{
-        names::Name,
-        tcpros::{establish_connection, ConnectionHeader},
-    },
-    RosLibRustError, RosLibRustResult,
+    names::Name,
+    tcpros::{establish_connection, ConnectionHeader},
 };
 use abort_on_drop::ChildTask;
-use roslibrust_codegen::RosServiceType;
+use roslibrust_common::{RosLibRustError, RosLibRustResult, RosServiceType};
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},

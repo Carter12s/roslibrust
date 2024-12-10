@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 env_logger = "0.10"
 roslibrust = { path = "../roslibrust", features = ["ros1"] }
+roslibrust_common = { path = "../roslibrust_common" }
+# TODO this shouldn't need to be here!
 roslibrust_codegen = { path = "../roslibrust_codegen" }
 lazy_static = "1.4"
 tokio = { version = "1.20", features = ["net", "sync"] }

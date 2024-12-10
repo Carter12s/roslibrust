@@ -1,4 +1,4 @@
-#[cfg(all(feature = "ros1", feature = "ros1_test"))]
+#[cfg(feature = "ros1_test")]
 mod tests {
     use roslibrust::ros1::NodeHandle;
     use roslibrust_codegen::RosMessageType;

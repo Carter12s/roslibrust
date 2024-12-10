@@ -852,6 +852,7 @@ version = "0.1.0"
 dependencies = [
  "cargo-emit",
  "roslibrust_codegen",
+ "roslibrust_common",
 ]
 
 [[package]]
@@ -860,6 +861,7 @@ version = "0.1.0"
 dependencies = [
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
+ "roslibrust_common",
 ]
 
 [[package]]
@@ -2571,27 +2573,22 @@ version = "0.11.1"
 dependencies = [
  "abort-on-drop",
  "anyhow",
- "byteorder",
  "dashmap",
  "deadqueue",
  "env_logger 0.10.2",
  "futures",
  "futures-util",
- "gethostname",
- "hyper",
  "lazy_static",
  "log",
  "proc-macro2",
  "rand",
- "regex",
- "reqwest",
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
- "roslibrust_serde_rosmsg",
+ "roslibrust_common",
+ "roslibrust_ros1",
  "serde",
  "serde-big-array",
  "serde_json",
- "serde_xmlrpc",
  "simple_logger",
  "smart-default 0.6.0",
  "test-log",
@@ -2611,6 +2608,7 @@ dependencies = [
  "md5",
  "proc-macro2",
  "quote",
+ "roslibrust_common",
  "serde",
  "serde-big-array",
  "serde_bytes",
@@ -2632,6 +2630,18 @@ dependencies = [
  "quote",
  "roslibrust_codegen",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "roslibrust_common"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.6",
+ "tokio",
+ "tokio-tungstenite 0.17.2",
 ]
 
 [[package]]
@@ -2659,6 +2669,30 @@ dependencies = [
  "roslibrust",
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
+ "roslibrust_common",
+ "tokio",
+]
+
+[[package]]
+name = "roslibrust_ros1"
+version = "0.1.0"
+dependencies = [
+ "abort-on-drop",
+ "anyhow",
+ "byteorder",
+ "gethostname",
+ "hyper",
+ "lazy_static",
+ "log",
+ "regex",
+ "reqwest",
+ "roslibrust_codegen",
+ "roslibrust_common",
+ "roslibrust_serde_rosmsg",
+ "serde",
+ "serde_xmlrpc",
+ "test-log",
+ "thiserror 2.0.6",
  "tokio",
 ]
 
@@ -2685,6 +2719,7 @@ dependencies = [
  "pprof",
  "roslibrust",
  "roslibrust_codegen",
+ "roslibrust_common",
  "tokio",
 ]
 
@@ -2699,6 +2734,7 @@ dependencies = [
  "roslibrust",
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
+ "roslibrust_common",
  "roslibrust_serde_rosmsg",
  "tokio",
  "zenoh",

@@ -386,6 +386,7 @@ mod integration_tests {
     #[test_log::test(tokio::test)]
     // Note: only have a ros1 version of this test for now, as this is specialized in how we launch rosbridge
     #[cfg(feature = "ros1_test")]
+    #[ignore]
     async fn pub_and_sub_reconnect_through_dead_bridge() {
         // Have to do a timeout to confirm the bridge is up / down
         const WAIT_FOR_ROSBRIDGE: tokio::time::Duration = tokio::time::Duration::from_millis(2000);

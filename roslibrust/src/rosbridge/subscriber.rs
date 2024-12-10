@@ -6,7 +6,7 @@ use log::error;
 use std::sync::Arc;
 
 use crate::{rosbridge::MessageQueue, ClientHandle};
-use roslibrust_codegen::RosMessageType;
+use roslibrust_common::RosMessageType;
 
 /// Represents a single instance of listening to a topic, and provides the ability to extract messages
 ///

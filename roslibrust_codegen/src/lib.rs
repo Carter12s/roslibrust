@@ -27,43 +27,8 @@ pub use serde_big_array::BigArray; // Used in generated code for large fixed siz
 pub use serde_bytes;
 pub use smart_default::SmartDefault; // Used in generated code for default values // Used in generated code for faster Vec<u8> serialization
 
-/// Fundamental traits for message types this crate works with
-/// This trait will be satisfied for any types generated with this crate's message_gen functionality
-pub trait RosMessageType:
-    'static + DeserializeOwned + Send + Serialize + Sync + Clone + Debug
-{
-    /// Expected to be the combination pkg_name/type_name string describing the type to ros
-    /// Example: std_msgs/Header
-    const ROS_TYPE_NAME: &'static str;
-
-    /// The computed md5sum of the message file and its dependencies
-    /// This field is optional, and only needed when using ros1 native communication
-    const MD5SUM: &'static str = "";
-
-    /// The definition from the msg, srv, or action file
-    /// This field is optional, and only needed when using ros1 native communication
-    const DEFINITION: &'static str = "";
-}
-
-// This special impl allows for services with no args / returns
-impl RosMessageType for () {
-    const ROS_TYPE_NAME: &'static str = "";
-    const MD5SUM: &'static str = "";
-    const DEFINITION: &'static str = "";
-}
-
-/// Fundamental traits for service types this crate works with
-/// This trait will be satisfied for any services definitions generated with this crate's message_gen functionality
-pub trait RosServiceType: 'static + Send + Sync {
-    /// Name of the ros service e.g. `rospy_tutorials/AddTwoInts`
-    const ROS_SERVICE_NAME: &'static str;
-    /// The computed md5sum of the message file and its dependencies
-    const MD5SUM: &'static str;
-    /// The type of data being sent in the request
-    type Request: RosMessageType;
-    /// The type of the data
-    type Response: RosMessageType;
-}
+// Export the common types so they can be found under this namespace for backwards compatibility reasons
+pub use roslibrust_common::*;
 
 /// Taking in a message definition
 /// reformat it according to the md5sum algorithm: <https://wiki.ros.org/ROS/Technical%20Overview#Message_serialization_and_msg_MD5_sums>

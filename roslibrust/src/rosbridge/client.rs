@@ -1,12 +1,13 @@
 use crate::{
     rosbridge::comm::{self, RosBridgeComm},
-    Publisher, RosLibRustError, RosLibRustResult, ServiceFn, ServiceHandle, Subscriber,
+    Publisher, RosLibRustError, RosLibRustResult, ServiceHandle, Subscriber,
 };
 use anyhow::anyhow;
 use dashmap::DashMap;
 use futures::StreamExt;
 use log::*;
-use roslibrust_codegen::{RosMessageType, RosServiceType};
+use roslibrust_common::ServiceFn;
+use roslibrust_common::{RosMessageType, RosServiceType};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;
