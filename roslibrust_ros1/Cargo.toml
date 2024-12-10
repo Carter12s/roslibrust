@@ -6,8 +6,6 @@ edition = "2021"
 [dependencies]
 # Provides common types and traits used throughout the roslibrust ecosystem.
 roslibrust_common = { path = "../roslibrust_common" }
-# TODO we'd like to remove this dependency? Don't love these are crosslinked
-roslibrust_codegen = { path = "../roslibrust_codegen" }
 
 # Should probably become workspace members:
 tokio = { version = "1.41", features = ["rt-multi-thread", "sync", "macros"] }

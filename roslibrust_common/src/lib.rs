@@ -105,3 +105,7 @@ impl RosMessageType for ShapeShifter {
     const MD5SUM: &'static str = "*";
     const DEFINITION: &'static str = "";
 }
+
+/// Contains functions for calculating md5sums of message definitions
+/// These functions are needed both in roslibrust_ros1 and roslibrust_codegen so they're in this crate
+pub mod md5sum;

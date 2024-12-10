@@ -7,7 +7,8 @@ edition = "2021"
 env_logger = "0.10"
 roslibrust = { path = "../roslibrust", features = ["ros1"] }
 roslibrust_common = { path = "../roslibrust_common" }
-# TODO this shouldn't need to be here!
+# This crate does directly invoke codegen and does need to rely on it directly
+# We can fix this by moving the generated types into a roslibrust_ros1_types crate
 roslibrust_codegen = { path = "../roslibrust_codegen" }
 lazy_static = "1.4"
 tokio = { version = "1.20", features = ["net", "sync"] }

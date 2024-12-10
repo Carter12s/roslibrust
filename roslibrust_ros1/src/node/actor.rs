@@ -194,7 +194,7 @@ impl NodeServerHandle {
 
         let md5sum;
         let md5sum_res =
-            roslibrust_codegen::message_definition_to_md5sum(topic_type, msg_definition);
+            roslibrust_common::md5sum::message_definition_to_md5sum(topic_type, msg_definition);
         match md5sum_res {
             // TODO(lucasw) make a new error type for this?
             Err(err) => {
