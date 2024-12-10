@@ -7,7 +7,7 @@ use abort_on_drop::ChildTask;
 use log::*;
 use tokio::io::AsyncWriteExt;
 
-use crate::ros1::tcpros::{self, ConnectionHeader};
+use crate::tcpros::{self, ConnectionHeader};
 
 use super::{names::Name, NodeHandle, TypeErasedCallback};
 

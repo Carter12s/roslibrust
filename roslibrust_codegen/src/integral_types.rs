@@ -1,6 +1,6 @@
 use simple_error::{bail, SimpleError};
 
-use crate::RosMessageType;
+use roslibrust_common::RosMessageType;
 
 /// Matches the integral ros1 type time, with extensions for ease of use
 /// NOTE: in ROS1 "Time" is not a message in and of itself and std_msgs/Time should be used.
@@ -75,16 +75,6 @@ impl RosMessageType for Time {
     const ROS_TYPE_NAME: &'static str = "builtin_interfaces/Time";
     // TODO: ROS2 support
     const MD5SUM: &'static str = "";
-    const DEFINITION: &'static str = "";
-}
-
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Debug, Default, Clone, PartialEq)]
-pub struct ShapeShifter(Vec<u8>);
-
-// The equivalent of rospy AnyMsg or C++ ShapeShifter, subscribe_any() uses this type
-impl RosMessageType for ShapeShifter {
-    const ROS_TYPE_NAME: &'static str = "*";
-    const MD5SUM: &'static str = "*";
     const DEFINITION: &'static str = "";
 }
 

@@ -9,6 +9,6 @@ members = [
     "roslibrust_genmsg",
     "roslibrust_test",
     "roslibrust_mock",
-    "roslibrust_zenoh",
+    "roslibrust_zenoh", "roslibrust_ros1", "roslibrust_common",
 ]
 resolver = "2"

@@ -1,7 +1,8 @@
+use roslibrust_common::RosServiceType;
+
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
 mod subscriber;
-use roslibrust_codegen::RosServiceType;
 pub use subscriber::*;
 
 // Publisher is a transparent module, we directly expose internal types
@@ -33,7 +34,7 @@ use tungstenite::Message;
 
 // Doing this to maintain backwards compatibilities like `use roslibrust::rosbridge::RosLibRustError`
 #[allow(unused)]
-pub use super::{RosLibRustError, RosLibRustResult};
+pub use roslibrust_common::{RosLibRustError, RosLibRustResult};
 
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) + Send + Sync>;

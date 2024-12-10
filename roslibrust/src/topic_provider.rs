@@ -1,6 +1,6 @@
-use roslibrust_codegen::{RosMessageType, RosServiceType};
+use roslibrust_common::{RosMessageType, RosServiceType, ServiceFn};
 
-use crate::{RosLibRustResult, ServiceClient, ServiceFn};
+use crate::{RosLibRustResult, ServiceClient};
 
 /// Indicates that something is a publisher and has our expected publish
 /// Implementors of this trait are expected to auto-cleanup the publisher when dropped

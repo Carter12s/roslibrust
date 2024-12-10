@@ -2,7 +2,7 @@
 //! to decode to the right type.
 use log::*;
 use roslibrust::ClientHandle;
-use roslibrust_codegen::RosMessageType;
+use roslibrust_common::RosMessageType;
 
 /// We place the ros1 generate code into a module to prevent name collisions with the identically
 /// named ros2 types.

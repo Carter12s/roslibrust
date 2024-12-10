@@ -2,7 +2,7 @@ use crate::{rosbridge::Writer, RosLibRustResult};
 use anyhow::bail;
 use futures_util::SinkExt;
 use log::debug;
-use roslibrust_codegen::RosMessageType;
+use roslibrust_common::RosMessageType;
 use serde_json::json;
 use std::{fmt::Display, str::FromStr, string::ToString};
 use tokio_tungstenite::tungstenite::Message;

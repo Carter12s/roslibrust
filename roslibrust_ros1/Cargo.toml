@@ -1,0 +1,33 @@
+[package]
+name = "roslibrust_ros1"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Provides common types and traits used throughout the roslibrust ecosystem.
+roslibrust_common = { path = "../roslibrust_common" }
+# TODO we'd like to remove this dependency? Don't love these are crosslinked
+roslibrust_codegen = { path = "../roslibrust_codegen" }
+
+# Should probably become workspace members:
+tokio = { version = "1.41", features = ["rt-multi-thread", "sync", "macros"] }
+log = "0.4"
+lazy_static = "1.4"
+abort-on-drop = "0.2"
+test-log = "0.2"
+serde = { version = "1.0" }
+
+# These are definitely needed by this crate:
+reqwest = { version = "0.11" }
+serde_xmlrpc = { version = "0.2" }
+roslibrust_serde_rosmsg = { version = "0.4" }
+hyper = { version = "0.14", features = ["server"] }
+gethostname = { version = "0.4" }
+regex = { version = "1.9" }
+byteorder = "1.4"
+thiserror = "2.0"
+anyhow = "1.0"
+
+[features]
+# Used for enabling tests that rely on a running ros1 master
+ros1_test = []

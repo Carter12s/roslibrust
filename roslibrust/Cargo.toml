@@ -13,7 +13,6 @@ categories = ["science::robotics"]
 [dependencies]
 abort-on-drop = "0.2"
 anyhow = "1.0"
-byteorder = "1.4"
 dashmap = "5.3"
 deadqueue = "0.2.4" # .4+ is required to fix bug with missing tokio dep
 futures = "0.3"
@@ -34,18 +33,16 @@ tokio = { version = "1.20", features = [
 ] }
 tokio-tungstenite = { version = "0.17" }
 uuid = { version = "1.1", features = ["v4"] }
+# TODO this crate shouldn't depend on codegen or codege_macro directly 
 roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro", version = "0.11.1" }
 roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.11.1" }
-reqwest = { version = "0.11", optional = true } # Only used with native ros1
-serde_xmlrpc = { version = "0.2", optional = true } # Only used with native ros1
-roslibrust_serde_rosmsg = { version = "0.4", optional = true } # Only used with native ros1
-hyper = { version = "0.14", features = [
-    "server",
-], optional = true } # Only used with native ros1
-gethostname = { version = "0.4", optional = true } # Only used with native ros1
-regex = { version = "1.9", optional = true } # Only used with native ros1
+
+# TODO version here
+roslibrust_common = { path = "../roslibrust_common" }
 # TODO I think we should move rosapi into its own crate...
 serde-big-array = { version = "0.5", optional = true } # Only used with rosapi
+# TODO REAL VERSION HERE
+roslibrust_ros1 = { path = "../roslibrust_ros1", optional = true }
 
 [dev-dependencies]
 env_logger = "0.10"
@@ -68,20 +65,7 @@ ros2_test = ["running_bridge"]
 # Provides access to experimental abstract trait topic_provider
 topic_provider = []
 # Provides a ros1 xmlrpc / TCPROS client
-ros1 = [
-    "dep:serde_xmlrpc",
-    "dep:reqwest",
-    "dep:hyper",
-    "dep:gethostname",
-    "dep:regex",
-    "dep:roslibrust_serde_rosmsg",
-]
-
-
-[[test]]
-name = "ros1_xmlrpc"
-path = "tests/ros1_xmlrpc.rs"
-required-features = ["ros1_test", "ros1"]
+ros1 = ["roslibrust_ros1"]
 
 [package.metadata.docs.rs]
 features = ["ros1"]
