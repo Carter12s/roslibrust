@@ -4,7 +4,7 @@
 #[cfg(feature = "ros1_test")]
 mod tests {
     use log::*;
-    use roslibrust::ros1::{NodeError, NodeHandle};
+    use roslibrust_ros1::{NodeError, NodeHandle};
     use tokio::time::timeout;
 
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
@@ -436,7 +436,7 @@ mod tests {
             .await
             .unwrap();
 
-        let master_client = roslibrust::ros1::MasterClient::new(
+        let master_client = roslibrust_ros1::MasterClient::new(
             "http://localhost:11311",
             "NAN",
             "/test_dropping_publisher_mc",
@@ -467,7 +467,7 @@ mod tests {
     }
 
     #[test_log::test(tokio::test)]
-    #[cfg(all(feature = "ros1_test", feature = "topic_provider"))]
+    #[cfg(all(feature = "ros1_test"))]
     async fn topic_provider_publish_functionality_test() {
         use roslibrust::topic_provider::*;
         use roslibrust::ClientHandle;
@@ -569,7 +569,7 @@ mod tests {
             .await
             .unwrap();
 
-        let master_client = roslibrust::ros1::MasterClient::new(
+        let master_client = roslibrust_ros1::MasterClient::new(
             "http://localhost:11311",
             "NAN",
             "/test_node_cleanup_checker",

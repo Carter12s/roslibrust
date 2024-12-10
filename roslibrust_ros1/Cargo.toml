@@ -28,6 +28,13 @@ byteorder = "1.4"
 thiserror = "2.0"
 anyhow = "1.0"
 
+[dev-dependencies]
+# Used to provide message types for the examples
+# TODO generate a roslibrust_std_msgs crate we can depend on instead of this
+roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
+# Used to test topic provider? Maybe move those tests to roslibrust directly?
+roslibrust = { path = "../roslibrust"}
+
 [features]
 # Used for enabling tests that rely on a running ros1 master
 ros1_test = []
