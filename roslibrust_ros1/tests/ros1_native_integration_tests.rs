@@ -467,10 +467,9 @@ mod tests {
     }
 
     #[test_log::test(tokio::test)]
-    #[cfg(all(feature = "ros1_test"))]
+    #[cfg(feature = "ros1_test")]
     async fn topic_provider_publish_functionality_test() {
-        use roslibrust::topic_provider::*;
-        use roslibrust::ClientHandle;
+        use roslibrust_common::*;
 
         // Dropping watchdog at end of function cancels watchdog
         // This test can hang which gives crappy debug output

@@ -109,3 +109,8 @@ impl RosMessageType for ShapeShifter {
 /// Contains functions for calculating md5sums of message definitions
 /// These functions are needed both in roslibrust_ros1 and roslibrust_codegen so they're in this crate
 pub mod md5sum;
+
+/// Contains the generic traits represent a pubsub system and service system
+/// These traits will be implemented for specific backends to provides access to "ROS Like" functionality
+pub mod topic_provider;
+pub use topic_provider::*; // Bring topic provider traits into root namespace

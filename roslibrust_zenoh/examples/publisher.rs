@@ -1,11 +1,11 @@
 use roslibrust_zenoh::ZenohClient;
 
-// IMPORTANT to bring this trait into scope so we can access the functions it provides
-// This trait provides the [subscribe] and [advertise] functions on ZenohCilent
-use roslibrust::topic_provider::TopicProvider;
-// IMPORTANT to bring this trait into scope so we can access the functions it provides
-// This trait provides the [next] function on ZenohSubscriber
-use roslibrust::topic_provider::Publish;
+/// IMPORTANT to bring this trait into scope so we can access the functions it provides
+/// This trait provides the [next][roslibrust::Subscribe::next] function on ZenohSubscriber
+use roslibrust::Publish;
+/// IMPORTANT to bring this trait into scope so we can access the functions it provides
+/// This trait provides the [subscribe][roslibrust::TopicProvider::subscribe] and [advertise][roslibrust::TopicProvider::advertise] functions on ZenohCilent
+use roslibrust::TopicProvider;
 
 // Generate rust definitions for our messages
 roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");

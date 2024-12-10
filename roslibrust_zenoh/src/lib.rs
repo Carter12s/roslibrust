@@ -1,8 +1,6 @@
 //! A crate for interfacing to ROS1 via the [zenoh-ros1-plugin / zenoh-ros1-bridge](https://github.com/eclipse-zenoh/zenoh-plugin-ros1).
 
-use roslibrust::topic_provider::{Publish, Service, ServiceProvider, Subscribe, TopicProvider};
-use roslibrust::{RosLibRustError, RosLibRustResult};
-use roslibrust_codegen::{RosMessageType, RosServiceType};
+use roslibrust_common::*;
 
 use log::*;
 use zenoh::bytes::ZBytes;
@@ -215,7 +213,7 @@ impl ServiceProvider for ZenohClient {
     type ServiceClient<T: RosServiceType> = ZenohServiceClient<T>;
     type ServiceServer = ZenohServiceServer;
 
-    async fn service_client<T: roslibrust_codegen::RosServiceType + 'static>(
+    async fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,
     ) -> RosLibRustResult<Self::ServiceClient<T>> {
@@ -228,10 +226,7 @@ impl ServiceProvider for ZenohClient {
         })
     }
 
-    async fn advertise_service<
-        T: roslibrust_codegen::RosServiceType + 'static,
-        F: roslibrust::ServiceFn<T>,
-    >(
+    async fn advertise_service<T: RosServiceType + 'static, F: ServiceFn<T>>(
         &self,
         topic: &str,
         server: F,

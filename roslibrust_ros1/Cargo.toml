@@ -30,8 +30,8 @@ anyhow = "1.0"
 # Used to provide message types for the examples
 # TODO generate a roslibrust_std_msgs crate we can depend on instead of this
 roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
-# Used to test topic provider? Maybe move those tests to roslibrust directly?
-roslibrust = { path = "../roslibrust"}
+# Relied on by generate types in the macro this should be cleaned up
+roslibrust_codegen = { path = "../roslibrust_codegen" }
 
 [features]
 # Used for enabling tests that rely on a running ros1 master

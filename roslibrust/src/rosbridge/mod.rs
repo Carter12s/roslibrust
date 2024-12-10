@@ -1,5 +1,4 @@
-use roslibrust_common::RosServiceType;
-
+use roslibrust_common::*;
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
 mod subscriber;
@@ -124,4 +123,91 @@ pub(crate) struct Subscription {
 // TODO move out of rosbridge and into common
 pub(crate) struct PublisherHandle {
     pub(crate) topic_type: String,
+}
+
+// Implement the generic Service trait for our ServiceClient
+impl<T: RosServiceType> Service<T> for crate::ServiceClient<T> {
+    async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
+        // TODO sort out the reference vs clone stuff here
+        ServiceClient::call(&self, request.clone()).await
+    }
+}
+
+impl ServiceProvider for crate::ClientHandle {
+    type ServiceClient<T: RosServiceType> = crate::ServiceClient<T>;
+    type ServiceServer = crate::ServiceHandle;
+
+    async fn service_client<T: RosServiceType + 'static>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::ServiceClient<T>> {
+        self.service_client::<T>(topic).await
+    }
+
+    fn advertise_service<T: RosServiceType + 'static, F>(
+        &self,
+        topic: &str,
+        server: F,
+    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceServer>> + Send
+    where
+        F: ServiceFn<T>,
+    {
+        self.advertise_service(topic, server)
+    }
+}
+
+// Implementation of TopicProvider trait for rosbridge client
+impl TopicProvider for crate::ClientHandle {
+    type Publisher<T: RosMessageType> = crate::Publisher<T>;
+    type Subscriber<T: RosMessageType> = crate::Subscriber<T>;
+
+    async fn advertise<T: RosMessageType>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::Publisher<T>> {
+        self.advertise::<T>(topic.as_ref()).await
+    }
+
+    async fn subscribe<T: RosMessageType>(
+        &self,
+        topic: &str,
+    ) -> RosLibRustResult<Self::Subscriber<T>> {
+        self.subscribe(topic).await
+    }
+}
+
+impl<T: RosMessageType> Subscribe<T> for crate::Subscriber<T> {
+    async fn next(&mut self) -> RosLibRustResult<T> {
+        // TODO: rosbridge subscribe really should emit errors...
+        Ok(crate::Subscriber::next(self).await)
+    }
+}
+
+// Provide an implementation of publish for rosbridge backend
+impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
+    async fn publish(&self, data: &T) -> RosLibRustResult<()> {
+        self.publish(data).await
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use roslibrust_common::*;
+
+    // Prove that we've implemented the topic provider trait fully for ClientHandle
+    #[test]
+    #[should_panic]
+    fn topic_provider_can_be_used_at_compile_time() {
+        struct MyClient<T: TopicProvider> {
+            _client: T,
+        }
+
+        // Kinda a hack way to make the compiler prove it could construct a MyClient<ClientHandle> with out actually
+        // constructing one at runtime
+        let new_mock: Result<crate::ClientHandle, _> = Err(anyhow::anyhow!("Expected error"));
+
+        let _x = MyClient {
+            _client: new_mock.unwrap(), // panic
+        };
+    }
 }

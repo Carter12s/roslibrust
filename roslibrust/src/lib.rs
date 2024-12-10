@@ -110,10 +110,3 @@ pub mod rosapi;
 // If the ros1 feature is enabled, export the roslibrust_ros1 crate under ros1
 #[cfg(feature = "ros1")]
 pub use roslibrust_ros1 as ros1;
-
-// Topic provider is locked behind a feature until it is stabalized
-// additionally because of its use of generic associated types, it requires rust >1.65
-#[cfg(feature = "topic_provider")]
-/// Provides a generic trait for building clients / against either the rosbridge,
-/// ros1, or a mock backend
-pub mod topic_provider;

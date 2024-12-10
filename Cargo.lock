@@ -2637,6 +2637,7 @@ name = "roslibrust_common"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "futures",
  "md5",
  "serde",
  "serde_json",
@@ -2687,7 +2688,7 @@ dependencies = [
  "log",
  "regex",
  "reqwest",
- "roslibrust",
+ "roslibrust_codegen",
  "roslibrust_codegen_macro",
  "roslibrust_common",
  "roslibrust_serde_rosmsg",
