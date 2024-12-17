@@ -61,11 +61,26 @@ pub trait ServiceProvider {
     type ServiceClient<T: RosServiceType>: Service<T> + Send + 'static;
     type ServiceServer;
 
+    /// A "oneshot" service call good for low frequency calls or where the service_provider may not always be available.
+    fn call_service<T: RosServiceType>(
+        &self,
+        topic: &str,
+        request: T::Request,
+    ) -> impl futures::Future<Output = RosLibRustResult<T::Response>> + Send;
+
+    /// An optimized version of call_service that returns a persistent client that can be used to repeatedly call a service.
+    /// Depending on backend this may provide a performance benefit over call_service.
+    /// Dropping the returned client will perform all needed cleanup.
     fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,
     ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceClient<T>>> + Send;
 
+    /// Advertise a service function to be available for clients to call.
+    /// A handle is returned that manages the lifetime of the service.
+    /// Dropping the handle will perform all needed cleanup.
+    /// The service will be active until the handle is dropped.
+    /// Currently this function only accepts non-async functions, but with the stabilization of async closures this may change.
     fn advertise_service<T: RosServiceType + 'static, F>(
         &self,
         topic: &str,

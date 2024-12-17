@@ -13,5 +13,6 @@ members = [
     "roslibrust_test",
     "roslibrust_zenoh",
     "roslibrust",
+    "roslibrust_rosapi",
 ]
 resolver = "2"

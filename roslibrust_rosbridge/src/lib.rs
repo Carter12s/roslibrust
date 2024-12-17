@@ -134,6 +134,14 @@ impl ServiceProvider for crate::ClientHandle {
     type ServiceClient<T: RosServiceType> = crate::ServiceClient<T>;
     type ServiceServer = crate::ServiceHandle;
 
+    async fn call_service<T: RosServiceType>(
+        &self,
+        topic: &str,
+        request: T::Request,
+    ) -> RosLibRustResult<T::Response> {
+        self.call_service::<T>(topic, request).await
+    }
+
     async fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,

@@ -2667,6 +2667,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "roslibrust_rosapi"
+version = "0.1.0"
+dependencies = [
+ "roslibrust_codegen",
+ "roslibrust_codegen_macro",
+ "roslibrust_common",
+ "roslibrust_rosbridge",
+ "test-log",
+ "tokio",
+]
+
+[[package]]
 name = "roslibrust_rosbridge"
 version = "0.1.0"
 dependencies = [

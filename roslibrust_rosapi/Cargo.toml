@@ -1,0 +1,22 @@
+[package]
+name = "roslibrust_rosapi"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# TODO shouldn't need to depend on codegen should be able to use _macro directly
+roslibrust_codegen = { path = "../roslibrust_codegen" }
+roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
+roslibrust_common = { path = "../roslibrust_common" }
+# Note: this crate doesn't depend on any specific backend implementations
+# but can work with any backend that implements the ServiceProvider trait and has a RosApi node running
+
+[dev-dependencies]
+tokio = { version = "1.41" }
+test-log = "0.2"
+# Only backend we're currently testing with
+roslibrust_rosbridge = { path = "../roslibrust_rosbridge" }
+
+[features]
+# Used to indicate we're executing tests with a running ros1 rosapi node
+ros1_test = []

@@ -64,6 +64,16 @@ impl ServiceProvider for crate::NodeHandle {
     type ServiceClient<T: RosServiceType> = crate::ServiceClient<T>;
     type ServiceServer = crate::ServiceServer;
 
+    async fn call_service<T: RosServiceType>(
+        &self,
+        topic: &str,
+        request: T::Request,
+    ) -> RosLibRustResult<T::Response> {
+        // TODO should have a more optimized version of this...
+        let client = self.service_client::<T>(topic).await?;
+        client.call(&request).await
+    }
+
     async fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,
