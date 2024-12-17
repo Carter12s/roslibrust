@@ -213,6 +213,16 @@ impl ServiceProvider for ZenohClient {
     type ServiceClient<T: RosServiceType> = ZenohServiceClient<T>;
     type ServiceServer = ZenohServiceServer;
 
+    async fn call_service<T: RosServiceType>(
+        &self,
+        topic: &str,
+        request: T::Request,
+    ) -> RosLibRustResult<T::Response> {
+        // TODO should be able to optimize this...
+        let client = self.service_client::<T>(topic).await?;
+        client.call(&request).await
+    }
+
     async fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,
