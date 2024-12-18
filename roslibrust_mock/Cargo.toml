@@ -5,11 +5,11 @@ edition = "2021"
 
 [dependencies]
 roslibrust_common = { path = "../roslibrust_common" }
-tokio = { version = "1.41", features = ["sync", "rt-multi-thread", "macros"] }
+tokio = { workspace = true }
 # Used for serializing messages
 bincode = "1.3"
 # We add logging to aid in debugging tests
-log = "0.4"
+log = { workspace = true }
 
 [dev-dependencies]
 roslibrust_codegen = { path = "../roslibrust_codegen" }

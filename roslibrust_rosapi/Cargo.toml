@@ -12,7 +12,7 @@ roslibrust_common = { path = "../roslibrust_common" }
 # but can work with any backend that implements the ServiceProvider trait and has a RosApi node running
 
 [dev-dependencies]
-tokio = { version = "1.41" }
+tokio = { workspace = true }
 test-log = "0.2"
 # Only backend we're currently testing with
 roslibrust_rosbridge = { path = "../roslibrust_rosbridge" }

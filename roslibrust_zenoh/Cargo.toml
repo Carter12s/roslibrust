@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.41", features = ["rt-multi-thread", "sync", "macros"] }
+roslibrust_serde_rosmsg = { workspace = true }
+log = { workspace = true }
+tokio = { workspace = true }
 roslibrust_common = { path = "../roslibrust_common" }
 zenoh = "1.0"
 hex = "0.4"
 anyhow = "1.0"
-roslibrust_serde_rosmsg = "0.4"
-log = "0.4"
 
 [dev-dependencies]
 env_logger = "0.11"

@@ -8,7 +8,7 @@ edition = "2021"
 thiserror = "2.0"
 anyhow = "1.0"
 # Used as basis for serialization
-serde = { version = "1.0", features = ["derive"] }
+serde = { workspace = true }
 # Used for md5sum calculation
 md5 = "0.7"
 # Used for async trait definitions
@@ -17,6 +17,6 @@ futures = "0.3"
 # THESE DEPENDENCIES WILL BE REMOVED
 # We're currently leaking these error types in the "generic error type"
 # We'll clean this up
-tokio = { version = "1.41", features = ["time"] }
+tokio = { workspace = true }
 tokio-tungstenite = { version = "0.17" }
 serde_json = "1.0"

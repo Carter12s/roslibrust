@@ -21,9 +21,9 @@ roslibrust_mock = { path = "../roslibrust_mock", optional = true }
 [dev-dependencies]
 env_logger = "0.11"
 test-log = "0.2"
-log = "0.4"
-tokio = { version = "1.20", features = ["macros", "rt-multi-thread"] }
-serde = { version = "1.0", features = ["derive"] }
+log = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
 # Used to generate messages for the examples
 roslibrust_codegen = { path = "../roslibrust_codegen" }
 roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }

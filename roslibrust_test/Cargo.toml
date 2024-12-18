@@ -11,14 +11,14 @@ roslibrust_common = { path = "../roslibrust_common" }
 # We can fix this by moving the generated types into a roslibrust_ros1_types crate
 roslibrust_codegen = { path = "../roslibrust_codegen" }
 lazy_static = "1.4"
-tokio = { version = "1.20", features = ["net", "sync"] }
-log = "0.4"
+tokio = { workspace = true }
+log = { workspace = true }
 
 [dev-dependencies]
 diffy = "0.3.0"
 criterion = { version = "0.4", features = ["html_reports", "async_tokio"] }
 pprof = { version = "0.11", features = ["flamegraph", "criterion"] }
-tokio = { version = "1.24", features = ["full"] }
+tokio = { workspace = true }
 
 [[bin]]
 path = "src/performance_ramp.rs"
