@@ -98,79 +98,25 @@
 //! Specifically, roslibrust attempts to follow "good" ros error handling convention and be as compatible as possible
 //! with various error types; however, due to the async nature of the crate `Box<dyn Error + Send + Sync>` is needed.
 
-mod rosbridge;
-pub use rosbridge::*;
+// Re-export common types and traits under the roslibrust namespace
+pub use roslibrust_common::*;
 
-// Re export the codegen traits so that crates that only interact with abstract messages
-// don't need to depend on the codegen crate
-pub use roslibrust_codegen::RosMessageType;
-pub use roslibrust_codegen::RosServiceType;
-
+// If the rosapi feature is enabled, export the roslibrust_rosapi crate under rosapi
 #[cfg(feature = "rosapi")]
-pub mod rosapi;
+pub use roslibrust_rosapi as rosapi;
 
+// If the ros1 feature is enabled, export the roslibrust_ros1 crate under ros1
 #[cfg(feature = "ros1")]
-pub mod ros1;
+pub use roslibrust_ros1 as ros1;
 
-// Topic provider is locked behind a feature until it is stabalized
-// additionally because of its use of generic associated types, it requires rust >1.65
-#[cfg(feature = "topic_provider")]
-/// Provides a generic trait for building clients / against either the rosbridge,
-/// ros1, or a mock backend
-pub mod topic_provider;
+// If the rosbridge feature is enabled, export the roslibrust_rosbridge crate under rosbridge
+#[cfg(feature = "rosbridge")]
+pub use roslibrust_rosbridge as rosbridge;
 
-/// For now starting with a central error type, may break this up more in future
-#[derive(thiserror::Error, Debug)]
-pub enum RosLibRustError {
-    #[error("Not currently connected to ros master / bridge")]
-    Disconnected,
-    // TODO we probably want to eliminate tungstenite from this and hide our
-    // underlying websocket implementation from the API
-    // currently we "technically" break the API when we change tungstenite verisons
-    #[error("Websocket communication error: {0}")]
-    CommFailure(#[from] tokio_tungstenite::tungstenite::Error),
-    #[error("Operation timed out: {0}")]
-    Timeout(#[from] tokio::time::error::Elapsed),
-    #[error("Failed to parse message from JSON: {0}")]
-    InvalidMessage(#[from] serde_json::Error),
-    #[error("TCPROS serialization error: {0}")]
-    SerializationError(String),
-    #[error("Rosbridge server reported an error: {0}")]
-    ServerError(String),
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-    #[error("Name does not meet ROS requirements: {0}")]
-    InvalidName(String),
-    // Generic catch-all error type for not-yet-handled errors
-    // TODO ultimately this type will be removed from API of library
-    #[error(transparent)]
-    Unexpected(#[from] anyhow::Error),
-}
+// If the zenoh feature is enabled, export the roslibrust_zenoh crate under zenoh
+#[cfg(feature = "zenoh")]
+pub use roslibrust_zenoh as zenoh;
 
-/// Generic result type used as standard throughout library.
-/// Note: many functions which currently return this will be updated to provide specific error
-/// types in the future instead of the generic error here.
-pub type RosLibRustResult<T> = Result<T, RosLibRustError>;
-
-// Note: service Fn is currently defined here as it used by ros1 and roslibrust impls
-/// This trait describes a function which can validly act as a ROS service
-/// server with roslibrust. We're really just using this as a trait alias
-/// as the full definition is overly verbose and trait aliases are unstable.
-pub trait ServiceFn<T: RosServiceType>:
-    Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
-    + Send
-    + Sync
-    + 'static
-{
-}
-
-/// Automatic implementation of ServiceFn for Fn
-impl<T, F> ServiceFn<T> for F
-where
-    T: RosServiceType,
-    F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
-        + Send
-        + Sync
-        + 'static,
-{
-}
+// If the mock feature is enabled, export the roslibrust_mock crate under mock
+#[cfg(feature = "mock")]
+pub use roslibrust_mock as mock;

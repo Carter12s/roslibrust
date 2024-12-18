@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - roslibrust_mock now provides a basic mock implementation of roslibrust's generic traits for use in building automated testing of nodes.
 - roslibrust_zenoh now proivides a Zenoh client that is compatible with the zenoh-ros1-plugin / zenoh-ros1-bridge
+- roslibrust_ros1 now provides a ROS1 native client as a standalone crate
+- roslibrust_rosbridge now provides a rosbridge client as a standalone crate
+- roslibrust_rosapi now provides a generic interface for the rosapi node compatible with both rosbridge and ros1 backends
 
 ### Fixed
 
@@ -36,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A major reorganization of the internals of roslibrust was done to improve our ability to support multiple backends.
+  As part of the organization the rosbridge backend has been moved under the the `rosbridge` module, so
+  `roslibrust::ClientHandle` now becomes `roslibrust::rosbridge::ClientHandle`.
 - Internal integral type Time changed from u32 to i32 representation to better align with ROS1
 - Conversions between ROS Time and Duration to std::time::Time and std::time::Duration switched to TryFrom as they can be fallible.
 

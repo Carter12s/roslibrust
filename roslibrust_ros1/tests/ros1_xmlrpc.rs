@@ -1,7 +1,7 @@
-#[cfg(all(feature = "ros1", feature = "ros1_test"))]
+#[cfg(feature = "ros1_test")]
 mod tests {
-    use roslibrust::ros1::NodeHandle;
-    use roslibrust_codegen::RosMessageType;
+    use roslibrust_common::RosMessageType;
+    use roslibrust_ros1::NodeHandle;
     use serde::de::DeserializeOwned;
     use serde_xmlrpc::Value;
     roslibrust_codegen_macro::find_and_generate_ros_messages!("assets/ros1_common_interfaces");

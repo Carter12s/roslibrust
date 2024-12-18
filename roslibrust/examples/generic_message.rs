@@ -1,8 +1,6 @@
 //! This example shows off creating a custom generic message, and leveraging serde_json's parsing resolution
 //! to decode to the right type.
-use log::*;
-use roslibrust::ClientHandle;
-use roslibrust_codegen::RosMessageType;
+use roslibrust_common::RosMessageType;
 
 /// We place the ros1 generate code into a module to prevent name collisions with the identically
 /// named ros2 types.
@@ -34,23 +32,20 @@ impl RosMessageType for GenericHeader {
     /// the same ROS type name.
     const ROS_TYPE_NAME: &'static str = "std_msgs/Header";
 
-    // TODO these fields should be removed and not required for this example see
-    // https://github.com/Carter12s/roslibrust/issues/124
-    const MD5SUM: &'static str = "";
+    // "*" is used as a wildcard to match any md5sum
+    const MD5SUM: &'static str = "*";
     const DEFINITION: &'static str = "";
 }
 
 /// Sets up a subscriber that could get either of two versions of a message
+#[cfg(feature = "rosbridge")]
 #[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
-    simple_logger::SimpleLogger::new()
-        .with_level(log::LevelFilter::Debug)
-        .without_timestamps() // required for running in wsl2
-        .init()
-        .unwrap();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    use log::*;
+    env_logger::init();
 
     // An instance of rosbridge needs to be running at this address for the example to work
-    let client = ClientHandle::new("ws://localhost:9090").await?;
+    let client = roslibrust::rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     info!("ClientHandle connected");
 
     let rx = client.subscribe::<GenericHeader>("talker").await?;
@@ -69,4 +64,9 @@ async fn main() -> Result<(), anyhow::Error> {
             }
         }
     }
+}
+
+#[cfg(not(feature = "rosbridge"))]
+fn main() {
+    eprintln!("This example does nothing without compiling with the feature 'rosbridge'");
 }

@@ -1,4 +1,4 @@
-use roslibrust_codegen::{RosMessageType, RosServiceType};
+use roslibrust_common::*;
 use roslibrust_test::ros1::*;
 
 /// Ensures that associate constants are generated on the test_msgs correctly

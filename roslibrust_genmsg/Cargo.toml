@@ -18,14 +18,14 @@ name = "gencpp"
 path = "src/main.rs"
 
 [dependencies]
+log = { workspace = true }
+serde = { workspace = true }
+roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.11.0" }
 clap = { version = "4.1", features = ["derive"] }
 env_logger = "0.11"
 itertools = "0.12"
 lazy_static = "1.4"
-log = "0.4"
 minijinja = "2.0"
-roslibrust_codegen = { path = "../roslibrust_codegen", version = "0.11.0" }
-serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 [dev-dependencies]

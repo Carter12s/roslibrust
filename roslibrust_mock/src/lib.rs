@@ -1,20 +1,15 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use roslibrust::topic_provider::*;
-use roslibrust::RosLibRustError;
-use roslibrust::RosLibRustResult;
-use roslibrust::RosMessageType;
+use roslibrust_common::*;
 
-use roslibrust::RosServiceType;
-use roslibrust::ServiceFn;
 use tokio::sync::broadcast as Channel;
 use tokio::sync::RwLock;
 
 use log::*;
 
 type TypeErasedCallback = Arc<
-    dyn Fn(Vec<u8>) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
+    dyn Fn(Vec<u8>) -> std::result::Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>>
         + Send
         + Sync
         + 'static,
@@ -42,10 +37,7 @@ impl TopicProvider for MockRos {
     type Publisher<T: RosMessageType> = MockPublisher<T>;
     type Subscriber<T: RosMessageType> = MockSubscriber<T>;
 
-    async fn advertise<T: RosMessageType>(
-        &self,
-        topic: &str,
-    ) -> RosLibRustResult<Self::Publisher<T>> {
+    async fn advertise<T: RosMessageType>(&self, topic: &str) -> Result<Self::Publisher<T>> {
         // Check if we already have this channel
         {
             let topics = self.topics.read().await;
@@ -72,7 +64,7 @@ impl TopicProvider for MockRos {
     async fn subscribe<T: RosMessageType>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::Subscriber<T>> {
+    ) -> roslibrust_common::Result<Self::Subscriber<T>> {
         // Check if we already have this channel
         {
             let topics = self.topics.read().await;
@@ -103,13 +95,13 @@ pub struct MockServiceClient<T: RosServiceType> {
 }
 
 impl<T: RosServiceType> Service<T> for MockServiceClient<T> {
-    async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
-        let data = bincode::serialize(request)
-            .map_err(|e| RosLibRustError::SerializationError(e.to_string()))?;
-        let response = (self.callback)(data)
-            .map_err(|e| RosLibRustError::SerializationError(e.to_string()))?;
+    async fn call(&self, request: &T::Request) -> roslibrust_common::Result<T::Response> {
+        let data =
+            bincode::serialize(request).map_err(|e| Error::SerializationError(e.to_string()))?;
+        let response =
+            (self.callback)(data).map_err(|e| Error::SerializationError(e.to_string()))?;
         let response = bincode::deserialize(&response[..])
-            .map_err(|e| RosLibRustError::SerializationError(e.to_string()))?;
+            .map_err(|e| Error::SerializationError(e.to_string()))?;
         Ok(response)
     }
 }
@@ -118,10 +110,19 @@ impl ServiceProvider for MockRos {
     type ServiceClient<T: RosServiceType> = MockServiceClient<T>;
     type ServiceServer = ();
 
+    async fn call_service<T: RosServiceType>(
+        &self,
+        topic: &str,
+        request: T::Request,
+    ) -> roslibrust_common::Result<T::Response> {
+        let client = self.service_client::<T>(topic).await?;
+        client.call(&request).await
+    }
+
     async fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::ServiceClient<T>> {
+    ) -> roslibrust_common::Result<Self::ServiceClient<T>> {
         let services = self.services.read().await;
         if let Some(callback) = services.get(topic) {
             return Ok(MockServiceClient {
@@ -129,27 +130,29 @@ impl ServiceProvider for MockRos {
                 _marker: Default::default(),
             });
         }
-        Err(RosLibRustError::Disconnected)
+        Err(Error::Disconnected)
     }
 
     async fn advertise_service<T: RosServiceType + 'static, F>(
         &self,
         topic: &str,
         server: F,
-    ) -> RosLibRustResult<Self::ServiceServer>
+    ) -> roslibrust_common::Result<Self::ServiceServer>
     where
         F: ServiceFn<T>,
     {
         // Type erase the service function here
-        let erased_closure =
-            move |message: Vec<u8>| -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
-                let request = bincode::deserialize(&message[..])
-                    .map_err(|e| RosLibRustError::SerializationError(e.to_string()))?;
-                let response = server(request)?;
-                let bytes = bincode::serialize(&response)
-                    .map_err(|e| RosLibRustError::SerializationError(e.to_string()))?;
-                Ok(bytes)
-            };
+        let erased_closure = move |message: Vec<u8>| -> std::result::Result<
+            Vec<u8>,
+            Box<dyn std::error::Error + Send + Sync>,
+        > {
+            let request = bincode::deserialize(&message[..])
+                .map_err(|e| Error::SerializationError(e.to_string()))?;
+            let response = server(request)?;
+            let bytes = bincode::serialize(&response)
+                .map_err(|e| Error::SerializationError(e.to_string()))?;
+            Ok(bytes)
+        };
         let erased_closure = Arc::new(erased_closure);
         let mut services = self.services.write().await;
         services.insert(topic.to_string(), erased_closure);
@@ -166,12 +169,10 @@ pub struct MockPublisher<T: RosMessageType> {
 }
 
 impl<T: RosMessageType> Publish<T> for MockPublisher<T> {
-    async fn publish(&self, data: &T) -> RosLibRustResult<()> {
-        let data = bincode::serialize(data)
-            .map_err(|e| RosLibRustError::SerializationError(e.to_string()))?;
-        self.sender
-            .send(data)
-            .map_err(|_e| RosLibRustError::Disconnected)?;
+    async fn publish(&self, data: &T) -> roslibrust_common::Result<()> {
+        let data =
+            bincode::serialize(data).map_err(|e| Error::SerializationError(e.to_string()))?;
+        self.sender.send(data).map_err(|_e| Error::Disconnected)?;
         debug!("Sent data on topic {}", T::ROS_TYPE_NAME);
         Ok(())
     }
@@ -183,14 +184,14 @@ pub struct MockSubscriber<T: RosMessageType> {
 }
 
 impl<T: RosMessageType> Subscribe<T> for MockSubscriber<T> {
-    async fn next(&mut self) -> RosLibRustResult<T> {
+    async fn next(&mut self) -> roslibrust_common::Result<T> {
         let data = self
             .receiver
             .recv()
             .await
-            .map_err(|_| RosLibRustError::Disconnected)?;
+            .map_err(|_| Error::Disconnected)?;
         let msg = bincode::deserialize(&data[..])
-            .map_err(|e| RosLibRustError::SerializationError(e.to_string()))?;
+            .map_err(|e| Error::SerializationError(e.to_string()))?;
         debug!("Received data on topic {}", T::ROS_TYPE_NAME);
         Ok(msg)
     }

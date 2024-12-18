@@ -1,5 +1,5 @@
-use crate::{ClientHandle, RosLibRustResult};
-use roslibrust_codegen::RosMessageType;
+use crate::ClientHandle;
+use roslibrust_common::RosMessageType;
 
 /// A handle given to the caller when they advertise a topic
 ///
@@ -48,7 +48,7 @@ impl<T: RosMessageType> Publisher<T> {
     /// Successful sending of the message does not guarantee successful receipt or re-transmission by
     /// rosbridge_server, rosbridge_server will fail to re-transmit if the type of the message does not
     /// match the topic's definition on roscore.
-    pub async fn publish(&self, msg: &T) -> RosLibRustResult<()> {
+    pub async fn publish(&self, msg: &T) -> roslibrust_common::Result<()> {
         self.client.publish(&self.topic, msg).await
     }
 }

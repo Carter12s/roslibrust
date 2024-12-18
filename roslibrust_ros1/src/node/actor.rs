@@ -1,18 +1,15 @@
 use crate::{
-    ros1::{
-        names::Name,
-        node::{XmlRpcServer, XmlRpcServerHandle},
-        publisher::Publication,
-        service_client::ServiceClientLink,
-        service_server::ServiceServerLink,
-        subscriber::Subscription,
-        MasterClient, NodeError, ProtocolParams, ServiceClient, TypeErasedCallback,
-    },
-    RosLibRustError, ServiceFn,
+    names::Name,
+    node::{XmlRpcServer, XmlRpcServerHandle},
+    publisher::Publication,
+    service_client::ServiceClientLink,
+    service_server::ServiceServerLink,
+    subscriber::Subscription,
+    MasterClient, NodeError, ProtocolParams, ServiceClient, TypeErasedCallback,
 };
 use abort_on_drop::ChildTask;
 use log::*;
-use roslibrust_codegen::{RosMessageType, RosServiceType};
+use roslibrust_common::{Error, RosMessageType, RosServiceType, ServiceFn};
 use std::{collections::HashMap, io, net::Ipv4Addr, sync::Arc};
 use tokio::sync::{broadcast, mpsc, oneshot};
 
@@ -197,7 +194,7 @@ impl NodeServerHandle {
 
         let md5sum;
         let md5sum_res =
-            roslibrust_codegen::message_definition_to_md5sum(topic_type, msg_definition);
+            roslibrust_common::md5sum::message_definition_to_md5sum(topic_type, msg_definition);
         match md5sum_res {
             // TODO(lucasw) make a new error type for this?
             Err(err) => {
@@ -288,10 +285,10 @@ impl NodeServerHandle {
         let server_typeless =
             move |message: Vec<u8>| -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
                 let request = roslibrust_serde_rosmsg::from_slice::<T::Request>(&message)
-                    .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
+                    .map_err(|err| Error::SerializationError(err.to_string()))?;
                 let response = server(request)?;
                 Ok(roslibrust_serde_rosmsg::to_vec(&response)
-                    .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?)
+                    .map_err(|err| Error::SerializationError(err.to_string()))?)
             };
         let server_typeless = Box::new(server_typeless);
 

@@ -451,16 +451,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
 
 [[package]]
-name = "colored"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbf2150cce219b664a8a70df7a1f933836724b503f8a413af9365b4dcc4d90b8"
-dependencies = [
- "lazy_static",
- "windows-sys 0.48.0",
-]
-
-[[package]]
 name = "combine"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -852,6 +842,7 @@ version = "0.1.0"
 dependencies = [
  "cargo-emit",
  "roslibrust_codegen",
+ "roslibrust_common",
 ]
 
 [[package]]
@@ -860,6 +851,7 @@ version = "0.1.0"
 dependencies = [
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
+ "roslibrust_common",
 ]
 
 [[package]]
@@ -1893,15 +1885,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num_threads"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c7398b9c8b70908f6371f47ed36737907c87c52af34c268fed0bf0ceb92ead9"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "object"
 version = "0.36.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2570,35 +2553,19 @@ name = "roslibrust"
 version = "0.11.1"
 dependencies = [
  "abort-on-drop",
- "anyhow",
- "byteorder",
- "dashmap",
- "deadqueue",
- "env_logger 0.10.2",
- "futures",
- "futures-util",
- "gethostname",
- "hyper",
- "lazy_static",
+ "env_logger 0.11.5",
  "log",
- "proc-macro2",
- "rand",
- "regex",
- "reqwest",
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
- "roslibrust_serde_rosmsg",
+ "roslibrust_common",
+ "roslibrust_mock",
+ "roslibrust_ros1",
+ "roslibrust_rosapi",
+ "roslibrust_rosbridge",
+ "roslibrust_zenoh",
  "serde",
- "serde-big-array",
- "serde_json",
- "serde_xmlrpc",
- "simple_logger",
- "smart-default 0.6.0",
  "test-log",
- "thiserror 1.0.69",
  "tokio",
- "tokio-tungstenite 0.17.2",
- "uuid",
 ]
 
 [[package]]
@@ -2611,12 +2578,13 @@ dependencies = [
  "md5",
  "proc-macro2",
  "quote",
+ "roslibrust_common",
  "serde",
  "serde-big-array",
  "serde_bytes",
  "serde_json",
  "simple-error",
- "smart-default 0.7.1",
+ "smart-default",
  "syn 1.0.109",
  "test-log",
  "tokio",
@@ -2632,6 +2600,20 @@ dependencies = [
  "quote",
  "roslibrust_codegen",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "roslibrust_common"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "futures",
+ "md5",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.6",
+ "tokio",
+ "tokio-tungstenite 0.17.2",
 ]
 
 [[package]]
@@ -2656,10 +2638,66 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "log",
- "roslibrust",
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
+ "roslibrust_common",
  "tokio",
+]
+
+[[package]]
+name = "roslibrust_ros1"
+version = "0.1.0"
+dependencies = [
+ "abort-on-drop",
+ "anyhow",
+ "byteorder",
+ "gethostname",
+ "hyper",
+ "lazy_static",
+ "log",
+ "regex",
+ "reqwest",
+ "roslibrust_codegen",
+ "roslibrust_codegen_macro",
+ "roslibrust_common",
+ "roslibrust_serde_rosmsg",
+ "serde",
+ "serde_xmlrpc",
+ "test-log",
+ "thiserror 2.0.6",
+ "tokio",
+]
+
+[[package]]
+name = "roslibrust_rosapi"
+version = "0.1.0"
+dependencies = [
+ "roslibrust_codegen",
+ "roslibrust_codegen_macro",
+ "roslibrust_common",
+ "roslibrust_rosbridge",
+ "test-log",
+ "tokio",
+]
+
+[[package]]
+name = "roslibrust_rosbridge"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dashmap",
+ "deadqueue",
+ "futures",
+ "futures-util",
+ "log",
+ "roslibrust_codegen",
+ "roslibrust_codegen_macro",
+ "roslibrust_common",
+ "serde_json",
+ "test-log",
+ "tokio",
+ "tokio-tungstenite 0.17.2",
+ "uuid",
 ]
 
 [[package]]
@@ -2685,6 +2723,7 @@ dependencies = [
  "pprof",
  "roslibrust",
  "roslibrust_codegen",
+ "roslibrust_common",
  "tokio",
 ]
 
@@ -2699,6 +2738,7 @@ dependencies = [
  "roslibrust",
  "roslibrust_codegen",
  "roslibrust_codegen_macro",
+ "roslibrust_common",
  "roslibrust_serde_rosmsg",
  "tokio",
  "zenoh",
@@ -3158,18 +3198,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e2accd2c41a0e920d2abd91b2badcfa1da784662f54fbc47e0e3a51f1e2e1cf"
 
 [[package]]
-name = "simple_logger"
-version = "5.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8c5dfa5e08767553704aa0ffd9d9794d527103c736aba9854773851fd7497eb"
-dependencies = [
- "colored",
- "log",
- "time",
- "windows-sys 0.48.0",
-]
-
-[[package]]
 name = "siphasher"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3189,17 +3217,6 @@ name = "smallvec"
 version = "1.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
-
-[[package]]
-name = "smart-default"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "133659a15339456eeeb07572eb02a91c91e9815e9cbc89566944d2c8d3efdbf6"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
 
 [[package]]
 name = "smart-default"
@@ -3462,9 +3479,7 @@ checksum = "35e7868883861bd0e56d9ac6efcaaca0d6d5d82a2a7ec8209ff492c07cf37b21"
 dependencies = [
  "deranged",
  "itoa",
- "libc",
  "num-conv",
- "num_threads",
  "powerfmt",
  "serde",
  "time-core",

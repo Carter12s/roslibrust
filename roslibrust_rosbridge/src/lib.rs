@@ -1,7 +1,8 @@
+use roslibrust_common::*;
+
 // Subscriber is a transparent module, we directly expose internal types
 // Module exists only to organize source code.
 mod subscriber;
-use roslibrust_codegen::RosServiceType;
 pub use subscriber::*;
 
 // Publisher is a transparent module, we directly expose internal types
@@ -20,7 +21,7 @@ mod integration_tests;
 // Standard return type for all tests to use
 #[cfg(test)]
 #[allow(dead_code)]
-type TestResult = Result<(), anyhow::Error>;
+type TestResult = std::result::Result<(), anyhow::Error>;
 
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
@@ -30,10 +31,6 @@ use std::collections::HashMap;
 use tokio::net::TcpStream;
 use tokio_tungstenite::*;
 use tungstenite::Message;
-
-// Doing this to maintain backwards compatibilities like `use roslibrust::rosbridge::RosLibRustError`
-#[allow(unused)]
-pub use super::{RosLibRustError, RosLibRustResult};
 
 /// Used for type erasure of message type so that we can store arbitrary handles
 type Callback = Box<dyn Fn(&str) + Send + Sync>;
@@ -48,7 +45,7 @@ type Callback = Box<dyn Fn(&str) + Send + Sync>;
 // backends - Carter 2022-10-6
 // TODO move out of rosbridge and into "common"
 pub(crate) type ServiceCallback = Box<
-    dyn Fn(&str) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>
+    dyn Fn(&str) -> std::result::Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>
         + Send
         + Sync,
 >;
@@ -83,7 +80,7 @@ pub struct ServiceClient<T> {
 }
 
 impl<T: RosServiceType> ServiceClient<T> {
-    pub async fn call(&self, request: T::Request) -> RosLibRustResult<T::Response> {
+    pub async fn call(&self, request: T::Request) -> Result<T::Response> {
         self.client
             .call_service::<T>(self.topic.as_str(), request)
             .await
@@ -123,4 +120,94 @@ pub(crate) struct Subscription {
 // TODO move out of rosbridge and into common
 pub(crate) struct PublisherHandle {
     pub(crate) topic_type: String,
+}
+
+// Implement the generic Service trait for our ServiceClient
+impl<T: RosServiceType> Service<T> for crate::ServiceClient<T> {
+    async fn call(&self, request: &T::Request) -> Result<T::Response> {
+        // TODO sort out the reference vs clone stuff here
+        ServiceClient::call(&self, request.clone()).await
+    }
+}
+
+impl ServiceProvider for crate::ClientHandle {
+    type ServiceClient<T: RosServiceType> = crate::ServiceClient<T>;
+    type ServiceServer = crate::ServiceHandle;
+
+    async fn call_service<T: RosServiceType>(
+        &self,
+        topic: &str,
+        request: T::Request,
+    ) -> Result<T::Response> {
+        self.call_service::<T>(topic, request).await
+    }
+
+    async fn service_client<T: RosServiceType + 'static>(
+        &self,
+        topic: &str,
+    ) -> Result<Self::ServiceClient<T>> {
+        self.service_client::<T>(topic).await
+    }
+
+    async fn advertise_service<T: RosServiceType + 'static, F>(
+        &self,
+        topic: &str,
+        server: F,
+    ) -> Result<Self::ServiceServer>
+    where
+        F: ServiceFn<T>,
+    {
+        self.advertise_service(topic, server).await
+    }
+}
+
+// Implementation of TopicProvider trait for rosbridge client
+impl TopicProvider for crate::ClientHandle {
+    type Publisher<T: RosMessageType> = crate::Publisher<T>;
+    type Subscriber<T: RosMessageType> = crate::Subscriber<T>;
+
+    async fn advertise<T: RosMessageType>(&self, topic: &str) -> Result<Self::Publisher<T>> {
+        self.advertise::<T>(topic.as_ref()).await
+    }
+
+    async fn subscribe<T: RosMessageType>(&self, topic: &str) -> Result<Self::Subscriber<T>> {
+        self.subscribe(topic).await
+    }
+}
+
+impl<T: RosMessageType> Subscribe<T> for crate::Subscriber<T> {
+    async fn next(&mut self) -> Result<T> {
+        // TODO: rosbridge subscribe really should emit errors...
+        Ok(crate::Subscriber::next(self).await)
+    }
+}
+
+// Provide an implementation of publish for rosbridge backend
+impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
+    async fn publish(&self, data: &T) -> Result<()> {
+        self.publish(data).await
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use roslibrust_common::*;
+
+    // Prove that we've implemented the topic provider trait fully for ClientHandle
+    #[test]
+    #[should_panic]
+    fn topic_provider_can_be_used_at_compile_time() {
+        struct MyClient<T: TopicProvider> {
+            _client: T,
+        }
+
+        // Kinda a hack way to make the compiler prove it could construct a MyClient<ClientHandle> with out actually
+        // constructing one at runtime
+        let new_mock: std::result::Result<crate::ClientHandle, _> =
+            Err(anyhow::anyhow!("Expected error"));
+
+        let _x = MyClient {
+            _client: new_mock.unwrap(), // panic
+        };
+    }
 }

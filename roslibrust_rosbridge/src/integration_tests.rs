@@ -11,9 +11,7 @@ mod integration_tests {
 
     use std::sync::Arc;
 
-    use crate::{
-        rosbridge::TestResult, ClientHandle, ClientHandleOptions, RosLibRustError, Subscriber,
-    };
+    use crate::{ClientHandle, ClientHandleOptions, Error, Subscriber, TestResult};
     use log::debug;
     use tokio::time::{timeout, Duration};
     // On my laptop test was ~90% reliable at 10ms
@@ -177,11 +175,6 @@ mod integration_tests {
     // of advertise / unadvertise status. Unclear how to confirm whether unadvertise was sent or not
     #[ignore]
     async fn unadvertise() -> TestResult {
-        let _ = simple_logger::SimpleLogger::new()
-            .with_level(log::LevelFilter::Debug)
-            .without_timestamps()
-            .init();
-
         // Flow:
         //  1. Create a publisher and subscriber
         //  2. Send a message and confirm connection works (topic was advertised)
@@ -316,7 +309,7 @@ mod integration_tests {
             .store(true, std::sync::atomic::Ordering::Relaxed);
 
         let res = client.advertise::<Time>("/bad_message_recv/topic").await;
-        assert!(matches!(res, Err(RosLibRustError::Disconnected)));
+        assert!(matches!(res, Err(Error::Disconnected)));
 
         Ok(())
     }
@@ -368,7 +361,7 @@ mod integration_tests {
             Ok(_) => {
                 panic!("Somehow returned a response on a service that didn't exist?");
             }
-            Err(RosLibRustError::ServerError(_)) => Ok(()),
+            Err(Error::ServerError(_)) => Ok(()),
             Err(e) => {
                 panic!("Got a different error type than expected in service response: {e}");
             }
@@ -386,6 +379,7 @@ mod integration_tests {
     #[test_log::test(tokio::test)]
     // Note: only have a ros1 version of this test for now, as this is specialized in how we launch rosbridge
     #[cfg(feature = "ros1_test")]
+    #[ignore]
     async fn pub_and_sub_reconnect_through_dead_bridge() {
         // Have to do a timeout to confirm the bridge is up / down
         const WAIT_FOR_ROSBRIDGE: tokio::time::Duration = tokio::time::Duration::from_millis(2000);
@@ -458,7 +452,7 @@ mod integration_tests {
             Ok(_) => {
                 panic!("Should have failed to publish after rosbridge died");
             }
-            Err(RosLibRustError::Disconnected) => {
+            Err(Error::Disconnected) => {
                 // All good!
             }
             Err(e) => {

@@ -1,8 +1,6 @@
 //! A crate for interfacing to ROS1 via the [zenoh-ros1-plugin / zenoh-ros1-bridge](https://github.com/eclipse-zenoh/zenoh-plugin-ros1).
 
-use roslibrust::topic_provider::{Publish, Service, ServiceProvider, Subscribe, TopicProvider};
-use roslibrust::{RosLibRustError, RosLibRustResult};
-use roslibrust_codegen::{RosMessageType, RosServiceType};
+use roslibrust_common::*;
 
 use log::*;
 use zenoh::bytes::ZBytes;
@@ -24,14 +22,14 @@ pub struct ZenohPublisher<T> {
 }
 
 impl<T: RosMessageType> Publish<T> for ZenohPublisher<T> {
-    async fn publish(&self, data: &T) -> RosLibRustResult<()> {
+    async fn publish(&self, data: &T) -> Result<()> {
         let bytes = roslibrust_serde_rosmsg::to_vec_skip_length(data).map_err(|e| {
-            RosLibRustError::SerializationError(format!("Failed to serialize message: {e:?}"))
+            Error::SerializationError(format!("Failed to serialize message: {e:?}"))
         })?;
 
         match self.publisher.put(&bytes).await {
             Ok(()) => Ok(()),
-            Err(e) => Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+            Err(e) => Err(Error::Unexpected(anyhow::anyhow!(
                 "Failed to publish message to zenoh: {e:?}"
             ))),
         }
@@ -47,14 +45,14 @@ pub struct ZenohSubscriber<T> {
 }
 
 impl<T: RosMessageType> Subscribe<T> for ZenohSubscriber<T> {
-    async fn next(&mut self) -> RosLibRustResult<T> {
+    async fn next(&mut self) -> Result<T> {
         let next = self.subscriber.recv_async().await;
 
         let sample = match next {
             Ok(sample) => sample,
             Err(e) => {
                 // TODO errors still suck with this API
-                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                return Err(Error::Unexpected(anyhow::anyhow!(
                     "Failed to receive next sample: {e:?}"
                 )));
             }
@@ -65,7 +63,7 @@ impl<T: RosMessageType> Subscribe<T> for ZenohSubscriber<T> {
         // So we use the known length version of the deserialization
         let msg = roslibrust_serde_rosmsg::from_slice_known_length(&bytes, bytes.len() as u32)
             .map_err(|e| {
-                RosLibRustError::SerializationError(format!("Failed to deserialize sample: {e:?}"))
+                Error::SerializationError(format!("Failed to deserialize sample: {e:?}"))
             })?;
         Ok(msg)
     }
@@ -76,16 +74,13 @@ impl TopicProvider for ZenohClient {
 
     type Subscriber<T: RosMessageType> = ZenohSubscriber<T>;
 
-    async fn advertise<T: RosMessageType>(
-        &self,
-        topic: &str,
-    ) -> RosLibRustResult<Self::Publisher<T>> {
+    async fn advertise<T: RosMessageType>(&self, topic: &str) -> Result<Self::Publisher<T>> {
         let mangled_topic = mangle_topic(topic, T::ROS_TYPE_NAME, T::MD5SUM);
         let publisher = match self.session.declare_publisher(mangled_topic).await {
             Ok(publisher) => publisher,
             Err(e) => {
                 // TODO errors still suck with this API...
-                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                return Err(Error::Unexpected(anyhow::anyhow!(
                     "Failed to declare publisher: {e:?}"
                 )));
             }
@@ -97,16 +92,13 @@ impl TopicProvider for ZenohClient {
         })
     }
 
-    async fn subscribe<T: RosMessageType>(
-        &self,
-        topic: &str,
-    ) -> RosLibRustResult<Self::Subscriber<T>> {
+    async fn subscribe<T: RosMessageType>(&self, topic: &str) -> Result<Self::Subscriber<T>> {
         let mangled_topic = mangle_topic(topic, T::ROS_TYPE_NAME, T::MD5SUM);
         let sub = match self.session.declare_subscriber(mangled_topic).await {
             Ok(sub) => sub,
             Err(e) => {
                 // TODO errors still suck with this API...
-                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                return Err(Error::Unexpected(anyhow::anyhow!(
                     "Failed to declare subscriber: {e:?}"
                 )));
             }
@@ -150,10 +142,10 @@ pub struct ZenohServiceClient<T: RosServiceType> {
 }
 
 impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
-    async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
+    async fn call(&self, request: &T::Request) -> Result<T::Response> {
         // Note: Zenoh decided the 4 byte length header is not part of the payload
         let request_bytes = roslibrust_serde_rosmsg::to_vec_skip_length(request).map_err(|e| {
-            RosLibRustError::SerializationError(format!("Failed to serialize message: {e:?}"))
+            Error::SerializationError(format!("Failed to serialize message: {e:?}"))
         })?;
         debug!("request bytes: {request_bytes:?}");
 
@@ -166,7 +158,7 @@ impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
             Ok(query) => query,
             Err(e) => {
                 // TODO errors still suck with this API...
-                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                return Err(Error::Unexpected(anyhow::anyhow!(
                     "Failed to create query for service: {e:?}"
                 )));
             }
@@ -175,7 +167,7 @@ impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
         let response = match query.recv_async().await {
             Ok(data) => data,
             Err(e) => {
-                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                return Err(Error::Unexpected(anyhow::anyhow!(
                     "Failed to receive response from service: {e:?}"
                 )));
             }
@@ -185,7 +177,7 @@ impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
         let sample = match response.into_result() {
             Ok(bytes) => bytes,
             Err(e) => {
-                return Err(RosLibRustError::Unexpected(anyhow::anyhow!(
+                return Err(Error::Unexpected(anyhow::anyhow!(
                     "Failed to receive sample from service: {e:?}"
                 )));
             }
@@ -196,7 +188,7 @@ impl<T: RosServiceType> Service<T> for ZenohServiceClient<T> {
         // Note: Zenoh decided to not make the 4 byte length header part of the payload
         let msg = roslibrust_serde_rosmsg::from_slice_known_length(&bytes, bytes.len() as u32)
             .map_err(|e| {
-                RosLibRustError::SerializationError(format!("Failed to deserialize sample: {e:?}"))
+                Error::SerializationError(format!("Failed to deserialize sample: {e:?}"))
             })?;
         Ok(msg)
     }
@@ -215,10 +207,20 @@ impl ServiceProvider for ZenohClient {
     type ServiceClient<T: RosServiceType> = ZenohServiceClient<T>;
     type ServiceServer = ZenohServiceServer;
 
-    async fn service_client<T: roslibrust_codegen::RosServiceType + 'static>(
+    async fn call_service<T: RosServiceType>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::ServiceClient<T>> {
+        request: T::Request,
+    ) -> Result<T::Response> {
+        // TODO should be able to optimize this...
+        let client = self.service_client::<T>(topic).await?;
+        client.call(&request).await
+    }
+
+    async fn service_client<T: RosServiceType + 'static>(
+        &self,
+        topic: &str,
+    ) -> Result<Self::ServiceClient<T>> {
         let mangled_topic = mangle_topic(topic, T::ROS_SERVICE_NAME, T::MD5SUM);
 
         Ok(ZenohServiceClient {
@@ -228,14 +230,11 @@ impl ServiceProvider for ZenohClient {
         })
     }
 
-    async fn advertise_service<
-        T: roslibrust_codegen::RosServiceType + 'static,
-        F: roslibrust::ServiceFn<T>,
-    >(
+    async fn advertise_service<T: RosServiceType + 'static, F: ServiceFn<T>>(
         &self,
         topic: &str,
         server: F,
-    ) -> RosLibRustResult<Self::ServiceServer> {
+    ) -> Result<Self::ServiceServer> {
         let mangled_topic = mangle_topic(topic, T::ROS_SERVICE_NAME, T::MD5SUM);
 
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
@@ -251,7 +250,7 @@ impl ServiceProvider for ZenohClient {
             })
             .await
             .map_err(|e| {
-                RosLibRustError::Unexpected(anyhow::anyhow!("Failed to declare queryable: {e:?}"))
+                Error::Unexpected(anyhow::anyhow!("Failed to declare queryable: {e:?}"))
             })?;
 
         // Spawn a task to handle the queries
@@ -314,7 +313,7 @@ impl ServiceProvider for ZenohClient {
             .declare_publisher(zenoh_info_topic)
             .await
             .map_err(|e| {
-                RosLibRustError::Unexpected(anyhow::anyhow!(
+                Error::Unexpected(anyhow::anyhow!(
                     "Failed to declare queryable for service discovery: {e:?}"
                 ))
             })?;

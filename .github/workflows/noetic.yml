@@ -39,4 +39,4 @@ jobs:
       - name: Start rosbridge
         run: source /opt/ros/noetic/setup.bash; roslaunch rosbridge_server rosbridge_websocket.launch & disown; rosrun rosapi rosapi_node & sleep 1
       - name: Integration Tests
-        run: source /opt/ros/noetic/setup.bash; source /root/.cargo/env; RUST_LOG=debug cargo test --features ros1_test,ros1,running_bridge,rosapi -- --test-threads 1
+        run: source /opt/ros/noetic/setup.bash; source /root/.cargo/env; RUST_LOG=debug cargo test --features ros1_test,ros1,running_bridge,rosapi,rosbridge,zenoh -- --test-threads 1

@@ -6,19 +6,19 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.41", features = ["rt-multi-thread", "sync", "macros"] }
-# We currently need to depend on these crates for trait information
-# I think we should move topic_provider and the generic message traits into their own crate
-# Then more things can work with them generically with less compile time dependencies
-roslibrust = { path = "../roslibrust", features = ["topic_provider"] }
-roslibrust_codegen = { path = "../roslibrust_codegen" }
+roslibrust_serde_rosmsg = { workspace = true }
+log = { workspace = true }
+tokio = { workspace = true }
+roslibrust_common = { path = "../roslibrust_common" }
 zenoh = "1.0"
 hex = "0.4"
 anyhow = "1.0"
-roslibrust_serde_rosmsg = "0.4"
-log = "0.4"
 
 [dev-dependencies]
 env_logger = "0.11"
+# Used to access traits for examples
+roslibrust = { path = "../roslibrust" }
 # Used to generate message types for the examples
 roslibrust_codegen_macro = { path = "../roslibrust_codegen_macro" }
+# Relied on by generate types in the macro this should be cleaned up
+roslibrust_codegen = { path = "../roslibrust_codegen" }

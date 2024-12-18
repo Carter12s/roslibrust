@@ -1,7 +1,7 @@
-use crate::ros1::{names::Name, tcpros::ConnectionHeader};
+use crate::{names::Name, tcpros::ConnectionHeader};
 use abort_on_drop::ChildTask;
 use log::*;
-use roslibrust_codegen::{RosMessageType, ShapeShifter};
+use roslibrust_common::{RosMessageType, ShapeShifter};
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::AsyncWriteExt,

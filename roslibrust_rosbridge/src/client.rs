@@ -1,12 +1,11 @@
-use crate::{
-    rosbridge::comm::{self, RosBridgeComm},
-    Publisher, RosLibRustError, RosLibRustResult, ServiceFn, ServiceHandle, Subscriber,
-};
+use crate::comm::Ops;
+use crate::comm::RosBridgeComm;
+use crate::{Publisher, ServiceHandle, Subscriber};
 use anyhow::anyhow;
 use dashmap::DashMap;
 use futures::StreamExt;
 use log::*;
-use roslibrust_codegen::{RosMessageType, RosServiceType};
+use roslibrust_common::*;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -59,7 +58,7 @@ impl ClientHandleOptions {
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 ///   // Create a new client
-///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
 ///   // Create a copy of the handle (does not create a seperate connection)
 ///   let mut handle2 = handle.clone();
 ///   tokio::spawn(async move {
@@ -86,7 +85,7 @@ impl ClientHandle {
     /// Like [ClientHandle::new] this function does not resolve until the connection is established for the first time.
     /// This function respects the [ClientHandleOptions] timeout and will return with an error if a connection is not
     /// established within the timeout.
-    pub async fn new_with_options(opts: ClientHandleOptions) -> RosLibRustResult<Self> {
+    pub async fn new_with_options(opts: ClientHandleOptions) -> Result<Self> {
         let inner = Arc::new(RwLock::new(timeout(opts.timeout, Client::new(opts)).await?));
         let inner_weak = Arc::downgrade(&inner);
 
@@ -106,19 +105,19 @@ impl ClientHandle {
     /// Connects a rosbridge instance at the given url
     /// Expects a fully describe websocket url, e.g. 'ws://localhost:9090'
     /// When awaited will not resolve until connection is successfully made.
-    pub async fn new<S: Into<String>>(url: S) -> RosLibRustResult<Self> {
+    pub async fn new<S: Into<String>>(url: S) -> Result<Self> {
         Self::new_with_options(ClientHandleOptions::new(url)).await
     }
 
-    fn check_for_disconnect(&self) -> RosLibRustResult<()> {
+    fn check_for_disconnect(&self) -> Result<()> {
         match self.is_disconnected.load(Ordering::Relaxed) {
             false => Ok(()),
-            true => Err(RosLibRustError::Disconnected),
+            true => Err(Error::Disconnected),
         }
     }
 
     // Internal implementation of subscribe
-    async fn _subscribe<Msg>(&self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
+    async fn _subscribe<Msg>(&self, topic_name: &str) -> Result<Subscriber<Msg>>
     where
         Msg: RosMessageType,
     {
@@ -205,11 +204,11 @@ impl ClientHandle {
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
-    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     ///   // Subscribe using ::<T> style
     ///   let subscriber1 = handle.subscribe::<std_msgs::Header>("/topic").await?;
     ///   // Subscribe using explicit type style
-    ///   let subscriber2: roslibrust::Subscriber<std_msgs::Header> = handle.subscribe::<std_msgs::Header>("/topic").await?;
+    ///   let subscriber2: roslibrust_rosbridge::Subscriber<std_msgs::Header> = handle.subscribe("/topic").await?;
     ///   # Ok(())
     /// # }
     /// ```
@@ -238,7 +237,7 @@ impl ClientHandle {
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
-    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     ///   // Subscribe to the same topic with two different types
     ///   let ros1_subscriber = handle.subscribe::<ros1::std_msgs::Header>("/topic").await?;
     ///   let ros2_subscriber = handle.subscribe::<ros2::std_msgs::Header>("/topic").await?;
@@ -250,7 +249,7 @@ impl ClientHandle {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn subscribe<Msg>(&self, topic_name: &str) -> RosLibRustResult<Subscriber<Msg>>
+    pub async fn subscribe<Msg>(&self, topic_name: &str) -> Result<Subscriber<Msg>>
     where
         Msg: RosMessageType,
     {
@@ -265,7 +264,7 @@ impl ClientHandle {
     // Publishes a message
     // Fails immediately(ish) if disconnected
     // Returns success when message is put on websocket (no confirmation of receipt)
-    pub(crate) async fn publish<T>(&self, topic: &str, msg: &T) -> RosLibRustResult<()>
+    pub(crate) async fn publish<T>(&self, topic: &str, msg: &T) -> Result<()>
     where
         T: RosMessageType,
     {
@@ -296,15 +295,15 @@ impl ClientHandle {
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
-    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     ///   // Advertise using ::<T> style
     ///   let mut publisher = handle.advertise::<std_msgs::Header>("/topic").await?;
     ///   // Advertise using explicit type
-    ///   let mut publisher2: roslibrust::Publisher<std_msgs::Header> = handle.advertise("/other_topic").await?;
+    ///   let mut publisher2: roslibrust_rosbridge::Publisher<std_msgs::Header> = handle.advertise("/other_topic").await?;
     ///   # Ok(())
     /// # }
     /// ```
-    pub async fn advertise<T>(&self, topic: &str) -> RosLibRustResult<Publisher<T>>
+    pub async fn advertise<T>(&self, topic: &str) -> Result<Publisher<T>>
     where
         T: RosMessageType,
     {
@@ -312,7 +311,7 @@ impl ClientHandle {
         let client = self.inner.read().await;
         if client.publishers.contains_key(topic) {
             // TODO if we ever remove this restriction we should still check types match
-            return Err(RosLibRustError::Unexpected(anyhow!(
+            return Err(Error::Unexpected(anyhow!(
                 "Attempted to create two publisher to same topic, this is not supported"
             )));
         } else {
@@ -348,7 +347,7 @@ impl ClientHandle {
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///   // Create a new client
-    ///   let mut handle = roslibrust::ClientHandle::new("ws://localhost:9090").await?;
+    ///   let mut handle = roslibrust_rosbridge::ClientHandle::new("ws://localhost:9090").await?;
     ///   // Call service, type of response will be rosapi::GetTimeResponse (alternatively named rosapi::GetTime::Response)
     ///   let response = handle.call_service::<rosapi::GetTime>("/rosapi/get_time", rosapi::GetTimeRequest{}).await?;
     /// # Ok(())
@@ -358,7 +357,7 @@ impl ClientHandle {
         &self,
         service: &str,
         req: S::Request,
-    ) -> RosLibRustResult<S::Response> {
+    ) -> Result<S::Response> {
         self.check_for_disconnect()?;
         let (tx, rx) = tokio::sync::oneshot::channel();
         let rand_string: String = uuid::Uuid::new_v4().to_string();
@@ -403,10 +402,10 @@ impl ClientHandle {
                 // We failed to parse the value as an expected type, before just giving up, try to parse as string
                 // if we got a string it indicates a server side error, otherwise we got the wrong datatype back
                 match serde_json::from_value(msg) {
-                    Ok(s) => return Err(RosLibRustError::ServerError(s)),
+                    Ok(s) => return Err(Error::ServerError(s)),
                     Err(_) => {
                         // Return the error from the origional parse
-                        return Err(RosLibRustError::InvalidMessage(e));
+                        return Err(Error::InvalidMessage(e));
                     }
                 }
             }
@@ -417,11 +416,7 @@ impl ClientHandle {
     /// Service will be active until the handle is dropped!
     ///
     /// See examples/service_server.rs for usage.
-    pub async fn advertise_service<T, F>(
-        &self,
-        topic: &str,
-        server: F,
-    ) -> RosLibRustResult<ServiceHandle>
+    pub async fn advertise_service<T, F>(&self, topic: &str, server: F) -> Result<ServiceHandle>
     where
         T: RosServiceType,
         F: ServiceFn<T>,
@@ -435,11 +430,11 @@ impl ClientHandle {
                 error!(
                     "Re-registering a server for the pre-existing topic: {topic} This will fail!"
                 );
-                return Err(RosLibRustError::Unexpected(anyhow!("roslibrust does not support re-advertising a service without first dropping the previous Service")));
+                return Err(Error::Unexpected(anyhow!("roslibrust does not support re-advertising a service without first dropping the previous Service")));
             }
 
             // We need to do type erasure and hide the request by wrapping their closure in a generic closure
-            let erased_closure = move |message: &str| -> Result<
+            let erased_closure = move |message: &str| -> std::result::Result<
                 serde_json::Value,
                 Box<dyn std::error::Error + Send + Sync>,
             > {
@@ -471,7 +466,7 @@ impl ClientHandle {
     ///
     /// Note: Unlike with ROS1 native service, this provides no performance benefit over call_service,
     /// and is just a thin wrapper around call_service.
-    pub async fn service_client<T>(&self, topic: &str) -> RosLibRustResult<ServiceClient<T>>
+    pub async fn service_client<T>(&self, topic: &str) -> Result<ServiceClient<T>>
     where
         T: RosServiceType,
     {
@@ -532,7 +527,7 @@ impl ClientHandle {
 
     // This function removes the entry for a subscriber in from the client, and if it is the last
     // subscriber for a given topic then dispatches an unsubscribe message to the master/bridge
-    pub(crate) fn unsubscribe(&self, topic_name: &str, id: &uuid::Uuid) -> RosLibRustResult<()> {
+    pub(crate) fn unsubscribe(&self, topic_name: &str, id: &uuid::Uuid) -> Result<()> {
         // Copy so we can move into closure
         let client = self.clone();
         let topic_name = topic_name.to_string();
@@ -585,7 +580,7 @@ pub(crate) struct Client {
 
 impl Client {
     // internal implementation of new
-    async fn new(opts: ClientHandleOptions) -> RosLibRustResult<Self> {
+    async fn new(opts: ClientHandleOptions) -> Result<Self> {
         let (writer, reader) = stubborn_connect(&opts.url).await;
         let client = Self {
             reader: RwLock::new(reader),
@@ -600,7 +595,7 @@ impl Client {
         Ok(client)
     }
 
-    async fn handle_message(&self, msg: Message) -> RosLibRustResult<()> {
+    async fn handle_message(&self, msg: Message) -> Result<()> {
         match msg {
             Message::Text(text) => {
                 debug!("got message: {}", text);
@@ -614,17 +609,17 @@ impl Client {
                     .expect("Op field not present on returned object.")
                     .as_str()
                     .expect("Op field was not of string type.");
-                let op = comm::Ops::from_str(op)?;
+                let op = Ops::from_str(op)?;
                 match op {
-                    comm::Ops::Publish => {
+                    Ops::Publish => {
                         trace!("handling publish for {:?}", &parsed);
                         self.handle_publish(parsed).await;
                     }
-                    comm::Ops::ServiceResponse => {
+                    Ops::ServiceResponse => {
                         trace!("handling service response for {:?}", &parsed);
                         self.handle_response(parsed).await;
                     }
-                    comm::Ops::CallService => {
+                    Ops::CallService => {
                         trace!("handling call_service for {:?}", &parsed);
                         self.handle_service(parsed).await;
                     }
@@ -694,7 +689,7 @@ impl Client {
         // Now we need to send the service_response back
     }
 
-    async fn spin_once(&self) -> RosLibRustResult<()> {
+    async fn spin_once(&self) -> Result<()> {
         let read = {
             let mut stream = self.reader.write().await;
             match stream.next().await {
@@ -703,9 +698,7 @@ impl Client {
                     return Err(e.into());
                 }
                 None => {
-                    return Err(RosLibRustError::Unexpected(anyhow!(
-                        "Wtf does none mean here?"
-                    )));
+                    return Err(Error::Unexpected(anyhow!("Wtf does none mean here?")));
                 }
             }
         };
@@ -735,7 +728,7 @@ impl Client {
         }
     }
 
-    async fn reconnect(&mut self) -> RosLibRustResult<()> {
+    async fn reconnect(&mut self) -> Result<()> {
         // Reconnect stream
         let (writer, reader) = stubborn_connect(&self.opts.url).await;
         self.reader = RwLock::new(reader);
@@ -772,7 +765,7 @@ impl Client {
 async fn stubborn_spin(
     client: std::sync::Weak<RwLock<Client>>,
     is_disconnected: Arc<AtomicBool>,
-) -> RosLibRustResult<()> {
+) -> Result<()> {
     debug!("Starting stubborn_spin");
     while let Some(client) = client.upgrade() {
         const SPIN_DURATION: Duration = Duration::from_millis(10);
@@ -801,9 +794,9 @@ async fn stubborn_spin(
 // Implementation of timeout that is a no-op if timeout is 0 or un-configured
 // Only works on functions that already return our result type
 // This might not be needed but reading tokio::timeout docs I couldn't confirm this
-async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> RosLibRustResult<T>
+async fn timeout<F, T>(timeout: Option<Duration>, future: F) -> Result<T>
 where
-    F: futures::Future<Output = RosLibRustResult<T>>,
+    F: futures::Future<Output = Result<T>>,
 {
     if let Some(t) = timeout {
         tokio::time::timeout(t, future).await?
@@ -832,7 +825,7 @@ async fn stubborn_connect(url: &str) -> (Writer, Reader) {
 }
 
 // Basic connection attempt and error wrapping
-async fn connect(url: &str) -> RosLibRustResult<Socket> {
+async fn connect(url: &str) -> Result<Socket> {
     let attempt = tokio_tungstenite::connect_async(url).await;
     match attempt {
         Ok((stream, _response)) => Ok(stream),

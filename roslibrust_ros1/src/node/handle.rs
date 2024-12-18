@@ -1,11 +1,9 @@
 use super::actor::{Node, NodeServerHandle};
 use crate::{
-    ros1::{
-        names::Name, publisher::Publisher, publisher::PublisherAny, service_client::ServiceClient,
-        subscriber::Subscriber, subscriber::SubscriberAny, NodeError, ServiceServer,
-    },
-    ServiceFn,
+    names::Name, publisher::Publisher, publisher::PublisherAny, service_client::ServiceClient,
+    subscriber::Subscriber, subscriber::SubscriberAny, NodeError, ServiceServer,
 };
+use roslibrust_common::ServiceFn;
 
 /// Represents a handle to an underlying Node. NodeHandle's can be freely cloned, moved, copied, etc.
 /// This class provides the user facing API for interacting with ROS.
@@ -97,7 +95,7 @@ impl NodeHandle {
     /// Subsequent calls will simply be given additional handles to the underlying publication.
     /// This behavior was chosen to mirror ROS1's API, however it is recommended to .clone() the returned publisher
     /// instead of calling this function multiple times.
-    pub async fn advertise<T: roslibrust_codegen::RosMessageType>(
+    pub async fn advertise<T: roslibrust_common::RosMessageType>(
         &self,
         topic_name: &str,
         queue_size: usize,
@@ -117,12 +115,12 @@ impl NodeHandle {
     ) -> Result<SubscriberAny, NodeError> {
         let receiver = self
             .inner
-            .register_subscriber::<roslibrust_codegen::ShapeShifter>(topic_name, queue_size)
+            .register_subscriber::<roslibrust_common::ShapeShifter>(topic_name, queue_size)
             .await?;
         Ok(SubscriberAny::new(receiver))
     }
 
-    pub async fn subscribe<T: roslibrust_codegen::RosMessageType>(
+    pub async fn subscribe<T: roslibrust_common::RosMessageType>(
         &self,
         topic_name: &str,
         queue_size: usize,
@@ -134,7 +132,7 @@ impl NodeHandle {
         Ok(Subscriber::new(receiver))
     }
 
-    pub async fn service_client<T: roslibrust_codegen::RosServiceType>(
+    pub async fn service_client<T: roslibrust_common::RosServiceType>(
         &self,
         service_name: &str,
     ) -> Result<ServiceClient<T>, NodeError> {
@@ -152,7 +150,7 @@ impl NodeHandle {
         server: F,
     ) -> Result<ServiceServer, NodeError>
     where
-        T: roslibrust_codegen::RosServiceType,
+        T: roslibrust_common::RosServiceType,
         F: ServiceFn<T>,
     {
         let service_name = Name::new(service_name)?;

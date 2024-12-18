@@ -1,14 +1,25 @@
 [workspace]
-
 members = [
     "example_package",
     "example_package_macro",
-    "roslibrust",
-    "roslibrust_codegen",
     "roslibrust_codegen_macro",
+    "roslibrust_codegen",
+    "roslibrust_common",
     "roslibrust_genmsg",
-    "roslibrust_test",
     "roslibrust_mock",
+    "roslibrust_ros1",
+    "roslibrust_rosbridge",
+    "roslibrust_test",
     "roslibrust_zenoh",
+    "roslibrust",
+    "roslibrust_rosapi",
 ]
 resolver = "2"
+
+[workspace.dependencies]
+log = "0.4"
+tokio = {version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+# Someday we may move this crate into this workspace
+# For now this is how we keep from repeating the verison everywhere
+roslibrust_serde_rosmsg = "0.4"
