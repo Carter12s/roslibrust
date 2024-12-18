@@ -3,7 +3,7 @@
 
 /// For now starting with a central error type, may break this up more in future
 #[derive(thiserror::Error, Debug)]
-pub enum RosLibRustError {
+pub enum Error {
     #[error("Not currently connected to ros master / bridge")]
     Disconnected,
     // TODO we probably want to eliminate tungstenite from this and hide our
@@ -32,7 +32,7 @@ pub enum RosLibRustError {
 /// Generic result type used as standard throughout library.
 /// Note: many functions which currently return this will be updated to provide specific error
 /// types in the future instead of the generic error here.
-pub type RosLibRustResult<T> = Result<T, RosLibRustError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// Fundamental traits for message types this crate works with
 /// This trait will be satisfied for any types generated with this crate's message_gen functionality
@@ -77,7 +77,9 @@ pub trait RosServiceType: 'static + Send + Sync {
 /// server with roslibrust. We're really just using this as a trait alias
 /// as the full definition is overly verbose and trait aliases are unstable.
 pub trait ServiceFn<T: RosServiceType>:
-    Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+    Fn(
+        T::Request,
+    ) -> std::result::Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
     + Send
     + Sync
     + 'static
@@ -88,7 +90,10 @@ pub trait ServiceFn<T: RosServiceType>:
 impl<T, F> ServiceFn<T> for F
 where
     T: RosServiceType,
-    F: Fn(T::Request) -> Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
+    F: Fn(
+            T::Request,
+        )
+            -> std::result::Result<T::Response, Box<dyn std::error::Error + 'static + Send + Sync>>
         + Send
         + Sync
         + 'static,

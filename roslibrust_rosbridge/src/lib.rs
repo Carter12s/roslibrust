@@ -21,7 +21,7 @@ mod integration_tests;
 // Standard return type for all tests to use
 #[cfg(test)]
 #[allow(dead_code)]
-type TestResult = Result<(), anyhow::Error>;
+type TestResult = std::result::Result<(), anyhow::Error>;
 
 /// Communication primitives for the rosbridge_suite protocol
 mod comm;
@@ -45,7 +45,7 @@ type Callback = Box<dyn Fn(&str) + Send + Sync>;
 // backends - Carter 2022-10-6
 // TODO move out of rosbridge and into "common"
 pub(crate) type ServiceCallback = Box<
-    dyn Fn(&str) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>
+    dyn Fn(&str) -> std::result::Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>
         + Send
         + Sync,
 >;
@@ -80,7 +80,7 @@ pub struct ServiceClient<T> {
 }
 
 impl<T: RosServiceType> ServiceClient<T> {
-    pub async fn call(&self, request: T::Request) -> RosLibRustResult<T::Response> {
+    pub async fn call(&self, request: T::Request) -> Result<T::Response> {
         self.client
             .call_service::<T>(self.topic.as_str(), request)
             .await
@@ -124,7 +124,7 @@ pub(crate) struct PublisherHandle {
 
 // Implement the generic Service trait for our ServiceClient
 impl<T: RosServiceType> Service<T> for crate::ServiceClient<T> {
-    async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
+    async fn call(&self, request: &T::Request) -> Result<T::Response> {
         // TODO sort out the reference vs clone stuff here
         ServiceClient::call(&self, request.clone()).await
     }
@@ -138,14 +138,14 @@ impl ServiceProvider for crate::ClientHandle {
         &self,
         topic: &str,
         request: T::Request,
-    ) -> RosLibRustResult<T::Response> {
+    ) -> Result<T::Response> {
         self.call_service::<T>(topic, request).await
     }
 
     async fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::ServiceClient<T>> {
+    ) -> Result<Self::ServiceClient<T>> {
         self.service_client::<T>(topic).await
     }
 
@@ -153,7 +153,7 @@ impl ServiceProvider for crate::ClientHandle {
         &self,
         topic: &str,
         server: F,
-    ) -> RosLibRustResult<Self::ServiceServer>
+    ) -> Result<Self::ServiceServer>
     where
         F: ServiceFn<T>,
     {
@@ -166,23 +166,17 @@ impl TopicProvider for crate::ClientHandle {
     type Publisher<T: RosMessageType> = crate::Publisher<T>;
     type Subscriber<T: RosMessageType> = crate::Subscriber<T>;
 
-    async fn advertise<T: RosMessageType>(
-        &self,
-        topic: &str,
-    ) -> RosLibRustResult<Self::Publisher<T>> {
+    async fn advertise<T: RosMessageType>(&self, topic: &str) -> Result<Self::Publisher<T>> {
         self.advertise::<T>(topic.as_ref()).await
     }
 
-    async fn subscribe<T: RosMessageType>(
-        &self,
-        topic: &str,
-    ) -> RosLibRustResult<Self::Subscriber<T>> {
+    async fn subscribe<T: RosMessageType>(&self, topic: &str) -> Result<Self::Subscriber<T>> {
         self.subscribe(topic).await
     }
 }
 
 impl<T: RosMessageType> Subscribe<T> for crate::Subscriber<T> {
-    async fn next(&mut self) -> RosLibRustResult<T> {
+    async fn next(&mut self) -> Result<T> {
         // TODO: rosbridge subscribe really should emit errors...
         Ok(crate::Subscriber::next(self).await)
     }
@@ -190,7 +184,7 @@ impl<T: RosMessageType> Subscribe<T> for crate::Subscriber<T> {
 
 // Provide an implementation of publish for rosbridge backend
 impl<T: RosMessageType> Publish<T> for crate::Publisher<T> {
-    async fn publish(&self, data: &T) -> RosLibRustResult<()> {
+    async fn publish(&self, data: &T) -> Result<()> {
         self.publish(data).await
     }
 }
@@ -209,7 +203,8 @@ mod test {
 
         // Kinda a hack way to make the compiler prove it could construct a MyClient<ClientHandle> with out actually
         // constructing one at runtime
-        let new_mock: Result<crate::ClientHandle, _> = Err(anyhow::anyhow!("Expected error"));
+        let new_mock: std::result::Result<crate::ClientHandle, _> =
+            Err(anyhow::anyhow!("Expected error"));
 
         let _x = MyClient {
             _client: new_mock.unwrap(), // panic

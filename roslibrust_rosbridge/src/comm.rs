@@ -1,8 +1,8 @@
-use crate::{RosLibRustResult, Writer};
+use crate::Writer;
 use anyhow::bail;
 use futures_util::SinkExt;
 use log::debug;
-use roslibrust_common::RosMessageType;
+use roslibrust_common::{Result, RosMessageType};
 use serde_json::json;
 use std::{fmt::Display, str::FromStr, string::ToString};
 use tokio_tungstenite::tungstenite::Message;
@@ -64,7 +64,7 @@ impl Into<&str> for &Ops {
 // TODO should replace this with deserialize
 impl FromStr for Ops {
     type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
+    fn from_str(s: &str) -> std::result::Result<Self, anyhow::Error> {
         Ok(match s {
             "advertise" => Ops::Advertise,
             "unadvertise" => Ops::Unadvertise,
@@ -88,31 +88,31 @@ impl FromStr for Ops {
 /// using this trait for mocking. I'm inclined to replace it, and move the
 /// impls directly into some wrapper around [Writer]
 pub(crate) trait RosBridgeComm {
-    async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
-    async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()>;
-    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: &T) -> RosLibRustResult<()>;
-    async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosLibRustResult<()>;
-    async fn advertise_str(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()>;
+    async fn subscribe(&mut self, topic: &str, msg_type: &str) -> Result<()>;
+    async fn unsubscribe(&mut self, topic: &str) -> Result<()>;
+    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: &T) -> Result<()>;
+    async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> Result<()>;
+    async fn advertise_str(&mut self, topic: &str, msg_type: &str) -> Result<()>;
     async fn call_service<Req: RosMessageType>(
         &mut self,
         service: &str,
         id: &str,
         req: Req,
-    ) -> RosLibRustResult<()>;
-    async fn unadvertise(&mut self, topic: &str) -> RosLibRustResult<()>;
-    async fn advertise_service(&mut self, topic: &str, srv_type: &str) -> RosLibRustResult<()>;
-    async fn unadvertise_service(&mut self, topic: &str) -> RosLibRustResult<()>;
+    ) -> Result<()>;
+    async fn unadvertise(&mut self, topic: &str) -> Result<()>;
+    async fn advertise_service(&mut self, topic: &str, srv_type: &str) -> Result<()>;
+    async fn unadvertise_service(&mut self, topic: &str) -> Result<()>;
     async fn service_response(
         &mut self,
         topic: &str,
         id: Option<String>,
         is_success: bool,
         response: serde_json::Value,
-    ) -> RosLibRustResult<()>;
+    ) -> Result<()>;
 }
 
 impl RosBridgeComm for Writer {
-    async fn subscribe(&mut self, topic: &str, msg_type: &str) -> RosLibRustResult<()> {
+    async fn subscribe(&mut self, topic: &str, msg_type: &str) -> Result<()> {
         let msg = json!(
         {
         "op": Ops::Subscribe.to_string(),
@@ -126,7 +126,7 @@ impl RosBridgeComm for Writer {
         Ok(())
     }
 
-    async fn unsubscribe(&mut self, topic: &str) -> RosLibRustResult<()> {
+    async fn unsubscribe(&mut self, topic: &str) -> Result<()> {
         let msg = json!(
         {
         "op": Ops::Unsubscribe.to_string(),
@@ -139,7 +139,7 @@ impl RosBridgeComm for Writer {
         Ok(())
     }
 
-    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: &T) -> RosLibRustResult<()> {
+    async fn publish<T: RosMessageType>(&mut self, topic: &str, msg: &T) -> Result<()> {
         let msg = json!(
             {
                 "op": Ops::Publish.to_string(),
@@ -154,14 +154,14 @@ impl RosBridgeComm for Writer {
         Ok(())
     }
 
-    async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> RosLibRustResult<()> {
+    async fn advertise<T: RosMessageType>(&mut self, topic: &str) -> Result<()> {
         self.advertise_str(topic, T::ROS_TYPE_NAME).await
     }
 
     // Identical to advertise, but allows providing a string argument for the topic type
     // This is important as the type is erased in our list of publishers, and not available
     // when we try to reconnect
-    async fn advertise_str(&mut self, topic: &str, topic_type: &str) -> RosLibRustResult<()> {
+    async fn advertise_str(&mut self, topic: &str, topic_type: &str) -> Result<()> {
         let msg = json!(
             {
                 "op": Ops::Advertise.to_string(),
@@ -180,7 +180,7 @@ impl RosBridgeComm for Writer {
         service: &str,
         id: &str,
         req: Req,
-    ) -> RosLibRustResult<()> {
+    ) -> Result<()> {
         let msg = json!(
             {
                 "op": Ops::CallService.to_string(),
@@ -195,7 +195,7 @@ impl RosBridgeComm for Writer {
         Ok(())
     }
 
-    async fn unadvertise(&mut self, topic: &str) -> RosLibRustResult<()> {
+    async fn unadvertise(&mut self, topic: &str) -> Result<()> {
         debug!("Sending unadvertise on {}", topic);
         let msg = json! {
             {
@@ -209,7 +209,7 @@ impl RosBridgeComm for Writer {
         Ok(())
     }
 
-    async fn advertise_service(&mut self, srv_name: &str, srv_type: &str) -> RosLibRustResult<()> {
+    async fn advertise_service(&mut self, srv_name: &str, srv_type: &str) -> Result<()> {
         debug!("Sending advertise service on {} w/ {}", srv_name, srv_type);
         let msg = json! {
             {
@@ -223,7 +223,7 @@ impl RosBridgeComm for Writer {
         Ok(())
     }
 
-    async fn unadvertise_service(&mut self, topic: &str) -> RosLibRustResult<()> {
+    async fn unadvertise_service(&mut self, topic: &str) -> Result<()> {
         debug!("Sending unadvertise service on {topic}");
         let msg = json! {
             {
@@ -242,7 +242,7 @@ impl RosBridgeComm for Writer {
         id: Option<String>,
         is_success: bool,
         response: serde_json::Value,
-    ) -> RosLibRustResult<()> {
+    ) -> Result<()> {
         debug!(
             "Sending service response on {:?} with {:?}, {:?}, {:?}",
             topic, id, is_success, response

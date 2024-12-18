@@ -1,4 +1,4 @@
-use crate::{RosLibRustResult, RosMessageType, RosServiceType, ServiceFn};
+use crate::{Result, RosMessageType, RosServiceType, ServiceFn};
 
 /// Indicates that something is a publisher and has our expected publish
 /// Implementors of this trait are expected to auto-cleanup the publisher when dropped
@@ -7,7 +7,7 @@ pub trait Publish<T: RosMessageType> {
     // However see: https://blog.rust-lang.org/2023/12/21/async-fn-rpit-in-traits.html
     // This generates a warning is rust as of writing due to ambiguity around the "Send-ness" of the return type
     // We only plan to work with multi-threaded work stealing executors (e.g. tokio) so we're manually specifying Send
-    fn publish(&self, data: &T) -> impl futures::Future<Output = RosLibRustResult<()>> + Send;
+    fn publish(&self, data: &T) -> impl futures::Future<Output = Result<()>> + Send;
 }
 
 /// Indicates that something is a subscriber and has our expected subscribe method
@@ -15,7 +15,7 @@ pub trait Publish<T: RosMessageType> {
 pub trait Subscribe<T: RosMessageType> {
     // TODO need to solidify how we want errors to work with subscribers...
     // TODO ros1 currently requires mut for next, we should change that
-    fn next(&mut self) -> impl futures::Future<Output = RosLibRustResult<T>> + Send;
+    fn next(&mut self) -> impl futures::Future<Output = Result<T>> + Send;
 }
 
 /// This trait generically describes the capability of something to act as an async interface to a set of topics
@@ -37,7 +37,7 @@ pub trait TopicProvider {
     fn advertise<T: RosMessageType>(
         &self,
         topic: &str,
-    ) -> impl futures::Future<Output = RosLibRustResult<Self::Publisher<T>>> + Send;
+    ) -> impl futures::Future<Output = Result<Self::Publisher<T>>> + Send;
 
     /// Subscribes to a topic and returns a type specific subscriber to use.
     ///
@@ -45,7 +45,7 @@ pub trait TopicProvider {
     fn subscribe<T: RosMessageType>(
         &self,
         topic: &str,
-    ) -> impl futures::Future<Output = RosLibRustResult<Self::Subscriber<T>>> + Send;
+    ) -> impl futures::Future<Output = Result<Self::Subscriber<T>>> + Send;
 }
 
 /// Defines what it means to be something that is callable as a service
@@ -53,7 +53,7 @@ pub trait Service<T: RosServiceType> {
     fn call(
         &self,
         request: &T::Request,
-    ) -> impl futures::Future<Output = RosLibRustResult<T::Response>> + Send;
+    ) -> impl futures::Future<Output = Result<T::Response>> + Send;
 }
 
 /// This trait is analogous to TopicProvider, but instead provides the capability to create service servers and service clients
@@ -66,7 +66,7 @@ pub trait ServiceProvider {
         &self,
         topic: &str,
         request: T::Request,
-    ) -> impl futures::Future<Output = RosLibRustResult<T::Response>> + Send;
+    ) -> impl futures::Future<Output = Result<T::Response>> + Send;
 
     /// An optimized version of call_service that returns a persistent client that can be used to repeatedly call a service.
     /// Depending on backend this may provide a performance benefit over call_service.
@@ -74,7 +74,7 @@ pub trait ServiceProvider {
     fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,
-    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceClient<T>>> + Send;
+    ) -> impl futures::Future<Output = Result<Self::ServiceClient<T>>> + Send;
 
     /// Advertise a service function to be available for clients to call.
     /// A handle is returned that manages the lifetime of the service.
@@ -85,7 +85,7 @@ pub trait ServiceProvider {
         &self,
         topic: &str,
         server: F,
-    ) -> impl futures::Future<Output = RosLibRustResult<Self::ServiceServer>> + Send
+    ) -> impl futures::Future<Output = Result<Self::ServiceServer>> + Send
     where
         F: ServiceFn<T>;
 }

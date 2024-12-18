@@ -28,7 +28,7 @@ pub use serde_bytes;
 pub use smart_default::SmartDefault; // Used in generated code for default values // Used in generated code for faster Vec<u8> serialization
 
 // Export the common types so they can be found under this namespace for backwards compatibility reasons
-pub use roslibrust_common::*;
+// pub use roslibrust_common::*;
 
 #[derive(Clone, Debug)]
 pub struct MessageFile {

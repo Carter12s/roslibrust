@@ -1,6 +1,9 @@
 //! This module holds all content for directly working with ROS1 natively
-
-use roslibrust_common::*;
+use roslibrust_common::Error;
+use roslibrust_common::{
+    Publish, RosMessageType, RosServiceType, Service, ServiceFn, ServiceProvider, Subscribe,
+    TopicProvider,
+};
 
 /// [master_client] module contains code for calling xmlrpc functions on the master
 mod master_client;
@@ -38,7 +41,7 @@ impl TopicProvider for NodeHandle {
     async fn advertise<T: RosMessageType>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::Publisher<T>> {
+    ) -> roslibrust_common::Result<Self::Publisher<T>> {
         // TODO MAJOR: consider promoting queue size, making unlimited default
         self.advertise::<T>(topic.as_ref(), 10, false)
             .await
@@ -48,14 +51,14 @@ impl TopicProvider for NodeHandle {
     async fn subscribe<T: RosMessageType>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::Subscriber<T>> {
+    ) -> roslibrust_common::Result<Self::Subscriber<T>> {
         // TODO MAJOR: consider promoting queue size, making unlimited default
         self.subscribe(topic, 10).await.map_err(|e| e.into())
     }
 }
 
 impl<T: RosServiceType> Service<T> for ServiceClient<T> {
-    async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
+    async fn call(&self, request: &T::Request) -> roslibrust_common::Result<T::Response> {
         self.call(request).await
     }
 }
@@ -68,7 +71,7 @@ impl ServiceProvider for crate::NodeHandle {
         &self,
         topic: &str,
         request: T::Request,
-    ) -> RosLibRustResult<T::Response> {
+    ) -> roslibrust_common::Result<T::Response> {
         // TODO should have a more optimized version of this...
         let client = self.service_client::<T>(topic).await?;
         client.call(&request).await
@@ -77,7 +80,7 @@ impl ServiceProvider for crate::NodeHandle {
     async fn service_client<T: RosServiceType + 'static>(
         &self,
         topic: &str,
-    ) -> RosLibRustResult<Self::ServiceClient<T>> {
+    ) -> roslibrust_common::Result<Self::ServiceClient<T>> {
         // TODO bad error mapping here...
         self.service_client::<T>(topic).await.map_err(|e| e.into())
     }
@@ -86,7 +89,7 @@ impl ServiceProvider for crate::NodeHandle {
         &self,
         topic: &str,
         server: F,
-    ) -> RosLibRustResult<Self::ServiceServer>
+    ) -> roslibrust_common::Result<Self::ServiceServer>
     where
         F: ServiceFn<T>,
     {
@@ -97,20 +100,20 @@ impl ServiceProvider for crate::NodeHandle {
 }
 
 impl<T: RosMessageType> Subscribe<T> for crate::Subscriber<T> {
-    async fn next(&mut self) -> RosLibRustResult<T> {
+    async fn next(&mut self) -> roslibrust_common::Result<T> {
         let res = crate::Subscriber::next(self).await;
         match res {
             Some(Ok(msg)) => Ok(msg),
             Some(Err(e)) => {
                 log::error!("Subscriber got error: {e:?}");
                 // TODO gotta do better error conversion / error types here
-                Err(crate::RosLibRustError::Unexpected(anyhow::anyhow!(
+                Err(Error::Unexpected(anyhow::anyhow!(
                     "Subscriber got error: {e:?}"
                 )))
             }
             None => {
                 log::error!("Subscriber hit dropped channel");
-                Err(crate::RosLibRustError::Unexpected(anyhow::anyhow!(
+                Err(Error::Unexpected(anyhow::anyhow!(
                     "Channel closed, something was dropped?"
                 )))
             }
@@ -120,17 +123,17 @@ impl<T: RosMessageType> Subscribe<T> for crate::Subscriber<T> {
 
 // Provide an implementation of publish for ros1 backend
 impl<T: RosMessageType> Publish<T> for Publisher<T> {
-    async fn publish(&self, data: &T) -> RosLibRustResult<()> {
+    async fn publish(&self, data: &T) -> roslibrust_common::Result<()> {
         // TODO error type conversion here is terrible and we need to standardize error stuff badly
         self.publish(data)
             .await
-            .map_err(|e| RosLibRustError::SerializationError(e.to_string()))
+            .map_err(|e| Error::SerializationError(e.to_string()))
     }
 }
 
 #[cfg(test)]
 mod test {
-    use roslibrust_common::*;
+    use roslibrust_common::TopicProvider;
 
     // Prove that we've implemented the topic provider trait fully for NodeHandle
     #[test]

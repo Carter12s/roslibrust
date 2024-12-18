@@ -3,7 +3,7 @@ use crate::{
     tcpros::{establish_connection, ConnectionHeader},
 };
 use abort_on_drop::ChildTask;
-use roslibrust_common::{RosLibRustError, RosLibRustResult, RosServiceType};
+use roslibrust_common::{Error, RosServiceType};
 use std::{marker::PhantomData, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -17,7 +17,7 @@ use tokio::{
 use super::tcpros;
 
 pub type CallServiceRequest = (Vec<u8>, oneshot::Sender<CallServiceResponse>);
-pub type CallServiceResponse = RosLibRustResult<Vec<u8>>;
+pub type CallServiceResponse = roslibrust_common::Result<Vec<u8>>;
 
 // Note: ServiceClient is clone, and this is expressly different behavior than calling .service_client() twice on NodeHandle
 // clonning a ServiceClient does not create a new connection to the service, but instead creates a second handle to the
@@ -50,14 +50,14 @@ impl<T: RosServiceType> ServiceClient<T> {
         &self.service_name
     }
 
-    pub async fn call(&self, request: &T::Request) -> RosLibRustResult<T::Response> {
+    pub async fn call(&self, request: &T::Request) -> std::result::Result<T::Response, Error> {
         let request_payload = roslibrust_serde_rosmsg::to_vec(request)
-            .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
+            .map_err(|err| Error::SerializationError(err.to_string()))?;
         let (response_tx, response_rx) = oneshot::channel();
 
         self.sender
             .send((request_payload, response_tx))
-            .map_err(|_err| RosLibRustError::Disconnected)?;
+            .map_err(|_err| Error::Disconnected)?;
 
         match response_rx.await {
             Ok(Ok(result_payload)) => {
@@ -67,14 +67,14 @@ impl<T: RosServiceType> ServiceClient<T> {
                     result_payload
                 );
                 let response: T::Response = roslibrust_serde_rosmsg::from_slice(&result_payload)
-                    .map_err(|err| RosLibRustError::SerializationError(err.to_string()))?;
+                    .map_err(|err| Error::SerializationError(err.to_string()))?;
                 return Ok(response);
             }
             Ok(Err(err)) => {
                 return Err(err);
             }
             Err(_err) => {
-                return Err(RosLibRustError::Disconnected);
+                return Err(Error::Disconnected);
             }
         }
     }
@@ -93,7 +93,7 @@ impl ServiceClientLink {
         service_uri: &str,
         srv_definition: &str,
         md5sum: &str,
-    ) -> RosLibRustResult<Self> {
+    ) -> roslibrust_common::Result<Self> {
         let header = ConnectionHeader {
             caller_id: node_name.to_string(),
             latching: false,
@@ -113,7 +113,7 @@ impl ServiceClientLink {
 
         let stream = establish_connection(&node_name, &service_name, &service_uri, header).await.map_err(|err| {
             log::error!("Failed to establish connection to service URI {service_uri} for service {service_name}: {err}");
-            RosLibRustError::from(err)
+            Error::from(err)
         })?;
 
         let actor_context = Self::actor_context(stream, service_name.to_owned(), call_rx);
@@ -161,7 +161,7 @@ impl ServiceClientLink {
             log::error!(
                 "Failed to send and receive service call for service {service_name}: {err:?}"
             );
-            RosLibRustError::from(err)
+            Error::from(err)
         });
         let send_result = response_sender.send(response);
         if let Err(_err) = send_result {
