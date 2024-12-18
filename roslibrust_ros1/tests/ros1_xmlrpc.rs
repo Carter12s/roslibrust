@@ -1,6 +1,6 @@
 #[cfg(feature = "ros1_test")]
 mod tests {
-    use roslibrust_codegen::RosMessageType;
+    use roslibrust_common::RosMessageType;
     use roslibrust_ros1::NodeHandle;
     use serde::de::DeserializeOwned;
     use serde_xmlrpc::Value;
