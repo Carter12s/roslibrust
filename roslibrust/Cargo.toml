@@ -11,16 +11,18 @@ keywords = ["ROS", "robotics", "websocket", "json", "async"]
 categories = ["science::robotics"]
 
 [dependencies]
-# TODO version here
+# TODO versions here
 roslibrust_common = { path = "../roslibrust_common" }
 roslibrust_ros1 = { path = "../roslibrust_ros1", optional = true }
 roslibrust_rosbridge = { path = "../roslibrust_rosbridge", optional = true }
 roslibrust_zenoh = { path = "../roslibrust_zenoh", optional = true }
 roslibrust_mock = { path = "../roslibrust_mock", optional = true }
+roslibrust_rosapi = { path = "../roslibrust_rosapi", optional = true }
 
 [dev-dependencies]
 env_logger = "0.11"
 test-log = "0.2"
+abort-on-drop = "0.2"
 log = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
@@ -33,8 +35,7 @@ default = []
 # Note: all does not include running_bridge as that is only intended for CI
 all = []
 # Provides a rosapi rust interface
-# TODO MAJOR remove this feature
-rosapi = []
+rosapi = ["roslibrust_rosapi"]
 # Intended for use with tests, includes tests that rely on a locally running rosbridge
 running_bridge = []
 # For use with integration tests, indicating we are testing integration with a ros1 bridge

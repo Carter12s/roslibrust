@@ -1,10 +1,11 @@
 //! This test file is intended to contain all integration tests of ROS1 native fuctionality.
 //! Any test which interacts with actual running ros nodes should be in this file.
 
-#[cfg(feature = "ros1_test")]
+#[cfg(all(feature = "ros1_test", feature = "ros1", feature = "rosbridge"))]
 mod tests {
     use log::*;
-    use roslibrust_ros1::{NodeError, NodeHandle};
+    use roslibrust::ros1::{NodeError, NodeHandle};
+    use roslibrust::rosbridge::ClientHandle;
     use tokio::time::timeout;
 
     roslibrust_codegen_macro::find_and_generate_ros_messages!(
@@ -489,7 +490,7 @@ mod tests {
             async fn test_main(
                 ros: &T,
                 msg: &str,
-            ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+            ) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 // In the body we'll publish a message
                 let publisher = ros
                     .advertise::<std_msgs::String>("/topic_provider_func_test")
